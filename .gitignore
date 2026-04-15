@@ -1,0 +1,22 @@
+# Dependencias Node.js
+node_modules/
+
+# Servidor local (no necesario en GitHub Pages)
+server.js
+package.json
+package-lock.json
+
+# GeoVisor (demasiado pesado, corre en servidor local)
+GEOVISOR CAECH.html
+
+# Datos geoespaciales pesados
+DATA SET/
+ENLACES GEOPORTALES/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
