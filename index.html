@@ -1325,6 +1325,258 @@
                 grid-template-columns: repeat(4, 1fr);
             }
         }
+
+        /* ═══════════════════════════════════════════════
+           PRICING CARDS — Planes de acceso
+        ═══════════════════════════════════════════════ */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .pricing-card {
+            background: var(--blanco);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .pricing-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        }
+        .pricing-card.featured {
+            border-color: var(--rojo-oscuro);
+            box-shadow: 0 8px 30px rgba(139,0,0,0.18);
+        }
+        .pricing-card.proximamente { opacity: 0.6; }
+        .plan-badge {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--rojo-oscuro);
+            background: rgba(139,0,0,0.08);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-bottom: 22px;
+        }
+        .plan-icon {
+            font-size: 46px;
+            color: var(--rojo-oscuro);
+            margin-bottom: 18px;
+        }
+        .plan-price {
+            font-size: 44px;
+            font-weight: 800;
+            color: var(--gris-oscuro);
+            margin-bottom: 28px;
+            line-height: 1;
+        }
+        .plan-price span {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--gris-medio);
+        }
+        .plan-features {
+            list-style: none;
+            text-align: left;
+            width: 100%;
+            margin-bottom: 30px;
+            flex-grow: 1;
+        }
+        .plan-features li {
+            padding: 9px 0 9px 26px;
+            position: relative;
+            color: var(--gris-medio);
+            font-size: 14px;
+            border-bottom: 1px solid var(--blanco-terciario);
+        }
+        .plan-features li:last-child { border-bottom: none; }
+        .plan-features li::before {
+            content: "✓";
+            color: var(--rojo-oscuro);
+            font-weight: 700;
+            position: absolute;
+            left: 0;
+        }
+        .plan-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--gris-medio);
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        /* ═══════════════════════════════════════════════
+           DICAT — Solicitud de reporte
+        ═══════════════════════════════════════════════ */
+        .dicat-login-prompt {
+            text-align: center;
+            padding: 60px 30px;
+            background: var(--blanco);
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .dicat-login-prompt > i {
+            font-size: 52px;
+            color: var(--rojo-oscuro);
+            opacity: 0.35;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .dicat-login-prompt h3 {
+            margin-bottom: 10px;
+            color: var(--gris-oscuro);
+        }
+        .dicat-login-prompt p {
+            color: var(--gris-medio);
+            margin-bottom: 25px;
+        }
+        .dicat-container {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 35px;
+            align-items: start;
+        }
+        .dicat-form {
+            background: var(--blanco);
+            border-radius: 12px;
+            padding: 35px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+        }
+        .dicat-form h3 {
+            color: var(--rojo-oscuro);
+            margin-bottom: 25px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pago-section { margin: 25px 0; }
+        .pago-section h4 {
+            font-size: 15px;
+            color: var(--gris-oscuro);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pago-opciones {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .pago-opcion {
+            border: 2px solid var(--blanco-terciario);
+            border-radius: 10px;
+            padding: 16px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            text-align: center;
+        }
+        .pago-opcion input[type="radio"] { display: none; }
+        .pago-opcion.seleccionado {
+            border-color: var(--rojo-oscuro);
+            background: rgba(139,0,0,0.04);
+        }
+        .pago-opcion i { font-size: 22px; color: var(--rojo-oscuro); }
+        .pago-opcion span { font-weight: 600; font-size: 14px; color: var(--gris-oscuro); }
+        .pago-opcion small { color: var(--gris-medio); font-size: 12px; }
+        .dicat-resumen {
+            background: var(--gris-claro);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .resumen-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            color: var(--gris-oscuro);
+        }
+        .resumen-item strong { font-size: 20px; color: var(--rojo-oscuro); }
+        .mis-solicitudes {
+            background: var(--blanco);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+        }
+        .mis-solicitudes h3 {
+            color: var(--gris-oscuro);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+        .sin-solicitudes {
+            color: var(--gris-medio);
+            text-align: center;
+            padding: 30px 0;
+            font-size: 14px;
+        }
+        .solicitud-card {
+            border: 1px solid var(--blanco-terciario);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .solicitud-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .solicitud-card-clave {
+            font-weight: 600;
+            color: var(--gris-oscuro);
+            font-size: 14px;
+        }
+        .solicitud-card-fecha {
+            font-size: 12px;
+            color: var(--gris-medio);
+        }
+        .solicitud-estado {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .estado-pendiente  { background: #FFF3CD; color: #856404; }
+        .estado-procesando { background: #CCE5FF; color: #004085; }
+        .estado-listo      { background: #D4EDDA; color: #155724; }
+        .btn-descargar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            font-size: 13px;
+            padding: 6px 14px;
+        }
+        @media (max-width: 900px) {
+            .dicat-container { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .pricing-grid { grid-template-columns: 1fr; }
+            .pago-opciones { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -1333,7 +1585,8 @@
         <div class="container">
             <nav class="navbar">
                 <div class="logo">
-                    <img src="LOGO/Logo Cae.jpg" alt="CAE - Provincial de Chimborazo" class="logo-img">
+                    <img src="LOGO/Isologo.jpg" alt="CAE - Provincial de Chimborazo" class="logo-img">
+                    <span style="display:inline-flex;align-items:center;background:#8B0000;color:#fff;font-size:10px;font-weight:700;letter-spacing:.8px;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle">BETA</span>
                 </div>
                 <button class="hamburger" id="hamburger-btn" aria-label="Abrir menú">
                     <span></span><span></span><span></span>
@@ -1343,10 +1596,11 @@
                     <li><a href="#nosotros">Nosotros</a></li>
                     <li><a href="#plataforma">Plataforma</a></li>
                     <li><a href="#cursos" id="cursos-link">Cursos</a></li>
-                    <li><a href="#funcionamiento">¿Cómo Funciona?</a></li>
+                    <li><a href="#planes">Planes</a></li>
+                    <li><a href="#solicitar">Solicitar DICAT</a></li>
                     <li><a href="#integracion">Integración</a></li>
-                    <li><a href="#registro">Únete</a></li>
                     <li><a href="#contacto">Contacto</a></li>
+                    <li><a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer" style="color:#8B0000;font-weight:700"><i class="fas fa-microscope" style="margin-right:4px"></i>Investigación</a></li>
                 </ul>
                 <div class="nav-buttons">
                     <a href="http://localhost:8080/GEOVISOR%20CAECH.html" class="btn btn-outline" target="_blank" rel="noopener noreferrer" id="geovisor-nav-btn"><i class="fas fa-map-marked-alt"></i> Geovisor</a>
@@ -1365,9 +1619,9 @@
                 <h2>Tecnología al Servicio del Territorio</h2>
                 <p>Plataforma de interoperabilidad que centraliza la información de instituciones públicas, automatizando la generación de reportes técnicos y diagnósticos de factibilidad con precisión geoespacial.</p>
                 <div class="hero-buttons">
-                    <a href="http://localhost:8080/GEOVISOR%20CAECH.html" class="btn btn-geovisor" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Acceder al Geovisor</a>
-                    <a href="#registro" class="btn" id="btn-hero-arquitecto" onclick="mostrarFormRegistro('arquitecto')"><i class="fas fa-drafting-compass"></i> Afiliarme al CAE-CH</a>
-                    <a href="#registro" class="btn btn-secondary" id="btn-hero-usuario" onclick="mostrarFormRegistro('usuario')"><i class="fas fa-user-plus"></i> Registrarme como Usuario</a>
+                    <a href="GEOVISOR CAECH.html" class="btn btn-geovisor" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Acceder al Geovisor</a>
+                    <a href="#solicitar" class="btn"><i class="fas fa-file-invoice-dollar"></i> Solicitar Reporte DICAT</a>
+                    <a href="#planes" class="btn btn-secondary"><i class="fas fa-id-card"></i> Ver Planes de Acceso</a>
                     <a href="#cursos" class="btn btn-secondary" id="cursos-hero-btn">Ver Cursos</a>
                 </div>
                 <div class="stats">
@@ -1452,6 +1706,22 @@
                         <li>Diagnósticos técnicos automáticos</li>
                         <li>Flujos de trabajo optimizados</li>
                     </ul>
+                </div>
+                <div class="feature-card" style="border-top:4px solid #8B0000; cursor:pointer;" onclick="window.open('RESEARCH/investigacion.html','_blank')">
+                    <div class="feature-icon" style="background:rgba(139,0,0,.1);color:#8B0000"><i class="fas fa-microscope"></i></div>
+                    <h3>Investigación Territorial</h3>
+                    <p>Detección de construcciones no declaradas en el catastro de Riobamba mediante contraste entre datos catastrales y edificaciones identificadas por inteligencia artificial.</p>
+                    <ul class="feature-list">
+                        <li>20 K+ construcciones no registradas detectadas</li>
+                        <li>Análisis por nivel de confianza IA</li>
+                        <li>Mapa interactivo con filtros</li>
+                    </ul>
+                    <div style="margin-top:12px">
+                        <a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer"
+                           style="display:inline-flex;align-items:center;gap:6px;background:#8B0000;color:#fff;border-radius:6px;padding:7px 16px;font-size:.82rem;font-weight:700;text-decoration:none">
+                            <i class="fas fa-chart-bar"></i> Ver análisis
+                        </a>
+                    </div>
                 </div>
                 <div class="feature-card proximamente">
                     <div class="feature-icon"><i class="fas fa-cubes"></i></div>
@@ -1634,256 +1904,171 @@
         </div>
     </section>
 
-    <!-- Únete a la Plataforma -->
-    <section class="section section-light" id="registro">
+    <!-- ══════════════════════════════════════════════════════
+         PLANES DE ACCESO
+    ══════════════════════════════════════════════════════ -->
+    <section class="section section-light" id="planes">
         <div class="container">
             <div class="section-title">
-                <h2>Únete a la Plataforma</h2>
-                <p>Selecciona el tipo de cuenta que deseas crear y completa tu registro</p>
+                <h2>Planes de Acceso</h2>
+                <p>Elige el plan que se adapta a tus necesidades de consulta territorial</p>
+            </div>
+            <div class="pricing-grid">
+
+                <!-- AFILIADO CAE-CH -->
+                <div class="pricing-card featured">
+                    <div class="plan-badge">Afiliado CAE-CH</div>
+                    <div class="plan-icon"><i class="fas fa-id-card"></i></div>
+                    <div class="plan-price">GRATIS</div>
+                    <ul class="plan-features">
+                        <li>GeoVisor completo sin restricciones</li>
+                        <li>Consulta ilimitada de predios</li>
+                        <li>Generación de reportes DICAT</li>
+                        <li>Acceso a todas las capas institucionales</li>
+                        <li>Soporte técnico prioritario</li>
+                    </ul>
+                    <button class="btn" style="width:100%" onclick="window.loginGoogle && window.loginGoogle()">
+                        <i class="fab fa-google"></i> Acceder con Google
+                    </button>
+                    <p class="plan-note">Tu membresía será verificada manualmente por el equipo CAE-CH contra el registro institucional de afiliados.</p>
+                </div>
+
+                <!-- PÚBLICO GENERAL -->
+                <div class="pricing-card">
+                    <div class="plan-badge">Público General</div>
+                    <div class="plan-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="plan-price">$10 <span>/ reporte</span></div>
+                    <ul class="plan-features">
+                        <li>Reporte DICAT individual en PDF</li>
+                        <li>Datos catastrales y territoriales</li>
+                        <li>Factibilidad de servicios</li>
+                        <li>Coordenadas UTM del predio</li>
+                        <li>Entrega en 24–48 horas hábiles</li>
+                    </ul>
+                    <a href="#solicitar" class="btn" style="width:100%;text-align:center">
+                        <i class="fas fa-file-alt"></i> Solicitar Reporte
+                    </a>
+                </div>
+
+                <!-- SUSCRIPCIÓN — PRÓXIMAMENTE -->
+                <div class="pricing-card proximamente">
+                    <div class="plan-badge">Suscripción Mensual</div>
+                    <div class="plan-icon"><i class="fas fa-layer-group"></i></div>
+                    <div class="plan-price">TBD <span>/ mes</span></div>
+                    <ul class="plan-features">
+                        <li>Reportes DICAT ilimitados</li>
+                        <li>Acceso al GeoVisor en línea</li>
+                        <li>Panel de seguimiento de solicitudes</li>
+                        <li>Historial completo de reportes</li>
+                        <li>Soporte preferencial</li>
+                    </ul>
+                    <button class="btn btn-inactivo" disabled style="width:100%">
+                        <i class="fas fa-clock"></i> Próximamente
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         SOLICITAR REPORTE DICAT
+    ══════════════════════════════════════════════════════ -->
+    <section class="section" id="solicitar">
+        <div class="container">
+            <div class="section-title">
+                <h2>Solicitar Reporte DICAT</h2>
+                <p>Diagnóstico de Información Catastral y Territorial — $10.00 USD por reporte</p>
             </div>
 
-            <!-- Tarjetas de selección de tipo de registro -->
-            <div class="registro-opciones">
-                <div class="registro-opcion-card activo" id="card-usuario" onclick="mostrarFormRegistro('usuario')">
-                    <span class="registro-opcion-icon"><i class="fas fa-user"></i></span>
-                    <h3>Soy Usuario</h3>
-                    <p>Personas naturales, empresas o instituciones que necesitan servicios profesionales de arquitectura en Riobamba.</p>
-                    <div class="btn btn-outline">Registrarme como Usuario</div>
-                </div>
-                <div class="registro-opcion-card" id="card-arquitecto" onclick="mostrarFormRegistro('arquitecto')">
-                    <span class="registro-opcion-icon"><i class="fas fa-drafting-compass"></i></span>
-                    <h3>Soy Arquitecto Profesional</h3>
-                    <p>Arquitectos titulados que desean afiliar su matrícula al CAE-CH y acceder a proyectos y oportunidades profesionales.</p>
-                    <div class="btn">Afiliarme al CAE-CH</div>
-                </div>
+            <!-- Sin sesión iniciada -->
+            <div id="dicat-sin-sesion" class="dicat-login-prompt">
+                <i class="fas fa-lock"></i>
+                <h3>Inicia sesión para continuar</h3>
+                <p>Necesitas una cuenta para realizar tu solicitud de reporte DICAT y hacer seguimiento de su estado.</p>
+                <button class="btn" style="font-size:15px;padding:12px 30px"
+                        onclick="window.loginGoogle && window.loginGoogle()">
+                    <i class="fab fa-google" style="color:#DB4437"></i>&nbsp; Continuar con Google
+                </button>
             </div>
 
-            <!-- Formularios y panel de beneficios -->
-            <div class="form-container">
+            <!-- Con sesión iniciada -->
+            <div id="dicat-con-sesion" style="display:none">
+                <div class="dicat-container">
 
-                <!-- FORMULARIO USUARIO -->
-                <div class="registro-forms" id="form-registro-usuario">
-                    <h3 class="registro-form-titulo"><i class="fas fa-user-plus"></i> Registro de Usuario</h3>
-                    <form id="form-usuario-registro">
+                    <!-- Formulario de solicitud -->
+                    <form class="dicat-form" id="form-dicat">
+                        <h3><i class="fas fa-map-marked-alt"></i> Datos del Predio</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="usr-nombre">Nombre Completo *</label>
-                                <input type="text" id="usr-nombre" class="form-control" placeholder="Juan Pérez García" required>
+                                <label for="dicat-clave">Clave Catastral *</label>
+                                <input type="text" id="dicat-clave" class="form-control"
+                                       placeholder="Ej: 06-01-01-001-000-000" required>
                             </div>
                             <div class="form-group">
-                                <label for="usr-cedula">Número de Cédula *</label>
-                                <input type="text" id="usr-cedula" class="form-control" placeholder="0601234567" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="usr-email">Correo Electrónico *</label>
-                                <input type="email" id="usr-email" class="form-control" placeholder="juan@email.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="usr-telefono">Teléfono *</label>
-                                <input type="tel" id="usr-telefono" class="form-control" placeholder="+593 98 765 4321" required>
+                                <label for="dicat-propietario">Nombre del Propietario *</label>
+                                <input type="text" id="dicat-propietario" class="form-control"
+                                       placeholder="Según escritura o catastro" required>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="usr-tipo">Tipo de Usuario *</label>
-                            <select id="usr-tipo" class="form-control" required>
-                                <option value="">Selecciona una opción</option>
-                                <option value="propietario">Propietario / Persona Natural</option>
-                                <option value="empresa">Empresa / Constructora</option>
-                                <option value="institucion">Institución Pública</option>
-                                <option value="estudiante">Estudiante de Arquitectura</option>
-                                <option value="otro">Otro</option>
-                            </select>
+                            <label for="dicat-direccion-predio">Dirección del Predio *</label>
+                            <input type="text" id="dicat-direccion-predio" class="form-control"
+                                   placeholder="Calle principal y secundaria, sector o barrio" required>
                         </div>
                         <div class="form-group">
-                            <label for="usr-direccion">Dirección / Barrio <span style="color:var(--gris-medio);font-weight:400">(opcional)</span></label>
-                            <input type="text" id="usr-direccion" class="form-control" placeholder="Ej: Barrio La Merced, Riobamba">
+                            <label for="dicat-obs">Observaciones <span style="color:var(--gris-medio);font-weight:400">(opcional)</span></label>
+                            <textarea id="dicat-obs" class="form-control"
+                                      placeholder="Información adicional para identificar el predio..."></textarea>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="usr-password">Contraseña *</label>
-                                <input type="password" id="usr-password" class="form-control" placeholder="Mínimo 8 caracteres" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="usr-confirm">Confirmar Contraseña *</label>
-                                <input type="password" id="usr-confirm" class="form-control" placeholder="Repite tu contraseña" required>
+
+                        <!-- Método de pago -->
+                        <div class="pago-section">
+                            <h4><i class="fas fa-credit-card"></i> Método de Pago</h4>
+                            <div class="pago-opciones">
+                                <label class="pago-opcion seleccionado" id="pago-online-label">
+                                    <input type="radio" name="metodo-pago" value="online" checked>
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Tarjeta / Online</span>
+                                    <small>Stripe — próximamente</small>
+                                </label>
+                                <label class="pago-opcion" id="pago-efectivo-label">
+                                    <input type="radio" name="metodo-pago" value="efectivo">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span>Efectivo en caja</span>
+                                    <small>Pago presencial CAE-CH</small>
+                                </label>
                             </div>
                         </div>
-                        <button type="submit" class="btn" style="width: 100%;">Crear Cuenta de Usuario</button>
-                        <p class="form-note">Al registrarte aceptas nuestros Términos y Condiciones y Política de Privacidad.</p>
+
+                        <div class="dicat-resumen">
+                            <div class="resumen-item">
+                                <span>Reporte DICAT</span>
+                                <strong>$10.00 USD</strong>
+                            </div>
+                            <button type="submit" class="btn"
+                                    style="width:100%;margin-top:15px;font-size:15px;padding:14px">
+                                <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                            </button>
+                        </div>
+                        <p class="form-note">
+                            * El reporte será procesado y entregado en 24–48 horas hábiles al correo de tu cuenta Google.
+                            El pago en efectivo se confirma presencialmente en las oficinas del CAE-CH.
+                        </p>
                     </form>
-                </div>
 
-                <!-- FORMULARIO ARQUITECTO (oculto por defecto) -->
-                <div class="registro-forms" id="form-registro-arquitecto" style="display: none;">
-                    <h3 class="registro-form-titulo"><i class="fas fa-drafting-compass"></i> Afiliación al CAE-CH</h3>
-                    <form id="form-arquitecto-registro">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="arq-nombre">Nombre Completo *</label>
-                                <input type="text" id="arq-nombre" class="form-control" placeholder="Arq. Juan Pérez García" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="arq-cedula">Número de Cédula *</label>
-                                <input type="text" id="arq-cedula" class="form-control" placeholder="0601234567" required>
-                            </div>
+                    <!-- Panel mis solicitudes -->
+                    <div class="mis-solicitudes">
+                        <h3><i class="fas fa-history"></i> Mis Solicitudes</h3>
+                        <div id="lista-solicitudes">
+                            <p class="sin-solicitudes">
+                                <i class="fas fa-inbox" style="display:block;font-size:32px;margin-bottom:10px;opacity:0.3"></i>
+                                Aún no tienes solicitudes registradas.
+                            </p>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="arq-email">Correo Electrónico *</label>
-                                <input type="email" id="arq-email" class="form-control" placeholder="arq.juan@email.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="arq-telefono">Teléfono *</label>
-                                <input type="tel" id="arq-telefono" class="form-control" placeholder="+593 98 765 4321" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="arq-matricula">N° de Matrícula CAE *</label>
-                                <input type="text" id="arq-matricula" class="form-control" placeholder="MAT-XXXX" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="arq-senescyt">N° de Registro SENESCYT *</label>
-                                <input type="text" id="arq-senescyt" class="form-control" placeholder="SENESCYT-XXXX" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="arq-especialidad">Especialidad *</label>
-                                <select id="arq-especialidad" class="form-control" required>
-                                    <option value="">Selecciona una especialidad</option>
-                                    <option value="arquitectura-general">Arquitectura General</option>
-                                    <option value="diseno-urbano">Diseño Urbano y Planificación</option>
-                                    <option value="restauracion">Restauración Patrimonial</option>
-                                    <option value="diseno-interior">Diseño de Interiores</option>
-                                    <option value="construccion">Construcción y Supervisión de Obras</option>
-                                    <option value="bioclimatica">Arquitectura Bioclimática</option>
-                                    <option value="otro">Otra especialidad</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="arq-experiencia">Años de Experiencia *</label>
-                                <select id="arq-experiencia" class="form-control" required>
-                                    <option value="">Selecciona</option>
-                                    <option value="0-2">Menos de 2 años</option>
-                                    <option value="2-5">2 a 5 años</option>
-                                    <option value="5-10">5 a 10 años</option>
-                                    <option value="10-20">10 a 20 años</option>
-                                    <option value="20+">Más de 20 años</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="arq-universidad">Universidad de Egreso *</label>
-                            <input type="text" id="arq-universidad" class="form-control" placeholder="Ej: Universidad Nacional de Chimborazo" required>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="arq-anio">Año de Graduación *</label>
-                                <input type="number" id="arq-anio" class="form-control" min="1960" max="2030" placeholder="Ej: 2010" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="arq-ciudad">Ciudad / Cantón *</label>
-                                <input type="text" id="arq-ciudad" class="form-control" value="Riobamba" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="arq-direccion">Dirección del Estudio / Oficina <span style="color:var(--gris-medio);font-weight:400">(opcional)</span></label>
-                            <input type="text" id="arq-direccion" class="form-control" placeholder="Ej: Av. Daniel León Borja y Carabobo, Oficina 201">
-                        </div>
-                        <div class="form-group">
-                            <label for="arq-portfolio">Portafolio / Sitio Web <span style="color:var(--gris-medio);font-weight:400">(opcional)</span></label>
-                            <input type="url" id="arq-portfolio" class="form-control" placeholder="https://tuportafolio.com">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="arq-password">Contraseña *</label>
-                                <input type="password" id="arq-password" class="form-control" placeholder="Mínimo 8 caracteres" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="arq-confirm">Confirmar Contraseña *</label>
-                                <input type="password" id="arq-confirm" class="form-control" placeholder="Repite tu contraseña" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn" style="width: 100%;">Solicitar Afiliación al CAE-CH</button>
-                        <p class="form-note">* Tu matrícula y datos serán verificados por el equipo del CAE-CH antes de activar tu cuenta.</p>
-                    </form>
-                </div>
+                    </div>
 
-                <!-- PANEL BENEFICIOS USUARIO -->
-                <div class="afiliacion-beneficios" id="panel-beneficios-usuario">
-                    <h3><i class="fas fa-star"></i> Beneficios de Registrarse</h3>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Acceso al directorio de arquitectos verificados y certificados por el CAE-CH</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Publica tus necesidades de arquitectura y recibe propuestas de profesionales</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Seguimiento en tiempo real del avance de tus proyectos</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Acceso al Geovisor para consultar datos de tu predio o sector</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Comunicación directa y segura con los profesionales contratados</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Historial completo de tus proyectos y comunicaciones</span>
-                    </div>
-                    <div style="margin-top: 25px; text-align: center;">
-                        <a href="http://localhost:8080/GEOVISOR%20CAECH.html" class="btn btn-geovisor" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-map-marked-alt"></i> Explorar el Geovisor
-                        </a>
-                    </div>
                 </div>
-
-                <!-- PANEL BENEFICIOS ARQUITECTO (oculto por defecto) -->
-                <div class="afiliacion-beneficios" id="panel-beneficios-arquitecto" style="display: none;">
-                    <h3><i class="fas fa-medal"></i> Beneficios de Afiliarte</h3>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Perfil profesional verificado y visible para clientes en Riobamba y Chimborazo</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Acceso a proyectos exclusivos y licitaciones del sector público y privado</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Descuentos en cursos de capacitación y actualización profesional del CAE-CH</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Acceso completo al Geovisor con todas las capas de datos institucionales</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Respaldo legal y ético del Colegio de Arquitectos del Ecuador</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Red de networking con más de 500 profesionales activos</span>
-                    </div>
-                    <div class="beneficio-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Certificaciones oficiales CAE-CH para fortalecer tu portfolio profesional</span>
-                    </div>
-                    <div style="margin-top: 25px; text-align: center;">
-                        <a href="http://localhost:8080/GEOVISOR%20CAECH.html" class="btn btn-geovisor" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-map-marked-alt"></i> Explorar el Geovisor
-                        </a>
-                    </div>
-                </div>
-
             </div>
         </div>
     </section>
@@ -1972,9 +2157,9 @@
                         <li><a href="#nosotros">Nosotros</a></li>
                         <li><a href="#plataforma">Plataforma</a></li>
                         <li><a href="#cursos" class="cursos-footer-link">Cursos</a></li>
-                        <li><a href="#registro" onclick="mostrarFormRegistro('usuario')">Registrarse como Usuario</a></li>
-                        <li><a href="#registro" onclick="mostrarFormRegistro('arquitecto')">Afiliarse al CAE-CH</a></li>
-                        <li><a href="http://localhost:8080/GEOVISOR%20CAECH.html" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Geovisor</a></li>
+                        <li><a href="#planes">Planes de Acceso</a></li>
+                        <li><a href="#solicitar">Solicitar Reporte DICAT</a></li>
+                        <li><a href="GEOVISOR CAECH.html" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Geovisor</a></li>
                         <li><a href="#contacto">Contacto</a></li>
                     </ul>
                 </div>
@@ -2014,17 +2199,18 @@
                 <div class="auth-content active" id="login-content">
                     <div class="social-auth">
                         <div class="social-buttons">
-                            <button class="btn-social btn-google">
-                                <i class="fab fa-google"></i> Continuar con Google
+                            <button class="btn-social btn-google" style="border-color:#DB4437;font-weight:600;font-size:15px;padding:14px;">
+                                <i class="fab fa-google" style="color:#DB4437;font-size:18px"></i> Continuar con Google
                             </button>
-                            <button class="btn-social btn-facebook">
-                                <i class="fab fa-facebook-f"></i> Continuar con Facebook
+                            <button class="btn-social btn-facebook" disabled style="opacity:0.45;cursor:not-allowed;position:relative">
+                                <i class="fab fa-facebook-f"></i> Facebook
+                                <span style="font-size:10px;background:#888;color:#fff;padding:2px 7px;border-radius:10px;margin-left:8px">Próximamente</span>
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="divider">
-                        <span>o ingresa con tu cuenta</span>
+                        <span>o ingresa con tu correo</span>
                     </div>
                     
                     <form id="login-form">
@@ -2054,15 +2240,16 @@
                 <div class="auth-content" id="register-content">
                     <div class="social-auth">
                         <div class="social-buttons">
-                            <button class="btn-social btn-google">
-                                <i class="fab fa-google"></i> Registrarse con Google
+                            <button class="btn-social btn-google" style="border-color:#DB4437;font-weight:600;font-size:15px;padding:14px;">
+                                <i class="fab fa-google" style="color:#DB4437;font-size:18px"></i> Registrarse con Google
                             </button>
-                            <button class="btn-social btn-facebook">
-                                <i class="fab fa-facebook-f"></i> Registrarse con Facebook
+                            <button class="btn-social btn-facebook" disabled style="opacity:0.45;cursor:not-allowed">
+                                <i class="fab fa-facebook-f"></i> Facebook
+                                <span style="font-size:10px;background:#888;color:#fff;padding:2px 7px;border-radius:10px;margin-left:8px">Próximamente</span>
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="divider">
                         <span>o regístrate con tu correo</span>
                     </div>
@@ -2104,6 +2291,281 @@
             </div>
         </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FIREBASE — Autenticación Google + Firestore
+         (CDN modular, no requiere build/npm)
+    ═══════════════════════════════════════════════════════════ -->
+    <script type="module">
+        import { initializeApp }
+            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider,
+                 signOut, onAuthStateChanged }
+            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, serverTimestamp }
+            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // ── Configuración ─────────────────────────────────────────
+        const firebaseConfig = {
+            apiKey:            "AIzaSyAASgPduoM-NbJMgMWt5SQCBTDcWH466RA",
+            authDomain:        "cae-ch.firebaseapp.com",
+            projectId:         "cae-ch",
+            storageBucket:     "cae-ch.firebasestorage.app",
+            messagingSenderId: "89054937508",
+            appId:             "1:89054937508:web:2d9fa3a0bc7f4d18850131"
+        };
+
+        const app      = initializeApp(firebaseConfig);
+        const auth     = getAuth(app);
+        const db       = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+
+        // ── Login con Google ──────────────────────────────────────
+        async function loginGoogle() {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                await guardarUsuario(result.user);
+                document.getElementById('auth-modal').style.display = 'none';
+                const nombre = result.user.displayName?.split(' ')[0] || 'Usuario';
+                if (window.showToast) window.showToast(`¡Bienvenido, ${nombre}!`, 'success');
+            } catch (err) {
+                if (err.code === 'auth/popup-closed-by-user') return;
+                if (err.code === 'auth/cancelled-popup-request') return;
+                console.error('Error Firebase Auth:', err);
+                if (window.showToast) window.showToast('Error al iniciar sesión. Intenta de nuevo.', 'error');
+            }
+        }
+
+        // ── Guardar / verificar usuario en Firestore ──────────────
+        async function guardarUsuario(user) {
+            const ref  = doc(db, 'usuarios', user.uid);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) {
+                await setDoc(ref, {
+                    uid:             user.uid,
+                    email:           user.email,
+                    nombre:          user.displayName || '',
+                    foto:            user.photoURL    || '',
+                    tipo:            'usuario',
+                    role:            'usuario',     // 'usuario' | 'miembro' | 'admin'
+                    cedula:          null,
+                    membresiaActiva: false,
+                    reportesPagados: 0,
+                    fechaRegistro:   serverTimestamp()
+                });
+            }
+        }
+
+        // ── Cerrar sesión ─────────────────────────────────────────
+        async function logoutGoogle() {
+            await signOut(auth);
+            if (window.showToast) window.showToast('Sesión cerrada correctamente.', 'info');
+        }
+
+        // ── Escuchar estado de sesión ─────────────────────────────
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                renderNavUsuario(user);
+                toggleDICAT(true);
+                cargarSolicitudes(user.uid);
+            } else {
+                renderNavInvitado();
+                toggleDICAT(false);
+            }
+        });
+
+        // ── Navbar: sesión activa ─────────────────────────────────
+        function renderNavUsuario(user) {
+            const nav     = document.querySelector('.nav-buttons');
+            const nombre  = (user.displayName || user.email).split(' ')[0];
+            const foto    = user.photoURL || '';
+            nav.innerHTML = `
+                <a href="GEOVISOR CAECH.html" class="btn btn-outline"
+                   target="_blank" rel="noopener noreferrer">
+                   <i class="fas fa-map-marked-alt"></i> Geovisor
+                </a>
+                <div style="display:flex;align-items:center;gap:10px;margin-left:8px">
+                    ${foto ? `<img src="${foto}" alt="" style="
+                        width:34px;height:34px;border-radius:50%;
+                        border:2px solid var(--rojo-oscuro);object-fit:cover">` : ''}
+                    <span style="font-weight:600;font-size:14px;
+                                 color:var(--gris-oscuro);white-space:nowrap">
+                        ${nombre}
+                    </span>
+                    <button id="btn-logout" class="btn btn-outline"
+                            style="padding:7px 14px;font-size:13px">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+            `;
+            document.getElementById('btn-logout')
+                    .addEventListener('click', logoutGoogle);
+        }
+
+        // ── Navbar: sin sesión ────────────────────────────────────
+        function renderNavInvitado() {
+            const nav     = document.querySelector('.nav-buttons');
+            nav.innerHTML = `
+                <a href="GEOVISOR CAECH.html" class="btn btn-outline"
+                   target="_blank" rel="noopener noreferrer" id="geovisor-nav-btn">
+                   <i class="fas fa-map-marked-alt"></i> Geovisor
+                </a>
+                <button class="btn btn-outline" id="fb-login-btn">
+                    <i class="fab fa-google" style="color:#DB4437"></i> Iniciar Sesión
+                </button>
+                <button class="btn" id="fb-register-btn">Registrarse</button>
+            `;
+            document.getElementById('fb-login-btn').addEventListener('click', () => {
+                const modal = document.getElementById('auth-modal');
+                if (modal) modal.style.display = 'flex';
+            });
+            document.getElementById('fb-register-btn').addEventListener('click', () => {
+                const modal = document.getElementById('auth-modal');
+                if (modal) modal.style.display = 'flex';
+            });
+        }
+
+        // ── Conectar botones Google del modal ─────────────────────
+        document.querySelectorAll('.btn-google').forEach(btn => {
+            btn.addEventListener('click', loginGoogle);
+        });
+
+        // ── Mostrar / ocultar sección DICAT según sesión ─────────
+        function toggleDICAT(loggedIn) {
+            const sinSesion = document.getElementById('dicat-sin-sesion');
+            const conSesion = document.getElementById('dicat-con-sesion');
+            if (!sinSesion || !conSesion) return;
+            sinSesion.style.display = loggedIn ? 'none'  : 'block';
+            conSesion.style.display = loggedIn ? 'block' : 'none';
+        }
+
+        // ── Selector de método de pago ────────────────────────────
+        document.querySelectorAll('.pago-opcion').forEach(label => {
+            label.addEventListener('click', () => {
+                document.querySelectorAll('.pago-opcion').forEach(l => l.classList.remove('seleccionado'));
+                label.classList.add('seleccionado');
+            });
+        });
+
+        // ── Enviar solicitud DICAT → Firestore ────────────────────
+        const formDicat = document.getElementById('form-dicat');
+        if (formDicat) {
+            formDicat.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const user = auth.currentUser;
+                if (!user) { if(window.showToast) window.showToast('Debes iniciar sesión.', 'error'); return; }
+
+                const clave       = document.getElementById('dicat-clave').value.trim();
+                const propietario = document.getElementById('dicat-propietario').value.trim();
+                const direccion   = document.getElementById('dicat-direccion-predio').value.trim();
+                const obs         = document.getElementById('dicat-obs').value.trim();
+                const metodoPago  = document.querySelector('input[name="metodo-pago"]:checked')?.value || 'efectivo';
+
+                const submitBtn = formDicat.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+                try {
+                    const { collection, addDoc } = await import(
+                        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+                    );
+                    await addDoc(collection(db, 'solicitudes'), {
+                        uid:          user.uid,
+                        email:        user.email,
+                        nombre:       user.displayName || '',
+                        claveCatastral: clave,
+                        propietario,
+                        direccion,
+                        observaciones: obs,
+                        metodoPago,
+                        monto:        10.00,
+                        moneda:       'USD',
+                        estado:       'pendiente',
+                        urlPDF:       null,
+                        fechaSolicitud: new Date()
+                    });
+
+                    if (window.showToast) window.showToast(
+                        metodoPago === 'efectivo'
+                            ? '¡Solicitud registrada! Acércate al CAE-CH para confirmar tu pago en efectivo.'
+                            : '¡Solicitud registrada! En breve recibirás instrucciones de pago en tu correo.',
+                        'success'
+                    );
+                    formDicat.reset();
+                    cargarSolicitudes(user.uid);
+                } catch (err) {
+                    console.error('Error al guardar solicitud:', err);
+                    if (window.showToast) window.showToast('Error al enviar la solicitud. Intenta de nuevo.', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Solicitud';
+                }
+            });
+        }
+
+        // ── Cargar solicitudes del usuario desde Firestore ────────
+        async function cargarSolicitudes(uid) {
+            const lista = document.getElementById('lista-solicitudes');
+            if (!lista) return;
+            try {
+                const { collection, query, where, orderBy, getDocs } = await import(
+                    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+                );
+                const q    = query(
+                    collection(db, 'solicitudes'),
+                    where('uid', '==', uid),
+                    orderBy('fechaSolicitud', 'desc')
+                );
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    lista.innerHTML = `<p class="sin-solicitudes">
+                        <i class="fas fa-inbox" style="display:block;font-size:32px;margin-bottom:10px;opacity:0.3"></i>
+                        Aún no tienes solicitudes registradas.
+                    </p>`;
+                    return;
+                }
+
+                const estadoClase = { pendiente:'estado-pendiente', procesando:'estado-procesando', listo:'estado-listo' };
+                const estadoTexto = { pendiente:'⏳ Pendiente', procesando:'🔄 Procesando', listo:'✅ Listo' };
+
+                lista.innerHTML = snap.docs.map(d => {
+                    const s    = d.data();
+                    const fecha = s.fechaSolicitud?.toDate
+                        ? s.fechaSolicitud.toDate().toLocaleDateString('es-EC')
+                        : '—';
+                    const cls  = estadoClase[s.estado] || 'estado-pendiente';
+                    const txt  = estadoTexto[s.estado] || s.estado;
+                    const dl   = s.urlPDF
+                        ? `<a href="${s.urlPDF}" target="_blank" class="btn btn-geovisor btn-descargar">
+                               <i class="fas fa-download"></i> Descargar PDF
+                           </a>` : '';
+                    return `
+                        <div class="solicitud-card">
+                            <div class="solicitud-card-header">
+                                <span class="solicitud-card-clave"><i class="fas fa-map-pin"></i> ${s.claveCatastral}</span>
+                                <span class="solicitud-estado ${cls}">${txt}</span>
+                            </div>
+                            <div class="solicitud-card-fecha">${s.propietario} &mdash; ${fecha}</div>
+                            <div style="font-size:12px;color:var(--gris-medio);margin-top:4px">
+                                Pago: ${s.metodoPago === 'efectivo' ? 'Efectivo en caja' : 'Online'} — $${s.monto.toFixed(2)}
+                            </div>
+                            ${dl}
+                        </div>`;
+                }).join('');
+
+            } catch (err) {
+                console.error('Error cargando solicitudes:', err);
+            }
+        }
+
+        // ── Exponer funciones globales ────────────────────────────
+        window.loginGoogle    = loginGoogle;
+        window.logoutGoogle   = logoutGoogle;
+        window.cargarSolicitudes = cargarSolicitudes;
+
+    </script>
 
     <script>
         // ── TOAST NOTIFICATIONS ──────────────────────────────────
@@ -2392,10 +2854,10 @@
                 modal.style.display = 'none';
             });
 
-            // Redes sociales (OAuth pendiente)
-            document.querySelectorAll('.btn-social').forEach(button => {
+            // Redes sociales — Facebook próximamente (Google lo maneja Firebase module)
+            document.querySelectorAll('.btn-social:not(.btn-google)').forEach(button => {
                 button.addEventListener('click', function() {
-                    showToast('Autenticación con redes sociales próximamente disponible.', 'info');
+                    showToast('Autenticación con Facebook próximamente disponible.', 'info');
                 });
             });
 
