@@ -1,0 +1,22 @@
+{
+  "generado": "2026-04-17T23:23:34.210Z",
+  "predios": {
+    "total": 73539,
+    "con_construccion_declarada": 28070,
+    "sin_construccion_declarada": 45469
+  },
+  "ia": {
+    "total_detectadas": 96026,
+    "fuente": "Google Open Buildings / ML"
+  },
+  "resultados": {
+    "no_registradas": 20089,
+    "predios_afectados": 8964,
+    "area_total_estimada_m2": 1810045,
+    "por_nivel": {
+      "ALTO": 3701,
+      "MEDIO": 9299,
+      "BAJO": 7089
+    }
+  }
+}

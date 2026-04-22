@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAE-CH | Investigación — Construcciones No Registradas</title>
+    <meta name="description" content="Análisis territorial de construcciones no declaradas en el catastro de Riobamba mediante detección por inteligencia artificial.">
+    <link rel="icon" type="image/jpeg" href="../LOGO/366642214_122106418796007509_1566356946917218903_n.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        :root {
+            --rojo: #8B0000;
+            --rojo-medio: #A52A2A;
+            --gris-oscuro: #2F2F2F;
+            --gris-medio: #5A5A5A;
+            --gris-claro: #F5F5F5;
+            --alto: #C0392B;
+            --medio: #E67E22;
+            --bajo: #F1C40F;
+            --predio: #2980B9;
+        }
+
+        body { background: var(--gris-claro); color: var(--gris-oscuro); }
+
+        /* ── Header ── */
+        header {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,.12);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .navbar {
+            max-width: 1400px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px;
+        }
+        .logo-area { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-area img { height: 44px; border-radius: 4px; }
+        .logo-text { font-size: 20px; font-weight: 700; color: var(--rojo); line-height: 1.1; }
+        .logo-sub { font-size: 11px; color: var(--gris-medio); letter-spacing: .5px; }
+        .back-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--rojo); color: #fff;
+            border: none; border-radius: 6px; padding: 8px 16px;
+            font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;
+            transition: background .2s;
+        }
+        .back-btn:hover { background: var(--rojo-medio); }
+
+        /* ── Hero band ── */
+        .hero-band {
+            background: linear-gradient(135deg, var(--rojo) 0%, #5a0000 100%);
+            color: #fff; padding: 28px 20px 24px;
+            border-bottom: 4px solid #6a0000;
+        }
+        .hero-band .inner { max-width: 1400px; margin: 0 auto; }
+        .hero-band h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 6px; }
+        .hero-band p  { font-size: .95rem; opacity: .87; max-width: 720px; }
+        .badge-ia {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+            border-radius: 20px; padding: 3px 12px; font-size: .78rem; margin-top: 10px;
+        }
+
+        /* ── KPI cards ── */
+        .kpi-row {
+            max-width: 1400px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 14px; padding: 20px 20px 10px;
+        }
+        .kpi-card {
+            background: #fff; border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            padding: 16px 18px; border-top: 4px solid var(--color, var(--rojo));
+        }
+        .kpi-card .val {
+            font-size: 1.9rem; font-weight: 800;
+            color: var(--color, var(--rojo)); line-height: 1;
+        }
+        .kpi-card .lbl { font-size: .78rem; color: var(--gris-medio); margin-top: 5px; }
+        .kpi-card .sub { font-size: .72rem; color: #aaa; margin-top: 2px; }
+
+        /* ── Main layout ── */
+        .main-layout {
+            max-width: 1400px; margin: 0 auto;
+            display: grid; grid-template-columns: 340px 1fr;
+            gap: 16px; padding: 16px 20px 30px;
+        }
+        @media (max-width: 900px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        /* ── Panel lateral ── */
+        .side-panel { display: flex; flex-direction: column; gap: 14px; }
+
+        .panel-card {
+            background: #fff; border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            overflow: hidden;
+        }
+        .panel-card .pc-header {
+            background: var(--rojo); color: #fff;
+            padding: 10px 14px; font-size: .85rem; font-weight: 700;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .panel-card .pc-body { padding: 14px; }
+
+        /* Filtros */
+        .filter-row { margin-bottom: 12px; }
+        .filter-row label { font-size: .78rem; font-weight: 600; color: var(--gris-medio); display: block; margin-bottom: 5px; }
+        .filter-row select, .filter-row input[type=range] {
+            width: 100%; border: 1px solid #ddd; border-radius: 6px;
+            padding: 7px 10px; font-size: .83rem; color: var(--gris-oscuro);
+            background: #fafafa;
+        }
+        .filter-row input[type=range] { padding: 4px 0; accent-color: var(--rojo); }
+        .conf-display {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--gris-medio); margin-top: 3px;
+        }
+
+        .btn-aplicar {
+            width: 100%; background: var(--rojo); color: #fff;
+            border: none; border-radius: 7px; padding: 9px;
+            font-size: .85rem; font-weight: 700; cursor: pointer;
+            transition: background .2s; margin-top: 6px;
+        }
+        .btn-aplicar:hover { background: var(--rojo-medio); }
+
+        /* Leyenda */
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: .82rem; }
+        .dot { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+
+        /* Popup de resultado */
+        #feature-panel .fp-title { font-weight: 700; font-size: .9rem; color: var(--rojo); margin-bottom: 8px; }
+        #feature-panel .fp-row { display: flex; justify-content: space-between; font-size: .8rem; padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+        #feature-panel .fp-row span:first-child { color: var(--gris-medio); }
+        #feature-panel .fp-row span:last-child { font-weight: 600; }
+        .nivel-badge {
+            display: inline-block; border-radius: 12px; padding: 2px 10px;
+            font-size: .72rem; font-weight: 700; color: #fff;
+        }
+        .nivel-ALTO   { background: var(--alto); }
+        .nivel-MEDIO  { background: var(--medio); }
+        .nivel-BAJO   { background: var(--bajo); color: #333; }
+
+        /* ── Mapa ── */
+        #map { height: 620px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+
+        /* ── Basemap switcher ── */
+        .basemap-ctrl {
+            position: absolute; bottom: 90px; right: 10px; z-index: 900;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .bm-btn {
+            background: #fff; border: 2px solid #ccc; border-radius: 6px;
+            padding: 5px 10px; font-size: .75rem; font-weight: 700; cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2); transition: all .15s; white-space: nowrap;
+            color: var(--gris-oscuro);
+        }
+        .bm-btn.active { background: var(--rojo); color: #fff; border-color: var(--rojo); }
+        .bm-btn:hover:not(.active) { background: #f0f0f0; }
+
+        /* Loading overlay */
+        #loading {
+            position: fixed; inset: 0;
+            background: rgba(139,0,0,.92);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; color: #fff; gap: 16px;
+        }
+        #loading h2 { font-size: 1.4rem; }
+        #loading p  { font-size: .9rem; opacity: .8; max-width: 380px; text-align: center; line-height: 1.5; }
+        .spinner {
+            width: 48px; height: 48px; border: 5px solid rgba(255,255,255,.3);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-bar-wrap { width: 260px; background: rgba(255,255,255,.2); border-radius: 8px; height: 8px; }
+        #loading-bar { height: 8px; background: #fff; border-radius: 8px; width: 0; transition: width .3s; }
+        #loading-error { display:none; background:rgba(0,0,0,.3); border-radius:10px; padding:16px 22px; max-width:400px; text-align:center; }
+        #loading-error code { background:rgba(255,255,255,.15); border-radius:4px; padding:2px 8px; font-size:.82rem; }
+
+        /* Metodología */
+        .metodo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .metodo-item {
+            background: var(--gris-claro); border-radius: 7px;
+            padding: 10px 12px; font-size: .78rem; color: var(--gris-oscuro);
+            border-left: 3px solid var(--rojo);
+        }
+        .metodo-item strong { display: block; margin-bottom: 3px; font-size: .82rem; }
+        @media (max-width: 600px) { .metodo-grid { grid-template-columns: 1fr; } }
+
+        /* Nota pie */
+        .nota-footer {
+            max-width: 1400px; margin: 0 auto 30px;
+            padding: 0 20px;
+        }
+        .nota-footer p {
+            background: #fff3cd; border: 1px solid #ffc107;
+            border-radius: 8px; padding: 12px 16px;
+            font-size: .79rem; color: #856404; line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── LOADING ── -->
+<div id="loading">
+    <div class="spinner" id="loading-spinner"></div>
+    <h2>Cargando análisis territorial</h2>
+    <p id="loading-msg">Inicializando...</p>
+    <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+    <div id="loading-error">
+        <p><i class="fas fa-exclamation-triangle"></i> <strong>Error al cargar los datos</strong></p>
+        <p id="loading-error-msg" style="margin-top:8px;font-size:.83rem"></p>
+        <p style="margin-top:10px;font-size:.8rem;opacity:.85">
+            Verifica tu conexión a internet e intenta nuevamente.
+        </p>
+        <button onclick="location.reload()" style="margin-top:12px;background:#fff;color:#8B0000;border:none;border-radius:6px;padding:7px 18px;font-weight:700;cursor:pointer">
+            <i class="fas fa-redo"></i> Reintentar
+        </button>
+    </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+    <div class="navbar">
+        <a class="logo-area" href="../index.html">
+            <img src="../LOGO/Logo Cae.jpg" alt="CAE-CH" onerror="this.style.display='none'">
+            <div>
+                <div class="logo-text">CAE-CH</div>
+                <div class="logo-sub">Chimborazo</div>
+            </div>
+        </a>
+        <a class="back-btn" href="../index.html"><i class="fas fa-arrow-left"></i> Inicio</a>
+    </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero-band">
+    <div class="inner">
+        <h1><i class="fas fa-microscope"></i> Investigación Territorial</h1>
+        <p>Detección de construcciones no declaradas en el catastro municipal de Riobamba mediante análisis de inteligencia artificial y contraste con datos catastrales oficiales.</p>
+        <div class="badge-ia"><i class="fas fa-robot"></i> Fuente IA: Google Open Buildings · ML</div>
+    </div>
+</div>
+
+<!-- ── KPIs ── -->
+<div class="kpi-row" id="kpi-row">
+    <div class="kpi-card" style="--color:#8B0000">
+        <div class="val" id="kpi-nr">—</div>
+        <div class="lbl">Construcciones no registradas</div>
+        <div class="sub">detectadas por IA en predios sin declaración</div>
+    </div>
+    <div class="kpi-card" style="--color:#C0392B">
+        <div class="val" id="kpi-alto">—</div>
+        <div class="lbl">Alta confianza</div>
+        <div class="sub">conf ≥ 0.85</div>
+    </div>
+    <div class="kpi-card" style="--color:#E67E22">
+        <div class="val" id="kpi-medio">—</div>
+        <div class="lbl">Confianza media</div>
+        <div class="sub">conf 0.75 – 0.85</div>
+    </div>
+    <div class="kpi-card" style="--color:#2980B9">
+        <div class="val" id="kpi-predios">—</div>
+        <div class="lbl">Predios afectados</div>
+        <div class="sub">con construcción no declarada</div>
+    </div>
+    <div class="kpi-card" style="--color:#27AE60">
+        <div class="val" id="kpi-area">—</div>
+        <div class="lbl">Área total estimada</div>
+        <div class="sub">superficie construida no catastrada</div>
+    </div>
+    <div class="kpi-card" style="--color:#6c757d">
+        <div class="val" id="kpi-total-pred">—</div>
+        <div class="lbl">Total predios analizados</div>
+        <div class="sub">base catastral GADMR</div>
+    </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main-layout">
+
+    <!-- Columna izquierda -->
+    <div class="side-panel">
+
+        <!-- Filtros -->
+        <div class="panel-card">
+            <div class="pc-header"><i class="fas fa-sliders-h"></i> Filtros de visualización</div>
+            <div class="pc-body">
+                <div class="filter-row">
+                    <label>Nivel de confianza mínimo</label>
+                    <input type="range" id="conf-slider" min="65" max="95" value="75" step="1"
+                           oninput="document.getElementById('conf-val').textContent = (this.value/100).toFixed(2)">
+                    <div class="conf-display">
+                        <span>0.65 (mín)</span>
+                        <span id="conf-val">0.75</span>
+                        <span>0.95 (máx)</span>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <label>Nivel de alerta</label>
+                    <select id="nivel-filter">
+                        <option value="TODOS">Todos los niveles</option>
+                        <option value="ALTO">Solo ALTO (≥ 0.85)</option>
+                        <option value="MEDIO">Solo MEDIO (0.75-0.85)</option>
+                        <option value="BAJO">Solo BAJO (0.65-0.75)</option>
+                    </select>
+                </div>
+                <div class="filter-row">
+                    <label>Área mínima de construcción (m²)</label>
+                    <input type="range" id="area-slider" min="10" max="500" value="10" step="10"
+                           oninput="document.getElementById('area-val').textContent = this.value + ' m²'">
+                    <div class="conf-display">
+                        <span>10 m²</span>
+                        <span id="area-val">10 m²</span>
+                        <span>500 m²</span>
+                    </div>
+                </div>
+                <button class="btn-aplicar" onclick="aplicarFiltros()">
+                    <i class="fas fa-filter"></i> Aplicar filtros
+                </button>
+                <div style="margin-top:10px; font-size:.77rem; color:var(--gris-medio); text-align:center">
+                    Mostrando <strong id="count-visible">—</strong> construcciones
+                </div>
+            </div>
+        </div>
+
+        <!-- Leyenda -->
+        <div class="panel-card">
+            <div class="pc-header"><i class="fas fa-map-legend"></i> Leyenda</div>
+            <div class="pc-body">
+                <div class="legend-item"><div class="dot" style="background:#C0392B"></div> Construcción IA — Alta confianza (≥0.85)</div>
+                <div class="legend-item"><div class="dot" style="background:#E67E22"></div> Construcción IA — Confianza media (0.75-0.85)</div>
+                <div class="legend-item"><div class="dot" style="background:#F1C40F"></div> Construcción IA — Confianza normal (&lt;0.75)</div>
+                <div class="legend-item"><div class="dot" style="background:#2980B9;opacity:.5;border:2px solid #2980B9"></div> Predio sin construcción declarada</div>
+                <hr style="border:none;border-top:1px solid #eee;margin:8px 0">
+                <div style="font-size:.74rem; color:var(--gris-medio)">
+                    Haz clic en cualquier elemento del mapa para ver su detalle.
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de selección -->
+        <div class="panel-card" id="detail-card" style="display:none">
+            <div class="pc-header"><i class="fas fa-info-circle"></i> Detalle de construcción</div>
+            <div class="pc-body" id="feature-panel"></div>
+        </div>
+
+        <!-- Metodología -->
+        <div class="panel-card">
+            <div class="pc-header"><i class="fas fa-flask"></i> Metodología</div>
+            <div class="pc-body">
+                <div class="metodo-grid">
+                    <div class="metodo-item">
+                        <strong>Fuente IA</strong>Google Open Buildings — detección ML de huellas de construcción.
+                    </div>
+                    <div class="metodo-item">
+                        <strong>Base catastral</strong>Predios GADMR con campo <code>sup_cons_c</code> = 0 (sin declaración).
+                    </div>
+                    <div class="metodo-item">
+                        <strong>Análisis</strong>Point-in-polygon: centroide IA vs polígono predio.
+                    </div>
+                    <div class="metodo-item">
+                        <strong>Criterio</strong>Se retienen coincidencias con umbral de confianza configurable.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mapa -->
+    <div style="position:relative">
+        <div id="map"></div>
+        <div class="basemap-ctrl">
+            <button class="bm-btn active" onclick="setBasemap('carto')" id="bm-carto"><i class="fas fa-map"></i> Mapa</button>
+            <button class="bm-btn" onclick="setBasemap('satelite')" id="bm-satelite"><i class="fas fa-satellite"></i> Satélite</button>
+            <button class="bm-btn" onclick="setBasemap('hibrido')" id="bm-hibrido"><i class="fas fa-layer-group"></i> Híbrido</button>
+            <button class="bm-btn" onclick="setBasemap('osm')" id="bm-osm"><i class="fas fa-road"></i> Calles</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Nota metodológica -->
+<div class="nota-footer">
+    <p><i class="fas fa-exclamation-triangle"></i> <strong>Nota:</strong> Este análisis es de carácter investigativo y no constituye un acto administrativo. Los resultados deben ser verificados en campo y contrastados con la documentación legal de cada predio. La detección por IA puede presentar falsos positivos especialmente en zonas de vegetación densa o estructuras no habitacionales.</p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── Estado global ────────────────────────────────────────────────────────────
+let noRegistradasData = null;
+let prediosData = null;
+let layerNR = null;
+let layerPredios = null;
+const CANVAS = L.canvas({ padding: 0.5 });
+const map = L.map('map', { center: [-1.6716, -78.6480], zoom: 13, zoomControl: true, preferCanvas: true });
+
+// ── Basemaps ─────────────────────────────────────────────────────────────────
+const BASEMAPS = {
+    carto: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CARTO', maxZoom: 20
+    }),
+    satelite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles © Esri — Source: Esri, USGS, NOAA', maxZoom: 20
+    }),
+    hibrido: L.layerGroup([
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri', maxZoom: 20
+        }),
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri', maxZoom: 20, opacity: 0.8
+        })
+    ]),
+    osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors', maxZoom: 19
+    })
+};
+
+let activeBasemap = BASEMAPS.carto;
+BASEMAPS.carto.addTo(map);
+
+function setBasemap(key) {
+    map.removeLayer(activeBasemap);
+    activeBasemap = BASEMAPS[key];
+    activeBasemap.addTo(map);
+    // Asegurar capas de datos encima del basemap
+    if (layerPredios) layerPredios.bringToFront();
+    if (layerNR) layerNR.bringToFront();
+    // Actualizar botones
+    ['carto','satelite','hibrido','osm'].forEach(k => {
+        document.getElementById('bm-' + k).classList.toggle('active', k === key);
+    });
+}
+
+// ── Utilidades ───────────────────────────────────────────────────────────────
+function setLoading(msg, pct) {
+    document.getElementById('loading-msg').textContent = msg;
+    document.getElementById('loading-bar').style.width = pct + '%';
+}
+
+function colorNivel(nivel) {
+    return nivel === 'ALTO' ? '#C0392B' : nivel === 'MEDIO' ? '#E67E22' : '#F1C40F';
+}
+
+function fmt(n) { return Number(n).toLocaleString('es-EC'); }
+
+function mostrarDetalle(p) {
+    const card = document.getElementById('detail-card');
+    const panel = document.getElementById('feature-panel');
+    card.style.display = 'block';
+    panel.innerHTML = `
+        <div class="fp-title"><i class="fas fa-building"></i> Construcción #${p.fid}</div>
+        <div class="fp-row"><span>Confianza IA</span><span>${(p.confidence*100).toFixed(1)}%</span></div>
+        <div class="fp-row"><span>Nivel de alerta</span><span><span class="nivel-badge nivel-${p.nivel}">${p.nivel}</span></span></div>
+        <div class="fp-row"><span>Área estimada</span><span>${fmt(p.area_m2)} m²</span></div>
+        <hr style="border:none;border-top:1px solid #eee;margin:6px 0">
+        <div class="fp-title" style="font-size:.82rem;margin-top:4px"><i class="fas fa-map-marker-alt"></i> Predio catastral</div>
+        <div class="fp-row"><span>Clave catastral</span><span>${p.clave_catastral || '—'}</span></div>
+        <div class="fp-row"><span>GIS Predio</span><span>${p.gis_predio || '—'}</span></div>
+        <div class="fp-row"><span>Propietario</span><span>${p.propietario || '—'}</span></div>
+        <div class="fp-row"><span>Sup. predio</span><span>${fmt(p.sup_predio_m2)} m²</span></div>
+        <div class="fp-row"><span>Sup. cons. declarada</span><span>${fmt(p.sup_cons_catastro)} m²</span></div>
+        <div class="fp-row"><span>Avalúo catastral</span><span>$ ${fmt(p.avaluo)}</span></div>
+        <div class="fp-row"><span>Plus Code</span><span style="font-size:.7rem">${p.plus_code || '—'}</span></div>`;
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Renderizado con filtros ──────────────────────────────────────────────────
+function aplicarFiltros() {
+    if (!noRegistradasData) return;
+
+    const confMin = parseFloat(document.getElementById('conf-slider').value) / 100;
+    const nivelF = document.getElementById('nivel-filter').value;
+    const areaMin = parseFloat(document.getElementById('area-slider').value);
+
+    const filtradas = noRegistradasData.features.filter(f => {
+        const p = f.properties;
+        if (p.confidence < confMin) return false;
+        if (nivelF !== 'TODOS' && p.nivel !== nivelF) return false;
+        if (p.area_m2 < areaMin) return false;
+        return true;
+    });
+
+    document.getElementById('count-visible').textContent = fmt(filtradas.length);
+
+    if (layerNR) map.removeLayer(layerNR);
+
+    layerNR = L.geoJSON({ type: 'FeatureCollection', features: filtradas }, {
+        renderer: CANVAS,
+        style: f => ({
+            fillColor: colorNivel(f.properties.nivel),
+            fillOpacity: 0.75,
+            color: '#fff',
+            weight: 0.5
+        }),
+        onEachFeature: (feature, layer) => {
+            layer.on('click', () => mostrarDetalle(feature.properties));
+            layer.bindTooltip(
+                `<b>${feature.properties.nivel}</b> — ${(feature.properties.confidence*100).toFixed(0)}% confianza<br>${feature.properties.area_m2} m² | ${feature.properties.clave_catastral}`,
+                { sticky: true, className: 'leaflet-tooltip-nr' }
+            );
+        }
+    }).addTo(map);
+}
+
+// ── Carga de datos ───────────────────────────────────────────────────────────
+async function cargarDatos() {
+    try {
+        // Stats
+        setLoading('Cargando estadísticas...', 10);
+        const statsR = await fetch('stats.json');
+        const stats = await statsR.json();
+
+        // KPIs
+        document.getElementById('kpi-nr').textContent = fmt(stats.resultados.no_registradas);
+        document.getElementById('kpi-alto').textContent = fmt(stats.resultados.por_nivel.ALTO);
+        document.getElementById('kpi-medio').textContent = fmt(stats.resultados.por_nivel.MEDIO);
+        document.getElementById('kpi-predios').textContent = fmt(stats.resultados.predios_afectados);
+        document.getElementById('kpi-area').textContent = fmt(Math.round(stats.resultados.area_total_estimada_m2 / 1000)) + ' K m²';
+        document.getElementById('kpi-total-pred').textContent = fmt(stats.predios.total);
+
+        // Predios afectados
+        setLoading('Cargando predios afectados...', 35);
+        const prediosR = await fetch('predios_afectados.geojson');
+        prediosData = await prediosR.json();
+
+        layerPredios = L.geoJSON(prediosData, {
+            renderer: CANVAS,
+            style: {
+                fillColor: '#2980B9',
+                fillOpacity: 0.12,
+                color: '#2980B9',
+                weight: 1.2
+            },
+            onEachFeature: (feature, layer) => {
+                layer.bindTooltip(
+                    `<b>Predio:</b> ${feature.properties.clave || '—'}<br>Sup: ${feature.properties.sup_pred_m2} m²`,
+                    { sticky: true }
+                );
+            }
+        }).addTo(map);
+
+        // Construcciones no registradas
+        setLoading('Cargando construcciones detectadas...', 65);
+        const nrR = await fetch('no_registradas.geojson');
+        noRegistradasData = await nrR.json();
+
+        setLoading('Renderizando mapa...', 90);
+        aplicarFiltros();
+
+        // Control de capas
+        const overlays = {
+            '<span style="color:#2980B9;font-weight:600">Predios sin declaración</span>': layerPredios,
+            '<span style="color:#C0392B;font-weight:600">Construcciones no registradas</span>': layerNR
+        };
+        L.control.layers(null, overlays, { collapsed: false, position: 'topright' }).addTo(map);
+
+        // Escala
+        L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+
+        setLoading('Listo', 100);
+        await new Promise(r => setTimeout(r, 400));
+        document.getElementById('loading').style.display = 'none';
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.getElementById('loading-bar-wrap').style.display = 'none';
+        document.getElementById('loading-msg').style.display = 'none';
+        document.getElementById('loading-error-msg').textContent = err.message || String(err);
+        document.getElementById('loading-error').style.display = 'block';
+    }
+}
+
+cargarDatos();
+</script>
+</body>
+</html>
