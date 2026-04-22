@@ -13,6 +13,14 @@ GEOVISOR CAECH.html
 DATA SET/
 ENLACES GEOPORTALES/
 
+# RESEARCH - datos crudos pesados (>50MB, no necesarios en producción)
+RESEARCH/CONSTRUCCIONES DETECTADAS POR IA.geojson
+RESEARCH/PREDIOS PRIVADOS RESEARCH .geojson
+RESEARCH/Google buildings.qgz
+RESEARCH/CONSTRUCCIONES DETECTADAS POR IA.qmd
+RESEARCH/PUGS Urbano Research.geojson
+RESEARCH/preprocess.js
+
 # Logs
 *.log
 npm-debug.log*
