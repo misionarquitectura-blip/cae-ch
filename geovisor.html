@@ -3806,6 +3806,19 @@
             // lo atraviesa. Divide el predio en dos mitades con un semiplano y
             // devuelve el área de la mitad menor (= zona afectada).
             // ─────────────────────────────────────────────────────────────────
+            // ─────────────────────────────────────────────────────────────────
+            // Calcula el área del predio que queda entre la calle y la línea
+            // de fábrica (franja de retiro/reserva vial).
+            //
+            // Estrategia:
+            //   1. Cortar el predio con un semiplano definido por la LF y su
+            //      normal → se obtienen dos sub-áreas (area1, area2).
+            //   2. Detectar de qué lado de la LF está la calle más cercana
+            //      (capa 7 Vialidad). El lado-calle es la afectación real.
+            //   3. Si la capa de Vialidad no está disponible o no hay vía a
+            //      una distancia razonable, fallback heurístico al lado de
+            //      menor área (asumiendo que el retiro es el pedazo chico).
+            // ─────────────────────────────────────────────────────────────────
             function calcularAreaBajoLineaFabrica(predioGeoJSON, lineaFeat) {
                 try {
                     let coords;
@@ -3825,12 +3838,11 @@
                     const len = Math.sqrt(dx * dx + dy * dy);
                     if (len < 1e-10) return null;
 
-                    // Vector normal unitario (perpendicular a la línea)
+                    // Vector normal unitario (perpendicular a la LF)
                     const nx = -dy / len, ny = dx / len;
                     const bigDist = 0.05;   // ~5 km en grados
                     const extFactor = 10;   // extender la línea 10x su longitud
 
-                    // Extremos extendidos de la línea
                     const ex0 = [x0 - dx * extFactor, y0 - dy * extFactor];
                     const ex1 = [x1 + dx * extFactor, y1 + dy * extFactor];
 
@@ -3848,8 +3860,48 @@
                     const totalArea = turf.area(predioGeoJSON);
                     const area2 = totalArea - area1;
 
-                    // La mitad menor es la zona afectada (franja de reserva vial)
-                    const afectacion = Math.min(area1, area2);
+                    if (area1 < 0.01 && area2 < 0.01) return null;
+
+                    // ── Detectar lado calle usando capa 7 (Vialidad) ──
+                    let ladoCalle = null; // 'positivo' | 'negativo'
+                    if (geojsonLayers[7]) {
+                        try {
+                            const predioCentroid = turf.centroid(predioGeoJSON);
+                            const buffer80 = turf.buffer(predioGeoJSON, 0.08, { units: 'kilometers' });
+                            let bestDist = Infinity;
+                            let bestSign = 0;
+                            geojsonLayers[7].eachLayer(function (lyr) {
+                                if (!lyr.feature) return;
+                                try {
+                                    const vGeo = lyr.toGeoJSON();
+                                    if (!turf.booleanIntersects(buffer80, vGeo)) return;
+                                    const vc = turf.centroid(vGeo);
+                                    const d = turf.distance(predioCentroid, vc, { units: 'meters' });
+                                    if (d >= bestDist) return;
+                                    // Producto punto con la normal: signo = lado del semiplano
+                                    const px = vc.geometry.coordinates[0];
+                                    const py = vc.geometry.coordinates[1];
+                                    const dot = (px - x0) * nx + (py - y0) * ny;
+                                    if (Math.abs(dot) < 1e-12) return; // exactamente sobre la LF, ignorar
+                                    bestDist = d;
+                                    bestSign = dot;
+                                } catch (e) { }
+                            });
+                            if (bestDist < Infinity) {
+                                ladoCalle = bestSign > 0 ? 'positivo' : 'negativo';
+                            }
+                        } catch (e) { }
+                    }
+
+                    let afectacion;
+                    if (ladoCalle === 'positivo') {
+                        afectacion = area1;
+                    } else if (ladoCalle === 'negativo') {
+                        afectacion = area2;
+                    } else {
+                        // Fallback heurístico: la franja chica suele ser el retiro
+                        afectacion = Math.min(area1, area2);
+                    }
                     return afectacion > 0.01 ? afectacion : null;
                 } catch (e) {
                     return null;
