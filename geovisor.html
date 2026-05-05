@@ -2659,8 +2659,382 @@
                         }
                     };
                     img.onerror = function () { clearTimeout(timeout); resolve(null); };
-                    img.src = 'LOGO/Logo Cae.jpg';
+                    img.src = 'LOGO/logo.jpg';
                 });
+            }
+
+            // ══════════════════════════════════════════════════════════════
+            // Generador de PDF DICAT del lado cliente (port directo de server.js).
+            // Reemplaza la dependencia del endpoint /api/generate-dicat para que
+            // el GeoVisor funcione en GitHub Pages (hosting estático).
+            // ══════════════════════════════════════════════════════════════
+            function buildDICATpdfClient(d, logoB64) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                const pw = doc.internal.pageSize.getWidth();
+                const ph = doc.internal.pageSize.getHeight();
+                const mg = 14;
+                let y = 0;
+
+                const {
+                    meta = {}, colindantes = {}, factibilidades = [], posteCercano,
+                    hasLayer3, afectacionVial, intersectionData = [], utmCoords = [],
+                    mapImage, activeLayers = [],
+                    nroInforme = '', fechaStr = '', vigenciaStr = ''
+                } = d;
+
+                const sectionHeader = (title, yy) => {
+                    doc.setFillColor(139, 0, 0);
+                    doc.rect(mg, yy, pw - mg * 2, 7, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(title, mg + 3, yy + 5);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    return yy + 10;
+                };
+                const checkSpace = (yy, needed) => {
+                    if (yy + needed > ph - mg) { doc.addPage(); return mg + 5; }
+                    return yy;
+                };
+                const at = (opts) => {
+                    doc.autoTable(opts);
+                    return doc.lastAutoTable ? doc.lastAutoTable.finalY + 6 : (opts.startY || 0) + 20;
+                };
+
+                // Cabecera institucional
+                doc.setFillColor(139, 0, 0);
+                doc.rect(0, 0, pw, 42, 'F');
+                if (logoB64) {
+                    try { doc.addImage(logoB64, 'JPEG', mg, 3, 26, 26); } catch (e) { }
+                }
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(13);
+                doc.setFont('helvetica', 'bold');
+                doc.text('COLEGIO DE ARQUITECTOS DEL ECUADOR', pw / 2, 10, { align: 'center' });
+                doc.text('NUCLEO CHIMBORAZO', pw / 2, 17, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('DIAGNOSTICO DE INFORMACION CATASTRAL Y TERRITORIAL - DICAT', pw / 2, 25, { align: 'center' });
+                doc.setFontSize(8);
+                doc.text('Plataforma Digital de Consulta Predial CAE-CH  caech.ec', pw / 2, 31, { align: 'center' });
+                doc.setFillColor(60, 0, 0);
+                doc.rect(0, 36, pw, 8, 'F');
+                doc.setFontSize(7.5);
+                doc.setTextColor(255, 220, 220);
+                doc.text(`Nro. ${nroInforme}`, mg, 41.5);
+                doc.text(`Emision: ${fechaStr}`, pw / 2, 41.5, { align: 'center' });
+                doc.text(`Vigencia: ${vigenciaStr}`, pw - mg, 41.5, { align: 'right' });
+                y = 50;
+                doc.setTextColor(0, 0, 0);
+
+                // Aviso beta
+                doc.setFillColor(255, 243, 205);
+                doc.setDrawColor(204, 153, 0);
+                doc.setLineWidth(0.4);
+                doc.rect(mg, y, pw - mg * 2, 22, 'FD');
+                doc.setTextColor(120, 80, 0);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8.5);
+                doc.text('AVISO IMPORTANTE - VERSION BETA', mg + 3, y + 5);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7.5);
+                doc.setTextColor(60, 40, 0);
+                const avisoTxt =
+                    'Este documento corresponde a un reporte automatizado en version beta y NO constituye acto administrativo ' +
+                    'alguno. La informacion presentada es un compendio de los shapes (capas geograficas) obtenidos de las ' +
+                    'distintas instituciones publicas y sus sistemas de gestion de datos, integrados con fines tecnico-informativos. ' +
+                    'Para tramites oficiales debe acudirse a las entidades competentes (GADMR, EERSA, Riobamba EP, CNT, etc.).';
+                doc.text(avisoTxt, mg + 3, y + 9, { maxWidth: pw - mg * 2 - 6 });
+                doc.setTextColor(0, 0, 0);
+                doc.setLineWidth(0.2);
+                y += 26;
+
+                // Sección 1
+                y = sectionHeader('1.  DATOS DEL PROPIETARIO / TITULAR', y);
+                y = at({
+                    startY: y,
+                    body: [
+                        ['Nombre / Razon social', meta.nombre || 'N/D'],
+                        ['Clave catastral principal', meta.clave || 'N/D'],
+                        ['Clave catastral auxiliar', meta.claveAux || 'N/D'],
+                        ['Clasificacion del predio', meta.tipoCatas || 'N/D'],
+                    ],
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 3 },
+                    columnStyles: { 0: { fontStyle: 'bold', fillColor: [248, 240, 240], cellWidth: 70 } },
+                    margin: { left: mg, right: mg },
+                });
+
+                // Sección 2
+                y = checkSpace(y, 45);
+                y = sectionHeader('2.  DATOS DEL PREDIO', y);
+                y = at({
+                    startY: y,
+                    body: [
+                        ['Area del predio', `${meta.areaCalc || 'N/D'} m2`, 'Perimetro', `${meta.perimCalc || 'N/D'} m`],
+                        ['Superficie construida', `${meta.supCons || 'N/D'} m2`, 'Avaluo catastral', meta.avaluo && meta.avaluo !== 'N/D' ? `$ ${meta.avaluo}` : 'N/D'],
+                        ['Sistema de referencia', 'WGS84 Zona 17S', 'Fuente', meta.fuente || 'Catastro GADMR'],
+                    ],
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 3 },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', fillColor: [248, 240, 240], cellWidth: 52 },
+                        1: { cellWidth: 40 },
+                        2: { fontStyle: 'bold', fillColor: [248, 240, 240], cellWidth: 52 },
+                        3: { cellWidth: 'auto' },
+                    },
+                    margin: { left: mg, right: mg },
+                });
+
+                // Sección 3 - Colindantes
+                y = checkSpace(y, 50);
+                y = sectionHeader('3.  COLINDANTES Y DIMENSIONES DE LINDEROS', y);
+                const colRows = [];
+                ['Norte', 'Sur', 'Este', 'Oeste'].forEach((dir) => {
+                    const lista = (colindantes[dir] || []);
+                    if (lista.length === 0) {
+                        colRows.push([dir, 'Sin colindante identificado', '-']);
+                    } else {
+                        lista.forEach((c, idx) => colRows.push([
+                            idx === 0 ? dir : '',
+                            c.nombre || 'Sin identificar',
+                            c.dim || '-',
+                        ]));
+                    }
+                });
+                y = at({
+                    startY: y,
+                    head: [['Orientacion', 'Propietario / Via colindante', 'Dimension lindero']],
+                    body: colRows,
+                    theme: 'striped',
+                    styles: { fontSize: 8.5, cellPadding: 3 },
+                    headStyles: { fillColor: [139, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', cellWidth: 22 },
+                        1: { cellWidth: 'auto' },
+                        2: { cellWidth: 34, halign: 'center' },
+                    },
+                    margin: { left: mg, right: mg },
+                });
+
+                // Sección 4 - Factibilidad
+                y = checkSpace(y, 55);
+                y = sectionHeader('4.  FACTIBILIDAD DE SERVICIOS E INFRAESTRUCTURA', y);
+                y = at({
+                    startY: y,
+                    head: [['Servicio / Infraestructura', 'Estado', 'Detalle']],
+                    body: factibilidades.map(f => [f.name || '', f.estado || '', f.detalle || '']),
+                    theme: 'grid',
+                    styles: { fontSize: 8.5, cellPadding: 3 },
+                    headStyles: { fillColor: [139, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { cellWidth: 62, fontStyle: 'bold' },
+                        1: { cellWidth: 30, halign: 'center', fontStyle: 'bold' },
+                        2: { cellWidth: 'auto' },
+                    },
+                    didParseCell(data) {
+                        if (data.column.index === 1 && data.section === 'body') {
+                            const f = factibilidades[data.row.index];
+                            if (f && f.color) data.cell.styles.textColor = f.color;
+                        }
+                    },
+                    margin: { left: mg, right: mg },
+                });
+
+                // Sección 4B - Poste eléctrico
+                if (hasLayer3) {
+                    y = checkSpace(y, 52);
+                    y = sectionHeader('4B.  ANALISIS DE PROXIMIDAD - POSTE ELECTRICO MAS CERCANO (EERSA)', y);
+                    if (posteCercano) {
+                        y = at({
+                            startY: y,
+                            head: [['Atributo', 'Valor']],
+                            body: [
+                                ['Codigo de estructura (ID unico)', posteCercano.codigoEstructura || 'N/D'],
+                                ['Descripcion tecnica', posteCercano.descripcionTecnica || 'N/D'],
+                                ['Potencia', posteCercano.potencia && posteCercano.potencia !== 'N/D' ? posteCercano.potencia + ' W' : 'N/D'],
+                                ['Secuencia de fase', posteCercano.secuenciaFase || 'N/D'],
+                                ['Distancia al centroide del predio', (posteCercano.distancia || 0) + ' m'],
+                            ],
+                            theme: 'grid',
+                            styles: { fontSize: 9, cellPadding: 3 },
+                            headStyles: { fillColor: [241, 196, 15], textColor: [0, 0, 0], fontStyle: 'bold' },
+                            columnStyles: {
+                                0: { fontStyle: 'bold', fillColor: [255, 253, 230], cellWidth: 82 },
+                                1: { cellWidth: 'auto' },
+                            },
+                            margin: { left: mg, right: mg },
+                        });
+                    } else {
+                        y = at({
+                            startY: y,
+                            body: [['No se encontro ningun poste electrico en el area de analisis.']],
+                            theme: 'plain',
+                            styles: { fontSize: 9, cellPadding: 3, textColor: [120, 120, 120] },
+                            margin: { left: mg, right: mg },
+                        });
+                    }
+                }
+
+                // Sección 4C - Afectación vial
+                y = checkSpace(y, 45);
+                y = sectionHeader('4C.  CATASTRO Y MOVILIDAD - AFECTACION POR LINEA DE FABRICA', y);
+                const tieneAfect = afectacionVial && afectacionVial.tieneAfectacion;
+                const areaAfect = afectacionVial ? (afectacionVial.areaAfectadaM2 || 0) : 0;
+                const textoAfect = tieneAfect
+                    ? 'SI – PREDIO CON AFECTACION VIAL DETECTADA'
+                    : (afectacionVial ? 'NO – SIN AFECTACION VIAL DETECTADA' : 'NO ANALIZADO – Capa de Lineas de Fabrica inactiva');
+                const colorAfect = tieneAfect ? [180, 30, 30] : [30, 130, 60];
+                const anchoVia = afectacionVial ? afectacionVial.anchoVia : null;
+                const anchoAcera = afectacionVial ? afectacionVial.anchoAcera : null;
+                const fuenteAncho = afectacionVial ? afectacionVial.fuenteAncho : null;
+                const filasAfect = [['Afectacion vial por linea de fabrica', textoAfect]];
+                if (tieneAfect && areaAfect > 0) {
+                    filasAfect.push(['Area afectada (reserva vial)', `${areaAfect.toFixed(2)} m²`]);
+                    filasAfect.push(['Observacion', 'El area indicada corresponde a la franja del predio comprendida entre la linea de fabrica y el limite del lote hacia la via. Esta zona no es edificable segun normativa municipal.']);
+                } else if (tieneAfect) {
+                    filasAfect.push(['Area afectada (reserva vial)', 'Geometria lineal – calculo de area no disponible']);
+                }
+                const fuenteLabel = fuenteAncho === 'calculado' ? ' (calculado perpendicularmente)'
+                    : fuenteAncho === 'atributos' ? ' (dato de tabla de atributos)' : '';
+                filasAfect.push(['Ancho de via', anchoVia != null ? `${anchoVia.toFixed(2)} m${fuenteLabel}` : 'No disponible en la zona del predio']);
+                filasAfect.push(['Ancho de acera', anchoAcera != null ? `${anchoAcera.toFixed(2)} m` : 'No disponible en la zona del predio']);
+                y = at({
+                    startY: y,
+                    body: filasAfect,
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak' },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', fillColor: [248, 240, 240], cellWidth: 82 },
+                        1: { cellWidth: 'auto' },
+                    },
+                    didParseCell(data) {
+                        if (data.column.index === 1 && data.row.index === 0 && data.section === 'body') {
+                            data.cell.styles.textColor = colorAfect;
+                            data.cell.styles.fontStyle = 'bold';
+                        }
+                    },
+                    margin: { left: mg, right: mg },
+                });
+
+                // Sección 5 - Regulaciones por capas activas
+                y = checkSpace(y, 40);
+                y = sectionHeader('5.  REGULACIONES E INFORMACION POR CAPAS ACTIVAS', y);
+                if (intersectionData && intersectionData.length > 0) {
+                    const avW = pw - mg * 2;
+                    y = at({
+                        head: [['Capa', 'Atributo', 'Valor']],
+                        body: intersectionData,
+                        startY: y,
+                        styles: { fontSize: 7, cellPadding: 1, overflow: 'linebreak', lineWidth: 0.1 },
+                        headStyles: { fillColor: [139, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold', lineWidth: 0.1 },
+                        columnStyles: {
+                            0: { cellWidth: 40 },
+                            1: { cellWidth: 35 },
+                            2: { cellWidth: avW - 77, overflow: 'linebreak' },
+                        },
+                        margin: { left: mg, right: mg },
+                        tableWidth: avW,
+                        theme: 'grid',
+                    });
+                } else {
+                    doc.setFontSize(9);
+                    doc.text('No hay capas activas para mostrar.', mg, y + 8);
+                    y += 18;
+                }
+
+                // Sección 6 - Coordenadas UTM
+                doc.addPage();
+                y = mg;
+                y = sectionHeader('6.  VERTICES DEL PREDIO - COORDENADAS UTM WGS84 ZONA 17S', y);
+                if (utmCoords && utmCoords.length > 0) {
+                    doc.setFontSize(12);
+                    doc.setTextColor(139, 0, 0);
+                    doc.text('Coordenadas UTM del Predio (WGS84 Zona 17S)', pw / 2, y, { align: 'center' });
+                    doc.setFontSize(9);
+                    doc.setTextColor(0, 0, 0);
+                    y = at({
+                        head: [['PT', 'X (Este)', 'Y (Norte)']],
+                        body: utmCoords.map((c, i) => [
+                            String(i + 1),
+                            ((c.easting || c.x || 0)).toFixed(4),
+                            ((c.northing || c.y || 0)).toFixed(4),
+                        ]),
+                        startY: y + 5,
+                        styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+                        headStyles: { fillColor: [139, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+                        columnStyles: { 0: { cellWidth: 15 }, 1: { cellWidth: 40 }, 2: { cellWidth: 40 } },
+                        margin: { left: mg, right: mg, top: 5 },
+                        tableWidth: pw - mg * 2,
+                    });
+                } else {
+                    doc.setFontSize(9);
+                    doc.text('No hay coordenadas UTM disponibles.', mg, y);
+                    y += 12;
+                }
+
+                // Sección 7 - Mapa
+                y = checkSpace(y, 80);
+                y = sectionHeader('7.  REPRESENTACION GRAFICA DEL PREDIO', y);
+                if (mapImage) {
+                    try {
+                        const imgData = mapImage.startsWith('data:') ? mapImage : `data:image/jpeg;base64,${mapImage}`;
+                        const imgW = pw - mg * 2;
+                        const imgH = Math.min(100, ph - y - 40);
+                        y = checkSpace(y, imgH + 20);
+                        doc.addImage(imgData, 'JPEG', mg, y, imgW, imgH);
+                        y += imgH + 5;
+                        doc.setFontSize(8);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text('Leyenda:', mg, y);
+                        y += 5;
+                        doc.setFillColor(139, 0, 0);
+                        doc.rect(mg, y, 3, 3, 'F');
+                        doc.text('Predio consultado', mg + 6, y + 2);
+                        let lx = mg + 55;
+                        let lrow = 0;
+                        (activeLayers || []).forEach((lyr) => {
+                            if (lrow >= 2) { y += 7; lx = mg; lrow = 0; }
+                            const hex = (lyr.color || '#888888').replace('#', '');
+                            const r = parseInt(hex.slice(0, 2), 16) || 128;
+                            const g = parseInt(hex.slice(2, 4), 16) || 128;
+                            const b = parseInt(hex.slice(4, 6), 16) || 128;
+                            doc.setFillColor(r, g, b);
+                            doc.rect(lx, y, 3, 3, 'F');
+                            doc.text(String(lyr.name || ''), lx + 5, y + 2);
+                            lx += 75;
+                            lrow++;
+                        });
+                    } catch (imgErr) {
+                        doc.setFontSize(9);
+                        doc.text('Imagen del mapa no disponible.', mg, y);
+                        y += 10;
+                    }
+                } else {
+                    doc.setFontSize(9);
+                    doc.text('Representacion grafica no disponible en este modo.', mg, y);
+                    y += 10;
+                }
+
+                // Pie de página
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let pg = 1; pg <= totalPages; pg++) {
+                    doc.setPage(pg);
+                    doc.setFillColor(248, 240, 240);
+                    doc.rect(0, ph - 14, pw, 14, 'F');
+                    doc.setFontSize(6.5);
+                    doc.setTextColor(100, 0, 0);
+                    doc.text(
+                        'El DICAT es un documento tecnico-informativo emitido por el CAE-CH. No reemplaza documentos oficiales del GADMR. Informacion catastral: Catastro GADMR.',
+                        pw / 2, ph - 8, { align: 'center', maxWidth: pw - mg * 2 }
+                    );
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(`Pag. ${pg} / ${totalPages}  -  ${nroInforme}  -  CAE-CH Plataforma Digital`, pw / 2, ph - 3, { align: 'center' });
+                }
+
+                return doc;
             }
 
             async function generarDICAT(props) {
@@ -2757,7 +3131,7 @@
                     }
 
                     // ── Enviar al servidor Ubuntu para generar el PDF ──────
-                    showProgressBar('Generando PDF en el servidor...');
+                    showProgressBar('Generando PDF...');
                     const reportData = {
                         filePrefix,
                         nroInforme,
@@ -2779,7 +3153,10 @@
                         activeLayers
                     };
 
-                    throw new Error('La generación del reporte DICAT en PDF está disponible únicamente en la instalación local del GeoVisor CAE-CH. Contacte al administrador para acceder a esta función.');
+                    const logoB64 = await cargarLogoBase64();
+                    const doc = buildDICATpdfClient(reportData, logoB64);
+                    showProgressBar('Descargando PDF...');
+                    doc.save(`${filePrefix}_${fechaHoy.toISOString().slice(0, 10)}.pdf`);
 
                 } catch (err) {
                     console.error('Error generando DICAT:', err);
