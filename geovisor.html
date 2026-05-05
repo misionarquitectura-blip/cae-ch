@@ -1,0 +1,4373 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAE-CH | Geovisor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --rojo-oscuro: #8B0000;
+            --rojo-medio: #A52A2A;
+            --gris-oscuro: #2F2F2F;
+            --gris-medio: #5A5A5A;
+            --gris-claro: #F5F5F5;
+            --blanco: #FFFFFF;
+            --blanco-primario: #FFFFFF;
+            --blanco-secundario: #F0F0F0;
+            --blanco-terciario: #E0E0E0;
+        }
+
+        body {
+            background-color: var(--gris-claro);
+            color: var(--gris-oscuro);
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Spinner de progreso circular */
+        .progress-spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .progress-spinner-overlay.active {
+            display: flex;
+        }
+
+        .spinner-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .spinner {
+            width: 120px;
+            height: 120px;
+            border: 8px solid rgba(255, 255, 255, 0.2);
+            border-top: 8px solid var(--rojo-oscuro);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .spinner-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: white;
+        }
+
+        .spinner-text {
+            color: white;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Header y navegación */
+        header {
+            background-color: var(--blanco);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--rojo-oscuro);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 25px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gris-oscuro);
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        .nav-links a:hover {
+            color: var(--rojo-oscuro);
+        }
+
+        .nav-link-principal {
+            color: var(--rojo-oscuro) !important;
+            font-weight: 600 !important;
+            border: 1.5px solid var(--rojo-oscuro);
+            border-radius: 4px;
+            padding: 4px 10px !important;
+        }
+        .nav-link-principal:hover {
+            background-color: var(--rojo-oscuro) !important;
+            color: var(--blanco) !important;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--rojo-oscuro);
+            color: var(--blanco-primario);
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background-color: var(--rojo-medio);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 2px solid var(--blanco-primario);
+            color: var(--blanco-primario);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--rojo-oscuro);
+            color: var(--rojo-oscuro);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--rojo-oscuro);
+            color: var(--blanco-primario);
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        /* Hero section */
+        .hero {
+            padding: 120px 0;
+            background: linear-gradient(135deg, var(--rojo-oscuro) 0%, var(--gris-oscuro) 100%);
+            color: var(--blanco-primario);
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 15px;
+            color: var(--blanco-primario);
+            line-height: 1.2;
+        }
+
+        .hero h2 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: var(--blanco-primario);
+            line-height: 1.3;
+        }
+
+        .hero p {
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto 35px;
+            color: var(--blanco-secundario);
+            line-height: 1.5;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--blanco-primario);
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: var(--blanco-secundario);
+        }
+
+        /* Sección de Geovisor */
+        .geovisor-section {
+            display: block;
+            padding: 0;
+            background-color: var(--gris-oscuro);
+        }
+
+        .geovisor-section.active {
+            display: block;
+        }
+
+        .geovisor-container {
+            display: flex;
+            height: 80vh;
+            position: relative;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #geovisor-map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .geovisor-sidebar {
+            width: 350px;
+            background-color: var(--blanco);
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--gris-claro);
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .sidebar-tab.active {
+            background-color: var(--blanco);
+            border-bottom: 3px solid var(--rojo-oscuro);
+            color: var(--rojo-oscuro);
+        }
+
+        .tab-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .layer-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .layer-item:last-child {
+            border-bottom: none;
+        }
+
+        .layer-checkbox {
+            margin-right: 10px;
+        }
+
+        .layer-info {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .layer-name {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .layer-source {
+            font-size: 12px;
+            color: var(--gris-medio);
+        }
+
+        .layer-source:hover {
+            color: var(--rojo-oscuro);
+            text-decoration: underline;
+        }
+
+        .layer-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .layer-action {
+            background: none;
+            border: none;
+            color: var(--gris-medio);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .layer-action:hover {
+            color: var(--rojo-oscuro);
+        }
+
+        .layer-proximamente {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .badge-proximamente {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--blanco);
+            background-color: var(--gris-medio);
+            border-radius: 3px;
+            padding: 1px 5px;
+            vertical-align: middle;
+            margin-left: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        .coordinates-form {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--gris-oscuro);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            color: var(--gris-oscuro);
+        }
+
+        .coordinates-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .coordinates-row .form-group {
+            flex: 1;
+        }
+
+        .property-info {
+            background-color: var(--gris-claro);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-label {
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: var(--gris-medio);
+        }
+
+        .pdf-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+        }
+
+        /* Controles del mapa */
+        .map-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 800;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-control {
+            background-color: var(--blanco);
+            border: none;
+            border-radius: 4px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: var(--gris-oscuro);
+            transition: all 0.2s;
+        }
+
+        .map-control:hover {
+            background-color: var(--gris-claro);
+            transform: scale(1.05);
+        }
+
+        /* Control de capas base */
+        .base-layer-control {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            z-index: 800;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .base-layer-btn {
+            background-color: var(--blanco);
+            border: none;
+            border-radius: 4px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: var(--gris-oscuro);
+            transition: all 0.2s;
+        }
+
+        .base-layer-btn:hover {
+            background-color: var(--gris-claro);
+            transform: scale(1.05);
+        }
+
+        .base-layer-btn.active {
+            background-color: var(--rojo-oscuro);
+            color: var(--blanco);
+        }
+
+        /* Panel de búsqueda catastral en sidebar */
+        .search-panel {
+            padding: 12px;
+            background: var(--blanco);
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .search-panel-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gris-medio);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 36px 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            border-color: var(--rojo-oscuro);
+            box-shadow: 0 0 0 2px rgba(139,0,0,0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gris-medio);
+            pointer-events: none;
+            font-size: 13px;
+        }
+
+        .search-results {
+            display: none;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 4px;
+            max-height: 240px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10;
+            position: relative;
+        }
+
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            line-height: 1.4;
+        }
+
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background-color: #fff5f5; }
+
+        .search-result-item.search-no-results {
+            color: var(--gris-medio);
+            cursor: default;
+            font-style: italic;
+        }
+
+        .search-result-item.search-no-results:hover { background: white; }
+
+        /* Panel de predio seleccionado */
+        .predio-panel {
+            background: #fff9f9;
+            border-bottom: 2px solid var(--rojo-oscuro);
+            padding: 12px;
+        }
+
+        .predio-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .predio-panel-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--rojo-oscuro);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .predio-panel-close {
+            background: none;
+            border: none;
+            color: var(--gris-medio);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .predio-panel-close:hover { color: var(--rojo-oscuro); }
+
+        .predio-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .predio-data-table td {
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+
+        .predio-data-table tr:nth-child(even) td { background: #f5f5f5; }
+
+        .predio-data-table td:first-child {
+            font-weight: 600;
+            color: var(--gris-medio);
+            width: 42%;
+            white-space: nowrap;
+        }
+
+        .btn-generar-informe {
+            width: 100%;
+            padding: 9px;
+            background: var(--rojo-oscuro);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-generar-informe:hover { background: var(--rojo-medio); }
+        .btn-generar-informe:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Estilos para múltiples coordenadas */
+        .coordinates-container {
+            margin-bottom: 15px;
+        }
+
+        .coordinate-group {
+            background-color: var(--gris-claro);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .coordinate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .coordinate-title {
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--gris-medio);
+        }
+
+        .remove-coordinate {
+            background: none;
+            border: none;
+            color: var(--rojo-oscuro);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .coordinates-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .coordinates-status {
+            font-size: 12px;
+            color: var(--gris-medio);
+            margin-bottom: 10px;
+        }
+
+        /* Modal para cargar CSV */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background-color: var(--blanco);
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gris-oscuro);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--gris-medio);
+        }
+
+        .modal-close:hover {
+            color: var(--rojo-oscuro);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .file-input-container {
+            margin-bottom: 15px;
+        }
+
+        .file-input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .file-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--gris-medio);
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            background-color: var(--gris-claro);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .file-input:hover {
+            border-color: var(--rojo-oscuro);
+        }
+
+        .csv-preview {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: var(--gris-claro);
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        /* Secciones de contenido */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-dark {
+            background-color: var(--gris-oscuro);
+            color: var(--blanco-secundario);
+        }
+
+        .section-light {
+            background-color: var(--gris-claro);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-size: 36px;
+            margin-bottom: 15px;
+            color: var(--gris-oscuro);
+        }
+
+        .section-dark .section-title h2 {
+            color: var(--blanco-primario);
+        }
+
+        .section-title p {
+            color: var(--gris-medio);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section-dark .section-title p {
+            color: var(--blanco-secundario);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--gris-oscuro);
+            color: var(--blanco-secundario);
+            padding: 50px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h4 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: var(--blanco-primario);
+        }
+
+        .footer-column p {
+            color: var(--blanco-secundario);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: var(--blanco-terciario);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--blanco-primario);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+            color: var(--blanco-terciario);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .nav-links li {
+                margin-left: 20px;
+            }
+
+            .nav-links a {
+                font-size: 14px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero h2 {
+                font-size: 24px;
+            }
+
+            .geovisor-sidebar {
+                width: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 80px 0;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero h2 {
+                font-size: 22px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .geovisor-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .geovisor-sidebar {
+                width: 100%;
+                height: 400px;
+                border-left: none;
+                border-top: 1px solid #ddd;
+            }
+
+            .map-controls {
+                left: 20px;
+                bottom: 10px;
+            }
+
+            .base-layer-control {
+                top: 70px;
+                left: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .hero h2 {
+                font-size: 20px;
+            }
+
+            .hero p {
+                font-size: 15px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            .sidebar-tabs {
+                flex-direction: column;
+            }
+
+            .sidebar-tab {
+                padding: 10px;
+            }
+
+            .map-controls {
+                left: 10px;
+                bottom: 10px;
+            }
+
+            .base-layer-control {
+                top: 70px;
+                left: 10px;
+            }
+        }
+
+        /* Contenedor para visualización de shapes */
+        #shapes-visualization-container {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 800px;
+            height: 600px;
+            z-index: 10000;
+            opacity: 1;
+            pointer-events: none;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #shapes-visualization {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Barra de progreso -->
+    <div class="progress-bar-container" id="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <div class="logo-text">CAE-CH</div>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#geovisor" id="geovisor-link">Geovisor</a></li>
+                    <li><a href="WEB CAE CH.html" class="nav-link-principal"><i class="fas fa-arrow-left"></i> Sitio Principal</a></li>
+                </ul>
+                <div class="nav-buttons">
+                    <a href="#" class="btn btn-outline" id="login-btn">Iniciar Sesión</a>
+                    <a href="#" class="btn" id="register-btn">Registrarse</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+
+    <!-- Sección de Geovisor -->
+    <section class="geovisor-section" id="geovisor">
+        <div class="geovisor-container">
+            <!-- Controles del mapa -->
+            <div class="map-controls">
+                <button class="map-control" id="zoom-in" title="Acercar">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="map-control" id="zoom-out" title="Alejar">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="map-control" id="reset-view" title="Restablecer vista">
+                    <i class="fas fa-home"></i>
+                </button>
+                <button class="map-control" id="locate-me" title="Mi ubicación">
+                    <i class="fas fa-location-arrow"></i>
+                </button>
+            </div>
+
+            <!-- Control de capas base -->
+            <div class="base-layer-control">
+                <button class="base-layer-btn active" id="base-street" title="Mapa Callejero">
+                    <i class="fas fa-map"></i>
+                </button>
+                <button class="base-layer-btn" id="base-satellite" title="Vista Satelital">
+                    <i class="fas fa-satellite"></i>
+                </button>
+                <button class="base-layer-btn" id="base-hybrid" title="Vista Híbrida">
+                    <i class="fas fa-layer-group"></i>
+                </button>
+            </div>
+
+            <!-- Mapa -->
+            <div class="map-container">
+                <div id="geovisor-map"></div>
+            </div>
+
+            <!-- Panel lateral -->
+            <div class="geovisor-sidebar">
+
+                <!-- Búsqueda catastral -->
+                <div class="search-panel">
+                    <div class="search-panel-label"><i class="fas fa-search"></i> Búsqueda catastral</div>
+                    <div class="search-input-wrapper">
+                        <input type="text" class="search-input" id="catastro-search" placeholder="Clave catastral o nombre del propietario..." autocomplete="off">
+                        <span class="search-icon"><i class="fas fa-search"></i></span>
+                    </div>
+                    <div class="search-results" id="search-results"></div>
+                </div>
+
+                <!-- Panel de predio seleccionado -->
+                <div class="predio-panel" id="predio-panel" style="display:none">
+                    <div class="predio-panel-header">
+                        <span class="predio-panel-title"><i class="fas fa-map-marker-alt"></i> Predio seleccionado</span>
+                        <button class="predio-panel-close" onclick="clearPredioSelection()" title="Limpiar selección">✕</button>
+                    </div>
+                    <table class="predio-data-table" id="predio-data-table"></table>
+                    <button class="btn-generar-informe" id="btn-generar-informe" onclick="generarInformePredio()">
+                        <i class="fas fa-file-pdf"></i> Generar DICAT
+                    </button>
+                </div>
+
+                <div class="sidebar-tabs">
+                    <div class="sidebar-tab active" data-tab="layers">Capas</div>
+                    <div class="sidebar-tab" data-tab="coordinates">Coordenadas</div>
+                    <div class="sidebar-tab" data-tab="info">Información</div>
+                </div>
+
+                <div class="tab-content">
+                    <!-- Panel de Capas -->
+                    <div class="tab-pane active" id="layers-pane">
+                        <h3>Capas Disponibles</h3>
+                        <ul class="layer-list">
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-1">
+                                <div class="layer-info" data-layer="1">
+                                    <div class="layer-name">PUGS Urbano</div>
+                                    <div class="layer-source" id="layer-1-source">GADMR – Gobierno Autónomo Descentralizado del cantón Riobamba</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="1">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-2">
+                                <div class="layer-info" data-layer="2">
+                                    <div class="layer-name">PUGS Rural</div>
+                                    <div class="layer-source" id="layer-2-source">GADMR – Gobierno Autónomo Descentralizado del cantón Riobamba</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="2">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-3">
+                                <div class="layer-info" data-layer="3">
+                                    <div class="layer-name">Infraestructura Eléctrica</div>
+                                    <div class="layer-source" id="layer-3-source">EERSA – Empresa Eléctrica Riobamba S.A.</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="3">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item layer-proximamente">
+                                <input type="checkbox" class="layer-checkbox" id="layer-4" disabled>
+                                <div class="layer-info" data-layer="4">
+                                    <div class="layer-name">Agua Potable y Alcantarillado <span class="badge-proximamente">Próximamente</span></div>
+                                    <div class="layer-source" id="layer-4-source">Riobamba EP</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="4">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item layer-proximamente">
+                                <input type="checkbox" class="layer-checkbox" id="layer-5" disabled>
+                                <div class="layer-info" data-layer="5">
+                                    <div class="layer-name">Cobertura Telecomunicaciones <span class="badge-proximamente">Próximamente</span></div>
+                                    <div class="layer-source" id="layer-5-source">CNT – Corporación Nacional de Telecomunicaciones</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="5">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-6">
+                                <div class="layer-info" data-layer="6">
+                                    <div class="layer-name">Catastro GADMR</div>
+                                    <div class="layer-source" id="layer-6-source">GADMR – Dir. Planificación, Hábitat y Desarrollo Urbanístico</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="6">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-7">
+                                <div class="layer-info" data-layer="7">
+                                    <div class="layer-name">Vialidad</div>
+                                    <div class="layer-source" id="layer-7-source">GADMR y GADPCH</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="7">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-8">
+                                <div class="layer-info" data-layer="8">
+                                    <div class="layer-name">Líneas de Fábrica</div>
+                                    <div class="layer-source" id="layer-8-source">GADMR – Certificación Ejes Viales</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="8">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-csv">
+                                <div class="layer-info" data-layer="csv">
+                                    <div class="layer-name">Consulta de predio</div>
+                                    <div class="layer-source" id="csv-source">Archivo CSV</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="csv">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Panel de Coordenadas -->
+                    <div class="tab-pane" id="coordinates-pane">
+                        <h3>Consultar por Coordenadas UTM</h3>
+                        <p style="font-size: 12px; color: var(--gris-medio); margin-bottom: 15px;">
+                            Sistema de coordenadas: WGS84 Zona 17S
+                        </p>
+
+                        <div class="coordinates-status" id="coordinates-status">
+                            Agregue al menos 3 coordenadas para trazar un polígono (máximo 10)
+                        </div>
+
+                        <div class="coordinates-actions">
+                            <button class="btn btn-small" id="add-coordinate">
+                                <i class="fas fa-plus"></i> Agregar Coordenada
+                            </button>
+                            <button class="btn btn-small btn-outline" id="clear-all">
+                                <i class="fas fa-trash"></i> Limpiar Todo
+                            </button>
+                        </div>
+
+                        <form class="coordinates-form" id="coordinates-form">
+                            <div class="coordinates-container" id="coordinates-container">
+                                <!-- Las coordenadas se agregarán aquí dinámicamente -->
+                            </div>
+
+                            <button type="submit" class="btn" id="submit-coordinates">Trazar Polígono</button>
+                        </form>
+
+                        <div class="property-info" id="property-info" style="display: none;">
+                            <h4>Información del Polígono</h4>
+                            <div class="info-item">
+                                <span class="info-label">Número de puntos:</span>
+                                <span class="info-value" id="info-points">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Área aproximada:</span>
+                                <span class="info-value" id="info-area">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Perímetro aproximado:</span>
+                                <span class="info-value" id="info-perimeter">-</span>
+                            </div>
+
+                            <button class="btn pdf-button" id="generate-pdf">
+                                <i class="fas fa-file-pdf"></i> Descargar Reporte PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Información -->
+                    <div class="tab-pane" id="info-pane">
+                        <h3>Información del Geovisor</h3>
+                        <p>El Geovisor CAE-CH integra información geoespacial de múltiples instituciones para
+                            proporcionar datos críticos para la planificación y ejecución de proyectos arquitectónicos.
+                        </p>
+
+                        <h4>Instrucciones de Uso</h4>
+                        <ul>
+                            <li>Active/desactive capas en el panel "Capas"</li>
+                            <li>Utilice las herramientas de zoom y navegación</li>
+                            <li>Utilice el control de capas base (arriba a la izquierda) para cambiar entre vista de
+                                mapa, satelital e híbrida</li>
+                            <li>Ingrese coordenadas UTM (WGS84 17S) para consultar información específica de un predio
+                            </li>
+                            <li>Agregue múltiples coordenadas para trazar un polígono</li>
+                            <li>Genere reportes PDF con la información consultada</li>
+                            <li>Haga clic en el icono de configuración o en el texto de cualquier capa para cargar un
+                                archivo GeoJSON con datos específicos</li>
+                            <li>Haga clic en el icono de configuración o en el texto de la capa "Consulta de predio"
+                                para cargar un archivo CSV con nuevas coordenadas</li>
+                        </ul>
+
+                        <h4>Generar Reporte PDF</h4>
+                        <p>Genere un reporte PDF con la información de las capas que intersectan con el polígono de
+                            consulta de predio cargado desde CSV.</p>
+                        <button class="btn pdf-button" id="generate-pdf-info">
+                            <i class="fas fa-file-pdf"></i> Descargar Reporte PDF
+                        </button>
+
+                        <h4>Fuentes de Datos</h4>
+                        <p>Los datos provienen de instituciones oficiales como:</p>
+                        <ul>
+                            <li>Municipio de Riobamba</li>
+                            <li>Empresa Eléctrica</li>
+                            <li>Empresa de Agua Potable</li>
+                            <li>Proveedores de Telecomunicaciones</li>
+                            <li>Registro de la Propiedad</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenedor para visualización de shapes -->
+    <div id="shapes-visualization-container">
+        <div id="shapes-visualization"></div>
+    </div>
+
+    <!-- Modal para cargar CSV -->
+    <div class="modal-overlay" id="csv-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Cargar Archivo CSV</h3>
+                <button class="modal-close" data-modal="csv-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Seleccione un archivo CSV con las coordenadas en formato UTM WGS84 17S.</p>
+                <p>Formato esperado: <code>PTO,X,Y</code> (con encabezado opcional)</p>
+
+                <div class="file-input-container">
+                    <label class="file-input-label" for="csv-file">Archivo CSV:</label>
+                    <input type="file" id="csv-file" class="file-input" accept=".csv">
+                    <div class="file-info" id="csv-file-info">No se ha seleccionado ningún archivo</div>
+                </div>
+
+                <div id="csv-preview-container" style="display: none;">
+                    <h4>Vista previa:</h4>
+                    <div class="csv-preview" id="csv-preview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" data-modal="csv-modal">Cancelar</button>
+                <button class="btn" id="load-csv" disabled>Cargar CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h4>CAE-CH Núcleo Chimborazo</h4>
+                    <p>Colegio de Arquitectos del Ecuador - Núcleo Chimborazo. Comprometidos con la excelencia
+                        arquitectónica en nuestra región.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Enlaces Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="#geovisor">Geovisor</a></li>
+                        <li><a href="WEB CAE CH.html">Sitio Principal</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Términos y Condiciones</a></li>
+                        <li><a href="#">Política de Privacidad</a></li>
+                        <li><a href="#">Código de Ética</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2026 CAE-CH. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Variables globales
+            const geovisorSection = document.getElementById('geovisor');
+            const geovisorLink = document.getElementById('geovisor-link');
+            const geovisorHeroBtn = document.getElementById('geovisor-hero-btn');
+            const geovisorFooterLinks = document.querySelectorAll('.geovisor-footer-link');
+
+            let csvPolygon = null;
+            let userPolygon = null;
+            let userMarkers = [];
+            let csvUTMCoordinates = []; // Almacenará coordenadas UTM originales
+
+            let geojsonLayers = {
+                1: null, 2: null, 3: null, 4: null, 5: null, 6: null
+            };
+
+            let streetLayer, satelliteLayer, hybridLayer, currentBaseLayer;
+            let currentBaseLayerType = 'street'; // Nueva variable para rastrear el tipo de capa base
+            let coordinateCounter = 0;
+            const maxCoordinates = 10;
+
+            let visualizationMap = null;
+
+            const progressSpinner = document.getElementById('progress-spinner');
+            const spinnerText = document.getElementById('spinner-text');
+
+            // Función para mostrar el spinner de progreso
+            function showProgressBar(message = 'Generando PDF...') {
+                if (progressSpinner) {
+                    progressSpinner.classList.add('active');
+                    if (spinnerText) {
+                        spinnerText.textContent = message;
+                    }
+                }
+            }
+
+            function hideProgressBar() {
+                if (progressSpinner) {
+                    setTimeout(() => {
+                        progressSpinner.classList.remove('active');
+                    }, 300);
+                }
+            }
+
+            // Función para mostrar la sección del Geovisor
+            function mostrarGeovisor() {
+                if (geovisorSection) {
+                    geovisorSection.classList.add('active');
+                    geovisorSection.scrollIntoView({ behavior: 'smooth' });
+                    if (!window.mapInitialized) {
+                        inicializarMapa();
+                        window.mapInitialized = true;
+                    }
+                }
+            }
+
+            // Inicializar el mapa directamente al cargar la página
+            mostrarGeovisor();
+
+            // Event listeners para mostrar el Geovisor
+            if (geovisorLink) {
+                geovisorLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    mostrarGeovisor();
+                });
+            }
+
+            if (geovisorHeroBtn) {
+                geovisorHeroBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    mostrarGeovisor();
+                });
+            }
+
+            if (geovisorFooterLinks.length > 0) {
+                geovisorFooterLinks.forEach(link => {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        mostrarGeovisor();
+                    });
+                });
+            }
+
+            // Función para agregar un nuevo grupo de coordenadas
+            function addCoordinateGroup() {
+                if (coordinateCounter >= maxCoordinates) {
+                    alert(`Máximo ${maxCoordinates} coordenadas permitidas`);
+                    return;
+                }
+
+                coordinateCounter++;
+                const container = document.getElementById('coordinates-container');
+                if (!container) return;
+
+                const coordinateGroup = document.createElement('div');
+                coordinateGroup.className = 'coordinate-group';
+                coordinateGroup.innerHTML = `
+                    <div class="coordinate-header">
+                        <span class="coordinate-title">Coordenada ${coordinateCounter}</span>
+                        <button type="button" class="remove-coordinate" data-index="${coordinateCounter}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="coordinates-row">
+                        <div class="form-group">
+                            <label for="easting-${coordinateCounter}">Este (X)</label>
+                            <input type="text" class="form-control" id="easting-${coordinateCounter}" placeholder="Ej: 772026.7500">
+                        </div>
+                        <div class="form-group">
+                            <label for="northing-${coordinateCounter}">Norte (Y)</label>
+                            <input type="text" class="form-control" id="northing-${coordinateCounter}" placeholder="Ej: 9819626.6400">
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(coordinateGroup);
+
+                const removeBtn = coordinateGroup.querySelector('.remove-coordinate');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function () {
+                        coordinateGroup.remove();
+                        coordinateCounter--;
+                        updateCoordinateStatus();
+                    });
+                }
+
+                updateCoordinateStatus();
+            }
+
+            // Función para actualizar el estado de las coordenadas
+            function updateCoordinateStatus() {
+                const status = document.getElementById('coordinates-status');
+                if (status) {
+                    status.textContent = `${coordinateCounter} coordenada(s) agregada(s) (máximo ${maxCoordinates})`;
+                }
+
+                const submitBtn = document.getElementById('submit-coordinates');
+                if (submitBtn) {
+                    if (coordinateCounter >= 3) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Trazar Polígono';
+                    } else if (coordinateCounter === 1) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Consultar Información';
+                    } else {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Agregue al menos 1 coordenada';
+                    }
+                }
+            }
+
+            // Función para limpiar todas las coordenadas
+            function clearAllCoordinates() {
+                const container = document.getElementById('coordinates-container');
+                if (container) {
+                    container.innerHTML = '';
+                    coordinateCounter = 0;
+                    updateCoordinateStatus();
+                }
+
+                if (userPolygon && window.map) {
+                    window.map.removeLayer(userPolygon);
+                    userPolygon = null;
+                }
+
+                if (userMarkers.length > 0 && window.map) {
+                    userMarkers.forEach(marker => {
+                        window.map.removeLayer(marker);
+                    });
+                    userMarkers = [];
+                }
+
+                const propertyInfo = document.getElementById('property-info');
+                if (propertyInfo) {
+                    propertyInfo.style.display = 'none';
+                }
+
+                // Limpiar coordenadas UTM
+                csvUTMCoordinates = [];
+            }
+
+            // Función para calcular el área de un polígono
+            function calculatePolygonArea(points) {
+                let area = 0;
+                const n = points.length;
+
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    area += points[i].lng * points[j].lat;
+                    area -= points[j].lng * points[i].lat;
+                }
+
+                area = Math.abs(area) / 2;
+
+                const avgLat = points.reduce((sum, point) => sum + point.lat, 0) / n;
+                const latToMeters = 111320;
+                const lngToMeters = 111319 * Math.cos(avgLat * Math.PI / 180);
+
+                return (area * latToMeters * lngToMeters).toFixed(2);
+            }
+
+            // Función para calcular el perímetro de un polígono
+            function calculatePolygonPerimeter(points) {
+                let perimeter = 0;
+                const n = points.length;
+
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    const dx = points[j].lng - points[i].lng;
+                    const dy = points[j].lat - points[i].lat;
+                    perimeter += Math.sqrt(dx * dx + dy * dy);
+                }
+
+                const avgLat = points.reduce((sum, point) => sum + point.lat, 0) / n;
+                const latToMeters = 111320;
+                const lngToMeters = 111319 * Math.cos(avgLat * Math.PI / 180);
+
+                return (perimeter * Math.sqrt(latToMeters * lngToMeters)).toFixed(2);
+            }
+
+            // Función para parsear un archivo CSV
+            function parseCSV(csvText) {
+                const lines = csvText.split('\n');
+                const data = [];
+
+                let startIndex = 0;
+                if (lines[0].toUpperCase().includes('PTO') && lines[0].toUpperCase().includes('X') && lines[0].toUpperCase().includes('Y')) {
+                    startIndex = 1;
+                }
+
+                for (let i = startIndex; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line) {
+                        const parts = line.split(/[,;\t]/).map(part => part.trim());
+                        if (parts.length >= 3) {
+                            const x = parseFloat(parts[1]);
+                            const y = parseFloat(parts[2]);
+                            if (!isNaN(x) && !isNaN(y)) {
+                                data.push({ x, y });
+                            }
+                        }
+                    }
+                }
+
+                return data;
+            }
+
+            // Función para cargar un nuevo archivo CSV
+            function loadCSVData(newData, fileName) {
+                if (csvPolygon && window.map) {
+                    window.map.removeLayer(csvPolygon);
+                }
+
+                // Guardar las coordenadas UTM originales
+                csvUTMCoordinates = newData;
+
+                const latLngPoints = [];
+                for (let i = 0; i < newData.length; i++) {
+                    const point = newData[i];
+                    const latLng = utmToLatLng(point.x, point.y, 17, true);
+                    latLngPoints.push(latLng);
+                }
+
+                if (window.map) {
+                    csvPolygon = L.polygon(latLngPoints, {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.3,
+                        weight: 2
+                    }).addTo(window.map);
+
+                    const sourceElement = document.getElementById('csv-source');
+                    if (sourceElement) {
+                        sourceElement.textContent = `Archivo: ${fileName}`;
+                    }
+
+                    csvPolygon.bindPopup(`Consulta de predio<br>Archivo: ${fileName}<br>Puntos: ${newData.length}`);
+                    window.map.fitBounds(csvPolygon.getBounds());
+                }
+
+                const csvModal = document.getElementById('csv-modal');
+                if (csvModal) {
+                    csvModal.classList.remove('active');
+                }
+
+                alert(`Archivo CSV cargado exitosamente. Se procesaron ${newData.length} puntos.`);
+            }
+
+            // Función para cargar un archivo GeoJSON para una capa específica
+            function loadGeoJSONData(geojsonData, fileName, layerId) {
+                if (geojsonLayers[layerId] && window.map) {
+                    window.map.removeLayer(geojsonLayers[layerId]);
+                }
+
+                try {
+                    if (!geojsonData || !geojsonData.type) {
+                        throw new Error('El archivo no es un GeoJSON válido');
+                    }
+
+                    const layerColors = {
+                        1: '#E67E22', // PUGS Urbano - naranja
+                        2: '#27AE60', // PUGS Rural - verde
+                        3: '#F1C40F', // Infraestructura Eléctrica - amarillo
+                        4: '#2980B9', // Agua Potable - azul
+                        5: '#8E44AD', // Telecomunicaciones - morado
+                        6: '#E74C3C', // Catastro GADMR - rojo
+                        7: '#7F8C8D', // Vialidad - gris
+                        8: '#C0392B'  // Líneas de Fábrica - rojo oscuro
+                    };
+
+                    const layerColor = layerColors[layerId] || '#8B0000';
+
+                    const layerNameElement = document.querySelector(`#layer-${layerId} .layer-name`);
+                    const layerName = layerNameElement ? layerNameElement.textContent : `Capa ${layerId}`;
+
+                    geojsonLayers[layerId] = L.geoJSON(geojsonData, {
+                        style: function (feature) {
+                            switch (feature.geometry.type) {
+                                case 'Polygon':
+                                case 'MultiPolygon':
+                                    return {
+                                        color: layerColor,
+                                        weight: 2,
+                                        fillColor: layerColor,
+                                        fillOpacity: 0.3
+                                    };
+                                case 'LineString':
+                                case 'MultiLineString':
+                                    return {
+                                        color: layerColor,
+                                        weight: 3,
+                                        opacity: 0.8
+                                    };
+                                case 'Point':
+                                case 'MultiPoint':
+                                    return {
+                                        color: layerColor,
+                                        radius: 6,
+                                        fillColor: layerColor,
+                                        fillOpacity: 0.8
+                                    };
+                                default:
+                                    return {
+                                        color: layerColor,
+                                        weight: 2,
+                                        fillColor: layerColor,
+                                        fillOpacity: 0.3
+                                    };
+                            }
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            return L.circleMarker(latlng, {
+                                radius: 6,
+                                fillColor: layerColor,
+                                color: layerColor,
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            });
+                        },
+                        onEachFeature: function (feature, layer) {
+                            if (!feature.properties) return;
+                            let popupContent;
+
+                            if (layerId === 6) {
+                                // Popup enriquecido para Catastro GADMR
+                                const p = feature.properties;
+                                const nombre = (p.gis_predio || '').trim() || (p.nombre_c || '').trim() || 'Sin nombre';
+                                const clave = (p.claves || '').trim() || (p.claves_aux || '').trim() || 'S/C';
+                                const area = p.Shape__Area ? parseFloat(p.Shape__Area).toFixed(2) + ' m²' : 'N/D';
+                                const avaluo = p.avaluo_c ? '$' + parseFloat(p.avaluo_c).toLocaleString('es-EC', { minimumFractionDigits: 2 }) : 'N/D';
+                                const supCons = (p.sup_cons_c !== undefined && String(p.sup_cons_c).trim() !== '') ? p.sup_cons_c + ' m²' : 'N/D';
+                                popupContent = `
+                                    <div style="font-family:Segoe UI,sans-serif;min-width:200px">
+                                        <div style="background:#E74C3C;color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
+                                            <i class="fas fa-home"></i> Catastro GADMR
+                                        </div>
+                                        <table style="font-size:12px;width:100%;border-collapse:collapse">
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Propietario</td><td style="padding:3px 4px">${nombre}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Clave catastral</td><td style="padding:3px 4px;font-size:11px">${clave}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Área</td><td style="padding:3px 4px">${area}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Avalúo</td><td style="padding:3px 4px">${avaluo}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Sup. construida</td><td style="padding:3px 4px">${supCons}</td></tr>
+                                        </table>
+                                        <button onclick="seleccionarPredioDesdePopup(this)" data-clave="${clave}"
+                                            style="margin-top:7px;width:100%;padding:5px;background:#8B0000;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-weight:bold">
+                                            <i class="fas fa-check-circle"></i> Seleccionar para informe
+                                        </button>
+                                    </div>`;
+                            } else {
+                                // Popup genérico para otras capas
+                                popupContent = `<div style="font-size:12px"><strong>${layerName}</strong>`;
+                                for (let key in feature.properties) {
+                                    const val = String(feature.properties[key]).trim();
+                                    if (val) popupContent += `<br><b>${key}:</b> ${val}`;
+                                }
+                                popupContent += '</div>';
+                            }
+                            layer.bindPopup(popupContent);
+                        }
+                    });
+
+                    if (window.map) {
+                        geojsonLayers[layerId].addTo(window.map);
+
+                        // LOGICA DE PERSISTENCIA DEL CSV
+                        if (csvPolygon) {
+                            // Si existe un polígono CSV, mantenerlo al frente y centrar en él
+                            csvPolygon.bringToFront();
+                            window.map.fitBounds(csvPolygon.getBounds());
+                        } else {
+                            // Si no hay CSV, comportarse como antes (centrar en la capa cargada)
+                            if (geojsonLayers[layerId].getBounds) {
+                                window.map.fitBounds(geojsonLayers[layerId].getBounds());
+                            }
+                        }
+                    }
+
+                    const checkbox = document.getElementById(`layer-${layerId}`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+
+                    const sourceElement = document.getElementById(`layer-${layerId}-source`);
+                    if (sourceElement) {
+                        sourceElement.textContent = `Archivo: ${fileName}`;
+                    }
+
+                    const modal = document.getElementById(`geojson-modal-${layerId}`);
+                    if (modal) {
+                        modal.classList.remove('active');
+                    }
+
+                    const featureCount = geojsonData.features ? geojsonData.features.length : 1;
+                    alert(`Archivo GeoJSON cargado exitosamente para ${layerName}. Se procesaron ${featureCount} elementos.`);
+                } catch (error) {
+                    console.error('Error al cargar GeoJSON:', error);
+                    alert('Error al procesar el archivo GeoJSON: ' + error.message);
+                }
+            }
+
+            // Función para convertir coordenadas UTM a grados decimales
+            function utmToLatLng(easting, northing, zone = 17, southernHemisphere = true) {
+                const a = 6378137.0;
+                const f = 1 / 298.257223563;
+                const k0 = 0.9996;
+                const falseEasting = 500000.0;
+                const falseNorthing = southernHemisphere ? 10000000.0 : 0;
+
+                const centralMeridian = (zone - 1) * 6 - 180 + 3;
+                const lambda0 = centralMeridian * Math.PI / 180;
+
+                const b = a * (1 - f);
+                const e = Math.sqrt(1 - (b * b) / (a * a));
+                const e2 = e * e;
+                const e4 = e2 * e2;
+                const e6 = e4 * e2;
+                const ep2 = e2 / (1 - e2);
+
+                const x = easting - falseEasting;
+                const y = northing - falseNorthing;
+
+                const M = y / k0;
+
+                const mu = M / (a * (1 - e2 / 4 - 3 * e4 / 64 - 5 * e6 / 256));
+                const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+
+                const J1 = 3 * e1 / 2 - 27 * e1 * e1 * e1 / 32;
+                const J2 = 21 * e1 * e1 / 16 - 55 * e1 * e1 * e1 * e1 / 32;
+                const J3 = 151 * e1 * e1 * e1 / 96;
+                const J4 = 1097 * e1 * e1 * e1 * e1 / 512;
+
+                const fp = mu + J1 * Math.sin(2 * mu) + J2 * Math.sin(4 * mu) + J3 * Math.sin(6 * mu) + J4 * Math.sin(8 * mu);
+
+                const C1 = ep2 * Math.cos(fp) * Math.cos(fp);
+                const T1 = Math.tan(fp) * Math.tan(fp);
+                const R1 = a * (1 - e2) / Math.pow(1 - e2 * Math.sin(fp) * Math.sin(fp), 1.5);
+                const N1 = a / Math.sqrt(1 - e2 * Math.sin(fp) * Math.sin(fp));
+                const D = x / (N1 * k0);
+
+                const Q1 = N1 * Math.tan(fp) / R1;
+                const Q2 = D * D / 2;
+                const Q3 = (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * ep2) * D * D * D * D / 24;
+                const Q4 = (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * ep2 - 3 * C1 * C1) * D * D * D * D * D * D / 720;
+
+                let lat = fp - Q1 * (Q2 - Q3 + Q4);
+
+                const Q5 = D;
+                const Q6 = (1 + 2 * T1 + C1) * D * D * D / 6;
+                const Q7 = (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * ep2 + 24 * T1 * T1) * D * D * D * D * D / 120;
+
+                let lng = lambda0 + (Q5 - Q6 + Q7) / Math.cos(fp);
+
+                lat = lat * 180 / Math.PI;
+                lng = lng * 180 / Math.PI;
+
+                return [lat, lng];
+            }
+
+            // Función para convertir lat/lng WGS84 a UTM Zona 17S
+            function latLngToUTM(lat, lng, zone = 17, southernHemisphere = true) {
+                const a = 6378137.0;
+                const f = 1 / 298.257223563;
+                const k0 = 0.9996;
+                const falseEasting = 500000.0;
+                const falseNorthing = southernHemisphere ? 10000000.0 : 0;
+                const e2 = 2 * f - f * f;
+                const e4 = e2 * e2;
+                const e6 = e4 * e2;
+                const ep2 = e2 / (1 - e2);
+                const latRad = lat * Math.PI / 180;
+                const lngRad = lng * Math.PI / 180;
+                const lambda0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+                const N = a / Math.sqrt(1 - e2 * Math.sin(latRad) * Math.sin(latRad));
+                const T = Math.tan(latRad) * Math.tan(latRad);
+                const C = ep2 * Math.cos(latRad) * Math.cos(latRad);
+                const A = Math.cos(latRad) * (lngRad - lambda0);
+                const M = a * (
+                    (1 - e2 / 4 - 3 * e4 / 64 - 5 * e6 / 256) * latRad
+                    - (3 * e2 / 8 + 3 * e4 / 32 + 45 * e6 / 1024) * Math.sin(2 * latRad)
+                    + (15 * e4 / 256 + 45 * e6 / 1024) * Math.sin(4 * latRad)
+                    - (35 * e6 / 3072) * Math.sin(6 * latRad)
+                );
+                const easting = falseEasting + k0 * N * (
+                    A + (1 - T + C) * A * A * A / 6
+                    + (5 - 18 * T + T * T + 72 * C - 58 * ep2) * A * A * A * A * A / 120
+                );
+                const northing = falseNorthing + k0 * (
+                    M + N * Math.tan(latRad) * (
+                        A * A / 2
+                        + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24
+                        + (61 - 58 * T + T * T + 600 * C - 330 * ep2) * A * A * A * A * A * A / 720
+                    )
+                );
+                return { easting, northing };
+            }
+
+            // Función para cambiar la capa base del mapa
+            function changeBaseLayer(layerType) {
+                if (!window.map) return;
+
+                if (currentBaseLayer) {
+                    window.map.removeLayer(currentBaseLayer);
+                }
+
+                const baseButtons = document.querySelectorAll('.base-layer-btn');
+                baseButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                switch (layerType) {
+                    case 'street':
+                        currentBaseLayer = streetLayer;
+                        currentBaseLayerType = 'street'; // Actualizar el tipo
+                        document.getElementById('base-street').classList.add('active');
+                        break;
+                    case 'satellite':
+                        currentBaseLayer = satelliteLayer;
+                        currentBaseLayerType = 'satellite'; // Actualizar el tipo
+                        document.getElementById('base-satellite').classList.add('active');
+                        break;
+                    case 'hybrid':
+                        currentBaseLayer = hybridLayer;
+                        currentBaseLayerType = 'hybrid'; // Actualizar el tipo
+                        document.getElementById('base-hybrid').classList.add('active');
+                        break;
+                }
+
+                if (currentBaseLayer) {
+                    window.map.addLayer(currentBaseLayer);
+                }
+            }
+
+            // ========== CONFIGURACIÓN DE OPTIMIZACIÓN PARA PDF ==========
+            const PDF_CONFIG = {
+                maxFeaturesPerLayer: {
+                    'Point': 800,
+                    'MultiPoint': 800,
+                    'LineString': 2000,       // Aumentado significativamente para infraestructura eléctrica
+                    'MultiLineString': 2000,  // Aumentado significativamente
+                    'Polygon': 300,           // Aumentado para mejor cobertura
+                    'MultiPolygon': 300       // Aumentado para mejor cobertura
+                },
+                simplificationTolerance: 0.00003, // ~3 metros, mantiene precisión
+                canvasScale: 1.2,
+                viewportBuffer: 0.5, // Aumentado de 0.3 a 0.5 (50% extra)
+                chunkSize: 500, // Reducido de 1000 a 500 para evitar bloqueos de memoria en capas grandes                useIntersectionFiltering: true // Filtrar por intersección, no por viewport
+            };
+
+            // Función para simplificar geometrías usando Turf.js
+            function simplifyGeometry(feature, tolerance) {
+                try {
+                    if (!feature || !feature.geometry) return feature;
+
+                    const geomType = feature.geometry.type;
+
+                    // Solo simplificar LineStrings y Polygons
+                    if (geomType === 'LineString' || geomType === 'Polygon' ||
+                        geomType === 'MultiLineString' || geomType === 'MultiPolygon') {
+
+                        const simplified = turf.simplify(feature, {
+                            tolerance: tolerance,
+                            highQuality: false
+                        });
+
+                        return simplified;
+                    }
+
+                    return feature;
+                } catch (error) {
+                    console.warn('Error al simplificar geometría:', error);
+                    return feature;
+                }
+            }
+
+            // Función para filtrar features por bounds con buffer
+            function filterFeaturesByBounds(features, bounds, bufferPercent) {
+                try {
+                    if (!features || !bounds) return features;
+
+                    // Crear bbox expandido con buffer
+                    const latDiff = bounds.getNorth() - bounds.getSouth();
+                    const lngDiff = bounds.getEast() - bounds.getWest();
+
+                    const latBuffer = latDiff * bufferPercent;
+                    const lngBuffer = lngDiff * bufferPercent;
+
+                    const expandedBounds = L.latLngBounds(
+                        [bounds.getSouth() - latBuffer, bounds.getWest() - lngBuffer],
+                        [bounds.getNorth() + latBuffer, bounds.getEast() + lngBuffer]
+                    );
+
+                    // Convertir bounds a bbox para Turf
+                    const bbox = [
+                        expandedBounds.getWest(),
+                        expandedBounds.getSouth(),
+                        expandedBounds.getEast(),
+                        expandedBounds.getNorth()
+                    ];
+
+                    const bboxPolygon = turf.bboxPolygon(bbox);
+
+                    // Filtrar features que intersectan con el bbox
+                    const filtered = features.filter(feature => {
+                        try {
+                            return turf.booleanIntersects(bboxPolygon, feature);
+                        } catch (e) {
+                            // Si hay error, incluir la feature por seguridad
+                            return true;
+                        }
+                    });
+
+                    return filtered;
+                } catch (error) {
+                    console.warn('Error al filtrar features por bounds:', error);
+                    return features;
+                }
+            }
+
+            // Función para optimizar una capa para PDF de manera asíncrona (por lotes)
+            async function optimizeLayerForPDF(layerGeoJSON, bounds, maxFeatures, csvPolygonGeoJSON, progressCallback) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        if (!layerGeoJSON || !layerGeoJSON.features) {
+                            resolve(layerGeoJSON);
+                            return;
+                        }
+
+                        // Clonar features para no modificar el original
+                        let allFeatures = [...layerGeoJSON.features];
+                        const originalCount = allFeatures.length;
+
+                        // Si hay pocos features, procesar sincrónicamente
+                        if (originalCount < 1000) {
+                            console.log(`Capa pequeña (${originalCount}), procesando sincrónicamente...`);
+                            // Reutilizar lógica síncrona para casos pequeños
+                            // 1. Filtrado
+                            if (csvPolygonGeoJSON && PDF_CONFIG.useIntersectionFiltering) {
+                                allFeatures = allFeatures.filter(f => {
+                                    try { return turf.booleanIntersects(csvPolygonGeoJSON, f); } catch (e) { return true; }
+                                });
+                            } else if (bounds) {
+                                allFeatures = filterFeaturesByBounds(allFeatures, bounds, PDF_CONFIG.viewportBuffer);
+                            }
+
+                            // 2. Límites
+                            if (allFeatures.length > 0) {
+                                const geomType = allFeatures[0].geometry.type;
+                                const limit = maxFeatures || PDF_CONFIG.maxFeaturesPerLayer[geomType] || 100;
+                                if (allFeatures.length > limit) {
+                                    const step = Math.floor(allFeatures.length / limit);
+                                    allFeatures = allFeatures.filter((_, i) => i % step === 0).slice(0, limit);
+                                }
+                            }
+
+                            // 3. Simplificación
+                            allFeatures = allFeatures.map(f => simplifyGeometry(f, PDF_CONFIG.simplificationTolerance));
+
+                            resolve({ type: 'FeatureCollection', features: allFeatures });
+                            return;
+                        }
+
+                        console.log(`Optimizando capa grande: ${originalCount} features originales (Asíncrono)`);
+
+                        const resultFeatures = [];
+
+                        // Pre-calcular polígono de filtrado (Intersección estricta O Bounds con buffer)
+                        let filterPolygon = null;
+
+                        try {
+                            if (csvPolygonGeoJSON && PDF_CONFIG.useIntersectionFiltering) {
+                                filterPolygon = csvPolygonGeoJSON;
+                            } else if (bounds) {
+                                // Calcular bounds con buffer para contexto
+                                const bufferPercent = PDF_CONFIG.viewportBuffer;
+                                const latDiff = bounds.getNorth() - bounds.getSouth();
+                                const lngDiff = bounds.getEast() - bounds.getWest();
+                                const latBuffer = latDiff * bufferPercent;
+                                const lngBuffer = lngDiff * bufferPercent;
+
+                                const expandedBounds = L.latLngBounds(
+                                    [bounds.getSouth() - latBuffer, bounds.getWest() - lngBuffer],
+                                    [bounds.getNorth() + latBuffer, bounds.getEast() + lngBuffer]
+                                );
+
+                                const bbox = [
+                                    expandedBounds.getWest(),
+                                    expandedBounds.getSouth(),
+                                    expandedBounds.getEast(),
+                                    expandedBounds.getNorth()
+                                ];
+
+                                filterPolygon = turf.bboxPolygon(bbox);
+                            }
+                        } catch (e) {
+                            console.warn("Error calculando polígono de filtro:", e);
+                            filterPolygon = null; // Fallback: include all
+                        }
+
+                        // Configuración de chunks
+                        const chunkSize = PDF_CONFIG.chunkSize || 1000;
+                        let index = 0;
+
+                        // FASE 1: Filtrado Espacial
+                        const processFiltering = () => {
+                            if (progressCallback) progressCallback(`Filtrando espacialmente: ${Math.round((index / originalCount) * 100)}%`);
+
+                            const end = Math.min(index + chunkSize, originalCount);
+
+                            for (let i = index; i < end; i++) {
+                                const feature = allFeatures[i];
+                                let include = false;
+
+                                try {
+                                    if (filterPolygon) {
+                                        include = turf.booleanIntersects(filterPolygon, feature);
+                                    } else {
+                                        include = true;
+                                    }
+                                } catch (e) {
+                                    include = true;
+                                }
+
+                                if (include) {
+                                    resultFeatures.push(feature);
+                                }
+                            }
+
+                            index = end;
+
+                            if (index < originalCount) {
+                                setTimeout(processFiltering, 0);
+                            } else {
+                                // Fin de Fase 1
+                                console.log(`Fase 1 completada. Features restantes: ${resultFeatures.length}`);
+                                // Ir a Fase 2: Limites
+                                index = 0;
+                                setTimeout(processLimiting, 0);
+                            }
+                        };
+
+                        // FASE 2: Límites (Sampling) - Esto es rápido, se puede hacer en un paso síncrono
+                        const processLimiting = () => {
+                            if (progressCallback) progressCallback('Aplicando límites inteligentes...');
+
+                            let limitedFeatures = resultFeatures;
+                            if (limitFeaturesCount(resultFeatures, maxFeatures)) {
+                                limitedFeatures = performSampling(resultFeatures, maxFeatures);
+                            }
+
+                            // Preparar para Fase 3
+                            // Reemplazamos el array de trabajo
+                            allFeatures = limitedFeatures; // allFeatures ahora tiene los features a simplificar
+                            index = 0;
+                            setTimeout(processSimplification, 0);
+                        };
+
+                        // Helper para chequear límites
+                        const limitFeaturesCount = (features, max) => {
+                            if (!features || features.length === 0) return false;
+                            const geomType = features[0].geometry.type;
+                            const limit = max || PDF_CONFIG.maxFeaturesPerLayer[geomType] || 100;
+                            return features.length > limit;
+                        };
+
+                        // Helper para sampling
+                        const performSampling = (features, max) => {
+                            const geomType = features[0].geometry.type;
+                            const limit = max || PDF_CONFIG.maxFeaturesPerLayer[geomType] || 100;
+                            console.log(`Limitando features de ${features.length} a ${limit}`);
+                            const step = Math.floor(features.length / limit);
+                            return features.filter((_, i) => i % step === 0).slice(0, limit);
+                        };
+
+                        // FASE 3: Simplificación
+                        const simplifiedResult = [];
+                        const processSimplification = () => {
+                            const count = allFeatures.length;
+                            if (progressCallback) progressCallback(`Simplificando geometrías: ${Math.round((index / count) * 100)}%`);
+
+                            const end = Math.min(index + chunkSize, count);
+
+                            for (let i = index; i < end; i++) {
+                                const feature = allFeatures[i];
+                                const simplified = simplifyGeometry(feature, PDF_CONFIG.simplificationTolerance);
+                                simplifiedResult.push(simplified);
+                            }
+
+                            index = end;
+
+                            if (index < count) {
+                                setTimeout(processSimplification, 0);
+                            } else {
+                                // Fin del proceso
+                                console.log(`Optimización asíncrona completa: ${originalCount} → ${simplifiedResult.length} features`);
+                                resolve({
+                                    type: 'FeatureCollection',
+                                    features: simplifiedResult
+                                });
+                            }
+                        };
+
+                        // Iniciar el proceso
+                        if (progressCallback) progressCallback('Iniciando optimización...');
+                        setTimeout(processFiltering, 0);
+
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            }
+
+            // Función para crear visualización de shapes para PDF con zoom en el predio consultado
+            async function createShapesVisualizationForPDF(baseLayerType) {
+                if (visualizationMap) {
+                    try { visualizationMap.remove(); } catch (e) { /* ya destruido */ }
+                    visualizationMap = null;
+                }
+
+                const visualizationContainer = document.getElementById('shapes-visualization-container');
+                const visualizationDiv = document.getElementById('shapes-visualization');
+                // Limpiar el contenedor para evitar error "Map container is already initialized"
+                if (visualizationDiv) visualizationDiv.innerHTML = '';
+
+                if (!visualizationContainer || !visualizationDiv) {
+                    console.error('No se encontró el contenedor de visualización');
+                    return null;
+                }
+
+                // Limpiar el contenedor
+                visualizationDiv.innerHTML = '';
+
+                // Crear el mapa
+                visualizationMap = L.map('shapes-visualization', {
+                    zoomControl: false,
+                    attributionControl: false,
+                    crs: L.CRS.EPSG3857,
+                    preferCanvas: true
+                });
+
+                visualizationDiv.style.backgroundColor = '#ffffff';
+
+                // Añadir capa base según el tipo activo en el geovisor
+                let baseLayer;
+                switch (baseLayerType) {
+                    case 'satellite':
+                        baseLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                            subdomains: ['mt0','mt1','mt2','mt3'],
+                            attribution: '&copy; Google Maps',
+                            opacity: 0.9
+                        });
+                        break;
+                    case 'hybrid':
+                        baseLayer = L.layerGroup([
+                            L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                                subdomains: ['mt0','mt1','mt2','mt3'],
+                                attribution: '&copy; Google Maps',
+                                opacity: 1
+                            }),
+                            L.tileLayer('https://{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
+                                subdomains: ['mt0','mt1','mt2','mt3'],
+                                attribution: '&copy; Google Maps',
+                                opacity: 0.7
+                            })
+                        ]);
+                        break;
+                    default: // 'street' por defecto
+                        baseLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                            subdomains: ['mt0','mt1','mt2','mt3'],
+                            attribution: '&copy; Google Maps',
+                            opacity: 0.9
+                        });
+                }
+
+                baseLayer.addTo(visualizationMap);
+
+                // Agregar escala gráfica al mapa
+                L.control.scale({
+                    position: 'bottomleft',
+                    metric: true,
+                    imperial: false,
+                    maxWidth: 150
+                }).addTo(visualizationMap);
+
+                let allBounds = null;
+
+                // Agregar polígono CSV si existe
+                const csvGeoJSON = csvPolygon ? csvPolygon.toGeoJSON() : null;
+
+                if (csvPolygon) {
+                    const csvLayer = L.geoJSON(csvGeoJSON, {
+                        style: {
+                            color: '#FF0000',
+                            fillColor: '#FF0000',
+                            fillOpacity: 0.4,
+                            weight: 3
+                        }
+                    }).addTo(visualizationMap);
+
+                    allBounds = csvLayer.getBounds();
+                } else {
+                    console.log('No hay polígono CSV para visualizar');
+                    return null;
+                }
+
+                const activeLayers = [];
+                const layerNames = {
+                    1: 'PUGS Urbano',
+                    2: 'PUGS Rural',
+                    3: 'Infraestructura Eléctrica',
+                    4: 'Agua Potable y Alcantarillado',
+                    5: 'Cobertura Telecomunicaciones',
+                    6: 'Catastro GADMR',
+                    7: 'Vialidad'
+                };
+
+                const layerColors = {
+                    1: '#E67E22', 2: '#27AE60', 3: '#F1C40F',
+                    4: '#2980B9', 5: '#8E44AD', 6: '#E74C3C', 7: '#7F8C8D', 8: '#C0392B'
+                };
+
+                // Agregar todas las capas activas con optimización ASÍNCRONA
+                for (let i = 1; i <= 8; i++) {
+                    const checkbox = document.getElementById(`layer-${i}`);
+                    if (checkbox && checkbox.checked && geojsonLayers[i]) {
+
+                        // Actualizar UI para mostrar qué capa se está procesando
+                        const layerName = layerNames[i];
+                        showProgressBar(`Optimizando capa: ${layerName}...`);
+
+                        const layerGeoJSON = geojsonLayers[i].toGeoJSON();
+                        const layerColor = layerColors[i] || '#8B0000';
+
+                        try {
+                            // OPTIMIZAR LA CAPA ANTES DE RENDERIZAR (AWAIT)
+                            // IMPORTANTE: Pasamos null como csvPolygonGeoJSON para desactivar el recorte estricto
+                            // y usar el filtrado por bounds (con buffer de contexto)
+                            const optimizedGeoJSON = await optimizeLayerForPDF(
+                                layerGeoJSON,
+                                allBounds,
+                                null,
+                                null, // Forzar uso de bounds + buffer para visibilidad de contexto
+                                (msg) => showProgressBar(`${layerName}: ${msg}`)
+                            );
+
+                            const layer = L.geoJSON(optimizedGeoJSON, {
+                                style: function (feature) {
+                                    switch (feature.geometry.type) {
+                                        case 'Polygon':
+                                        case 'MultiPolygon':
+                                            return {
+                                                color: layerColor,
+                                                weight: 2,
+                                                fillColor: layerColor,
+                                                fillOpacity: 0.25
+                                            };
+                                        case 'LineString':
+                                        case 'MultiLineString':
+                                            return {
+                                                color: layerColor,
+                                                weight: 2.5,
+                                                opacity: 0.8
+                                            };
+                                        case 'Point':
+                                        case 'MultiPoint':
+                                            return {
+                                                color: layerColor,
+                                                radius: 4,
+                                                fillColor: layerColor,
+                                                fillOpacity: 0.8
+                                            };
+                                        default:
+                                            return {
+                                                color: layerColor,
+                                                weight: 2,
+                                                fillColor: layerColor,
+                                                fillOpacity: 0.25
+                                            };
+                                    }
+                                },
+                                pointToLayer: function (feature, latlng) {
+                                    return L.circleMarker(latlng, {
+                                        radius: 4,
+                                        fillColor: layerColor,
+                                        color: layerColor,
+                                        weight: 1,
+                                        opacity: 1,
+                                        fillOpacity: 0.8
+                                    });
+                                }
+                            }).addTo(visualizationMap);
+                            activeLayers.push({
+                                id: i,
+                                name: layerName,
+                                color: layerColor,
+                                layer: layer
+                            });
+                        } catch (error) {
+                            console.error(`Error optimizando capa ${i}:`, error);
+                        }
+
+                        // Pequeña pausa entre capas para liberar UI y memoria
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+                }
+
+                // Ajustar la vista para que el polígono CSV sea el centro, con un margen
+                if (allBounds) {
+                    const center = allBounds.getCenter();
+                    const boundsSize = allBounds.getNorthEast().distanceTo(allBounds.getSouthWest());
+
+                    let zoomLevel = 16;
+                    if (boundsSize > 5000) zoomLevel = 12;
+                    else if (boundsSize > 1000) zoomLevel = 14;
+                    else if (boundsSize > 500) zoomLevel = 15;
+                    else if (boundsSize > 100) zoomLevel = 16;
+                    else zoomLevel = 18;
+
+                    visualizationMap.setView(center, zoomLevel);
+
+                    setTimeout(() => {
+                        visualizationMap.fitBounds(allBounds, {
+                            padding: [30, 30],
+                            maxZoom: zoomLevel
+                        });
+                    }, 100);
+                }
+
+                // Forzar actualización del tamaño y esperar un poco
+                await new Promise(r => setTimeout(r, 200));
+
+                if (visualizationMap) {
+                    visualizationMap.invalidateSize();
+                }
+
+                return {
+                    map: visualizationMap,
+                    activeLayers: activeLayers,
+                    csvPolygon: csvPolygon
+                };
+            }
+
+            // Función para generar la tabla de coordenadas UTM con 4 decimales
+            function generateCoordinatesTable(doc, utmCoordinates, startY, pageWidth, margin) {
+                if (!utmCoordinates || utmCoordinates.length === 0) {
+                    doc.text('No hay coordenadas UTM disponibles para mostrar.', margin, startY);
+                    return startY + 10;
+                }
+
+                doc.setFontSize(12);
+                doc.setTextColor(139, 0, 0);
+                doc.text('Coordenadas UTM del Predio (WGS84 Zona 17S)', pageWidth / 2, startY, { align: 'center' });
+
+                doc.setFontSize(9);
+                doc.setTextColor(0, 0, 0);
+
+                const tableHeaders = [['PT', 'X (Este)', 'Y (Norte)']];
+                const tableData = utmCoordinates.map((coord, index) => [
+                    (index + 1).toString(),
+                    (coord.easting ? coord.easting.toFixed(4) : coord.x.toFixed(4)),
+                    (coord.northing ? coord.northing.toFixed(4) : coord.y.toFixed(4))
+                ]);
+
+                doc.autoTable({
+                    head: tableHeaders,
+                    body: tableData,
+                    startY: startY + 5,
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 2,
+                        overflow: 'linebreak'
+                    },
+                    headStyles: {
+                        fillColor: [139, 0, 0],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold'
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 15 },
+                        1: { cellWidth: 40 },
+                        2: { cellWidth: 40 }
+                    },
+                    margin: { left: margin, right: margin, top: 5 },
+                    tableWidth: pageWidth - (2 * margin)
+                });
+
+                return doc.lastAutoTable ? doc.lastAutoTable.finalY + 5 : startY + 20;
+            }
+
+            // ══════════════════════════════════════════════════════════════
+            // FUNCIÓN CENTRAL: generarDICAT(props)
+            // props = propiedades catastro (búsqueda) | null (CSV/coordenadas)
+            // Requiere: csvPolygon y csvUTMCoordinates ya establecidos
+            // ══════════════════════════════════════════════════════════════
+            // Carga el logo institucional como base64 para incrustar en el PDF
+            function cargarLogoBase64() {
+                return new Promise((resolve) => {
+                    // Timeout de seguridad: si algo falla silenciosamente, continuar sin logo
+                    const timeout = setTimeout(() => resolve(null), 5000);
+                    const img = new Image();
+                    img.onload = function () {
+                        clearTimeout(timeout);
+                        try {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.naturalWidth;
+                            canvas.height = img.naturalHeight;
+                            canvas.getContext('2d').drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/jpeg'));
+                        } catch (e) {
+                            // canvas.toDataURL() lanza SecurityError en file:// (canvas tainted)
+                            resolve(null);
+                        }
+                    };
+                    img.onerror = function () { clearTimeout(timeout); resolve(null); };
+                    img.src = 'LOGO/Logo Cae.jpg';
+                });
+            }
+
+            async function generarDICAT(props) {
+                showProgressBar('Preparando DICAT...');
+
+                if (!csvPolygon) {
+                    alert('Primero debe definir el polígono del predio (CSV, coordenadas o búsqueda catastral).');
+                    hideProgressBar();
+                    return;
+                }
+
+                try {
+                    // ── Datos comunes ──────────────────────────────────────
+                    const fechaHoy    = new Date();
+                    const fechaStr    = fechaHoy.toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' });
+                    const vigencia    = new Date(fechaHoy);
+                    vigencia.setFullYear(vigencia.getFullYear() + 2);
+                    const vigenciaStr = vigencia.toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' });
+                    const nroInforme  = `DICAT-${fechaHoy.getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+
+                    const csvPoints     = csvPolygon.getLatLngs()[0];
+                    const polygonPoints = csvPoints.map(ll => ({ lat: ll.lat, lng: ll.lng }));
+                    const areaCalc      = csvPoints.length >= 3 ? calculatePolygonArea(polygonPoints)     : 'N/D';
+                    const perimCalc     = csvPoints.length >= 3 ? calculatePolygonPerimeter(polygonPoints) : 'N/D';
+                    const predioGeoJSON = csvPolygon.toGeoJSON();
+
+                    const nombre      = props ? ((props.gis_predio || '').trim() || (props.nombre_c || '').trim() || 'Sin nombre') : 'Consulta por coordenadas / CSV';
+                    const clave       = props ? ((props.claves     || '').trim() || 'S/C') : 'S/C';
+                    const claveAux    = props ? ((props.claves_aux || '').trim() || 'S/C') : 'S/C';
+                    const tipoCatas   = props ? (props.tipo_catas === '1' ? 'Urbano' : props.tipo_catas === '2' ? 'Rural' : (props.tipo_catas || 'N/D')) : 'N/D';
+                    const avaluo      = props && props.avaluo_c ? parseFloat(props.avaluo_c).toLocaleString('es-EC', { minimumFractionDigits: 2 }) : 'N/D';
+                    const supCons     = props && props.sup_cons_c !== undefined ? props.sup_cons_c : 'N/D';
+                    const selectedClave = props ? (props.claves || '').trim() : '';
+                    const filePrefix  = props ? `DICAT_${clave.replace(/\s+/g, '_').substring(0, 18)}` : 'DICAT_coords';
+
+                    // ── Cálculos espaciales (en el navegador, sobre capas cargadas) ──
+                    showProgressBar('Calculando colindantes...');
+                    const colindantes = geojsonLayers[6]
+                        ? calcularColindantes(predioGeoJSON, selectedClave)
+                        : { Norte: [], Sur: [], Este: [], Oeste: [] };
+
+                    showProgressBar('Verificando factibilidades...');
+                    const factibilidades = calcularFactibilidades(predioGeoJSON);
+
+                    showProgressBar('Analizando poste eléctrico más cercano...');
+                    const posteCercano = encontrarPosteMasCercano(predioGeoJSON);
+
+                    showProgressBar('Analizando afectación vial...');
+                    const afectacionVial = calcularAfectacionVial(predioGeoJSON);
+
+                    showProgressBar('Calculando intersecciones con capas...');
+                    const intersectionData = computeIntersectionData(predioGeoJSON, selectedClave);
+
+                    // ── Captura del mapa (html2canvas en el navegador) ─────
+                    showProgressBar('Generando visualización del mapa...');
+                    let mapImage     = null;
+                    let activeLayers = [];
+                    let vizMap       = null;
+                    const vizContainer = document.getElementById('shapes-visualization-container');
+                    try {
+                        const vizResult = await createShapesVisualizationForPDF(currentBaseLayerType);
+                        if (vizResult && vizResult.map) {
+                            vizMap       = vizResult.map;
+                            activeLayers = (vizResult.activeLayers || []).map(function (l) {
+                                return { id: l.id, name: l.name, color: l.color };
+                            });
+                            vizContainer.style.cssText = 'position:fixed;top:0;left:0;width:800px;height:600px;opacity:1;z-index:10000;visibility:visible;background:#fff;display:block';
+
+                            showProgressBar('Renderizando mapa...');
+                            await new Promise(r => setTimeout(r, 500));
+                            vizMap.invalidateSize();
+                            try { vizMap.fitBounds(csvPolygon.getBounds(), { padding: [30, 30] }); } catch (e) { }
+                            await new Promise(r => setTimeout(r, 2000));
+
+                            showProgressBar('Capturando imagen del mapa...');
+                            try {
+                                const canvas = await html2canvas(vizContainer, {
+                                    useCORS: true, allowTaint: false,
+                                    backgroundColor: '#ffffff',
+                                    scale: PDF_CONFIG.canvasScale,
+                                    logging: false, width: 800, height: 600,
+                                    onclone: function (d) {
+                                        const c = d.getElementById('shapes-visualization-container');
+                                        if (c) { c.style.visibility = 'visible'; c.style.opacity = '1'; }
+                                    }
+                                });
+                                mapImage = canvas.toDataURL('image/jpeg', 0.85);
+                            } catch (e) { }
+                        }
+                    } catch (e) { }
+                    finally {
+                        if (vizMap) { try { vizMap.remove(); } catch (e) { } visualizationMap = null; }
+                        if (vizContainer) vizContainer.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;visibility:hidden;display:none';
+                    }
+
+                    // ── Enviar al servidor Ubuntu para generar el PDF ──────
+                    showProgressBar('Generando PDF en el servidor...');
+                    const reportData = {
+                        filePrefix,
+                        nroInforme,
+                        fechaStr,
+                        vigenciaStr,
+                        meta: {
+                            nombre, clave, claveAux, tipoCatas, avaluo, supCons,
+                            areaCalc, perimCalc,
+                            fuente: props ? 'Catastro GADMR' : 'Coordenadas ingresadas'
+                        },
+                        colindantes,
+                        factibilidades,
+                        posteCercano,
+                        hasLayer3:       !!geojsonLayers[3],
+                        afectacionVial,
+                        intersectionData,
+                        utmCoords:       csvUTMCoordinates || [],
+                        mapImage,
+                        activeLayers
+                    };
+
+                    throw new Error('La generación del reporte DICAT en PDF está disponible únicamente en la instalación local del GeoVisor CAE-CH. Contacte al administrador para acceder a esta función.');
+
+                } catch (err) {
+                    console.error('Error generando DICAT:', err);
+                    alert('Error generando el DICAT: ' + (err.message || err));
+                } finally {
+                    hideProgressBar();
+                }
+            }
+
+            // Mantiene compatibilidad con botones existentes (CSV / coordenadas)
+            async function generatePDF() {
+                if (!csvPolygon) {
+                    alert('Primero debe cargar un archivo CSV con la consulta de predio o ingresar coordenadas manualmente.');
+                    return;
+                }
+                await generarDICAT(null);
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Extrae los datos de intersección sin renderizar PDF (usado para
+            // enviar al servidor en modo server-side PDF).
+            // ─────────────────────────────────────────────────────────────────
+            function computeIntersectionData(predioGeoJSON, selectedClave) {
+                const tableData = [];
+                const layerNames = {
+                    1: 'PUGS Urbano', 2: 'PUGS Rural', 3: 'Infraestructura Electrica',
+                    4: 'Agua Potable y Alcantarillado', 5: 'Cobertura Telecomunicaciones',
+                    6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Líneas de Fábrica'
+                };
+
+                for (let i = 1; i <= 8; i++) {
+                    const checkbox  = document.getElementById(`layer-${i}`);
+                    const isActive  = checkbox && checkbox.checked;
+                    const layerName = layerNames[i] || `Capa ${i}`;
+
+                    if (!isActive) {
+                        tableData.push([layerName, 'Estado', 'Capa inactiva']);
+                        continue;
+                    }
+                    if (!geojsonLayers[i]) {
+                        tableData.push([layerName, 'Estado', 'Capa activa sin datos']);
+                        continue;
+                    }
+
+                    const layerGeoJSON = geojsonLayers[i].toGeoJSON();
+                    if (!layerGeoJSON.features) continue;
+
+                    let hits = 0;
+                    layerGeoJSON.features.forEach(function (feature) {
+                        try {
+                            let incluir = false;
+                            if (i === 6) {
+                                if (selectedClave) {
+                                    const cf = feature.properties
+                                        ? (feature.properties.claves || feature.properties.CLAVES || '').trim()
+                                        : '';
+                                    incluir = cf === selectedClave.trim();
+                                } else {
+                                    const ix = turf.intersect(predioGeoJSON, feature);
+                                    incluir = ix !== null && ix.geometry !== null &&
+                                        ix.geometry.type !== 'LineString' && ix.geometry.type !== 'MultiLineString' &&
+                                        ix.geometry.type !== 'Point'      && ix.geometry.type !== 'MultiPoint';
+                                }
+                            } else {
+                                incluir = turf.booleanIntersects(predioGeoJSON, feature);
+                            }
+                            if (incluir) {
+                                hits++;
+                                if (feature.properties) {
+                                    for (const key in feature.properties) {
+                                        tableData.push([layerName, key, String(feature.properties[key])]);
+                                    }
+                                } else {
+                                    tableData.push([layerName, 'Sin atributos', 'Geometria intersectada']);
+                                }
+                            }
+                        } catch (e) { }
+                    });
+
+                    if (hits === 0) tableData.push([layerName, 'Resultado', 'No hay intersecciones']);
+                }
+
+                const csvCheckbox = document.getElementById('layer-csv');
+                tableData.push(['Consulta de Predio', 'Estado', csvCheckbox && csvCheckbox.checked ? 'ACTIVA' : 'INACTIVA']);
+                tableData.push(['Consulta de Predio', 'Puntos', csvPolygon ? csvPolygon.getLatLngs()[0].length.toString() : '0']);
+                return tableData;
+            }
+
+            // Función para generar la tabla de intersecciones optimizada
+            function generateIntersectionTable(doc, startY, pageWidth, margin, selectedClave) {
+                let tableData = [];
+                let tableHeaders = ['Capa', 'Atributo', 'Valor'];
+
+                const csvGeoJSON = csvPolygon.toGeoJSON();
+
+                const layerNames = {
+                    1: 'PUGS Urbano',
+                    2: 'PUGS Rural',
+                    3: 'Infraestructura Eléctrica',
+                    4: 'Agua Potable y Alcantarillado',
+                    5: 'Cobertura Telecomunicaciones',
+                    6: 'Catastro GADMR',
+                    7: 'Vialidad',
+                    8: 'Líneas de Fábrica'
+                };
+
+                const activeLayers = [];
+                let totalIntersections = 0;
+
+                for (let i = 1; i <= 8; i++) {
+                    const checkbox = document.getElementById(`layer-${i}`);
+                    const isActive = checkbox && checkbox.checked;
+                    const layerName = layerNames[i] || `Capa ${i}`;
+
+                    if (isActive) {
+                        activeLayers.push({
+                            id: i,
+                            name: layerName,
+                            hasData: !!geojsonLayers[i]
+                        });
+
+                        if (geojsonLayers[i]) {
+                            const layerGeoJSON = geojsonLayers[i].toGeoJSON();
+
+                            if (layerGeoJSON.features) {
+                                let layerIntersections = 0;
+
+                                layerGeoJSON.features.forEach(feature => {
+                                    try {
+                                        let incluir = false;
+
+                                        if (i === 6) {
+                                            // Capa Catastro GADMR: mostrar SOLO el predio consultado.
+                                            // Si hay clave catastral conocida, filtrar por ella para
+                                            // evitar que predios colindantes (que comparten lindero)
+                                            // aparezcan en el reporte.
+                                            if (selectedClave) {
+                                                const claveFeat = feature.properties
+                                                    ? (feature.properties.claves || feature.properties.CLAVES || '').trim()
+                                                    : '';
+                                                incluir = claveFeat === selectedClave.trim();
+                                            } else {
+                                                // Consulta por coordenadas/CSV: incluir sólo si hay
+                                                // superposición real de área (no sólo borde compartido).
+                                                const interseccion = turf.intersect(csvGeoJSON, feature);
+                                                incluir = interseccion !== null &&
+                                                    interseccion.geometry !== null &&
+                                                    interseccion.geometry.type !== 'LineString' &&
+                                                    interseccion.geometry.type !== 'MultiLineString' &&
+                                                    interseccion.geometry.type !== 'Point' &&
+                                                    interseccion.geometry.type !== 'MultiPoint';
+                                            }
+                                        } else {
+                                            incluir = turf.booleanIntersects(csvGeoJSON, feature);
+                                        }
+
+                                        if (incluir) {
+                                            layerIntersections++;
+                                            totalIntersections++;
+
+                                            if (feature.properties) {
+                                                for (let key in feature.properties) {
+                                                    const value = String(feature.properties[key]);
+                                                    tableData.push([
+                                                        layerName,
+                                                        key,
+                                                        value
+                                                    ]);
+                                                }
+                                            } else {
+                                                tableData.push([
+                                                    layerName,
+                                                    'Sin atributos',
+                                                    'Geometría intersectada'
+                                                ]);
+                                            }
+                                        }
+                                    } catch (error) {
+                                        console.error('Error al verificar intersección:', error);
+                                    }
+                                });
+
+                                if (layerIntersections === 0) {
+                                    tableData.push([
+                                        layerName,
+                                        'Resultado',
+                                        'No hay intersecciones'
+                                    ]);
+                                }
+                            }
+                        } else {
+                            tableData.push([
+                                layerName,
+                                'Estado',
+                                'Capa activa sin datos'
+                            ]);
+                        }
+                    } else {
+                        tableData.push([
+                            layerName,
+                            'Estado',
+                            'Capa inactiva'
+                        ]);
+                    }
+                }
+
+                const csvCheckbox = document.getElementById('layer-csv');
+                const csvIsActive = csvCheckbox && csvCheckbox.checked;
+
+                tableData.push([
+                    'Consulta de Predio',
+                    'Estado',
+                    csvIsActive ? 'ACTIVA' : 'INACTIVA'
+                ]);
+
+                tableData.push([
+                    'Consulta de Predio',
+                    'Puntos',
+                    csvPolygon ? csvPolygon.getLatLngs()[0].length.toString() : '0'
+                ]);
+
+                if (tableData.length > 0) {
+                    // Calcular anchos de columnas dinámicamente
+                    const availableWidth = pageWidth - (2 * margin); // Ancho disponible entre márgenes
+                    const col0Width = 40; // Ancho fijo para "Capa"
+                    const col1Width = 35; // Ancho fijo para "Atributo"
+                    const col2Width = availableWidth - col0Width - col1Width - 2; // Resto para "Valor" (-2 para padding)
+
+                    doc.autoTable({
+                        head: [tableHeaders],
+                        body: tableData,
+                        startY: startY,
+                        styles: {
+                            fontSize: 7,
+                            cellPadding: 1,
+                            overflow: 'linebreak',
+                            lineWidth: 0.1
+                        },
+                        headStyles: {
+                            fillColor: [139, 0, 0],
+                            textColor: [255, 255, 255],
+                            fontStyle: 'bold',
+                            lineWidth: 0.1
+                        },
+                        columnStyles: {
+                            0: { cellWidth: col0Width },
+                            1: { cellWidth: col1Width },
+                            2: { cellWidth: col2Width, overflow: 'linebreak' }
+                        },
+                        margin: { left: margin, right: margin },
+                        tableWidth: availableWidth,
+                        theme: 'grid'
+                    });
+                } else {
+                    doc.text('No hay capas activas para mostrar.', margin, startY + 10);
+                }
+
+                return doc.lastAutoTable ? doc.lastAutoTable.finalY + 5 : startY + 20;
+            }
+
+            // Función para abrir modales
+            function openModal(layerId) {
+                if (layerId !== 'csv') return;
+                const modal = document.getElementById('csv-modal');
+                if (!modal) return;
+                modal.classList.add('active');
+                const fileInput = modal.querySelector('input[type="file"]');
+                const fileInfo = modal.querySelector('.file-info');
+                const previewContainer = modal.querySelector('[id$="-preview-container"]');
+                const loadBtn = modal.querySelector('.btn:not(.btn-outline)');
+                if (fileInput) fileInput.value = '';
+                if (fileInfo) fileInfo.textContent = 'No se ha seleccionado ningún archivo';
+                if (previewContainer) previewContainer.style.display = 'none';
+                if (loadBtn) loadBtn.disabled = true;
+            }
+
+            // Inicialización del mapa
+            function inicializarMapa() {
+                const riobambaLat = -1.673210;
+                const riobambaLng = -78.648178;
+
+                const map = L.map('geovisor-map', {
+                    zoomControl: false
+                }).setView([riobambaLat, riobambaLng], 13);
+                window.map = map;
+
+                streetLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                    subdomains: ['mt0','mt1','mt2','mt3'],
+                    attribution: '&copy; Google Maps'
+                });
+
+                satelliteLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                    subdomains: ['mt0','mt1','mt2','mt3'],
+                    attribution: '&copy; Google Maps'
+                });
+
+                hybridLayer = L.layerGroup([
+                    satelliteLayer,
+                    L.tileLayer('https://{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
+                        subdomains: ['mt0','mt1','mt2','mt3'],
+                        attribution: '&copy; Google Maps',
+                        opacity: 0.7
+                    })
+                ]);
+
+                currentBaseLayer = streetLayer;
+                currentBaseLayer.addTo(map);
+
+                L.marker([riobambaLat, riobambaLng])
+                    .addTo(map)
+                    .bindPopup('Riobamba, Ecuador<br>Centro de la ciudad')
+                    .openPopup();
+
+                // Configuración para la capa CSV
+                const csvConfigBtn = document.querySelector('.layer-action[data-layer="csv"]');
+                if (csvConfigBtn) {
+                    csvConfigBtn.addEventListener('click', function () {
+                        openModal('csv');
+                    });
+                }
+
+                const csvLayerInfo = document.querySelector('.layer-info[data-layer="csv"]');
+                if (csvLayerInfo) {
+                    csvLayerInfo.addEventListener('click', function () {
+                        openModal('csv');
+                    });
+                }
+
+                // Manejar cambios en el checkbox de la capa CSV
+                const csvCheckbox = document.getElementById('layer-csv');
+                if (csvCheckbox) {
+                    csvCheckbox.addEventListener('change', function () {
+                        if (this.checked) {
+                            if (!csvPolygon) {
+                                openModal('csv');
+                            } else {
+                                if (window.map) {
+                                    map.addLayer(csvPolygon);
+                                }
+                            }
+                        } else {
+                            if (csvPolygon && window.map) {
+                                map.removeLayer(csvPolygon);
+                            }
+                        }
+                    });
+                }
+
+                // Configuración del modal para cargar CSV
+                const csvModal = document.getElementById('csv-modal');
+                const csvModalClose = document.querySelector('#csv-modal .modal-close');
+                const csvCancelBtn = document.querySelector('#csv-modal .btn-outline');
+                const csvFileInput = document.getElementById('csv-file');
+                const csvFileInfo = document.getElementById('csv-file-info');
+                const csvPreview = document.getElementById('csv-preview');
+                const csvPreviewContainer = document.getElementById('csv-preview-container');
+                const loadCsvBtn = document.getElementById('load-csv');
+
+                function closeCsvModal() {
+                    if (csvModal) csvModal.classList.remove('active');
+                    if (csvFileInput) csvFileInput.value = '';
+                    if (csvFileInfo) csvFileInfo.textContent = 'No se ha seleccionado ningún archivo';
+                    if (csvPreviewContainer) csvPreviewContainer.style.display = 'none';
+                    if (loadCsvBtn) loadCsvBtn.disabled = true;
+                }
+
+                if (csvModalClose) csvModalClose.addEventListener('click', closeCsvModal);
+                if (csvCancelBtn) csvCancelBtn.addEventListener('click', closeCsvModal);
+
+                if (csvFileInput) {
+                    csvFileInput.addEventListener('change', function (e) {
+                        const file = e.target.files[0];
+                        if (!file) {
+                            if (csvFileInfo) csvFileInfo.textContent = 'No se ha seleccionado ningún archivo';
+                            if (csvPreviewContainer) csvPreviewContainer.style.display = 'none';
+                            if (loadCsvBtn) loadCsvBtn.disabled = true;
+                            return;
+                        }
+
+                        if (csvFileInfo) {
+                            csvFileInfo.textContent = `Archivo: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const content = e.target.result;
+
+                            if (csvPreview) {
+                                csvPreview.textContent = content.substring(0, 500) + (content.length > 500 ? '...' : '');
+                            }
+                            if (csvPreviewContainer) csvPreviewContainer.style.display = 'block';
+
+                            const lines = content.split('\n');
+                            const firstLine = lines[0].toUpperCase();
+
+                            if (firstLine.includes('PTO') && firstLine.includes('X') && firstLine.includes('Y')) {
+                                if (csvFileInfo) csvFileInfo.textContent += ' - Formato válido detectado';
+                                if (loadCsvBtn) loadCsvBtn.disabled = false;
+                            } else if (lines.length >= 1 && lines[0].split(/[,;\t]/).length >= 3) {
+                                if (csvFileInfo) csvFileInfo.textContent += ' - Formato compatible detectado';
+                                if (loadCsvBtn) loadCsvBtn.disabled = false;
+                            } else {
+                                if (csvFileInfo) csvFileInfo.textContent += ' - Formato no reconocido';
+                                if (loadCsvBtn) loadCsvBtn.disabled = true;
+                            }
+                        };
+                        reader.readAsText(file);
+                    });
+                }
+
+                if (loadCsvBtn) {
+                    loadCsvBtn.addEventListener('click', function () {
+                        const file = csvFileInput ? csvFileInput.files[0] : null;
+                        if (!file) return;
+
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const content = e.target.result;
+                            const newData = parseCSV(content);
+
+                            if (newData.length > 0) {
+                                loadCSVData(newData, file.name);
+                            } else {
+                                alert('No se pudieron procesar datos válidos del archivo CSV.');
+                            }
+                        };
+                        reader.readAsText(file);
+                    });
+                }
+
+                // Carga on-demand: archivos predefinidos por capa
+                const layerFiles = {
+                    1: 'DATA SET/PUGS Urbano.geojson',
+                    2: 'DATA SET/PUGS Rural.geojson',
+                    3: 'DATA SET/LUMINARIA.geojson',
+                    6: 'DATA SET/Catastro GADMR.geojson',
+                    7: 'DATA SET/VIALIDAD_TOTAL.geojson',
+                    8: 'DATA SET/LINEAS_FABRICA.geojson'
+                };
+
+                // Manejar cambios en los checkboxes de las capas 1-8
+                for (let i = 1; i <= 8; i++) {
+                    const checkbox = document.getElementById(`layer-${i}`);
+                    if (!checkbox || checkbox.disabled) continue;
+                    checkbox.addEventListener('change', (function (layerId) {
+                        return async function () {
+                            if (this.checked) {
+                                if (geojsonLayers[layerId] && window.map) {
+                                    // Ya cargado: solo mostrar
+                                    window.map.addLayer(geojsonLayers[layerId]);
+                                } else if (layerFiles[layerId]) {
+                                    // Cargar archivo predefinido
+                                    const nameEl = document.querySelector(`#layer-${layerId} .layer-name`);
+                                    const label = nameEl ? nameEl.textContent.trim() : `Capa ${layerId}`;
+                                    showProgressBar(`Cargando ${label}...`);
+                                    try {
+                                        const response = await fetch(encodeURI(layerFiles[layerId]));
+                                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                                        const data = await response.json();
+                                        loadGeoJSONData(data, layerFiles[layerId], layerId);
+                                    } catch (err) {
+                                        console.warn(`Error al cargar capa ${layerId}:`, err);
+                                        this.checked = false;
+                                    } finally {
+                                        hideProgressBar();
+                                    }
+                                } else {
+                                    this.checked = false;
+                                }
+                            } else {
+                                if (geojsonLayers[layerId] && window.map) {
+                                    window.map.removeLayer(geojsonLayers[layerId]);
+                                }
+                            }
+                        };
+                    })(i));
+                }
+
+                // Controles del mapa
+                const zoomInBtn = document.getElementById('zoom-in');
+                const zoomOutBtn = document.getElementById('zoom-out');
+                const resetViewBtn = document.getElementById('reset-view');
+                const locateMeBtn = document.getElementById('locate-me');
+
+                if (zoomInBtn) {
+                    zoomInBtn.addEventListener('click', function () {
+                        map.zoomIn();
+                    });
+                }
+
+                if (zoomOutBtn) {
+                    zoomOutBtn.addEventListener('click', function () {
+                        map.zoomOut();
+                    });
+                }
+
+                if (resetViewBtn) {
+                    resetViewBtn.addEventListener('click', function () {
+                        map.setView([riobambaLat, riobambaLng], 13);
+                    });
+                }
+
+                if (locateMeBtn) {
+                    locateMeBtn.addEventListener('click', function () {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(function (position) {
+                                const lat = position.coords.latitude;
+                                const lng = position.coords.longitude;
+                                map.setView([lat, lng], 15);
+                                L.marker([lat, lng])
+                                    .addTo(map)
+                                    .bindPopup('Su ubicación actual')
+                                    .openPopup();
+                            }, function () {
+                                alert('No se pudo obtener su ubicación. Asegúrese de que los servicios de ubicación estén activados.');
+                            });
+                        } else {
+                            alert('La geolocalización no es compatible con este navegador.');
+                        }
+                    });
+                }
+
+                // Control de capas base
+                const baseStreetBtn = document.getElementById('base-street');
+                const baseSatelliteBtn = document.getElementById('base-satellite');
+                const baseHybridBtn = document.getElementById('base-hybrid');
+
+                if (baseStreetBtn) {
+                    baseStreetBtn.addEventListener('click', function () {
+                        changeBaseLayer('street');
+                    });
+                }
+
+                if (baseSatelliteBtn) {
+                    baseSatelliteBtn.addEventListener('click', function () {
+                        changeBaseLayer('satellite');
+                    });
+                }
+
+                if (baseHybridBtn) {
+                    baseHybridBtn.addEventListener('click', function () {
+                        changeBaseLayer('hybrid');
+                    });
+                }
+
+                // Manejar el formulario de coordenadas UTM
+                const coordinatesForm = document.getElementById('coordinates-form');
+                if (coordinatesForm) {
+                    coordinatesForm.addEventListener('submit', function (e) {
+                        e.preventDefault();
+
+                        if (userPolygon && window.map) {
+                            map.removeLayer(userPolygon);
+                            userPolygon = null;
+                        }
+
+                        if (userMarkers.length > 0 && window.map) {
+                            userMarkers.forEach(marker => {
+                                window.map.removeLayer(marker);
+                            });
+                            userMarkers = [];
+                        }
+
+                        const coordinates = [];
+                        const coordinateGroups = document.querySelectorAll('.coordinate-group');
+
+                        coordinateGroups.forEach(group => {
+                            const eastingInput = group.querySelector('input[id^="easting-"]');
+                            const northingInput = group.querySelector('input[id^="northing-"]');
+
+                            if (eastingInput && northingInput) {
+                                const easting = parseFloat(eastingInput.value);
+                                const northing = parseFloat(northingInput.value);
+
+                                if (!isNaN(easting) && !isNaN(northing)) {
+                                    coordinates.push({ easting, northing });
+                                }
+                            }
+                        });
+
+                        if (coordinates.length === 0) {
+                            alert('Por favor, ingrese al menos una coordenada válida.');
+                            return;
+                        }
+
+                        // Guardar las coordenadas UTM originales
+                        csvUTMCoordinates = coordinates;
+
+                        const latLngPoints = [];
+
+                        coordinates.forEach(coord => {
+                            const latLng = utmToLatLng(coord.easting, coord.northing, 17, true);
+                            latLngPoints.push(latLng);
+
+                            if (window.map) {
+                                const marker = L.marker(latLng).addTo(map);
+                                marker.bindPopup(`Coordenada UTM:<br>Este: ${coord.easting.toFixed(4)}<br>Norte: ${coord.northing.toFixed(4)}`);
+                                userMarkers.push(marker);
+                            }
+                        });
+
+                        if (coordinates.length >= 3 && window.map) {
+                            userPolygon = L.polygon(latLngPoints, {
+                                color: 'blue',
+                                fillColor: '#30f',
+                                fillOpacity: 0.3,
+                                weight: 3
+                            }).addTo(map);
+
+                            const polygonPoints = latLngPoints.map(coord => ({ lat: coord[0], lng: coord[1] }));
+                            const area = calculatePolygonArea(polygonPoints);
+                            const perimeter = calculatePolygonPerimeter(polygonPoints);
+
+                            const propertyInfo = document.getElementById('property-info');
+                            if (propertyInfo) {
+                                propertyInfo.style.display = 'block';
+                            }
+
+                            const infoPoints = document.getElementById('info-points');
+                            if (infoPoints) {
+                                infoPoints.textContent = coordinates.length;
+                            }
+
+                            const infoArea = document.getElementById('info-area');
+                            if (infoArea) {
+                                infoArea.textContent = `${area} m²`;
+                            }
+
+                            const infoPerimeter = document.getElementById('info-perimeter');
+                            if (infoPerimeter) {
+                                infoPerimeter.textContent = `${perimeter} m`;
+                            }
+
+                            userPolygon.bindPopup(`Polígono con ${coordinates.length} puntos<br>Área: ${area} m²<br>Perímetro: ${perimeter} m`);
+
+                            map.fitBounds(userPolygon.getBounds());
+
+                            csvPolygon = userPolygon;
+
+                            const sourceElement = document.getElementById('csv-source');
+                            if (sourceElement) {
+                                sourceElement.textContent = `Coordenadas ingresadas manualmente`;
+                            }
+
+                            const csvCheckbox = document.getElementById('layer-csv');
+                            if (csvCheckbox) {
+                                csvCheckbox.checked = true;
+                            }
+                        } else if (coordinates.length === 1 && window.map) {
+                            map.setView(latLngPoints[0], 16);
+
+                            const propertyInfo = document.getElementById('property-info');
+                            if (propertyInfo) {
+                                propertyInfo.style.display = 'block';
+                            }
+
+                            const infoPoints = document.getElementById('info-points');
+                            if (infoPoints) {
+                                infoPoints.textContent = '1';
+                            }
+
+                            const infoArea = document.getElementById('info-area');
+                            if (infoArea) {
+                                infoArea.textContent = '-';
+                            }
+
+                            const infoPerimeter = document.getElementById('info-perimeter');
+                            if (infoPerimeter) {
+                                infoPerimeter.textContent = '-';
+                            }
+
+                            csvPolygon = L.circle(latLngPoints[0], {
+                                radius: 10,
+                                color: 'red',
+                                fillColor: '#f03',
+                                fillOpacity: 0.3
+                            }).addTo(map);
+
+                            const sourceElement = document.getElementById('csv-source');
+                            if (sourceElement) {
+                                sourceElement.textContent = `Coordenada ingresada manualmente`;
+                            }
+
+                            const csvCheckbox = document.getElementById('layer-csv');
+                            if (csvCheckbox) {
+                                csvCheckbox.checked = true;
+                            }
+                        }
+                    });
+                }
+
+                // Generar PDF desde el panel de Coordenadas
+                const generatePdfBtn = document.getElementById('generate-pdf');
+                if (generatePdfBtn) {
+                    generatePdfBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        generatePDF();
+                    });
+                }
+
+                // Generar PDF desde el panel de Información
+                const generatePdfInfoBtn = document.getElementById('generate-pdf-info');
+                if (generatePdfInfoBtn) {
+                    generatePdfInfoBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        generatePDF();
+                    });
+                }
+
+                // Botón para agregar coordenadas
+                const addCoordinateBtn = document.getElementById('add-coordinate');
+                if (addCoordinateBtn) {
+                    addCoordinateBtn.addEventListener('click', function () {
+                        addCoordinateGroup();
+                    });
+                }
+
+                // Botón para limpiar todo
+                const clearAllBtn = document.getElementById('clear-all');
+                if (clearAllBtn) {
+                    clearAllBtn.addEventListener('click', function () {
+                        clearAllCoordinates();
+                    });
+                }
+
+                // Agregar primera coordenada por defecto
+                addCoordinateGroup();
+            }
+
+            // Funcionalidad de pestañas del sidebar
+            const sidebarTabs = document.querySelectorAll('.sidebar-tab');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            if (sidebarTabs.length > 0 && tabPanes.length > 0) {
+                sidebarTabs.forEach(tab => {
+                    tab.addEventListener('click', function () {
+                        const tabId = this.getAttribute('data-tab');
+
+                        sidebarTabs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+
+                        tabPanes.forEach(pane => {
+                            pane.classList.remove('active');
+                        });
+
+                        const targetPane = document.getElementById(`${tabId}-pane`);
+                        if (targetPane) {
+                            targetPane.classList.add('active');
+                        }
+                    });
+                });
+            }
+
+            // ========== BÚSQUEDA CATASTRAL ==========
+            let searchHighlightLayer = null;
+            let selectedPredioFeature = null;
+            let allPrediosOwner = []; // todos los predios del mismo propietario
+
+            const searchInput = document.getElementById('catastro-search');
+            const searchResultsEl = document.getElementById('search-results');
+
+            function performCatastralSearch(query) {
+                query = query.trim().toLowerCase();
+                searchResultsEl.innerHTML = '';
+
+                if (query.length < 3) {
+                    searchResultsEl.style.display = 'none';
+                    return;
+                }
+
+                if (!geojsonLayers[6]) {
+                    searchResultsEl.innerHTML = '<div class="search-result-item search-no-results">Active primero la capa "Catastro GADMR"</div>';
+                    searchResultsEl.style.display = 'block';
+                    return;
+                }
+
+                const matches = [];
+                geojsonLayers[6].eachLayer(function (layer) {
+                    if (!layer.feature) return;
+                    const p = layer.feature.properties;
+                    const claves = (p.claves || '').trim().toLowerCase();
+                    const clavesAux = (p.claves_aux || '').trim().toLowerCase();
+                    const gisPredio = (p.gis_predio || '').trim().toLowerCase();
+                    const nombreC = (p.nombre_c || '').trim().toLowerCase();
+
+                    if (claves.includes(query) || clavesAux.includes(query) ||
+                        gisPredio.includes(query) || nombreC.includes(query)) {
+                        matches.push({ layer, props: p });
+                    }
+                });
+
+                if (matches.length === 0) {
+                    searchResultsEl.innerHTML = '<div class="search-result-item search-no-results">No se encontraron predios</div>';
+                    searchResultsEl.style.display = 'block';
+                    return;
+                }
+
+                // Agrupar por propietario (gis_predio o nombre_c, trimmeando primero)
+                const ownerMap = new Map();
+                matches.forEach(function (m) {
+                    const key = (m.props.gis_predio || '').trim() || (m.props.nombre_c || '').trim() || 'Sin nombre';
+                    if (!ownerMap.has(key)) ownerMap.set(key, []);
+                    ownerMap.get(key).push(m);
+                });
+
+                ownerMap.forEach(function (predios, ownerName) {
+                    if (predios.length > 1) {
+                        // Encabezado de propietario con múltiples predios
+                        const header = document.createElement('div');
+                        header.className = 'search-result-item';
+                        header.style.cssText = 'background:#fff5f5;border-left:3px solid #8B0000;cursor:default';
+                        header.innerHTML = `<strong style="color:#8B0000"><i class="fas fa-user"></i> ${ownerName}</strong> <span style="background:#8B0000;color:white;border-radius:10px;padding:1px 7px;font-size:11px">${predios.length} predios</span>`;
+                        searchResultsEl.appendChild(header);
+
+                        predios.slice(0, 8).forEach(function ({ layer, props }, idx) {
+                            const item = document.createElement('div');
+                            item.className = 'search-result-item';
+                            item.style.cssText = 'padding-left:20px;border-left:3px solid #ddd';
+                            const clave = (props.claves || props.claves_aux || 'S/C').trim();
+                            const area = props.Shape__Area ? parseFloat(props.Shape__Area).toFixed(1) : '?';
+                            item.innerHTML = `<i class="fas fa-map" style="color:#8B0000;margin-right:4px"></i> Predio ${idx + 1}<br><small style="color:#888">${clave} &nbsp;|&nbsp; ${area} m²</small>`;
+                            item.addEventListener('click', function () {
+                                selectPredio(layer, props, predios);
+                            });
+                            searchResultsEl.appendChild(item);
+                        });
+                    } else {
+                        // Un solo predio
+                        const { layer, props } = predios[0];
+                        const item = document.createElement('div');
+                        item.className = 'search-result-item';
+                        const clave = (props.claves || props.claves_aux || '').trim();
+                        item.innerHTML = `<strong>${ownerName}</strong><br><small style="color:#888">${clave}</small>`;
+                        item.addEventListener('click', function () {
+                            selectPredio(layer, props, predios);
+                        });
+                        searchResultsEl.appendChild(item);
+                    }
+                });
+
+                if (matches.length >= 10) {
+                    const more = document.createElement('div');
+                    more.className = 'search-result-item search-no-results';
+                    more.textContent = `Mostrando primeros resultados. Afine la búsqueda para más precisión.`;
+                    searchResultsEl.appendChild(more);
+                }
+
+                searchResultsEl.style.display = 'block';
+            }
+
+            function selectPredio(layer, props, allPredios) {
+                // Limpiar highlight anterior
+                if (searchHighlightLayer) {
+                    window.map.removeLayer(searchHighlightLayer);
+                    searchHighlightLayer = null;
+                }
+
+                selectedPredioFeature = { layer, props };
+                allPrediosOwner = allPredios || [{ layer, props }];
+
+                const bounds = layer.getBounds();
+                window.map.fitBounds(bounds, { maxZoom: 19, padding: [80, 80] });
+
+                // Highlight del predio seleccionado en el mapa
+                searchHighlightLayer = L.geoJSON(layer.toGeoJSON(), {
+                    style: { color: '#FFD700', weight: 3, fillColor: '#FFD700', fillOpacity: 0.35 }
+                }).addTo(window.map);
+
+                // Highlight suave de los demás predios del mismo propietario
+                if (allPrediosOwner.length > 1) {
+                    allPrediosOwner.forEach(function (p) {
+                        if (p.layer !== layer) {
+                            L.geoJSON(p.layer.toGeoJSON(), {
+                                style: { color: '#FFA500', weight: 2, fillColor: '#FFA500', fillOpacity: 0.15, dashArray: '4,4' }
+                            }).addTo(window.map);
+                        }
+                    });
+                }
+
+                searchResultsEl.style.display = 'none';
+                searchInput.value = (props.gis_predio || '').trim() || (props.nombre_c || '').trim();
+
+                // Datos del predio (trim antes del OR para evitar espacios en blanco como truthy)
+                const nombre = (props.gis_predio || '').trim() || (props.nombre_c || '').trim() || 'Sin nombre';
+                const clave = (props.claves || 'S/C').trim();
+                const claveAux = (props.claves_aux || 'S/C').trim();
+                const area = props.Shape__Area ? parseFloat(props.Shape__Area).toFixed(2) : 'N/D';
+                const avaluo = props.avaluo_c ? `$${parseFloat(props.avaluo_c).toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : 'N/D';
+                const supCons = (props.sup_cons_c !== undefined && props.sup_cons_c !== null) ? props.sup_cons_c + ' m²' : 'N/D';
+                const tipoCatas = props.tipo_catas || 'N/D';
+
+                // Poblar tabla en el panel del sidebar
+                const table = document.getElementById('predio-data-table');
+                const rows = [
+                    ['Propietario', nombre],
+                    ['Clave catastral', clave],
+                    ['Clave auxiliar', claveAux],
+                    ['Tipo catastral', tipoCatas],
+                    ['Área del predio', area + ' m²'],
+                    ['Sup. construida', supCons],
+                    ['Avalúo catastral', avaluo],
+                ];
+                if (allPrediosOwner.length > 1) {
+                    rows.push(['Total predios', `${allPrediosOwner.length} predios registrados`]);
+                }
+                table.innerHTML = rows.map(function (r) {
+                    return `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`;
+                }).join('');
+
+                // Mostrar panel
+                document.getElementById('predio-panel').style.display = 'block';
+            }
+
+            // Permite seleccionar un predio directamente desde el popup al hacer clic en el mapa
+            window.seleccionarPredioDesdePopup = function (btn) {
+                const clave = btn.getAttribute('data-clave');
+                if (!clave || !geojsonLayers[6]) return;
+
+                geojsonLayers[6].eachLayer(function (layer) {
+                    if (!layer.feature) return;
+                    const p = layer.feature.properties;
+                    const c = (p.claves || '').trim() || (p.claves_aux || '').trim();
+                    if (c === clave) {
+                        // Buscar todos los predios del mismo propietario
+                        const propietario = (p.gis_predio || '').trim() || (p.nombre_c || '').trim();
+                        const todosLosPredios = [];
+                        if (propietario) {
+                            geojsonLayers[6].eachLayer(function (l2) {
+                                if (!l2.feature) return;
+                                const p2 = l2.feature.properties;
+                                const n2 = (p2.gis_predio || '').trim() || (p2.nombre_c || '').trim();
+                                if (n2 === propietario) todosLosPredios.push({ layer: l2, props: p2 });
+                            });
+                        }
+                        window.map.closePopup();
+                        selectPredio(layer, p, todosLosPredios.length > 0 ? todosLosPredios : [{ layer, props: p }]);
+                    }
+                });
+            };
+
+            window.clearPredioSelection = function () {
+                selectedPredioFeature = null;
+                allPrediosOwner = [];
+                if (searchHighlightLayer) {
+                    window.map.removeLayer(searchHighlightLayer);
+                    searchHighlightLayer = null;
+                }
+                document.getElementById('predio-panel').style.display = 'none';
+                document.getElementById('predio-data-table').innerHTML = '';
+                searchInput.value = '';
+                searchResultsEl.style.display = 'none';
+            };
+
+            // ======================================================
+            // GENERADOR DE DICAT - Diagnóstico de Información Catastral y Territorial
+            // ======================================================================
+
+            function iprusSectionHeader(doc, title, y, pageWidth, margin) {
+                doc.setFillColor(139, 0, 0);
+                doc.rect(margin, y, pageWidth - margin * 2, 7, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text(title, margin + 3, y + 5);
+                doc.setTextColor(0, 0, 0);
+                doc.setFont('helvetica', 'normal');
+                return y + 10;
+            }
+
+            function iprusCheckSpace(doc, y, pageHeight, margin, needed) {
+                if (y + needed > pageHeight - margin) {
+                    doc.addPage();
+                    return margin + 5;
+                }
+                return y;
+            }
+
+            // Extrae el nombre de calle de las propiedades de un feature de vialidad
+            function extraerNombreCalle(props) {
+                // Campos con nombres reales de vía (prioridad alta)
+                const camposNombre = ['nombre', 'NOMBRE', 'name', 'NAME', 'via', 'VIA', 'calle', 'CALLE',
+                    'denominaci', 'DENOMINACI', 'descripcion', 'DESCRIPCION', 'tipo_via', 'TIPO_VIA',
+                    'nomvial', 'NOMVIAL', 'calle_nombre', 'CALLE_NOMBRE'];
+                for (const c of camposNombre) {
+                    const v = (props[c] || '').toString().trim();
+                    if (v && v !== 'null' && v !== '0') return v;
+                }
+                // Fallback: campo Layer si contiene info útil de vía
+                const layer = (props['Layer'] || props['LAYER'] || '').toString().trim();
+                if (layer && layer !== 'null') {
+                    // Filtrar capas genéricas que no son nombres de calle
+                    const capasGenericas = ['LINEA DE FABRICA', 'ACERA', 'BORDILLO', 'MANZANA'];
+                    const esVia = capasGenericas.every(g => !layer.toUpperCase().includes(g));
+                    if (esVia) return layer; // e.g. "A. EJES DE VIA"
+                }
+                return '';
+            }
+
+            // Calcula la longitud del lindero compartido entre dos polígonos
+            // Método: L_compartido = (Perim1 + Perim2 - Perim_Union) / 2
+            function calcularLinderoCompartido(poly1, poly2) {
+                try {
+                    const toLine = function (g) {
+                        try { return turf.polygonToLine(g); } catch (e) { return null; }
+                    };
+                    const l1 = toLine(poly1);
+                    const l2 = toLine(poly2);
+                    if (!l1 || !l2) return null;
+                    const unionPoly = turf.union(poly1, poly2);
+                    if (!unionPoly) return null;
+                    const lU = toLine(unionPoly);
+                    if (!lU) return null;
+                    const len1 = turf.length(l1, { units: 'meters' });
+                    const len2 = turf.length(l2, { units: 'meters' });
+                    const lenU = turf.length(lU, { units: 'meters' });
+                    const shared = (len1 + len2 - lenU) / 2;
+                    return shared > 0.1 ? shared : null;
+                } catch (e) { return null; }
+            }
+
+            // Busca el nombre de calle en la capa de vialidad que colinda con el predio en una dirección
+            // ─────────────────────────────────────────────────────────────────
+            // Calcula el área del predio afectada cuando una línea de fábrica
+            // lo atraviesa. Divide el predio en dos mitades con un semiplano y
+            // devuelve el área de la mitad menor (= zona afectada).
+            // ─────────────────────────────────────────────────────────────────
+            function calcularAreaBajoLineaFabrica(predioGeoJSON, lineaFeat) {
+                try {
+                    let coords;
+                    const geomType = lineaFeat.geometry.type;
+                    if (geomType === 'LineString') {
+                        coords = lineaFeat.geometry.coordinates;
+                    } else if (geomType === 'MultiLineString') {
+                        coords = lineaFeat.geometry.coordinates.reduce(
+                            (longest, seg) => seg.length > longest.length ? seg : longest, []
+                        );
+                    }
+                    if (!coords || coords.length < 2) return null;
+
+                    const x0 = coords[0][0], y0 = coords[0][1];
+                    const x1 = coords[coords.length - 1][0], y1 = coords[coords.length - 1][1];
+                    const dx = x1 - x0, dy = y1 - y0;
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    if (len < 1e-10) return null;
+
+                    // Vector normal unitario (perpendicular a la línea)
+                    const nx = -dy / len, ny = dx / len;
+                    const bigDist = 0.05;   // ~5 km en grados
+                    const extFactor = 10;   // extender la línea 10x su longitud
+
+                    // Extremos extendidos de la línea
+                    const ex0 = [x0 - dx * extFactor, y0 - dy * extFactor];
+                    const ex1 = [x1 + dx * extFactor, y1 + dy * extFactor];
+
+                    // Semiplano rectangular en el lado "normal positivo"
+                    const halfPlane = turf.polygon([[
+                        ex0,
+                        [ex0[0] + nx * bigDist, ex0[1] + ny * bigDist],
+                        [ex1[0] + nx * bigDist, ex1[1] + ny * bigDist],
+                        ex1,
+                        ex0
+                    ]]);
+
+                    const part1 = turf.intersect(predioGeoJSON, halfPlane);
+                    const area1 = part1 ? turf.area(part1) : 0;
+                    const totalArea = turf.area(predioGeoJSON);
+                    const area2 = totalArea - area1;
+
+                    // La mitad menor es la zona afectada (franja de reserva vial)
+                    const afectacion = Math.min(area1, area2);
+                    return afectacion > 0.01 ? afectacion : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Calcula el ancho perpendicular al centroide del predio usando
+            // features del targetLayer (e.g. 'LINEA DE FABRICA', '-ACERA').
+            // Lanza un transecto perpendicular a la línea más cercana y mide
+            // el gap entre las dos intersecciones consecutivas que corresponden
+            // al ancho de la vía o acera. Retorna metros o null.
+            // ─────────────────────────────────────────────────────────────────
+            function calcularAnchoPerpendicular(predioGeoJSON, targetLayer) {
+                if (!geojsonLayers[8]) return null;
+                const centroid = turf.centroid(predioGeoJSON);
+                const cLng = centroid.geometry.coordinates[0];
+                const cLat = centroid.geometry.coordinates[1];
+
+                // Recopilar features del layer dentro de 80 m
+                let buffer80;
+                try { buffer80 = turf.buffer(predioGeoJSON, 0.08, { units: 'kilometers' }); } catch (e) { return null; }
+                const featuresNearby = [];
+                geojsonLayers[8].eachLayer(function (lyr) {
+                    if (!lyr.feature) return;
+                    try {
+                        const featGeo = lyr.toGeoJSON();
+                        const layer = featGeo.properties && featGeo.properties.Layer;
+                        if (layer !== targetLayer) return;
+                        if (turf.booleanIntersects(buffer80, featGeo)) featuresNearby.push(featGeo);
+                    } catch (e) { }
+                });
+                if (featuresNearby.length < 2) return null;
+
+                // Feature más cercana al centroide → dirección de la línea
+                let nearestFeat = null, minD = Infinity;
+                featuresNearby.forEach(function (feat) {
+                    try {
+                        const d = turf.distance(centroid, turf.centroid(feat), { units: 'meters' });
+                        if (d < minD) { minD = d; nearestFeat = feat; }
+                    } catch (e) { }
+                });
+                if (!nearestFeat) return null;
+
+                let coords;
+                const gt = nearestFeat.geometry.type;
+                if (gt === 'LineString') {
+                    coords = nearestFeat.geometry.coordinates;
+                } else if (gt === 'MultiLineString') {
+                    coords = nearestFeat.geometry.coordinates.reduce(function (a, b) { return b.length > a.length ? b : a; }, []);
+                }
+                if (!coords || coords.length < 2) return null;
+
+                // Vector perpendicular a la dirección de la línea
+                const x0 = coords[0][0], y0 = coords[0][1];
+                const x1 = coords[coords.length - 1][0], y1 = coords[coords.length - 1][1];
+                const dx = x1 - x0, dy = y1 - y0;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                if (len < 1e-10) return null;
+                const px = -dy / len, py = dx / len;
+
+                // Transecto ~500 m a cada lado del centroide
+                const D = 0.005;
+                let transect;
+                try {
+                    transect = turf.lineString([
+                        [cLng - px * D, cLat - py * D],
+                        [cLng + px * D, cLat + py * D]
+                    ]);
+                } catch (e) { return null; }
+
+                // Intersecciones del transecto con cada feature cercana
+                const distances = [];
+                featuresNearby.forEach(function (feat) {
+                    try {
+                        const pts = turf.lineIntersect(transect, feat);
+                        pts.features.forEach(function (pt) {
+                            const d = turf.distance(centroid, pt, { units: 'meters' });
+                            if (d > 0.2) distances.push(d);
+                        });
+                    } catch (e) { }
+                });
+                if (distances.length < 2) return null;
+
+                distances.sort(function (a, b) { return a - b; });
+                // Deduplicar (< 0.5 m = mismo punto)
+                const uniq = [distances[0]];
+                for (let i = 1; i < distances.length; i++) {
+                    if (distances[i] - distances[i - 1] > 0.5) uniq.push(distances[i]);
+                }
+                if (uniq.length < 2) return null;
+
+                // Primer par con gap plausible para una vía (3–60 m)
+                for (let i = 0; i < uniq.length - 1; i++) {
+                    const gap = uniq[i + 1] - uniq[i];
+                    if (gap >= 3 && gap <= 60) return Math.round(gap * 100) / 100;
+                }
+                return null;
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Analiza la capa 8 (Líneas de Fábrica) contra el polígono del
+            // predio y devuelve si hay afectación y el área comprometida en m².
+            // ─────────────────────────────────────────────────────────────────
+            function calcularAfectacionVial(predioGeoJSON) {
+                const resultado = { tieneAfectacion: false, areaAfectadaM2: 0 };
+                if (!geojsonLayers[8]) return resultado;
+
+                geojsonLayers[8].eachLayer(function (lyr) {
+                    if (!lyr.feature) return;
+                    try {
+                        const featGeo = lyr.toGeoJSON();
+                        const geomType = featGeo.geometry && featGeo.geometry.type;
+                        if (!geomType) return;
+
+                        if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
+                            // Superposición directa: calcular área de intersección
+                            const interseccion = turf.intersect(predioGeoJSON, featGeo);
+                            if (interseccion) {
+                                const area = turf.area(interseccion);
+                                if (area > 0.1) {
+                                    resultado.tieneAfectacion = true;
+                                    resultado.areaAfectadaM2 += area;
+                                }
+                            }
+                        } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
+                            // Línea que atraviesa el polígono
+                            let cruza = false;
+                            try { cruza = turf.booleanCrosses(featGeo, predioGeoJSON); } catch (e) { }
+                            if (!cruza) {
+                                try { cruza = turf.booleanIntersects(featGeo, predioGeoJSON); } catch (e) { }
+                            }
+                            if (cruza) {
+                                resultado.tieneAfectacion = true;
+                                const areaEst = calcularAreaBajoLineaFabrica(predioGeoJSON, featGeo);
+                                if (areaEst !== null) resultado.areaAfectadaM2 += areaEst;
+                            }
+                        }
+                    } catch (e) { }
+                });
+
+                if (resultado.areaAfectadaM2 > 0) {
+                    resultado.areaAfectadaM2 = Math.round(resultado.areaAfectadaM2 * 100) / 100;
+                }
+
+                // ── Ancho de vía y acera: atributos → fallback perpendicular ──
+                let anchoVia = null, anchoAcera = null, fuenteAncho = null;
+                let minDistVia = Infinity, minDistAcera = Infinity;
+                try {
+                    const predioCentroid = turf.centroid(predioGeoJSON);
+                    const predioBuffer = turf.buffer(predioGeoJSON, 0.05, { units: 'kilometers' });
+                    // 1) Buscar por atributos específicos (0-ANCHOS VIALES / -ACERA)
+                    geojsonLayers[8].eachLayer(function (lyr) {
+                        if (!lyr.feature) return;
+                        try {
+                            const featGeo = lyr.toGeoJSON();
+                            const layer = featGeo.properties && featGeo.properties.Layer;
+                            if (layer !== '0-ANCHOS VIALES' && layer !== '-ACERA') return;
+                            let intersects = false;
+                            try { intersects = turf.booleanIntersects(predioBuffer, featGeo); } catch (e) { }
+                            if (!intersects) return;
+                            const len = turf.length(featGeo, { units: 'meters' });
+                            if (len < 0.5) return;
+                            let dist = Infinity;
+                            try { dist = turf.distance(predioCentroid, turf.centroid(featGeo), { units: 'meters' }); } catch (e) { }
+                            if (layer === '0-ANCHOS VIALES' && dist < minDistVia) {
+                                minDistVia = dist;
+                                anchoVia = Math.round(len * 100) / 100;
+                                fuenteAncho = 'atributos';
+                            } else if (layer === '-ACERA' && dist < minDistAcera) {
+                                minDistAcera = dist;
+                                anchoAcera = Math.round(len * 100) / 100;
+                            }
+                        } catch (e) { }
+                    });
+                    // 2) Fallback: calcular perpendicular al centroide alineado con líneas de fábrica
+                    if (anchoVia === null) {
+                        const viaPerp = calcularAnchoPerpendicular(predioGeoJSON, 'LINEA DE FABRICA');
+                        if (viaPerp !== null) { anchoVia = viaPerp; fuenteAncho = 'calculado'; }
+                    }
+                    if (anchoAcera === null) {
+                        const aceraPerp = calcularAnchoPerpendicular(predioGeoJSON, '-ACERA');
+                        if (aceraPerp !== null) anchoAcera = aceraPerp;
+                    }
+                } catch (e) { }
+                resultado.anchoVia = anchoVia;
+                resultado.anchoAcera = anchoAcera;
+                resultado.fuenteAncho = fuenteAncho;
+
+                return resultado;
+            }
+
+            function buscarCalleColindante(predioGeoJSON, direccion) {
+                if (!geojsonLayers[7]) return null;
+                const centro = turf.centroid(predioGeoJSON);
+                const cLat = centro.geometry.coordinates[1];
+                const cLng = centro.geometry.coordinates[0];
+                let mejorNombre = null;
+                let hayViaEnDir = false;
+                let mejorDistancia = Infinity;
+
+                geojsonLayers[7].eachLayer(function (lyr) {
+                    if (!lyr.feature) return;
+                    try {
+                        const vGeo = lyr.toGeoJSON();
+                        if (!turf.booleanIntersects(predioGeoJSON, vGeo)) return;
+                        let vc;
+                        try { vc = turf.centroid(vGeo); } catch (e) { return; }
+                        const vLat = vc.geometry.coordinates[1];
+                        const vLng = vc.geometry.coordinates[0];
+                        const dLat = vLat - cLat;
+                        const dLng = vLng - cLng;
+
+                        // Verificar que la vía está en la dirección correcta
+                        let dirVia = '';
+                        if (Math.abs(dLat) >= Math.abs(dLng)) {
+                            dirVia = dLat >= 0 ? 'Norte' : 'Sur';
+                        } else {
+                            dirVia = dLng >= 0 ? 'Este' : 'Oeste';
+                        }
+                        if (dirVia !== direccion) return;
+
+                        hayViaEnDir = true;
+                        const nombre = extraerNombreCalle(lyr.feature.properties);
+                        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+                        if (nombre && dist < mejorDistancia) {
+                            mejorDistancia = dist;
+                            mejorNombre = nombre;
+                        }
+                    } catch (e) { }
+                });
+
+                if (mejorNombre) return mejorNombre;
+                if (hayViaEnDir) return 'Vía sin denominación';
+                return null;
+            }
+
+            function calcularColindantes(predioGeoJSON, selectedClave) {
+                const dirs = { Norte: [], Sur: [], Este: [], Oeste: [] };
+                if (!geojsonLayers[6]) return dirs;
+
+                const centro = turf.centroid(predioGeoJSON);
+                const cLat = centro.geometry.coordinates[1];
+                const cLng = centro.geometry.coordinates[0];
+
+                // Calcular perímetro del predio una sola vez
+                let predioPerim = null;
+                try {
+                    const predioLine = turf.polygonToLine(predioGeoJSON);
+                    predioPerim = turf.length(predioLine, { units: 'meters' });
+                } catch (e) { }
+
+                geojsonLayers[6].eachLayer(function (lyr) {
+                    if (!lyr.feature) return;
+                    const p = lyr.feature.properties;
+                    const clave = (p.claves || '').trim();
+                    if (clave && clave === selectedClave) return;
+                    try {
+                        const nGeo = lyr.toGeoJSON();
+                        if (!turf.booleanIntersects(predioGeoJSON, nGeo)) return;
+
+                        const nc = turf.centroid(nGeo);
+                        const nLat = nc.geometry.coordinates[1];
+                        const nLng = nc.geometry.coordinates[0];
+                        const dLat = nLat - cLat;
+                        const dLng = nLng - cLng;
+
+                        const nombre = (p.gis_predio || '').trim() || (p.nombre_c || '').trim() || 'Sin identificar';
+
+                        // Calcular dimensión del lindero compartido
+                        let dim = '—';
+                        const sharedLen = calcularLinderoCompartido(predioGeoJSON, nGeo);
+                        if (sharedLen !== null) {
+                            dim = sharedLen.toFixed(2) + ' m';
+                        }
+
+                        const entry = { nombre, dim };
+                        if (Math.abs(dLat) >= Math.abs(dLng)) {
+                            (dLat >= 0 ? dirs.Norte : dirs.Sur).push(entry);
+                        } else {
+                            (dLng >= 0 ? dirs.Este : dirs.Oeste).push(entry);
+                        }
+                    } catch (e) { }
+                });
+
+                // Para direcciones sin colindante catastral, buscar nombre de calle en vialidad
+                ['Norte', 'Sur', 'Este', 'Oeste'].forEach(function (dir) {
+                    if (dirs[dir].length === 0) {
+                        const calle = buscarCalleColindante(predioGeoJSON, dir);
+                        if (calle) {
+                            // Calcular la dimensión del lado del predio en esa dirección
+                            // usando el segmento más extremo del polígono en esa dirección
+                            dirs[dir].push({ nombre: 'Vía: ' + calle, dim: '—', esVia: true });
+                        }
+                        // Si tampoco hay vía, queda vacío (se mostrará como sin identificar)
+                    }
+                });
+
+                return dirs;
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Análisis de proximidad (Nearest Neighbor) — Poste más cercano
+            // Identifica el elemento puntual de infraestructura eléctrica (capa 3)
+            // más próximo al centroide del predio, independientemente de intersección.
+            // ─────────────────────────────────────────────────────────────────
+            function encontrarPosteMasCercano(predioGeoJSON) {
+                if (!geojsonLayers[3]) return null;
+
+                const centroide = turf.centroid(predioGeoJSON);
+
+                // Pre-filtro por bounding box extendido (~600 m) para mayor eficiencia
+                const bbox = turf.bbox(predioGeoJSON);
+                const buf = 0.006; // ~600 m en grados decimales
+                const bboxExp = [bbox[0] - buf, bbox[1] - buf, bbox[2] + buf, bbox[3] + buf];
+
+                let posteMasCercano = null;
+                let distanciaMin = Infinity;
+
+                geojsonLayers[3].eachLayer(function (lyr) {
+                    if (!lyr.feature) return;
+                    try {
+                        const feat = lyr.toGeoJSON();
+                        const geomType = feat.geometry ? feat.geometry.type : null;
+                        if (!geomType) return;
+
+                        // Sólo procesar geometrías puntuales (postes / estructuras)
+                        if (geomType !== 'Point' && geomType !== 'MultiPoint') return;
+
+                        const coordsList = geomType === 'Point'
+                            ? [feat.geometry.coordinates]
+                            : feat.geometry.coordinates;
+
+                        // Descartar si ninguna coordenada está en el bbox expandido
+                        const enBbox = coordsList.some(function (c) {
+                            return c[0] >= bboxExp[0] && c[0] <= bboxExp[2] &&
+                                   c[1] >= bboxExp[1] && c[1] <= bboxExp[3];
+                        });
+                        if (!enBbox) return;
+
+                        coordsList.forEach(function (c) {
+                            const d = turf.distance(centroide, turf.point(c), { units: 'meters' });
+                            if (d < distanciaMin) {
+                                distanciaMin = d;
+                                posteMasCercano = { props: feat.properties, distancia: d };
+                            }
+                        });
+                    } catch (e) { }
+                });
+
+                if (!posteMasCercano) return null;
+
+                const p = posteMasCercano.props || {};
+
+                // ── Código de estructura (ID único) ───────────────────────────
+                const codigoEstructura =
+                    p.CODIGOESTRUCTURA || p.codigoestructura ||
+                    p.CODIGO || p.codigo ||
+                    (p.OBJECTID !== undefined ? 'OBJ-' + String(p.OBJECTID) : 'N/D');
+
+                // ── Descripción técnica (tipo, material, tamaño) ─────────────
+                const descParts = [];
+                const tipo = p.TIPO || p.tipo || p.SUBTIPO || p.subtipo || '';
+                const material = p.MATERIAL || p.material || '';
+                const tamano = p.TAMANO || p.tamano || '';
+                const descripcion = p.DESCRIPCION || p.descripcion || '';
+                if (tipo) descParts.push(tipo);
+                if (material) descParts.push('Material: ' + material);
+                if (tamano) descParts.push('Tamaño: ' + tamano);
+                if (!tipo && !material && descripcion) descParts.push(descripcion);
+                const descripcionTecnica = descParts.join(' | ') || 'N/D';
+
+                // ── Potencia ──────────────────────────────────────────────────
+                const potencia =
+                    (p.POTENCIA !== undefined && p.POTENCIA !== null) ? String(p.POTENCIA) :
+                    (p.potencia !== undefined && p.potencia !== null) ? String(p.potencia) : 'N/D';
+
+                // ── Secuencia de fase ─────────────────────────────────────────
+                const secuenciaFase =
+                    p.SECUENCIAFASE || p.secuenciafase ||
+                    p.FASECONEXION  || p.faseconexion  ||
+                    p.FASE || p.fase || 'N/D';
+
+                return {
+                    codigoEstructura,
+                    descripcionTecnica,
+                    potencia,
+                    secuenciaFase,
+                    distancia: Math.round(distanciaMin * 100) / 100
+                };
+            }
+
+            function calcularFactibilidades(predioGeoJSON) {
+                const layerDefs = {
+                    1: { name: 'Uso de Suelo Urbano (PUGS)', icon: '🏙' },
+                    2: { name: 'Uso de Suelo Rural (PUGS)', icon: '🌾' },
+                    3: { name: 'Infraestructura Eléctrica', icon: '⚡' },
+                    4: { name: 'Agua Potable y Alcantarillado', icon: '💧' },
+                    5: { name: 'Telecomunicaciones', icon: '📡' },
+                    7: { name: 'Vialidad', icon: '🛣' }
+                };
+                const results = [];
+                for (const id in layerDefs) {
+                    const def = layerDefs[id];
+                    const cb = document.getElementById(`layer-${id}`);
+                    const isActive = cb && cb.checked;
+                    const hasLayer = !!geojsonLayers[id];
+
+                    if (!isActive) {
+                        results.push({ name: def.name, estado: 'NO VERIFICADO', detalle: 'Capa no activa', color: [180, 180, 180] });
+                        continue;
+                    }
+                    if (!hasLayer) {
+                        results.push({ name: def.name, estado: 'SIN DATOS', detalle: 'Capa activa sin datos cargados', color: [200, 160, 50] });
+                        continue;
+                    }
+
+                    let intersecta = false;
+                    let detalles = [];
+                    geojsonLayers[id].eachLayer(function (lyr) {
+                        if (!lyr.feature) return;
+                        try {
+                            if (turf.booleanIntersects(predioGeoJSON, lyr.toGeoJSON())) {
+                                intersecta = true;
+                                const p = lyr.feature.properties;
+                                // Extraer valor descriptivo según la capa
+                                const val = p.uso || p.USO || p.TIPO || p.tipo || p.nombre || p.NOMBRE ||
+                                    p.voltaje || p.VOLTAJE || p.material || p.via || p.VIA || '';
+                                if (val && String(val).trim()) detalles.push(String(val).trim());
+                            }
+                        } catch (e) { }
+                    });
+
+                    // Capa 3 — Infraestructura Eléctrica: usar vecino más cercano
+                    // si ningún elemento interseca directamente el predio.
+                    if (!intersecta && String(id) === '3') {
+                        const posteCercano = encontrarPosteMasCercano(predioGeoJSON);
+                        if (posteCercano) {
+                            intersecta = true;
+                            detalles = [
+                                `Poste más cercano: ${posteCercano.codigoEstructura} — ${posteCercano.distancia} m`
+                            ];
+                        }
+                    }
+
+                    if (intersecta) {
+                        const det = [...new Set(detalles)].slice(0, 3).join(', ') || 'Presente en el área';
+                        results.push({ name: def.name, estado: 'DISPONIBLE', detalle: det, color: [39, 174, 96] });
+                    } else {
+                        results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Sin elementos en el área del predio', color: [192, 57, 43] });
+                    }
+                }
+                return results;
+            }
+
+            // Prepara el polígono del predio catastral y delega a generarDICAT
+            window.generarInformePredio = async function () {
+                if (!selectedPredioFeature) return;
+                const { layer, props } = selectedPredioFeature;
+
+                const geoJSON = layer.toGeoJSON();
+                const geomType = geoJSON.geometry ? geoJSON.geometry.type : null;
+                let coordsRing;
+
+                if (geomType === 'Polygon') {
+                    coordsRing = geoJSON.geometry.coordinates[0];
+                } else if (geomType === 'MultiPolygon') {
+                    coordsRing = geoJSON.geometry.coordinates[0][0];
+                } else {
+                    alert('La geometría del predio no es un polígono válido.');
+                    return;
+                }
+                if (!coordsRing || coordsRing.length < 3) {
+                    alert('El predio no tiene coordenadas suficientes.');
+                    return;
+                }
+
+                let latLngs = coordsRing.map(function (c) { return [c[1], c[0]]; });
+                if (latLngs.length > 1) {
+                    const f = latLngs[0], l = latLngs[latLngs.length - 1];
+                    if (f[0] === l[0] && f[1] === l[1]) latLngs.pop();
+                }
+                if (csvPolygon && window.map) window.map.removeLayer(csvPolygon);
+                csvPolygon = L.polygon(latLngs, {
+                    color: '#8B0000', weight: 2, fillColor: '#8B0000', fillOpacity: 0.15, dashArray: '6,4'
+                }).addTo(window.map);
+                csvUTMCoordinates = latLngs.map(function (ll) {
+                    const utm = latLngToUTM(ll[0], ll[1], 17, true);
+                    return { easting: utm.easting, northing: utm.northing, x: utm.easting, y: utm.northing };
+                });
+
+                await generarDICAT(props);
+            };
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    performCatastralSearch(this.value);
+                });
+                document.addEventListener('click', function (e) {
+                    if (!e.target.closest('.search-panel')) {
+                        searchResultsEl.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Spinner de progreso circular -->
+    <div class="progress-spinner-overlay" id="progress-spinner">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="spinner-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+        </div>
+        <div class="spinner-text" id="spinner-text">Generando PDF...</div>
+    </div>
+
+</body>
+
+</html>

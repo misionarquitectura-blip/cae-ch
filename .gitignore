@@ -6,11 +6,14 @@ server.js
 package.json
 package-lock.json
 
-# GeoVisor (demasiado pesado, corre en servidor local)
+# GeoVisor local (versión de desarrollo con servidor)
 GEOVISOR CAECH.html
 
-# Datos geoespaciales pesados
-DATA SET/
+# DATA SET: excluir todo excepto los GeoJSON del GeoVisor
+DATA SET/CATASTRO RIOBAMBA FEB 2026/
+DATA SET/CERTIFICACION_EJES_VIALES.gdb/
+DATA SET/EERSA/
+DATA SET/*.csv
 ENLACES GEOPORTALES/
 
 # RESEARCH - datos crudos pesados (>50MB, no necesarios en producción)
