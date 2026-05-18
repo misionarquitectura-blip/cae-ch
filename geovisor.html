@@ -1280,7 +1280,7 @@
                                 <input type="checkbox" class="layer-checkbox" id="layer-6">
                                 <div class="layer-info" data-layer="6">
                                     <div class="layer-name">Catastro GADMR</div>
-                                    <div class="layer-source" id="layer-6-source">GADMR – Dir. Planificación, Hábitat y Desarrollo Urbanístico</div>
+                                    <div class="layer-source" id="layer-6-source">GADMR – Catastro Predial · Actualización: febrero 2026</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -1317,6 +1317,21 @@
                                         <i class="fas fa-info-circle"></i>
                                     </button>
                                     <button class="layer-action" title="Configuración" data-layer="8">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-9">
+                                <div class="layer-info" data-layer="9">
+                                    <div class="layer-name">Construcciones IA <span style="display:inline-block;background:#9B59B6;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;margin-left:4px">IA 2024</span></div>
+                                    <div class="layer-source" id="layer-9-source">Google Open Buildings 2024 — Detección por ML</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="9">
                                         <i class="fas fa-cog"></i>
                                     </button>
                                 </div>
@@ -1812,7 +1827,8 @@
                         5: '#8E44AD', // Telecomunicaciones - morado
                         6: '#E74C3C', // Catastro GADMR - rojo
                         7: '#7F8C8D', // Vialidad - gris
-                        8: '#C0392B'  // Líneas de Fábrica - rojo oscuro
+                        8: '#C0392B', // Líneas de Fábrica - rojo oscuro
+                        9: '#9B59B6'  // Construcciones IA - púrpura
                     };
 
                     const layerColor = layerColors[layerId] || '#8B0000';
@@ -1893,6 +1909,24 @@
                                             style="margin-top:7px;width:100%;padding:5px;background:#8B0000;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-weight:bold">
                                             <i class="fas fa-check-circle"></i> Seleccionar para informe
                                         </button>
+                                    </div>`;
+                            } else if (layerId === 9) {
+                                const p = feature.properties;
+                                const nivel = (p.nivel || 'N/D').toUpperCase();
+                                const conf = p.confidence ? (p.confidence * 100).toFixed(1) + '%' : 'N/D';
+                                const area = p.area_m2 ? p.area_m2 + ' m²' : 'N/D';
+                                const nivelColor = nivel === 'ALTO' ? '#C0392B' : nivel === 'MEDIO' ? '#E67E22' : '#F39C12';
+                                popupContent = `
+                                    <div style="font-family:Segoe UI,sans-serif;min-width:200px">
+                                        <div style="background:#9B59B6;color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
+                                            <i class="fas fa-robot"></i> Construcción IA · Google Open Buildings 2024
+                                        </div>
+                                        <table style="font-size:12px;width:100%;border-collapse:collapse">
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:50%">Nivel de alerta</td><td style="padding:3px 4px;color:${nivelColor};font-weight:bold">${nivel}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Confianza IA</td><td style="padding:3px 4px">${conf}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Área estimada</td><td style="padding:3px 4px">${area}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Clave catastral</td><td style="padding:3px 4px;font-size:11px">${p.clave_catastral || '—'}</td></tr>
+                                        </table>
                                     </div>`;
                             } else {
                                 // Popup genérico para otras capas
@@ -2678,7 +2712,7 @@
 
                 const {
                     meta = {}, colindantes = {}, factibilidades = [], posteCercano,
-                    hasLayer3, afectacionVial, intersectionData = [], utmCoords = [],
+                    hasLayer3, afectacionVial, construccionesIA, intersectionData = [], utmCoords = [],
                     mapImage, activeLayers = [],
                     nroInforme = '', fechaStr = '', vigenciaStr = ''
                 } = d;
@@ -2919,6 +2953,48 @@
                     margin: { left: mg, right: mg },
                 });
 
+                // Sección 4D - Construcciones detectadas por IA
+                y = checkSpace(y, 45);
+                y = sectionHeader('4D.  DETECCION IA - CONSTRUCCIONES (Google Open Buildings 2024)', y);
+                if (construccionesIA && construccionesIA.disponible) {
+                    const hayDetecciones = construccionesIA.cantidad > 0;
+                    const textoIA = hayDetecciones
+                        ? `${construccionesIA.cantidad} construccion(es) detectada(s) en el area del predio`
+                        : 'Sin construcciones detectadas por IA en el area del predio';
+                    const colorIA = hayDetecciones ? [155, 89, 182] : [30, 130, 60];
+                    const filasIA = [['Estado deteccion IA', textoIA]];
+                    if (hayDetecciones) {
+                        filasIA.push(['Nivel de alerta maximo', construccionesIA.nivelMax || 'N/D']);
+                        filasIA.push(['Area total estimada (IA)', construccionesIA.areaTotal + ' m²']);
+                        filasIA.push(['Observacion', 'Las construcciones detectadas pueden indicar edificaciones no declaradas en el catastro municipal. Se recomienda verificar en campo y contrastar con la documentacion legal del predio. Fuente: Google Open Buildings 2024 — Modelo ML.']);
+                    }
+                    y = at({
+                        startY: y,
+                        body: filasIA,
+                        theme: 'grid',
+                        styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak' },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', fillColor: [248, 240, 255], cellWidth: 82 },
+                            1: { cellWidth: 'auto' },
+                        },
+                        didParseCell(data) {
+                            if (data.column.index === 1 && data.row.index === 0 && data.section === 'body') {
+                                data.cell.styles.textColor = colorIA;
+                                data.cell.styles.fontStyle = 'bold';
+                            }
+                        },
+                        margin: { left: mg, right: mg },
+                    });
+                } else {
+                    y = at({
+                        startY: y,
+                        body: [['Capa de Construcciones IA no activa. Active la capa "Construcciones IA" en el Geovisor para incluir este analisis en el reporte.']],
+                        theme: 'plain',
+                        styles: { fontSize: 9, cellPadding: 3, textColor: [120, 120, 120] },
+                        margin: { left: mg, right: mg },
+                    });
+                }
+
                 // Sección 5 - Regulaciones por capas activas
                 y = checkSpace(y, 40);
                 y = sectionHeader('5.  REGULACIONES E INFORMACION POR CAPAS ACTIVAS', y);
@@ -3085,6 +3161,9 @@
                     showProgressBar('Analizando afectación vial...');
                     const afectacionVial = calcularAfectacionVial(predioGeoJSON);
 
+                    showProgressBar('Analizando construcciones detectadas por IA...');
+                    const construccionesIA = analizarConstruccionesIA(predioGeoJSON);
+
                     showProgressBar('Calculando intersecciones con capas...');
                     const intersectionData = computeIntersectionData(predioGeoJSON, selectedClave);
 
@@ -3147,6 +3226,7 @@
                         posteCercano,
                         hasLayer3:       !!geojsonLayers[3],
                         afectacionVial,
+                        construccionesIA,
                         intersectionData,
                         utmCoords:       csvUTMCoordinates || [],
                         mapImage,
@@ -3594,11 +3674,12 @@
                     3: 'DATA SET/LUMINARIA.geojson',
                     6: 'DATA SET/Catastro GADMR.geojson',
                     7: 'DATA SET/VIALIDAD_TOTAL.geojson',
-                    8: 'DATA SET/LINEAS_FABRICA.geojson'
+                    8: 'DATA SET/LINEAS_FABRICA.geojson',
+                    9: 'RESEARCH/no_registradas.geojson'
                 };
 
-                // Manejar cambios en los checkboxes de las capas 1-8
-                for (let i = 1; i <= 8; i++) {
+                // Manejar cambios en los checkboxes de las capas 1-9
+                for (let i = 1; i <= 9; i++) {
                     const checkbox = document.getElementById(`layer-${i}`);
                     if (!checkbox || checkbox.disabled) continue;
                     checkbox.addEventListener('change', (function (layerId) {
@@ -4669,6 +4750,28 @@
                     secuenciaFase,
                     distancia: Math.round(distanciaMin * 100) / 100
                 };
+            }
+
+            function analizarConstruccionesIA(predioGeoJSON) {
+                if (!geojsonLayers[9]) return { disponible: false, cantidad: 0, nivelMax: null, areaTotal: 0 };
+                let cantidad = 0;
+                let areaTotal = 0;
+                let nivelMax = null;
+                const orden = { ALTO: 3, MEDIO: 2, BAJO: 1 };
+                geojsonLayers[9].eachLayer(function (lyr) {
+                    if (!lyr.feature) return;
+                    try {
+                        if (turf.booleanIntersects(predioGeoJSON, lyr.toGeoJSON())) {
+                            cantidad++;
+                            const p = lyr.feature.properties;
+                            const area = parseFloat(p.area_m2 || 0);
+                            if (!isNaN(area)) areaTotal += area;
+                            const niv = (p.nivel || '').toUpperCase();
+                            if (!nivelMax || (orden[niv] || 0) > (orden[nivelMax] || 0)) nivelMax = niv;
+                        }
+                    } catch (e) { }
+                });
+                return { disponible: true, cantidad, nivelMax, areaTotal: Math.round(areaTotal * 100) / 100 };
             }
 
             function calcularFactibilidades(predioGeoJSON) {
