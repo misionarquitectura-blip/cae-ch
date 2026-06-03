@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -1604,8 +1604,7 @@
                 </ul>
                 <div class="nav-buttons">
                     <a href="geovisor.html" class="btn btn-outline" target="_blank" rel="noopener noreferrer" id="geovisor-nav-btn"><i class="fas fa-map-marked-alt"></i> Geovisor</a>
-                    <a href="#" class="btn btn-outline" id="login-btn">Iniciar Sesión</a>
-                    <a href="#" class="btn" id="register-btn">Registrarse</a>
+                    <a href="mailto:caechoficial@gmail.com" class="btn btn-outline"><i class="fas fa-envelope"></i> Contacto</a>
                 </div>
             </nav>
         </div>
@@ -1932,9 +1931,9 @@
                         <li>Acceso a todas las capas institucionales</li>
                         <li>Soporte técnico prioritario</li>
                     </ul>
-                    <button class="btn" style="width:100%" onclick="window.loginGoogle && window.loginGoogle()">
-                        <i class="fab fa-google"></i> Acceder con Google
-                    </button>
+                    <a href="geovisor.html" class="btn" style="width:100%;display:block;text-align:center" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-map-marked-alt"></i> Ir al Geovisor
+                    </a>
                     <p class="plan-note">Tu membresía será verificada manualmente por el equipo CAE-CH contra el registro institucional de afiliados.</p>
                 </div>
 
@@ -1982,22 +1981,44 @@
     <section class="section" id="solicitar">
         <div class="container">
             <div class="section-title">
-                <h2>Solicitar Reporte DICAT</h2>
-                <p>Diagnóstico de Información Catastral y Territorial — $10.00 USD por reporte</p>
+                <h2>Reporte DICAT</h2>
+                <p>Diagnóstico de Información Catastral y Territorial</p>
             </div>
 
-            <!-- Sin sesión iniciada -->
-            <div id="dicat-sin-sesion" class="dicat-login-prompt">
-                <i class="fas fa-lock"></i>
-                <h3>Inicia sesión para continuar</h3>
-                <p>Necesitas una cuenta para realizar tu solicitud de reporte DICAT y hacer seguimiento de su estado.</p>
-                <button class="btn" style="font-size:15px;padding:12px 30px"
-                        onclick="window.loginGoogle && window.loginGoogle()">
-                    <i class="fab fa-google" style="color:#DB4437"></i>&nbsp; Continuar con Google
-                </button>
+            <!-- Versión gratuita digital -->
+            <div id="dicat-libre" style="max-width:820px;margin:0 auto 32px auto;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;">
+                    <!-- Tarjeta digital gratuita -->
+                    <div style="background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.09);padding:28px 28px 24px;border-top:4px solid #8B0000;text-align:center;">
+                        <div style="font-size:40px;margin-bottom:12px;color:#8B0000"><i class="fas fa-file-pdf"></i></div>
+                        <h3 style="margin-bottom:8px;font-size:18px;color:#2F2F2F">Versión Digital</h3>
+                        <p style="font-size:26px;font-weight:700;color:#8B0000;margin:8px 0 4px">GRATUITO</p>
+                        <p style="color:#5A5A5A;font-size:13.5px;margin-bottom:18px">Genera tu reporte DICAT directamente desde el Geovisor en formato PDF — sin costo, sin registro.</p>
+                        <a href="geovisor.html" class="btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:11px 24px;">
+                            <i class="fas fa-map-marked-alt"></i> Abrir Geovisor
+                        </a>
+                        <p style="font-size:11.5px;color:#888;margin-top:12px">Busca tu predio → selecciona → genera PDF</p>
+                    </div>
+                    <!-- Tarjeta oficial firmada -->
+                    <div style="background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.09);padding:28px 28px 24px;border-top:4px solid #5A5A5A;text-align:center;">
+                        <div style="font-size:40px;margin-bottom:12px;color:#5A5A5A"><i class="fas fa-stamp"></i></div>
+                        <h3 style="margin-bottom:8px;font-size:18px;color:#2F2F2F">Versión Oficial</h3>
+                        <p style="font-size:15px;font-weight:600;color:#5A5A5A;margin:8px 0 4px">Impresa o Digital Firmada</p>
+                        <p style="color:#5A5A5A;font-size:13.5px;margin-bottom:18px">Con firma y sello del CAE-CH. Válida para trámites municipales y legales. Solicítala por correo electrónico.</p>
+                        <a href="mailto:caechoficial@gmail.com?subject=Solicitud%20Reporte%20DICAT%20Oficial&body=Nombre%3A%0AClave%20catastral%3A%0ADirecci%C3%B3n%20del%20predio%3A%0ATipo%20de%20reporte%20(impreso%20%2F%20digital%20firmado)%3A%0AObservaciones%3A"
+                           class="btn btn-outline" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:11px 24px;">
+                            <i class="fas fa-envelope"></i> Solicitar por Email
+                        </a>
+                        <p style="font-size:11.5px;color:#888;margin-top:12px">caechoficial@gmail.com</p>
+                    </div>
+                </div>
+                <div style="background:#FFF8F0;border:1px solid #E8D5B0;border-radius:8px;padding:16px 20px;font-size:13px;color:#5A5A5A;">
+                    <i class="fas fa-info-circle" style="color:#8B0000;margin-right:6px"></i>
+                    <strong>¿Cómo solicitar el reporte oficial?</strong> Envía tu correo indicando la clave catastral, nombre del propietario, dirección del predio y si necesitas versión impresa o digital firmada. El CAE-CH procesará tu solicitud en 24–48 horas hábiles.
+                </div>
             </div>
 
-            <!-- Con sesión iniciada -->
+            <!-- Con sesión iniciada (legacy – oculto) -->
             <div id="dicat-con-sesion" style="display:none">
                 <div class="dicat-container">
 
@@ -2188,389 +2209,6 @@
         <i class="fas fa-chevron-up"></i>
     </button>
 
-    <!-- Modal de Autenticación -->
-    <div class="modal" id="auth-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Iniciar Sesión</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="auth-tabs">
-                    <div class="auth-tab active" data-tab="login">Iniciar Sesión</div>
-                    <div class="auth-tab" data-tab="register">Registrarse</div>
-                </div>
-                
-                <div class="auth-content active" id="login-content">
-                    <div class="social-auth">
-                        <div class="social-buttons">
-                            <button class="btn-social btn-google" style="border-color:#DB4437;font-weight:600;font-size:15px;padding:14px;">
-                                <i class="fab fa-google" style="color:#DB4437;font-size:18px"></i> Continuar con Google
-                            </button>
-                            <button class="btn-social btn-facebook" disabled style="opacity:0.45;cursor:not-allowed;position:relative">
-                                <i class="fab fa-facebook-f"></i> Facebook
-                                <span style="font-size:10px;background:#888;color:#fff;padding:2px 7px;border-radius:10px;margin-left:8px">Próximamente</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="divider">
-                        <span>o ingresa con tu correo</span>
-                    </div>
-                    
-                    <form id="login-form">
-                        <div class="form-group">
-                            <label for="login-email">Correo Electrónico</label>
-                            <input type="email" id="login-email" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="login-password">Contraseña</label>
-                            <input type="password" id="login-password" class="form-control" required>
-                        </div>
-                        <div class="form-options">
-                            <div class="remember-me">
-                                <input type="checkbox" id="remember-me">
-                                <label for="remember-me">Recordarme</label>
-                            </div>
-                            <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-                        </div>
-                        <button type="submit" class="btn" style="width: 100%;">Iniciar Sesión</button>
-                    </form>
-                    
-                    <div class="form-footer">
-                        ¿No tienes una cuenta? <a href="#" class="switch-to-register">Regístrate aquí</a>
-                    </div>
-                </div>
-                
-                <div class="auth-content" id="register-content">
-                    <div class="social-auth">
-                        <div class="social-buttons">
-                            <button class="btn-social btn-google" style="border-color:#DB4437;font-weight:600;font-size:15px;padding:14px;">
-                                <i class="fab fa-google" style="color:#DB4437;font-size:18px"></i> Registrarse con Google
-                            </button>
-                            <button class="btn-social btn-facebook" disabled style="opacity:0.45;cursor:not-allowed">
-                                <i class="fab fa-facebook-f"></i> Facebook
-                                <span style="font-size:10px;background:#888;color:#fff;padding:2px 7px;border-radius:10px;margin-left:8px">Próximamente</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="divider">
-                        <span>o regístrate con tu correo</span>
-                    </div>
-                    
-                    <form id="register-form">
-                        <div class="form-group">
-                            <label for="register-name">Nombre Completo</label>
-                            <input type="text" id="register-name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="register-email">Correo Electrónico</label>
-                            <input type="email" id="register-email" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="register-password">Contraseña</label>
-                            <input type="password" id="register-password" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="register-confirm">Confirmar Contraseña</label>
-                            <input type="password" id="register-confirm" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="register-type">Tipo de Cuenta</label>
-                            <select id="register-type" class="form-control" required>
-                                <option value="">Selecciona un tipo</option>
-                                <option value="afiliado">Afiliado CAE-CH</option>
-                                <option value="profesional">Profesional Arquitecto</option>
-                                <option value="estudiante">Estudiante de Arquitectura</option>
-                                <option value="publico">Público General</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn" style="width: 100%;">Crear Cuenta</button>
-                    </form>
-                    
-                    <div class="form-footer">
-                        ¿Ya tienes una cuenta? <a href="#" class="switch-to-login">Inicia sesión aquí</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         FIREBASE — Autenticación Google + Firestore
-         (CDN modular, no requiere build/npm)
-    ═══════════════════════════════════════════════════════════ -->
-    <script type="module">
-        import { initializeApp }
-            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider,
-                 signOut, onAuthStateChanged }
-            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, serverTimestamp }
-            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-        // ── Configuración ─────────────────────────────────────────
-        const firebaseConfig = {
-            apiKey:            "AIzaSyAASgPduoM-NbJMgMWt5SQCBTDcWH466RA",
-            authDomain:        "cae-ch.firebaseapp.com",
-            projectId:         "cae-ch",
-            storageBucket:     "cae-ch.firebasestorage.app",
-            messagingSenderId: "89054937508",
-            appId:             "1:89054937508:web:2d9fa3a0bc7f4d18850131"
-        };
-
-        const app      = initializeApp(firebaseConfig);
-        const auth     = getAuth(app);
-        const db       = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-
-        // ── Login con Google ──────────────────────────────────────
-        async function loginGoogle() {
-            try {
-                const result = await signInWithPopup(auth, provider);
-                await guardarUsuario(result.user);
-                document.getElementById('auth-modal').style.display = 'none';
-                const nombre = result.user.displayName?.split(' ')[0] || 'Usuario';
-                if (window.showToast) window.showToast(`¡Bienvenido, ${nombre}!`, 'success');
-            } catch (err) {
-                if (err.code === 'auth/popup-closed-by-user') return;
-                if (err.code === 'auth/cancelled-popup-request') return;
-                console.error('Error Firebase Auth:', err);
-                if (window.showToast) window.showToast('Error al iniciar sesión. Intenta de nuevo.', 'error');
-            }
-        }
-
-        // ── Guardar / verificar usuario en Firestore ──────────────
-        async function guardarUsuario(user) {
-            const ref  = doc(db, 'usuarios', user.uid);
-            const snap = await getDoc(ref);
-            if (!snap.exists()) {
-                await setDoc(ref, {
-                    uid:             user.uid,
-                    email:           user.email,
-                    nombre:          user.displayName || '',
-                    foto:            user.photoURL    || '',
-                    tipo:            'usuario',
-                    role:            'usuario',     // 'usuario' | 'miembro' | 'admin'
-                    cedula:          null,
-                    membresiaActiva: false,
-                    reportesPagados: 0,
-                    fechaRegistro:   serverTimestamp()
-                });
-            }
-        }
-
-        // ── Cerrar sesión ─────────────────────────────────────────
-        async function logoutGoogle() {
-            await signOut(auth);
-            if (window.showToast) window.showToast('Sesión cerrada correctamente.', 'info');
-        }
-
-        // ── Escuchar estado de sesión ─────────────────────────────
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                renderNavUsuario(user);
-                toggleDICAT(true);
-                cargarSolicitudes(user.uid);
-            } else {
-                renderNavInvitado();
-                toggleDICAT(false);
-            }
-        });
-
-        // ── Navbar: sesión activa ─────────────────────────────────
-        function renderNavUsuario(user) {
-            const nav     = document.querySelector('.nav-buttons');
-            const nombre  = (user.displayName || user.email).split(' ')[0];
-            const foto    = user.photoURL || '';
-            nav.innerHTML = `
-                <a href="geovisor.html" class="btn btn-outline"
-                   target="_blank" rel="noopener noreferrer">
-                   <i class="fas fa-map-marked-alt"></i> Geovisor
-                </a>
-                <div style="display:flex;align-items:center;gap:10px;margin-left:8px">
-                    ${foto ? `<img src="${foto}" alt="" style="
-                        width:34px;height:34px;border-radius:50%;
-                        border:2px solid var(--rojo-oscuro);object-fit:cover">` : ''}
-                    <span style="font-weight:600;font-size:14px;
-                                 color:var(--gris-oscuro);white-space:nowrap">
-                        ${nombre}
-                    </span>
-                    <button id="btn-logout" class="btn btn-outline"
-                            style="padding:7px 14px;font-size:13px">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
-                </div>
-            `;
-            document.getElementById('btn-logout')
-                    .addEventListener('click', logoutGoogle);
-        }
-
-        // ── Navbar: sin sesión ────────────────────────────────────
-        function renderNavInvitado() {
-            const nav     = document.querySelector('.nav-buttons');
-            nav.innerHTML = `
-                <a href="geovisor.html" class="btn btn-outline"
-                   target="_blank" rel="noopener noreferrer" id="geovisor-nav-btn">
-                   <i class="fas fa-map-marked-alt"></i> Geovisor
-                </a>
-                <button class="btn btn-outline" id="fb-login-btn">
-                    <i class="fab fa-google" style="color:#DB4437"></i> Iniciar Sesión
-                </button>
-                <button class="btn" id="fb-register-btn">Registrarse</button>
-            `;
-            document.getElementById('fb-login-btn').addEventListener('click', () => {
-                const modal = document.getElementById('auth-modal');
-                if (modal) modal.style.display = 'flex';
-            });
-            document.getElementById('fb-register-btn').addEventListener('click', () => {
-                const modal = document.getElementById('auth-modal');
-                if (modal) modal.style.display = 'flex';
-            });
-        }
-
-        // ── Conectar botones Google del modal ─────────────────────
-        document.querySelectorAll('.btn-google').forEach(btn => {
-            btn.addEventListener('click', loginGoogle);
-        });
-
-        // ── Mostrar / ocultar sección DICAT según sesión ─────────
-        function toggleDICAT(loggedIn) {
-            const sinSesion = document.getElementById('dicat-sin-sesion');
-            const conSesion = document.getElementById('dicat-con-sesion');
-            if (!sinSesion || !conSesion) return;
-            sinSesion.style.display = loggedIn ? 'none'  : 'block';
-            conSesion.style.display = loggedIn ? 'block' : 'none';
-        }
-
-        // ── Selector de método de pago ────────────────────────────
-        document.querySelectorAll('.pago-opcion').forEach(label => {
-            label.addEventListener('click', () => {
-                document.querySelectorAll('.pago-opcion').forEach(l => l.classList.remove('seleccionado'));
-                label.classList.add('seleccionado');
-            });
-        });
-
-        // ── Enviar solicitud DICAT → Firestore ────────────────────
-        const formDicat = document.getElementById('form-dicat');
-        if (formDicat) {
-            formDicat.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const user = auth.currentUser;
-                if (!user) { if(window.showToast) window.showToast('Debes iniciar sesión.', 'error'); return; }
-
-                const clave       = document.getElementById('dicat-clave').value.trim();
-                const propietario = document.getElementById('dicat-propietario').value.trim();
-                const direccion   = document.getElementById('dicat-direccion-predio').value.trim();
-                const obs         = document.getElementById('dicat-obs').value.trim();
-                const metodoPago  = document.querySelector('input[name="metodo-pago"]:checked')?.value || 'efectivo';
-
-                const submitBtn = formDicat.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-
-                try {
-                    const { collection, addDoc } = await import(
-                        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-                    );
-                    await addDoc(collection(db, 'solicitudes'), {
-                        uid:          user.uid,
-                        email:        user.email,
-                        nombre:       user.displayName || '',
-                        claveCatastral: clave,
-                        propietario,
-                        direccion,
-                        observaciones: obs,
-                        metodoPago,
-                        monto:        10.00,
-                        moneda:       'USD',
-                        estado:       'pendiente',
-                        urlPDF:       null,
-                        fechaSolicitud: new Date()
-                    });
-
-                    if (window.showToast) window.showToast(
-                        metodoPago === 'efectivo'
-                            ? '¡Solicitud registrada! Acércate al CAE-CH para confirmar tu pago en efectivo.'
-                            : '¡Solicitud registrada! En breve recibirás instrucciones de pago en tu correo.',
-                        'success'
-                    );
-                    formDicat.reset();
-                    cargarSolicitudes(user.uid);
-                } catch (err) {
-                    console.error('Error al guardar solicitud:', err);
-                    if (window.showToast) window.showToast('Error al enviar la solicitud. Intenta de nuevo.', 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Solicitud';
-                }
-            });
-        }
-
-        // ── Cargar solicitudes del usuario desde Firestore ────────
-        async function cargarSolicitudes(uid) {
-            const lista = document.getElementById('lista-solicitudes');
-            if (!lista) return;
-            try {
-                const { collection, query, where, orderBy, getDocs } = await import(
-                    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-                );
-                const q    = query(
-                    collection(db, 'solicitudes'),
-                    where('uid', '==', uid),
-                    orderBy('fechaSolicitud', 'desc')
-                );
-                const snap = await getDocs(q);
-
-                if (snap.empty) {
-                    lista.innerHTML = `<p class="sin-solicitudes">
-                        <i class="fas fa-inbox" style="display:block;font-size:32px;margin-bottom:10px;opacity:0.3"></i>
-                        Aún no tienes solicitudes registradas.
-                    </p>`;
-                    return;
-                }
-
-                const estadoClase = { pendiente:'estado-pendiente', procesando:'estado-procesando', listo:'estado-listo' };
-                const estadoTexto = { pendiente:'⏳ Pendiente', procesando:'🔄 Procesando', listo:'✅ Listo' };
-
-                lista.innerHTML = snap.docs.map(d => {
-                    const s    = d.data();
-                    const fecha = s.fechaSolicitud?.toDate
-                        ? s.fechaSolicitud.toDate().toLocaleDateString('es-EC')
-                        : '—';
-                    const cls  = estadoClase[s.estado] || 'estado-pendiente';
-                    const txt  = estadoTexto[s.estado] || s.estado;
-                    const dl   = s.urlPDF
-                        ? `<a href="${s.urlPDF}" target="_blank" class="btn btn-geovisor btn-descargar">
-                               <i class="fas fa-download"></i> Descargar PDF
-                           </a>` : '';
-                    return `
-                        <div class="solicitud-card">
-                            <div class="solicitud-card-header">
-                                <span class="solicitud-card-clave"><i class="fas fa-map-pin"></i> ${s.claveCatastral}</span>
-                                <span class="solicitud-estado ${cls}">${txt}</span>
-                            </div>
-                            <div class="solicitud-card-fecha">${s.propietario} &mdash; ${fecha}</div>
-                            <div style="font-size:12px;color:var(--gris-medio);margin-top:4px">
-                                Pago: ${s.metodoPago === 'efectivo' ? 'Efectivo en caja' : 'Online'} — $${s.monto.toFixed(2)}
-                            </div>
-                            ${dl}
-                        </div>`;
-                }).join('');
-
-            } catch (err) {
-                console.error('Error cargando solicitudes:', err);
-            }
-        }
-
-        // ── Exponer funciones globales ────────────────────────────
-        window.loginGoogle    = loginGoogle;
-        window.logoutGoogle   = logoutGoogle;
-        window.cargarSolicitudes = cargarSolicitudes;
-
-    </script>
 
     <script>
         // ── TOAST NOTIFICATIONS ──────────────────────────────────
@@ -2699,102 +2337,6 @@
                 });
             });
             
-            // Funcionalidad para el modal de autenticación
-            const modal = document.getElementById('auth-modal');
-            const loginBtn = document.getElementById('login-btn');
-            const registerBtn = document.getElementById('register-btn');
-            const closeModal = document.querySelector('.close-modal');
-            const authTabs = document.querySelectorAll('.auth-tab');
-            const authContents = document.querySelectorAll('.auth-content');
-            const switchToRegister = document.querySelector('.switch-to-register');
-            const switchToLogin = document.querySelector('.switch-to-login');
-            const courseButtons = document.querySelectorAll('.course-card .btn');
-            const modalTitle = document.getElementById('modal-title');
-            
-            // Abrir modal para login
-            loginBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                modal.style.display = 'flex';
-                switchToAuthTab('login');
-            });
-            
-            // Abrir modal para registro
-            registerBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                modal.style.display = 'flex';
-                switchToAuthTab('register');
-            });
-            
-            // Cerrar modal
-            closeModal.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-            
-            // Cerrar modal al hacer clic fuera
-            window.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-            
-            // Cambiar entre pestañas
-            authTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    switchToAuthTab(tabId);
-                });
-            });
-            
-            // Cambiar a registro desde login
-            switchToRegister.addEventListener('click', function(e) {
-                e.preventDefault();
-                switchToAuthTab('register');
-            });
-            
-            // Cambiar a login desde registro
-            switchToLogin.addEventListener('click', function(e) {
-                e.preventDefault();
-                switchToAuthTab('login');
-            });
-            
-            // Función para cambiar pestaña
-            function switchToAuthTab(tabId) {
-                // Actualizar pestañas activas
-                authTabs.forEach(tab => {
-                    if (tab.getAttribute('data-tab') === tabId) {
-                        tab.classList.add('active');
-                    } else {
-                        tab.classList.remove('active');
-                    }
-                });
-                
-                // Actualizar contenido activo
-                authContents.forEach(content => {
-                    if (content.id === `${tabId}-content`) {
-                        content.classList.add('active');
-                    } else {
-                        content.classList.remove('active');
-                    }
-                });
-                
-                // Actualizar título del modal
-                if (tabId === 'login') {
-                    modalTitle.textContent = 'Iniciar Sesión';
-                } else {
-                    modalTitle.textContent = 'Crear Cuenta';
-                }
-            }
-            
-            // Manejar inscripción a cursos
-            courseButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const courseName = this.getAttribute('data-course');
-                    modal.style.display = 'flex';
-                    switchToAuthTab('register');
-                    console.log(`Curso seleccionado: ${courseName}`);
-                });
-            });
 
             // Nuevos formularios de registro de sección
             const formUsuarioReg = document.getElementById('form-usuario-registro');
@@ -2859,7 +2401,7 @@
                 modal.style.display = 'none';
             });
 
-            // Redes sociales — Facebook próximamente (Google lo maneja Firebase module)
+            // Redes sociales — Facebook próximamente
             document.querySelectorAll('.btn-social:not(.btn-google)').forEach(button => {
                 button.addEventListener('click', function() {
                     showToast('Autenticación con Facebook próximamente disponible.', 'info');

@@ -8,7 +8,71 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        /* ── Métricas widget ─────────────────────────── */
+        .metricas-btn {
+            position: fixed; bottom: 24px; right: 24px;
+            background: var(--rojo-oscuro); color: #fff;
+            border: none; border-radius: 50%; width: 48px; height: 48px;
+            font-size: 20px; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+            z-index: 1200; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .metricas-btn:hover { background: var(--rojo-medio); }
+        .metricas-panel {
+            display: none; position: fixed; bottom: 82px; right: 24px;
+            background: #fff; border-radius: 12px; width: 270px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.18); z-index: 1200;
+            padding: 18px 18px 14px; font-size: 13px; color: #2F2F2F;
+        }
+        .metricas-panel h4 { margin: 0 0 12px; color: var(--rojo-oscuro); font-size: 14px; }
+        .metricas-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
+        .metricas-row:last-child { border-bottom: none; }
+        .metricas-num { font-size: 20px; font-weight: 700; color: var(--rojo-oscuro); }
+        /* ── Modal de notificaciones ─────────────────── */
+        .notif-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1300;
+            align-items: center; justify-content: center;
+        }
+        .notif-modal-overlay.active { display: flex; }
+        .notif-modal {
+            background: #fff; border-radius: 12px; padding: 28px;
+            width: 340px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .notif-modal h3 { margin: 0 0 8px; color: var(--rojo-oscuro); font-size: 16px; }
+        .notif-modal p { font-size: 13px; color: #5A5A5A; margin-bottom: 14px; }
+        .notif-modal input { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; margin-bottom: 10px; box-sizing: border-box; }
+        .notif-modal .btn-row { display: flex; gap: 8px; }
+        /* ── Historial modal ─────────────────────────── */
+        .historial-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1300;
+            align-items: center; justify-content: center;
+        }
+        .historial-modal-overlay.active { display: flex; }
+        .historial-modal {
+            background: #fff; border-radius: 12px; padding: 28px;
+            width: 480px; max-width: 95vw; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .historial-modal h3 { margin: 0 0 16px; color: var(--rojo-oscuro); font-size: 16px; }
+        .historial-entry { display: flex; gap: 12px; margin-bottom: 16px; }
+        .historial-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--rojo-oscuro); margin-top: 4px; flex-shrink: 0; }
+        .historial-entry-content { font-size: 13px; color: #2F2F2F; }
+        .historial-entry-date { font-size: 11px; color: #888; margin-top: 2px; }
+        .historial-line { width: 2px; background: #eee; margin: -8px 0 -8px 5px; }
+        /* ── Vigencia catastro warning ───────────────── */
+        .vigencia-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 11px; padding: 3px 8px; border-radius: 10px;
+            font-weight: 600; margin-left: 8px;
+        }
+        .vigencia-ok { background: #e8f5e9; color: #2e7d32; }
+        .vigencia-warn { background: #fff3e0; color: #e65100; }
+        .vigencia-expired { background: #ffebee; color: #b71c1c; }
+    </style>
         * {
             margin: 0;
             padding: 0;
@@ -1120,8 +1184,8 @@
                     <li><a href="WEB CAE CH.html" class="nav-link-principal"><i class="fas fa-arrow-left"></i> Sitio Principal</a></li>
                 </ul>
                 <div class="nav-buttons">
-                    <a href="#" class="btn btn-outline" id="login-btn">Iniciar Sesión</a>
-                    <a href="#" class="btn" id="register-btn">Registrarse</a>
+                    <button class="btn btn-outline" onclick="abrirHistorialModal()" title="Historial de actualizaciones del catastro" style="cursor:pointer"><i class="fas fa-history"></i> Historial</button>
+                    <a href="mailto:caechoficial@gmail.com" class="btn btn-outline"><i class="fas fa-envelope"></i> Contacto</a>
                 </div>
             </nav>
         </div>
@@ -1187,6 +1251,11 @@
                     <table class="predio-data-table" id="predio-data-table"></table>
                     <button class="btn-generar-informe" id="btn-generar-informe" onclick="generarInformePredio()">
                         <i class="fas fa-file-pdf"></i> Generar DICAT
+                    </button>
+                    <button class="btn-generar-informe" id="btn-notif-predio"
+                            onclick="abrirNotifModal()"
+                            style="background:#5A5A5A;margin-top:6px;font-size:12px;padding:8px 12px">
+                        <i class="fas fa-bell"></i> Suscribirse a alertas de este predio
                     </button>
                 </div>
 
@@ -1436,12 +1505,21 @@
                         <h4>Fuentes de Datos</h4>
                         <p>Los datos provienen de instituciones oficiales como:</p>
                         <ul>
-                            <li>Municipio de Riobamba</li>
-                            <li>Empresa Eléctrica</li>
-                            <li>Empresa de Agua Potable</li>
-                            <li>Proveedores de Telecomunicaciones</li>
-                            <li>Registro de la Propiedad</li>
+                            <li>Municipio de Riobamba (GADMR)</li>
+                            <li>EERSA – Empresa Eléctrica Riobamba</li>
+                            <li>EMAPAR – Agua Potable y Alcantarillado</li>
+                            <li>CNT / Proveedores de Telecomunicaciones</li>
+                            <li>Google Open Buildings 2024 (detección IA)</li>
                         </ul>
+
+                        <h4>Estado del Catastro</h4>
+                        <div id="vigencia-ui-badge" style="margin-top:6px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.5">
+                            Calculando...
+                        </div>
+                        <button class="btn btn-outline" onclick="abrirHistorialModal()"
+                                style="width:100%;margin-top:10px;font-size:12px;padding:8px">
+                            <i class="fas fa-history"></i> Ver historial de actualizaciones
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1532,7 +1610,7 @@
             let userMarkers = [];
             let csvUTMCoordinates = []; // Almacenará coordenadas UTM originales
 
-            let geojsonLayers = {
+            let geojsonLayers = window.geojsonLayers = {
                 1: null, 2: null, 3: null, 4: null, 5: null, 6: null
             };
 
@@ -2713,6 +2791,7 @@
                 const {
                     meta = {}, colindantes = {}, factibilidades = [], posteCercano,
                     hasLayer3, afectacionVial, construccionesIA, intersectionData = [], utmCoords = [],
+                    normativaPUGS = null, qrDataUrl = null,
                     mapImage, activeLayers = [],
                     nroInforme = '', fechaStr = '', vigenciaStr = ''
                 } = d;
@@ -2760,8 +2839,27 @@
                 doc.text(`Nro. ${nroInforme}`, mg, 41.5);
                 doc.text(`Emision: ${fechaStr}`, pw / 2, 41.5, { align: 'center' });
                 doc.text(`Vigencia: ${vigenciaStr}`, pw - mg, 41.5, { align: 'right' });
+                // QR de verificación (esquina superior derecha del encabezado)
+                if (qrDataUrl) {
+                    try {
+                        doc.addImage(qrDataUrl, 'PNG', pw - mg - 24, 2, 24, 24);
+                        doc.setFontSize(5); doc.setTextColor(255, 200, 200);
+                        doc.text('Verificar', pw - mg - 12, 27.5, { align: 'center' });
+                    } catch(e) {}
+                }
                 y = 50;
                 doc.setTextColor(0, 0, 0);
+                // Indicador de vigencia del catastro
+                const _vigCat = (typeof calcularVigenciaCatastro === 'function') ? calcularVigenciaCatastro() : null;
+                if (_vigCat && _vigCat.estado !== 'ok') {
+                    const wc = _vigCat.estado === 'warn' ? [230, 100, 0] : [180, 0, 0];
+                    doc.setFillColor(wc[0], wc[1], wc[2]);
+                    doc.roundedRect(mg, y, pw - mg * 2, 8, 1, 1, 'F');
+                    doc.setTextColor(255, 255, 255); doc.setFontSize(7);
+                    doc.text(`⚠  ${_vigCat.texto}`, pw / 2, y + 5.2, { align: 'center', maxWidth: pw - mg * 2 - 4 });
+                    doc.setTextColor(0, 0, 0);
+                    y += 11;
+                }
 
                 // Aviso beta
                 doc.setFillColor(255, 243, 205);
@@ -2916,11 +3014,14 @@
                 y = checkSpace(y, 45);
                 y = sectionHeader('4C.  CATASTRO Y MOVILIDAD - AFECTACION POR LINEA DE FABRICA', y);
                 const tieneAfect = afectacionVial && afectacionVial.tieneAfectacion;
+                const capaDisp = afectacionVial && afectacionVial.capaDisponible;
                 const areaAfect = afectacionVial ? (afectacionVial.areaAfectadaM2 || 0) : 0;
                 const textoAfect = tieneAfect
                     ? 'SI – PREDIO CON AFECTACION VIAL DETECTADA'
-                    : (afectacionVial ? 'NO – SIN AFECTACION VIAL DETECTADA' : 'NO ANALIZADO – Capa de Lineas de Fabrica inactiva');
-                const colorAfect = tieneAfect ? [180, 30, 30] : [30, 130, 60];
+                    : (capaDisp
+                        ? 'NO – PREDIO SIN AFECTACION DIRECTA (vialidad presente en el sector)'
+                        : 'NO ANALIZADO – Capa de Lineas de Fabrica no activa');
+                const colorAfect = tieneAfect ? [180, 30, 30] : (capaDisp ? [30, 130, 60] : [120, 120, 120]);
                 const anchoVia = afectacionVial ? afectacionVial.anchoVia : null;
                 const anchoAcera = afectacionVial ? afectacionVial.anchoAcera : null;
                 const fuenteAncho = afectacionVial ? afectacionVial.fuenteAncho : null;
@@ -2993,6 +3094,52 @@
                         styles: { fontSize: 9, cellPadding: 3, textColor: [120, 120, 120] },
                         margin: { left: mg, right: mg },
                     });
+                }
+
+                // Sección 4E — Normativa PUGS
+                y = checkSpace(y, 50);
+                y = sectionHeader('4E.  REGULACION URBANISTICA - PLAN DE USO Y GESTION DEL SUELO (PUGS)', y);
+                if (normativaPUGS && normativaPUGS.disponible) {
+                    const filasPUGS = [
+                        ['Clasificación del suelo',  normativaPUGS.clasificacion || 'N/D'],
+                        ['Subclasificación',          normativaPUGS.subclasif    || 'N/D'],
+                        ['Código de zona (PIT)',      normativaPUGS.zona + (normativaPUGS.nombre_zona ? '  –  ' + normativaPUGS.nombre_zona : '')],
+                        ['Tratamiento urbanístico',   normativaPUGS.tratamiento  || 'N/D'],
+                        ['Lote mínimo',               normativaPUGS.lote_min],
+                        ['COS planta baja',           normativaPUGS.cos_pb],
+                        ['COS total',                 normativaPUGS.cos_total],
+                        ['Altura mínima',             normativaPUGS.altura_min],
+                        ['Altura máxima',             normativaPUGS.altura_max],
+                        ['Pisos base / máximo',       `${normativaPUGS.pisos_base} / ${normativaPUGS.pisos_max}`],
+                        ['Implantación',              normativaPUGS.implantacion],
+                        ['Retiro frontal',            normativaPUGS.r_frontal],
+                        ['Retiro lateral',            normativaPUGS.r_lateral],
+                        ['Retiro posterior',          normativaPUGS.r_posterior],
+                        ['Uso general del suelo',     normativaPUGS.u_general],
+                        ['Uso principal',             normativaPUGS.u_principal],
+                    ];
+                    y = at({
+                        startY: y,
+                        body: filasPUGS,
+                        theme: 'grid',
+                        styles: { fontSize: 8.5, cellPadding: 3, overflow: 'linebreak' },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', fillColor: [248, 240, 240], cellWidth: 72 },
+                            1: { cellWidth: 'auto' },
+                        },
+                        margin: { left: mg, right: mg },
+                    });
+                    doc.setFontSize(7.5); doc.setTextColor(100, 100, 100);
+                    doc.text('Fuente: PUGS – Plan de Uso y Gestión del Suelo del cantón Riobamba. GADMR.', mg, y);
+                    doc.setTextColor(0, 0, 0);
+                    y += 7;
+                } else {
+                    doc.setFontSize(9);
+                    const msgPUGS = (!window.geojsonLayers || (!window.geojsonLayers[1] && !window.geojsonLayers[2]))
+                        ? 'Capa PUGS no activa — active la capa "PUGS Urbano" o "PUGS Rural" para obtener normativa.'
+                        : 'Predio fuera del área cubierta por el PUGS cargado.';
+                    doc.text(msgPUGS, mg, y + 8, { maxWidth: pw - mg * 2 });
+                    y += 18;
                 }
 
                 // Sección 5 - Regulaciones por capas activas
@@ -3102,8 +3249,11 @@
                     doc.rect(0, ph - 14, pw, 14, 'F');
                     doc.setFontSize(6.5);
                     doc.setTextColor(100, 0, 0);
+                    const _corteStr = CATASTRO_FECHA_CORTE
+                        ? CATASTRO_FECHA_CORTE.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })
+                        : 'mayo 2026';
                     doc.text(
-                        'El DICAT es un documento tecnico-informativo emitido por el CAE-CH. No reemplaza documentos oficiales del GADMR. Informacion catastral: Catastro GADMR.',
+                        `El DICAT es un documento tecnico-informativo emitido por el CAE-CH. No reemplaza documentos oficiales del GADMR. Corte catastral GADMR: ${_corteStr}.`,
                         pw / 2, ph - 8, { align: 'center', maxWidth: pw - mg * 2 }
                     );
                     doc.setTextColor(150, 150, 150);
@@ -3167,6 +3317,13 @@
                     showProgressBar('Calculando intersecciones con capas...');
                     const intersectionData = computeIntersectionData(predioGeoJSON, selectedClave);
 
+                    showProgressBar('Extrayendo normativa PUGS...');
+                    const normativaPUGS = extraerNormativaPUGS(predioGeoJSON);
+
+                    showProgressBar('Generando código QR de verificación...');
+                    const qrUrl = `https://misionarquitectura-blip.github.io/CAE-CH/?verify=${encodeURIComponent(nroInforme)}`;
+                    const qrDataUrl = await generarQRDataUrl(qrUrl);
+
                     // ── Captura del mapa (html2canvas en el navegador) ─────
                     showProgressBar('Generando visualización del mapa...');
                     let mapImage     = null;
@@ -3228,10 +3385,13 @@
                         afectacionVial,
                         construccionesIA,
                         intersectionData,
+                        normativaPUGS,
+                        qrDataUrl,
                         utmCoords:       csvUTMCoordinates || [],
                         mapImage,
                         activeLayers
                     };
+                    if (typeof incrementarMetricaDICAT === 'function') incrementarMetricaDICAT();
 
                     const logoB64 = await cargarLogoBase64();
                     const doc = buildDICATpdfClient(reportData, logoB64);
@@ -4149,6 +4309,7 @@
 
                 // Mostrar panel
                 document.getElementById('predio-panel').style.display = 'block';
+                if (typeof incrementarMetricaPreidio === 'function') incrementarMetricaPreidio();
             }
 
             // Permite seleccionar un predio directamente desde el popup al hacer clic en el mapa
@@ -4465,8 +4626,9 @@
             // predio y devuelve si hay afectación y el área comprometida en m².
             // ─────────────────────────────────────────────────────────────────
             function calcularAfectacionVial(predioGeoJSON) {
-                const resultado = { tieneAfectacion: false, areaAfectadaM2: 0 };
+                const resultado = { tieneAfectacion: false, areaAfectadaM2: 0, capaDisponible: false };
                 if (!geojsonLayers[8]) return resultado;
+                resultado.capaDisponible = true;
 
                 geojsonLayers[8].eachLayer(function (lyr) {
                     if (!lyr.feature) return;
@@ -4889,6 +5051,204 @@
         });
     </script>
 
+    <!-- ══════════════════════════════════════════════════════════
+         MEJORAS: Métricas · Notificaciones · Historial · QR · PUGS · Vigencia
+    ══════════════════════════════════════════════════════════ -->
+    <script>
+    // ── Fecha de corte del catastro ───────────────────────────────
+    const CATASTRO_FECHA_CORTE = new Date('2026-05-01');
+
+    function calcularVigenciaCatastro() {
+        const ahora = new Date();
+        const meses = (ahora.getFullYear() - CATASTRO_FECHA_CORTE.getFullYear()) * 12
+                    + (ahora.getMonth() - CATASTRO_FECHA_CORTE.getMonth());
+        const fechaStr = CATASTRO_FECHA_CORTE.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' });
+        return {
+            meses,
+            fechaCorte: fechaStr,
+            estado: meses <= 6 ? 'ok' : meses <= 12 ? 'warn' : 'expired',
+            texto: meses <= 6
+                ? `Datos actualizados a ${fechaStr} (${meses} mes${meses !== 1 ? 'es' : ''} de antigüedad)`
+                : `ADVERTENCIA: datos con ${meses} meses de antigüedad — consulte actualizaciones con el GADMR`
+        };
+    }
+
+    // ── Métricas (localStorage + sessionStorage) ─────────────────
+    const MET_KEY = 'caech_metricas';
+    function cargarMetricas() {
+        try { return JSON.parse(localStorage.getItem(MET_KEY)) || { predios: 0, dicats: 0, ultima: null }; }
+        catch(e) { return { predios: 0, dicats: 0, ultima: null }; }
+    }
+    function guardarMetricas(m) { try { localStorage.setItem(MET_KEY, JSON.stringify(m)); } catch(e) {} }
+    function incrementarMetricaPreidio() {
+        const m = cargarMetricas();
+        m.predios++;
+        m.ultima = new Date().toLocaleString('es-EC');
+        guardarMetricas(m);
+        sessionStorage.setItem('caech_sesion', (parseInt(sessionStorage.getItem('caech_sesion') || '0') + 1).toString());
+        actualizarPanelMetricas();
+    }
+    function incrementarMetricaDICAT() {
+        const m = cargarMetricas();
+        m.dicats++;
+        m.ultima = new Date().toLocaleString('es-EC');
+        guardarMetricas(m);
+        actualizarPanelMetricas();
+    }
+    function actualizarPanelMetricas() {
+        const m = cargarMetricas();
+        const sesion = parseInt(sessionStorage.getItem('caech_sesion') || '0');
+        const el = (id) => document.getElementById(id);
+        if (el('met-predios'))  el('met-predios').textContent  = m.predios;
+        if (el('met-dicats'))   el('met-dicats').textContent   = m.dicats;
+        if (el('met-sesion'))   el('met-sesion').textContent   = sesion;
+        if (el('met-ultima'))   el('met-ultima').textContent   = m.ultima || '—';
+    }
+    function toggleMetricas() {
+        const panel = document.getElementById('metricas-panel');
+        const visible = panel.style.display === 'block';
+        panel.style.display = visible ? 'none' : 'block';
+        if (!visible) actualizarPanelMetricas();
+    }
+    function resetMetricas() {
+        guardarMetricas({ predios: 0, dicats: 0, ultima: null });
+        sessionStorage.removeItem('caech_sesion');
+        actualizarPanelMetricas();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        actualizarPanelMetricas();
+
+        // Badge de vigencia del catastro en el panel de Información
+        const badge = document.getElementById('vigencia-ui-badge');
+        if (badge && typeof calcularVigenciaCatastro === 'function') {
+            const v = calcularVigenciaCatastro();
+            const colors = {
+                ok:      { bg: '#e8f5e9', color: '#2e7d32', icon: '✅' },
+                warn:    { bg: '#fff3e0', color: '#e65100', icon: '⚠️' },
+                expired: { bg: '#ffebee', color: '#b71c1c', icon: '🔴' },
+            };
+            const c = colors[v.estado];
+            badge.style.background   = c.bg;
+            badge.style.color        = c.color;
+            badge.style.border       = `1px solid ${c.color}44`;
+            badge.innerHTML = `<strong>${c.icon} ${v.estado === 'ok' ? 'Catastro actualizado' : 'Catastro desactualizado'}</strong><br>
+                Corte: <strong>${v.fechaCorte}</strong> · ${v.meses} mes${v.meses !== 1 ? 'es' : ''} de antigüedad<br>
+                ${v.estado !== 'ok' ? '<span style="font-size:11px">Se recomienda verificar con el GADMR.</span>' : ''}`;
+        }
+    });
+
+    // ── Notificaciones de cambios prediales ──────────────────────
+    let _notifClave = '';
+    function abrirNotifModal() {
+        const claveEl = document.getElementById('predio-data-table');
+        const rows = claveEl ? Array.from(claveEl.querySelectorAll('tr')) : [];
+        const claveRow = rows.find(r => r.cells[0] && r.cells[0].textContent.toLowerCase().includes('clave'));
+        _notifClave = claveRow ? claveRow.cells[1].textContent.trim() : 'Sin clave catastral';
+        document.getElementById('notif-clave').value = _notifClave;
+        document.getElementById('notif-email').value = '';
+        document.getElementById('notif-modal-overlay').classList.add('active');
+    }
+    function cerrarNotifModal() {
+        document.getElementById('notif-modal-overlay').classList.remove('active');
+    }
+    function enviarSolicitudAlerta() {
+        const email = document.getElementById('notif-email').value.trim();
+        if (!email || !/\S+@\S+\.\S+/.test(email)) {
+            alert('Por favor ingresa un correo válido.'); return;
+        }
+        const subject = encodeURIComponent(`Solicitud de Alerta Predial – Clave ${_notifClave}`);
+        const body = encodeURIComponent(
+            `Estimado equipo CAE-CH,\n\nSolicito suscribirme a alertas de cambios para el predio:\n\nClave catastral: ${_notifClave}\nCorreo de notificación: ${email}\n\nPor favor confirmar la suscripción.\n\nGracias.`
+        );
+        window.open(`mailto:caechoficial@gmail.com?subject=${subject}&body=${body}`, '_blank');
+        cerrarNotifModal();
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { cerrarNotifModal(); cerrarHistorialModal(); }
+    });
+
+    // ── Historial de actualizaciones ─────────────────────────────
+    function abrirHistorialModal() {
+        // Calcular próxima actualización estimada (+6 meses desde el corte)
+        const proxima = new Date(CATASTRO_FECHA_CORTE);
+        proxima.setMonth(proxima.getMonth() + 6);
+        const proximaStr = proxima.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' });
+        const el = document.getElementById('hist-proxima-actualizacion');
+        if (el) el.textContent = proximaStr;
+
+        // Mostrar total de predios del catastro si la capa está cargada
+        const elTotal = document.getElementById('hist-total-predios');
+        if (elTotal && window.geojsonLayers && window.geojsonLayers[6]) {
+            let cnt = 0;
+            window.geojsonLayers[6].eachLayer(() => cnt++);
+            if (cnt > 0) elTotal.textContent = `${cnt.toLocaleString('es-EC')} predios cargados.`;
+        }
+        document.getElementById('historial-modal-overlay').classList.add('active');
+    }
+    function cerrarHistorialModal() {
+        document.getElementById('historial-modal-overlay').classList.remove('active');
+    }
+
+    // ── Generación de QR como data URL ───────────────────────────
+    async function generarQRDataUrl(text) {
+        return new Promise((resolve) => {
+            try {
+                const container = document.getElementById('qr-canvas-container');
+                container.innerHTML = '';
+                new QRCode(container, { text, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.M });
+                setTimeout(() => {
+                    const canvas = container.querySelector('canvas');
+                    const img    = container.querySelector('img');
+                    if (canvas)     resolve(canvas.toDataURL('image/png'));
+                    else if (img)   resolve(img.src);
+                    else            resolve(null);
+                }, 250);
+            } catch(e) { resolve(null); }
+        });
+    }
+
+    // ── Extracción de normativa PUGS para el predio ──────────────
+    function extraerNormativaPUGS(predioGeoJSON) {
+        const resultado = { disponible: false };
+        if (!window.geojsonLayers) return resultado;
+        const centroid = turf.centroid(predioGeoJSON);
+        for (const layerId of [1, 2]) {
+            if (!window.geojsonLayers[layerId]) continue;
+            window.geojsonLayers[layerId].eachLayer(lyr => {
+                if (resultado.disponible || !lyr.feature) return;
+                try {
+                    const feat = lyr.toGeoJSON();
+                    if (turf.booleanPointInPolygon(centroid, feat)) {
+                        const p = feat.properties || {};
+                        resultado.disponible   = true;
+                        resultado.tipo         = layerId === 1 ? 'Urbano' : 'Rural';
+                        resultado.zona         = p.codigo_pit || 'N/D';
+                        resultado.nombre_zona  = p.nam_pit    || '';
+                        resultado.clasificacion= p.clas_suelo || '';
+                        resultado.subclasif    = p.subc_suelo || '';
+                        resultado.tratamiento  = p.tratamient || '';
+                        resultado.lote_min     = p.lote_min   != null ? String(p.lote_min)  + ' m²'  : 'N/D';
+                        resultado.cos_pb       = p.cos_pb     != null ? String(p.cos_pb)    + ' %'   : 'N/D';
+                        resultado.cos_total    = p.cos_total  != null ? String(p.cos_total) + ' %'   : 'N/D';
+                        resultado.altura_min   = p.altura_min != null ? String(p.altura_min)+ ' m'   : 'N/D';
+                        resultado.altura_max   = p.altura_max != null ? String(p.altura_max)+ ' m'   : 'N/D';
+                        resultado.pisos_base   = p.edif_bas   != null ? String(p.edif_bas)            : 'N/D';
+                        resultado.pisos_max    = p.edif_max   != null ? String(p.edif_max)            : 'N/D';
+                        resultado.implantacion = p.implantac  || 'N/D';
+                        resultado.r_frontal    = p.r_frontal  != null ? String(p.r_frontal) + ' m'   : 'N/D';
+                        resultado.r_lateral    = p.r_lateral  != null ? String(p.r_lateral) + ' m'   : 'N/D';
+                        resultado.r_posterior  = p.r_posterio != null ? String(p.r_posterio)+ ' m'   : 'N/D';
+                        resultado.u_general    = p.u_general  || 'N/D';
+                        resultado.u_principal  = (p.u_principa || '').substring(0, 120);
+                    }
+                } catch(e) {}
+            });
+            if (resultado.disponible) break;
+        }
+        return resultado;
+    }
+    </script>
+
     <!-- Spinner de progreso circular -->
     <div class="progress-spinner-overlay" id="progress-spinner">
         <div class="spinner-container">
@@ -4899,6 +5259,107 @@
         </div>
         <div class="spinner-text" id="spinner-text">Generando PDF...</div>
     </div>
+
+    <!-- ── QR canvas oculto para PDF ──────────────────────── -->
+    <div id="qr-canvas-container" style="position:absolute;left:-9999px;top:-9999px;width:128px;height:128px;"></div>
+
+    <!-- ── Modal Notificaciones ────────────────────────────── -->
+    <div class="notif-modal-overlay" id="notif-modal-overlay">
+        <div class="notif-modal">
+            <h3><i class="fas fa-bell" style="color:var(--rojo-oscuro);margin-right:6px"></i> Alertas de cambios prediales</h3>
+            <p>Te notificaremos por email cuando este predio sufra modificaciones en el catastro GADMR (cambios de área, propietario, avalúo, etc.).</p>
+            <input type="text" id="notif-clave" placeholder="Clave catastral del predio" readonly>
+            <input type="email" id="notif-email" placeholder="Tu correo electrónico *" required>
+            <div class="btn-row">
+                <button class="btn" onclick="enviarSolicitudAlerta()" style="flex:1;font-size:13px">
+                    <i class="fas fa-paper-plane"></i> Suscribirme
+                </button>
+                <button class="btn btn-outline" onclick="cerrarNotifModal()" style="font-size:13px">Cancelar</button>
+            </div>
+            <p style="font-size:11px;color:#888;margin-top:10px;margin-bottom:0">
+                Las alertas son procesadas manualmente por el equipo CAE-CH. Recibirás confirmación en tu correo.
+            </p>
+        </div>
+    </div>
+
+    <!-- ── Modal Historial de Actualizaciones ──────────────── -->
+    <div class="historial-modal-overlay" id="historial-modal-overlay">
+        <div class="historial-modal">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="margin:0"><i class="fas fa-history" style="color:var(--rojo-oscuro);margin-right:8px"></i> Historial del Catastro GADMR</h3>
+                <button onclick="cerrarHistorialModal()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#888">&times;</button>
+            </div>
+            <div style="background:#FFF8F0;border:1px solid #E8D5B0;border-radius:8px;padding:12px 14px;font-size:12px;color:#5A5A5A;margin-bottom:18px">
+                <i class="fas fa-info-circle" style="color:var(--rojo-oscuro);margin-right:4px"></i>
+                Los datos del catastro provienen del GADMR. El CAE-CH actualiza esta plataforma cuando recibe nuevas versiones oficiales.
+            </div>
+
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line" style="height:40px"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Actualización Mayo 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">VIGENTE</span>
+                    <div style="margin-top:4px">Integración del catastro predial GADMR con correcciones de clave catastral, propietarios y avalúos al corte de mayo 2026. <strong id="hist-total-predios"></strong></div>
+                    <div class="historial-entry-date">Mayo 2026 · Fuente: GADMR · Formato GeoJSON WGS84</div>
+                </div>
+            </div>
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot" style="background:#bbb"></div>
+                    <div class="historial-line" style="height:40px"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Actualización Febrero 2026</strong>
+                    <div style="margin-top:4px">Primera versión pública en la plataforma. Catastro GADMR a corte de febrero 2026. Líneas de Fábrica, PUGS Urbano y Rural, Vialidad total.</div>
+                    <div class="historial-entry-date">Febrero 2026 · Fuente: GADMR · Formato GeoJSON WGS84</div>
+                </div>
+            </div>
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot" style="background:#bbb"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Lanzamiento Plataforma CAE-CH</strong>
+                    <div style="margin-top:4px">Integración inicial con datos GADMR, EERSA (luminaria), Google Open Buildings 2024 (detección IA) y PUGS vigente.</div>
+                    <div class="historial-entry-date">Enero 2026 · Versión 1.0</div>
+                </div>
+            </div>
+
+            <div style="margin-top:18px;padding-top:14px;border-top:1px solid #eee">
+                <p style="font-size:12px;color:#888;margin:0">
+                    <i class="fas fa-calendar-check" style="color:var(--rojo-oscuro);margin-right:4px"></i>
+                    Próxima actualización estimada: <strong id="hist-proxima-actualizacion"></strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Widget de Métricas ───────────────────────────────── -->
+    <div class="metricas-panel" id="metricas-panel">
+        <h4><i class="fas fa-chart-bar" style="margin-right:6px"></i> Métricas de Uso</h4>
+        <div class="metricas-row">
+            <span>Predios consultados</span>
+            <span class="metricas-num" id="met-predios">0</span>
+        </div>
+        <div class="metricas-row">
+            <span>DICATes generados</span>
+            <span class="metricas-num" id="met-dicats">0</span>
+        </div>
+        <div class="metricas-row">
+            <span>Sesión actual</span>
+            <span class="metricas-num" id="met-sesion">0</span>
+        </div>
+        <div class="metricas-row" style="font-size:11px;color:#888;padding-top:8px">
+            <span>Última consulta</span>
+            <span id="met-ultima">—</span>
+        </div>
+        <button onclick="resetMetricas()" style="margin-top:10px;font-size:11px;color:#888;background:none;border:none;cursor:pointer;text-decoration:underline">Reiniciar contadores</button>
+    </div>
+    <button class="metricas-btn" id="metricas-btn" onclick="toggleMetricas()" title="Métricas de uso">
+        <i class="fas fa-chart-bar"></i>
+    </button>
 
 </body>
 
