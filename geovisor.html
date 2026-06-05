@@ -1952,17 +1952,18 @@
                         throw new Error('El archivo no es un GeoJSON válido');
                     }
 
+                    // Misma paleta que el reporte (vista previa = reporte)
                     const layerColors = {
-                        1: '#E67E22', // PUGS Urbano - naranja
-                        2: '#27AE60', // PUGS Rural - verde
-                        3: '#F1C40F', // Infraestructura Eléctrica - amarillo
-                        4: '#2980B9', // Agua Potable - azul
-                        5: '#8E44AD', // Telecomunicaciones - morado
-                        6: '#E74C3C', // Catastro GADMR - rojo
-                        7: '#7F8C8D', // Vialidad - gris
-                        8: '#C0392B', // Líneas de Fábrica - rojo oscuro
-                        9: '#9B59B6', // Construcciones IA no registradas - púrpura
-                        10: '#6C3483' // Construcciones IA todas - púrpura oscuro
+                        1: '#FB8C00', // PUGS Urbano - naranja
+                        2: '#2E7D32', // PUGS Rural - verde
+                        3: '#00ACC1', // Infraestructura Eléctrica - cian
+                        4: '#1976D2', // Agua Potable - azul medio
+                        5: '#5E35B1', // Telecomunicaciones - índigo
+                        6: '#1565C0', // Catastro GADMR - azul
+                        7: '#111111', // Vialidad - negro
+                        8: '#D81B60', // Líneas de Fábrica - magenta
+                        9: '#6A1B9A', // Construcciones IA no registradas - púrpura
+                        10: '#CE93D8' // Construcciones IA todas - lila claro
                     };
 
                     const layerColor = layerColors[layerId] || '#8B0000';
@@ -3718,7 +3719,7 @@
                     // ── Plano vectorial con cotas (canvas, sin satélite) ───
                     showProgressBar('Generando plano vectorial con cotas...');
                     let planoVectorial = null;
-                    try { planoVectorial = crearPlanoVectorialPredio(predioGeoJSON); } catch (e) { }
+                    try { planoVectorial = crearPlanoVectorialPredio(predioGeoJSON); } catch (e) { console.warn('Plano vectorial falló:', e); }
 
                     // ── Enviar al servidor Ubuntu para generar el PDF ──────
                     showProgressBar('Generando PDF...');
@@ -4618,9 +4619,9 @@
                 const bounds = layer.getBounds();
                 window.map.fitBounds(bounds, { maxZoom: 19, padding: [80, 80] });
 
-                // Highlight del predio seleccionado en el mapa
+                // Highlight del predio seleccionado en el mapa (mismo estilo dominante que el reporte)
                 searchHighlightLayer = L.geoJSON(layer.toGeoJSON(), {
-                    style: { color: '#FFD700', weight: 3, fillColor: '#FFD700', fillOpacity: 0.35 }
+                    style: { color: '#D50000', weight: 4, fillColor: '#FFEB3B', fillOpacity: 0.6 }
                 }).addTo(window.map);
 
                 // Highlight suave de los demás predios del mismo propietario
@@ -5457,7 +5458,7 @@
                 }
                 if (csvPolygon && window.map) window.map.removeLayer(csvPolygon);
                 csvPolygon = L.polygon(latLngs, {
-                    color: '#8B0000', weight: 2, fillColor: '#8B0000', fillOpacity: 0.15, dashArray: '6,4'
+                    color: '#D50000', weight: 4, fillColor: '#FFEB3B', fillOpacity: 0.55
                 }).addTo(window.map);
                 csvUTMCoordinates = latLngs.map(function (ll) {
                     const utm = latLngToUTM(ll[0], ll[1], 17, true);
