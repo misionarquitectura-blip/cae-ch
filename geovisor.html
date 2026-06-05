@@ -1186,7 +1186,7 @@
                 </div>
                 <ul class="nav-links">
                     <li><a href="#geovisor" id="geovisor-link">Geovisor</a></li>
-                    <li><a href="WEB CAE CH.html" class="nav-link-principal"><i class="fas fa-arrow-left"></i> Sitio Principal</a></li>
+                    <li><a href="index.html" class="nav-link-principal"><i class="fas fa-arrow-left"></i> Sitio Principal</a></li>
                 </ul>
                 <div class="nav-buttons">
                     <button class="btn btn-outline" onclick="abrirHistorialModal()" title="Historial de actualizaciones del catastro" style="cursor:pointer"><i class="fas fa-history"></i> Historial</button>
@@ -1398,14 +1398,29 @@
                             <li class="layer-item">
                                 <input type="checkbox" class="layer-checkbox" id="layer-9">
                                 <div class="layer-info" data-layer="9">
-                                    <div class="layer-name">Construcciones IA <span style="display:inline-block;background:#9B59B6;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;margin-left:4px">IA 2024</span></div>
-                                    <div class="layer-source" id="layer-9-source">Google Open Buildings 2024 — Detección por ML</div>
+                                    <div class="layer-name">Construcciones IA · No registradas <span style="display:inline-block;background:#9B59B6;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;margin-left:4px">IA 2024</span></div>
+                                    <div class="layer-source" id="layer-9-source">Detección IA sin declarar en catastro (~20 K)</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
                                         <i class="fas fa-info-circle"></i>
                                     </button>
                                     <button class="layer-action" title="Configuración" data-layer="9">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-10">
+                                <div class="layer-info" data-layer="10">
+                                    <div class="layer-name">Construcciones IA · Todas <span style="display:inline-block;background:#6C3483;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;margin-left:4px">IA 2024</span></div>
+                                    <div class="layer-source" id="layer-10-source">Google Open Buildings 2024 — Todas las detectadas (~96 K)</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="10">
                                         <i class="fas fa-cog"></i>
                                     </button>
                                 </div>
@@ -1578,7 +1593,7 @@
                     <h4>Enlaces Rápidos</h4>
                     <ul class="footer-links">
                         <li><a href="#geovisor">Geovisor</a></li>
-                        <li><a href="WEB CAE CH.html">Sitio Principal</a></li>
+                        <li><a href="index.html">Sitio Principal</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -1661,6 +1676,41 @@
 
             // Inicializar el mapa directamente al cargar la página
             mostrarGeovisor();
+
+            // ── Apertura directa de un predio vía QR del reporte (?clave=...) ──
+            // El QR del DICAT enlaza a geovisor.html?verify=NRO&clave=CLAVE.
+            // Al abrirlo, activamos el catastro y seleccionamos automáticamente el predio.
+            window.addEventListener('load', function () {
+                const claveQR = new URLSearchParams(window.location.search).get('clave');
+                if (!claveQR) return;
+
+                const cb6 = document.getElementById('layer-6');
+                if (cb6 && !cb6.checked) {
+                    cb6.checked = true;
+                    cb6.dispatchEvent(new Event('change'));
+                }
+
+                showProgressBar('Abriendo el predio del reporte…');
+                let intentos = 0;
+                const timer = setInterval(function () {
+                    intentos++;
+                    if (window.geojsonLayers && window.geojsonLayers[6]) {
+                        clearInterval(timer);
+                        // Margen para que el encuadre automático de la carga del catastro
+                        // (que enfoca toda la capa) termine antes de centrar en el predio;
+                        // de lo contrario la vista podría quedar alejada.
+                        setTimeout(function () {
+                            const ok = seleccionarPredioPorClave(claveQR);
+                            hideProgressBar();
+                            if (!ok) console.warn('QR: no se encontró el predio con clave', claveQR);
+                        }, 700);
+                    } else if (intentos > 120) { // ~60 s de espera máxima (catastro ~55 MB)
+                        clearInterval(timer);
+                        hideProgressBar();
+                        console.warn('QR: el catastro no terminó de cargar a tiempo');
+                    }
+                }, 500);
+            });
 
             // Event listeners para mostrar el Geovisor
             if (geovisorLink) {
@@ -1911,7 +1961,8 @@
                         6: '#E74C3C', // Catastro GADMR - rojo
                         7: '#7F8C8D', // Vialidad - gris
                         8: '#C0392B', // Líneas de Fábrica - rojo oscuro
-                        9: '#9B59B6'  // Construcciones IA - púrpura
+                        9: '#9B59B6', // Construcciones IA no registradas - púrpura
+                        10: '#6C3483' // Construcciones IA todas - púrpura oscuro
                     };
 
                     const layerColor = layerColors[layerId] || '#8B0000';
@@ -1924,6 +1975,15 @@
                             switch (feature.geometry.type) {
                                 case 'Polygon':
                                 case 'MultiPolygon':
+                                    // Capa 10 (~96 K huellas IA): trazo fino para no saturar el mapa
+                                    if (layerId === 10) {
+                                        return {
+                                            color: layerColor,
+                                            weight: 0.6,
+                                            fillColor: layerColor,
+                                            fillOpacity: 0.35
+                                        };
+                                    }
                                     return {
                                         color: layerColor,
                                         weight: 2,
@@ -1966,6 +2026,32 @@
                         },
                         onEachFeature: function (feature, layer) {
                             if (!feature.properties) return;
+
+                            // Capa 10 (~96 K features): popup diferido — se construye al hacer clic,
+                            // evitando generar 96 000 cadenas HTML al cargar la capa.
+                            if (layerId === 10) {
+                                layer.bindPopup(function () {
+                                    const p = feature.properties;
+                                    const nivel = (p.nivel || 'N/D').toUpperCase();
+                                    const conf = p.confidence ? (p.confidence * 100).toFixed(1) + '%' : 'N/D';
+                                    const area = p.area_m2 ? p.area_m2 + ' m²' : 'N/D';
+                                    const nivelColor = nivel === 'ALTO' ? '#C0392B' : nivel === 'MEDIO' ? '#E67E22' : '#F39C12';
+                                    return `
+                                    <div style="font-family:Segoe UI,sans-serif;min-width:200px">
+                                        <div style="background:#6C3483;color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
+                                            <i class="fas fa-robot"></i> Construcción detectada por IA · Google Open Buildings 2024
+                                        </div>
+                                        <table style="font-size:12px;width:100%;border-collapse:collapse">
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:50%">Confianza IA</td><td style="padding:3px 4px;color:${nivelColor};font-weight:bold">${conf}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Área estimada</td><td style="padding:3px 4px">${area}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Plus Code</td><td style="padding:3px 4px;font-size:11px">${p.plus_code || '—'}</td></tr>
+                                        </table>
+                                        <p style="margin:7px 0 0;font-size:10.5px;color:#888;line-height:1.3">Huella detectada por modelo de IA. No implica edificación no declarada por sí sola.</p>
+                                    </div>`;
+                                });
+                                return;
+                            }
+
                             let popupContent;
 
                             if (layerId === 6) {
@@ -2208,13 +2294,21 @@
                 simplificationTolerance: 0.00003, // ~3 metros, mantiene precisión
                 canvasScale: 1.2,
                 viewportBuffer: 0.5, // Aumentado de 0.3 a 0.5 (50% extra)
-                chunkSize: 500, // Reducido de 1000 a 500 para evitar bloqueos de memoria en capas grandes                useIntersectionFiltering: true // Filtrar por intersección, no por viewport
+                chunkSize: 500, // Reducido de 1000 a 500 para evitar bloqueos de memoria en capas grandes
+                useIntersectionFiltering: true, // Filtrar por intersección, no por viewport
+                // Capas donde la fidelidad geométrica es crítica (límites legales de
+                // construcción y ejes viales): no se simplifican ni se submuestrean.
+                highPrecisionLayers: [7, 8]
             };
 
             // Función para simplificar geometrías usando Turf.js
             function simplifyGeometry(feature, tolerance) {
                 try {
                     if (!feature || !feature.geometry) return feature;
+
+                    // tolerance 0/null → preservar la geometría original sin simplificar
+                    // (capas de alta precisión: vialidad y líneas de fábrica)
+                    if (!tolerance) return feature;
 
                     const geomType = feature.geometry.type;
 
@@ -2235,6 +2329,31 @@
                     console.warn('Error al simplificar geometría:', error);
                     return feature;
                 }
+            }
+
+            // ── Validación de geometría para Leaflet ───────────────────────────
+            // La simplificación puede colapsar polígonos pequeños (anillos con menos
+            // de 4 vértices o coordenadas indefinidas). Una sola geometría inválida
+            // hace fallar todo L.geoJSON(), por eso descartamos las degeneradas.
+            function _coordPar(c) {
+                return Array.isArray(c) && c.length >= 2 &&
+                    typeof c[0] === 'number' && typeof c[1] === 'number' &&
+                    isFinite(c[0]) && isFinite(c[1]);
+            }
+            function _anillo(r) { return Array.isArray(r) && r.length >= 4 && r.every(_coordPar); }
+            function geometriaValidaParaLeaflet(g) {
+                if (!g || !g.type || !g.coordinates) return false;
+                try {
+                    switch (g.type) {
+                        case 'Point':           return _coordPar(g.coordinates);
+                        case 'MultiPoint':      return Array.isArray(g.coordinates) && g.coordinates.length > 0 && g.coordinates.every(_coordPar);
+                        case 'LineString':      return Array.isArray(g.coordinates) && g.coordinates.length >= 2 && g.coordinates.every(_coordPar);
+                        case 'MultiLineString': return Array.isArray(g.coordinates) && g.coordinates.length > 0 && g.coordinates.every(l => Array.isArray(l) && l.length >= 2 && l.every(_coordPar));
+                        case 'Polygon':         return Array.isArray(g.coordinates) && g.coordinates.length > 0 && g.coordinates.every(_anillo);
+                        case 'MultiPolygon':    return Array.isArray(g.coordinates) && g.coordinates.length > 0 && g.coordinates.every(p => Array.isArray(p) && p.length > 0 && p.every(_anillo));
+                        default:                return true;
+                    }
+                } catch (e) { return false; }
             }
 
             // Función para filtrar features por bounds con buffer
@@ -2282,7 +2401,11 @@
             }
 
             // Función para optimizar una capa para PDF de manera asíncrona (por lotes)
-            async function optimizeLayerForPDF(layerGeoJSON, bounds, maxFeatures, csvPolygonGeoJSON, progressCallback) {
+            async function optimizeLayerForPDF(layerGeoJSON, bounds, maxFeatures, csvPolygonGeoJSON, progressCallback, options = {}) {
+                // tolerance: tolerancia de simplificación (0 = sin simplificar)
+                // noSampling: true = conservar todas las features filtradas (sin submuestreo)
+                const simplifyTol = (options.tolerance !== undefined) ? options.tolerance : PDF_CONFIG.simplificationTolerance;
+                const noSampling = !!options.noSampling;
                 return new Promise((resolve, reject) => {
                     try {
                         if (!layerGeoJSON || !layerGeoJSON.features) {
@@ -2307,8 +2430,8 @@
                                 allFeatures = filterFeaturesByBounds(allFeatures, bounds, PDF_CONFIG.viewportBuffer);
                             }
 
-                            // 2. Límites
-                            if (allFeatures.length > 0) {
+                            // 2. Límites (omitido para capas de alta precisión)
+                            if (!noSampling && allFeatures.length > 0) {
                                 const geomType = allFeatures[0].geometry.type;
                                 const limit = maxFeatures || PDF_CONFIG.maxFeaturesPerLayer[geomType] || 100;
                                 if (allFeatures.length > limit) {
@@ -2317,8 +2440,8 @@
                                 }
                             }
 
-                            // 3. Simplificación
-                            allFeatures = allFeatures.map(f => simplifyGeometry(f, PDF_CONFIG.simplificationTolerance));
+                            // 3. Simplificación (simplifyTol = 0 conserva la geometría intacta)
+                            allFeatures = allFeatures.map(f => simplifyGeometry(f, simplifyTol));
 
                             resolve({ type: 'FeatureCollection', features: allFeatures });
                             return;
@@ -2408,7 +2531,7 @@
                             if (progressCallback) progressCallback('Aplicando límites inteligentes...');
 
                             let limitedFeatures = resultFeatures;
-                            if (limitFeaturesCount(resultFeatures, maxFeatures)) {
+                            if (!noSampling && limitFeaturesCount(resultFeatures, maxFeatures)) {
                                 limitedFeatures = performSampling(resultFeatures, maxFeatures);
                             }
 
@@ -2446,7 +2569,7 @@
 
                             for (let i = index; i < end; i++) {
                                 const feature = allFeatures[i];
-                                const simplified = simplifyGeometry(feature, PDF_CONFIG.simplificationTolerance);
+                                const simplified = simplifyGeometry(feature, simplifyTol);
                                 simplifiedResult.push(simplified);
                             }
 
@@ -2575,16 +2698,20 @@
                     4: 'Agua Potable y Alcantarillado',
                     5: 'Cobertura Telecomunicaciones',
                     6: 'Catastro GADMR',
-                    7: 'Vialidad'
+                    7: 'Vialidad',
+                    8: 'Líneas de Fábrica',
+                    9: 'Construcciones IA · No registradas',
+                    10: 'Construcciones IA · Todas'
                 };
 
                 const layerColors = {
                     1: '#E67E22', 2: '#27AE60', 3: '#F1C40F',
-                    4: '#2980B9', 5: '#8E44AD', 6: '#E74C3C', 7: '#7F8C8D', 8: '#C0392B'
+                    4: '#2980B9', 5: '#8E44AD', 6: '#E74C3C', 7: '#7F8C8D', 8: '#C0392B',
+                    9: '#9B59B6', 10: '#6C3483'
                 };
 
                 // Agregar todas las capas activas con optimización ASÍNCRONA
-                for (let i = 1; i <= 8; i++) {
+                for (let i = 1; i <= 10; i++) {
                     const checkbox = document.getElementById(`layer-${i}`);
                     if (checkbox && checkbox.checked && geojsonLayers[i]) {
 
@@ -2599,13 +2726,24 @@
                             // OPTIMIZAR LA CAPA ANTES DE RENDERIZAR (AWAIT)
                             // IMPORTANTE: Pasamos null como csvPolygonGeoJSON para desactivar el recorte estricto
                             // y usar el filtrado por bounds (con buffer de contexto)
+                            // Capas de alta precisión (vialidad, líneas de fábrica): sin simplificar ni submuestrear
+                            const highPrec = PDF_CONFIG.highPrecisionLayers.indexOf(i) !== -1;
                             const optimizedGeoJSON = await optimizeLayerForPDF(
                                 layerGeoJSON,
                                 allBounds,
                                 null,
                                 null, // Forzar uso de bounds + buffer para visibilidad de contexto
-                                (msg) => showProgressBar(`${layerName}: ${msg}`)
+                                (msg) => showProgressBar(`${layerName}: ${msg}`),
+                                highPrec ? { tolerance: 0, noSampling: true } : {}
                             );
+
+                            // Descartar geometrías degeneradas para que una feature inválida
+                            // no aborte el renderizado de toda la capa en la imagen del PDF.
+                            if (optimizedGeoJSON && optimizedGeoJSON.features) {
+                                optimizedGeoJSON.features = optimizedGeoJSON.features.filter(function (f) {
+                                    return f && f.geometry && geometriaValidaParaLeaflet(f.geometry);
+                                });
+                            }
 
                             const layer = L.geoJSON(optimizedGeoJSON, {
                                 style: function (feature) {
@@ -2929,16 +3067,17 @@
                 y = checkSpace(y, 50);
                 y = sectionHeader('3.  COLINDANTES Y DIMENSIONES DE LINDEROS', y);
                 const colRows = [];
+                let hayViaRef = false;
                 ['Norte', 'Sur', 'Este', 'Oeste'].forEach((dir) => {
                     const lista = (colindantes[dir] || []);
                     if (lista.length === 0) {
                         colRows.push([dir, 'Sin colindante identificado', '-']);
                     } else {
-                        lista.forEach((c, idx) => colRows.push([
-                            idx === 0 ? dir : '',
-                            c.nombre || 'Sin identificar',
-                            c.dim || '-',
-                        ]));
+                        lista.forEach((c, idx) => {
+                            let nombre = c.nombre || 'Sin identificar';
+                            if (c.referencial) { nombre += ' (ref.)'; hayViaRef = true; }
+                            colRows.push([idx === 0 ? dir : '', nombre, c.dim || '-']);
+                        });
                     }
                 });
                 y = at({
@@ -2955,6 +3094,12 @@
                     },
                     margin: { left: mg, right: mg },
                 });
+                if (hayViaRef) {
+                    doc.setFontSize(7.5); doc.setTextColor(100, 100, 100);
+                    doc.text('(ref.) Nombre de via referencial obtenido de OpenStreetMap; no constituye denominacion catastral oficial. Dimension de lindero a via estimada.', mg, y, { maxWidth: pw - mg * 2 });
+                    doc.setTextColor(0, 0, 0);
+                    y += 8;
+                }
 
                 // Sección 4 - Factibilidad
                 y = checkSpace(y, 55);
@@ -3062,17 +3207,32 @@
                 // Sección 4D - Construcciones detectadas por IA
                 y = checkSpace(y, 45);
                 y = sectionHeader('4D.  DETECCION IA - CONSTRUCCIONES (Google Open Buildings 2024)', y);
-                if (construccionesIA && construccionesIA.disponible) {
-                    const hayDetecciones = construccionesIA.cantidad > 0;
-                    const textoIA = hayDetecciones
-                        ? `${construccionesIA.cantidad} construccion(es) detectada(s) en el area del predio`
-                        : 'Sin construcciones detectadas por IA en el area del predio';
-                    const colorIA = hayDetecciones ? [155, 89, 182] : [30, 130, 60];
+                const iaNoReg = construccionesIA && construccionesIA.disponible;
+                const iaTodas = construccionesIA && construccionesIA.todasDisponible;
+                if (iaNoReg || iaTodas) {
+                    const hayNoReg = iaNoReg && construccionesIA.cantidad > 0;
+                    let textoIA, colorIA;
+                    if (hayNoReg) {
+                        textoIA = `${construccionesIA.cantidad} construccion(es) detectada(s) SIN registro catastral en el area`;
+                        colorIA = [155, 89, 182];
+                    } else if (iaTodas && construccionesIA.todasCantidad > 0) {
+                        textoIA = `${construccionesIA.todasCantidad} construccion(es) detectada(s) por IA en el area`
+                            + (iaNoReg ? ', todas con registro catastral' : '');
+                        colorIA = iaNoReg ? [30, 130, 60] : [90, 90, 90];
+                    } else {
+                        textoIA = 'Sin construcciones detectadas por IA en el area del predio';
+                        colorIA = [30, 130, 60];
+                    }
                     const filasIA = [['Estado deteccion IA', textoIA]];
-                    if (hayDetecciones) {
+                    if (iaTodas) {
+                        filasIA.push(['Total detectadas por IA (todas)',
+                            `${construccionesIA.todasCantidad} construccion(es) · ${construccionesIA.todasAreaTotal} m² estimados`]);
+                    }
+                    if (hayNoReg) {
+                        filasIA.push(['No registradas en catastro', `${construccionesIA.cantidad} construccion(es)`]);
                         filasIA.push(['Nivel de alerta maximo', construccionesIA.nivelMax || 'N/D']);
-                        filasIA.push(['Area total estimada (IA)', construccionesIA.areaTotal + ' m²']);
-                        filasIA.push(['Observacion', 'Las construcciones detectadas pueden indicar edificaciones no declaradas en el catastro municipal. Se recomienda verificar en campo y contrastar con la documentacion legal del predio. Fuente: Google Open Buildings 2024 — Modelo ML.']);
+                        filasIA.push(['Area no registrada estimada (IA)', construccionesIA.areaTotal + ' m²']);
+                        filasIA.push(['Observacion', 'Las construcciones detectadas sin registro pueden indicar edificaciones no declaradas en el catastro municipal. Se recomienda verificar en campo y contrastar con la documentacion legal del predio. Fuente: Google Open Buildings 2024 — Modelo ML.']);
                     }
                     y = at({
                         startY: y,
@@ -3094,7 +3254,7 @@
                 } else {
                     y = at({
                         startY: y,
-                        body: [['Capa de Construcciones IA no activa. Active la capa "Construcciones IA" en el Geovisor para incluir este analisis en el reporte.']],
+                        body: [['Capas de Construcciones IA no activas. Active "Construcciones IA · No registradas" y/o "Construcciones IA · Todas" en el Geovisor para incluir este analisis en el reporte.']],
                         theme: 'plain',
                         styles: { fontSize: 9, cellPadding: 3, textColor: [120, 120, 120] },
                         margin: { left: mg, right: mg },
@@ -3302,9 +3462,9 @@
                     const filePrefix  = props ? `DICAT_${clave.replace(/\s+/g, '_').substring(0, 18)}` : 'DICAT_coords';
 
                     // ── Cálculos espaciales (en el navegador, sobre capas cargadas) ──
-                    showProgressBar('Calculando colindantes...');
+                    showProgressBar('Calculando colindantes y vías...');
                     const colindantes = geojsonLayers[6]
-                        ? calcularColindantes(predioGeoJSON, selectedClave)
+                        ? await calcularColindantes(predioGeoJSON, selectedClave)
                         : { Norte: [], Sur: [], Este: [], Oeste: [] };
 
                     showProgressBar('Verificando factibilidades...');
@@ -3326,7 +3486,10 @@
                     const normativaPUGS = extraerNormativaPUGS(predioGeoJSON);
 
                     showProgressBar('Generando código QR de verificación...');
-                    const qrUrl = `https://misionarquitectura-blip.github.io/CAE-CH/?verify=${encodeURIComponent(nroInforme)}`;
+                    // El QR abre el GeoVisor y, si hay clave catastral, centra y selecciona el predio.
+                    const qrBase = 'https://misionarquitectura-blip.github.io/cae-ch/geovisor.html';
+                    const qrUrl = `${qrBase}?verify=${encodeURIComponent(nroInforme)}` +
+                        (clave && clave !== 'S/C' ? `&clave=${encodeURIComponent(clave)}` : '');
                     const qrDataUrl = await generarQRDataUrl(qrUrl);
 
                     // ── Captura del mapa (html2canvas en el navegador) ─────
@@ -3684,7 +3847,8 @@
                 const riobambaLng = -78.648178;
 
                 const map = L.map('geovisor-map', {
-                    zoomControl: false
+                    zoomControl: false,
+                    preferCanvas: true // renderer canvas: maneja capas pesadas (catastro, vialidad, ~96 K construcciones IA) sin congelar el navegador
                 }).setView([riobambaLat, riobambaLng], 13);
                 window.map = map;
 
@@ -3840,11 +4004,12 @@
                     6: 'DATA SET/Catastro GADMR.geojson',
                     7: 'DATA SET/VIALIDAD_TOTAL.geojson',
                     8: 'DATA SET/LINEAS_FABRICA.geojson',
-                    9: 'RESEARCH/no_registradas.geojson'
+                    9: 'RESEARCH/no_registradas.geojson',
+                    10: 'RESEARCH/construcciones_ia.geojson'
                 };
 
-                // Manejar cambios en los checkboxes de las capas 1-9
-                for (let i = 1; i <= 9; i++) {
+                // Manejar cambios en los checkboxes de las capas 1-10
+                for (let i = 1; i <= 10; i++) {
                     const checkbox = document.getElementById(`layer-${i}`);
                     if (!checkbox || checkbox.disabled) continue;
                     checkbox.addEventListener('change', (function (layerId) {
@@ -4317,13 +4482,13 @@
                 if (typeof incrementarMetricaPreidio === 'function') incrementarMetricaPreidio();
             }
 
-            // Permite seleccionar un predio directamente desde el popup al hacer clic en el mapa
-            window.seleccionarPredioDesdePopup = function (btn) {
-                const clave = btn.getAttribute('data-clave');
-                if (!clave || !geojsonLayers[6]) return;
-
+            // Busca y selecciona un predio del catastro por su clave catastral.
+            // Devuelve true si lo encontró. Reutilizada por el popup y por el QR (?clave=).
+            window.seleccionarPredioPorClave = function (clave) {
+                if (!clave || !geojsonLayers[6]) return false;
+                let encontrado = false;
                 geojsonLayers[6].eachLayer(function (layer) {
-                    if (!layer.feature) return;
+                    if (encontrado || !layer.feature) return;
                     const p = layer.feature.properties;
                     const c = (p.claves || '').trim() || (p.claves_aux || '').trim();
                     if (c === clave) {
@@ -4340,8 +4505,15 @@
                         }
                         window.map.closePopup();
                         selectPredio(layer, p, todosLosPredios.length > 0 ? todosLosPredios : [{ layer, props: p }]);
+                        encontrado = true;
                     }
                 });
+                return encontrado;
+            };
+
+            // Permite seleccionar un predio directamente desde el popup al hacer clic en el mapa
+            window.seleccionarPredioDesdePopup = function (btn) {
+                seleccionarPredioPorClave(btn.getAttribute('data-clave'));
             };
 
             window.clearPredioSelection = function () {
@@ -4384,7 +4556,8 @@
             // Extrae el nombre de calle de las propiedades de un feature de vialidad
             function extraerNombreCalle(props) {
                 // Campos con nombres reales de vía (prioridad alta)
-                const camposNombre = ['nombre', 'NOMBRE', 'name', 'NAME', 'via', 'VIA', 'calle', 'CALLE',
+                // NOMBRE_EJE es el campo real en VIALIDAD_TOTAL.geojson (aunque solo ~2% lo tiene)
+                const camposNombre = ['NOMBRE_EJE', 'nombre_eje', 'nombre', 'NOMBRE', 'name', 'NAME', 'via', 'VIA', 'calle', 'CALLE',
                     'denominaci', 'DENOMINACI', 'descripcion', 'DESCRIPCION', 'tipo_via', 'TIPO_VIA',
                     'nomvial', 'NOMVIAL', 'calle_nombre', 'CALLE_NOMBRE'];
                 for (const c of camposNombre) {
@@ -4764,7 +4937,23 @@
                 return null;
             }
 
-            function calcularColindantes(predioGeoJSON, selectedClave) {
+            // Geocodificación inversa con Nominatim (OpenStreetMap): nombre de calle
+            // referencial para un punto. Devuelve null si no hay red o sin resultado.
+            async function geocodificarCalleOSM(lat, lng) {
+                try {
+                    const u = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+                    const ctrl = new AbortController();
+                    const t = setTimeout(() => ctrl.abort(), 6000);
+                    const r = await fetch(u, { headers: { 'Accept': 'application/json' }, signal: ctrl.signal });
+                    clearTimeout(t);
+                    if (!r.ok) return null;
+                    const j = await r.json();
+                    const a = j.address || {};
+                    return a.road || a.pedestrian || a.footway || a.residential || a.path || null;
+                } catch (e) { return null; }
+            }
+
+            async function calcularColindantes(predioGeoJSON, selectedClave) {
                 const dirs = { Norte: [], Sur: [], Este: [], Oeste: [] };
                 if (!geojsonLayers[6]) return dirs;
 
@@ -4812,18 +5001,43 @@
                     } catch (e) { }
                 });
 
-                // Para direcciones sin colindante catastral, buscar nombre de calle en vialidad
-                ['Norte', 'Sur', 'Este', 'Oeste'].forEach(function (dir) {
-                    if (dirs[dir].length === 0) {
-                        const calle = buscarCalleColindante(predioGeoJSON, dir);
-                        if (calle) {
-                            // Calcular la dimensión del lado del predio en esa dirección
-                            // usando el segmento más extremo del polígono en esa dirección
-                            dirs[dir].push({ nombre: 'Vía: ' + calle, dim: '—', esVia: true });
-                        }
-                        // Si tampoco hay vía, queda vacío (se mostrará como sin identificar)
+                // Para los lados sin colindante catastral (típicamente frente a calle en
+                // zona urbana): inferir el nombre de la vía por geocodificación inversa OSM.
+                // Se proyecta un punto ~9 m hacia afuera del borde del predio en cada dirección.
+                const bbox = turf.bbox(predioGeoJSON); // [minLng, minLat, maxLng, maxLat]
+                const off = 0.00008; // ~9 m
+                const midLng = (bbox[0] + bbox[2]) / 2;
+                const midLat = (bbox[1] + bbox[3]) / 2;
+                const puntoDir = {
+                    Norte: { lat: bbox[3] + off, lng: midLng },
+                    Sur:   { lat: bbox[1] - off, lng: midLng },
+                    Este:  { lat: midLat, lng: bbox[2] + off },
+                    Oeste: { lat: midLat, lng: bbox[0] - off }
+                };
+                // Frente aproximado del predio en cada orientación (ancho del bounding box)
+                let anchoEO = null, anchoNS = null;
+                try {
+                    anchoEO = turf.distance([bbox[0], midLat], [bbox[2], midLat], { units: 'meters' });
+                    anchoNS = turf.distance([midLng, bbox[1]], [midLng, bbox[3]], { units: 'meters' });
+                } catch (e) { }
+                const dimDir = { Norte: anchoEO, Sur: anchoEO, Este: anchoNS, Oeste: anchoNS };
+
+                let primera = true;
+                for (const dir of ['Norte', 'Sur', 'Este', 'Oeste']) {
+                    if (dirs[dir].length > 0) continue;
+                    const pt = puntoDir[dir];
+                    // Throttle entre peticiones para respetar el límite de Nominatim (1 req/s)
+                    if (!primera) await new Promise(r => setTimeout(r, 1100));
+                    primera = false;
+                    let calle = await geocodificarCalleOSM(pt.lat, pt.lng);
+                    let ref = true;
+                    if (!calle) { calle = buscarCalleColindante(predioGeoJSON, dir); ref = !!calle; } // fallback: capa vialidad local
+                    if (calle) {
+                        const dim = (dimDir[dir] != null) ? dimDir[dir].toFixed(2) + ' m (aprox.)' : '—';
+                        dirs[dir].push({ nombre: 'Vía: ' + calle, dim, esVia: true, referencial: ref });
                     }
-                });
+                    // Si tampoco hay vía, queda vacío (se mostrará como sin identificar)
+                }
 
                 return dirs;
             }
@@ -4920,25 +5134,48 @@
             }
 
             function analizarConstruccionesIA(predioGeoJSON) {
-                if (!geojsonLayers[9]) return { disponible: false, cantidad: 0, nivelMax: null, areaTotal: 0 };
-                let cantidad = 0;
-                let areaTotal = 0;
-                let nivelMax = null;
                 const orden = { ALTO: 3, MEDIO: 2, BAJO: 1 };
-                geojsonLayers[9].eachLayer(function (lyr) {
-                    if (!lyr.feature) return;
-                    try {
-                        if (turf.booleanIntersects(predioGeoJSON, lyr.toGeoJSON())) {
-                            cantidad++;
-                            const p = lyr.feature.properties;
-                            const area = parseFloat(p.area_m2 || 0);
-                            if (!isNaN(area)) areaTotal += area;
-                            const niv = (p.nivel || '').toUpperCase();
-                            if (!nivelMax || (orden[niv] || 0) > (orden[nivelMax] || 0)) nivelMax = niv;
-                        }
-                    } catch (e) { }
-                });
-                return { disponible: true, cantidad, nivelMax, areaTotal: Math.round(areaTotal * 100) / 100 };
+                const res = {
+                    disponible: false, cantidad: 0, nivelMax: null, areaTotal: 0,
+                    todasDisponible: false, todasCantidad: 0, todasAreaTotal: 0
+                };
+
+                // Capa 9 — construcciones IA NO registradas en el catastro
+                if (geojsonLayers[9]) {
+                    res.disponible = true;
+                    geojsonLayers[9].eachLayer(function (lyr) {
+                        if (!lyr.feature) return;
+                        try {
+                            if (turf.booleanIntersects(predioGeoJSON, lyr.toGeoJSON())) {
+                                res.cantidad++;
+                                const p = lyr.feature.properties;
+                                const area = parseFloat(p.area_m2 || 0);
+                                if (!isNaN(area)) res.areaTotal += area;
+                                const niv = (p.nivel || '').toUpperCase();
+                                if (!res.nivelMax || (orden[niv] || 0) > (orden[res.nivelMax] || 0)) res.nivelMax = niv;
+                            }
+                        } catch (e) { }
+                    });
+                    res.areaTotal = Math.round(res.areaTotal * 100) / 100;
+                }
+
+                // Capa 10 — TODAS las construcciones detectadas por IA
+                if (geojsonLayers[10]) {
+                    res.todasDisponible = true;
+                    geojsonLayers[10].eachLayer(function (lyr) {
+                        if (!lyr.feature) return;
+                        try {
+                            if (turf.booleanIntersects(predioGeoJSON, lyr.toGeoJSON())) {
+                                res.todasCantidad++;
+                                const area = parseFloat(lyr.feature.properties.area_m2 || 0);
+                                if (!isNaN(area)) res.todasAreaTotal += area;
+                            }
+                        } catch (e) { }
+                    });
+                    res.todasAreaTotal = Math.round(res.todasAreaTotal * 100) / 100;
+                }
+
+                return res;
             }
 
             function calcularFactibilidades(predioGeoJSON) {
@@ -5291,12 +5528,12 @@
     <div class="historial-modal-overlay" id="historial-modal-overlay">
         <div class="historial-modal">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="margin:0"><i class="fas fa-history" style="color:var(--rojo-oscuro);margin-right:8px"></i> Historial del Catastro GADMR</h3>
+                <h3 style="margin:0"><i class="fas fa-history" style="color:var(--rojo-oscuro);margin-right:8px"></i> Historial de Actualizaciones</h3>
                 <button onclick="cerrarHistorialModal()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#888">&times;</button>
             </div>
             <div style="background:#FFF8F0;border:1px solid #E8D5B0;border-radius:8px;padding:12px 14px;font-size:12px;color:#5A5A5A;margin-bottom:18px">
                 <i class="fas fa-info-circle" style="color:var(--rojo-oscuro);margin-right:4px"></i>
-                Los datos del catastro provienen del GADMR. El CAE-CH actualiza esta plataforma cuando recibe nuevas versiones oficiales.
+                Bitácora de mejoras de la plataforma y de las versiones de datos. Los datos del catastro provienen del GADMR; el CAE-CH actualiza la plataforma cuando recibe nuevas versiones oficiales.
             </div>
 
             <div class="historial-entry">
@@ -5305,7 +5542,22 @@
                     <div class="historial-line" style="height:40px"></div>
                 </div>
                 <div class="historial-entry-content">
-                    <strong>Actualización Mayo 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">VIGENTE</span>
+                    <strong>Mejoras de Plataforma — Junio 2026</strong> — <span style="background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">NUEVO</span>
+                    <div style="margin-top:4px">
+                        Nueva capa <strong>Construcciones IA · Todas</strong> (~96 K edificaciones detectadas) junto a la de no registradas.
+                        El reporte DICAT ahora <strong>identifica las calles colindantes</strong> (referencial, OpenStreetMap) en los lados sin colindante catastral,
+                        el <strong>código QR abre el predio</strong> directamente en el GeoVisor, y se mejoró la <strong>precisión geoespacial</strong> de vialidad y líneas de fábrica en el plano del reporte.
+                    </div>
+                    <div class="historial-entry-date">Junio 2026 · Mejora de funcionalidad</div>
+                </div>
+            </div>
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line" style="height:40px"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Actualización Mayo 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS VIGENTES</span>
                     <div style="margin-top:4px">Integración del catastro predial GADMR con correcciones de clave catastral, propietarios y avalúos al corte de mayo 2026. <strong id="hist-total-predios"></strong></div>
                     <div class="historial-entry-date">Mayo 2026 · Fuente: GADMR · Formato GeoJSON WGS84</div>
                 </div>

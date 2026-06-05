@@ -23,6 +23,11 @@ RESEARCH/Google buildings.qgz
 RESEARCH/CONSTRUCCIONES DETECTADAS POR IA.qmd
 RESEARCH/PUGS Urbano Research.geojson
 RESEARCH/preprocess.js
+RESEARCH/build_construcciones_ia.js
+
+# Respaldos y configuración local
+*.bak
+.claude/
 
 # Logs
 *.log
