@@ -2597,6 +2597,121 @@
                 });
             }
 
+            // ══════════════════════════════════════════════════════════════
+            // PLANO VECTORIAL DEL PREDIO (sin imagen satelital) con cotas.
+            // Dibuja directamente en un canvas proyectando lat/lng → píxel, por lo
+            // que las geometrías son exactas y consistentes entre sí (no dependen de
+            // los tiles de Google). Devuelve un dataURL PNG para insertar en el PDF.
+            // ══════════════════════════════════════════════════════════════
+            function crearPlanoVectorialPredio(predioGeoJSON) {
+                try {
+                    const COL = { 1:'#FB8C00', 2:'#2E7D32', 3:'#00ACC1', 6:'#1565C0', 7:'#111111', 8:'#D81B60', 9:'#6A1B9A', 10:'#CE93D8' };
+                    const hexA = (hex, a) => {
+                        const h = hex.replace('#',''); const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+                        return `rgba(${r},${g},${b},${a})`;
+                    };
+
+                    // Anillo exterior del predio (Polygon o MultiPolygon)
+                    const geom = predioGeoJSON.geometry;
+                    const ring = geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : geom.coordinates[0];
+                    if (!ring || ring.length < 4) return null;
+
+                    // Área a dibujar: bbox del predio + margen de contexto (~70%, mínimo ~18 m)
+                    const pb = turf.bbox(predioGeoJSON);
+                    const padX = Math.max((pb[2]-pb[0])*0.7, 0.00018);
+                    const padY = Math.max((pb[3]-pb[1])*0.7, 0.00018);
+                    const area = [pb[0]-padX, pb[1]-padY, pb[2]+padX, pb[3]+padY];
+
+                    const W=1000, H=760, pad=46;
+                    const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
+                    const ctx=canvas.getContext('2d');
+                    const lat0=(area[1]+area[3])/2;
+                    const mLng=111320*Math.cos(lat0*Math.PI/180), mLat=111320;
+                    const wM=(area[2]-area[0])*mLng, hM=(area[3]-area[1])*mLat;
+                    const scale=Math.min((W-2*pad)/wM, (H-2*pad)/hM);
+                    const offX=(W-wM*scale)/2, offY=(H-hM*scale)/2;
+                    const P=(lng,lat)=>[ offX+(lng-area[0])*mLng*scale, H-(offY+(lat-area[1])*mLat*scale) ];
+
+                    // Fondo + cuadrícula sutil
+                    ctx.fillStyle='#FAFAFA'; ctx.fillRect(0,0,W,H);
+                    ctx.strokeStyle='#ECECEC'; ctx.lineWidth=1;
+                    for(let gx=pad; gx<=W-pad; gx+=(W-2*pad)/8){ ctx.beginPath(); ctx.moveTo(gx,pad); ctx.lineTo(gx,H-pad); ctx.stroke(); }
+                    for(let gy=pad; gy<=H-pad; gy+=(H-2*pad)/6){ ctx.beginPath(); ctx.moveTo(pad,gy); ctx.lineTo(W-pad,gy); ctx.stroke(); }
+                    ctx.strokeStyle='#CFCFCF'; ctx.strokeRect(pad,pad,W-2*pad,H-2*pad);
+
+                    const ringPath=(r)=>{ ctx.beginPath(); r.forEach((c,i)=>{ const p=P(c[0],c[1]); i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]); }); };
+                    const drawPoly=(coords,stroke,fill,lw)=>{ coords.forEach(r=>{ ringPath(r); ctx.closePath(); if(fill){ctx.fillStyle=fill;ctx.fill();} ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }); };
+                    const drawGeom=(g,stroke,fill,lw)=>{
+                        if(!g) return;
+                        if(g.type==='Polygon') drawPoly(g.coordinates,stroke,fill,lw);
+                        else if(g.type==='MultiPolygon') g.coordinates.forEach(p=>drawPoly(p,stroke,fill,lw));
+                        else if(g.type==='LineString'){ ringPath(g.coordinates); ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
+                        else if(g.type==='MultiLineString') g.coordinates.forEach(l=>{ ringPath(l); ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); });
+                        else if(g.type==='Point'){ const p=P(g.coordinates[0],g.coordinates[1]); ctx.beginPath(); ctx.arc(p[0],p[1],3,0,7); ctx.fillStyle=stroke; ctx.fill(); }
+                    };
+
+                    // Capas activas, de fondo a frente. Solo las features que solapan el área.
+                    const orden=[1,2,10,9,6,8,7];
+                    const usadas=[];
+                    for(const i of orden){
+                        const cb=document.getElementById('layer-'+i);
+                        if(!cb || !cb.checked || !window.geojsonLayers || !window.geojsonLayers[i]) continue;
+                        const col=COL[i]; let dibujo=false;
+                        const fill = (i===6)? null : (i===9)? hexA(col,0.45) : (i===10)? hexA(col,0.32) : (i===1||i===2)? hexA(col,0.14) : null;
+                        const lw   = (i===7)? 2.6 : (i===8)? 2.0 : (i===6)? 1.1 : (i===9||i===10)? 0.6 : 1.3;
+                        window.geojsonLayers[i].eachLayer(function(lyr){
+                            if(!lyr.feature || !lyr.getBounds) return;
+                            let b; try{ b=lyr.getBounds(); }catch(e){ return; }
+                            if(!b || !b.isValid || !b.isValid()) return;
+                            if(b.getWest()>area[2]||b.getEast()<area[0]||b.getSouth()>area[3]||b.getNorth()<area[1]) return;
+                            drawGeom(lyr.feature.geometry, col, fill, lw); dibujo=true;
+                        });
+                        if(dibujo) usadas.push(i);
+                    }
+
+                    // Predio consultado (dominante)
+                    drawGeom(geom, '#D50000', hexA('#FFEB3B',0.55), 3.5);
+                    // Vértices
+                    ring.forEach(c=>{ const p=P(c[0],c[1]); ctx.beginPath(); ctx.arc(p[0],p[1],3.2,0,7); ctx.fillStyle='#D50000'; ctx.fill(); ctx.lineWidth=1; ctx.strokeStyle='#fff'; ctx.stroke(); });
+
+                    // ── Cotas: longitud de cada lado del predio ──
+                    const cen=turf.centroid(predioGeoJSON).geometry.coordinates; const cp=P(cen[0],cen[1]);
+                    ctx.font='bold 13px Segoe UI, Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                    for(let k=0;k<ring.length-1;k++){
+                        const a=ring[k], b=ring[k+1];
+                        const dM=turf.distance(a,b,{units:'kilometers'})*1000;
+                        if(dM<0.5) continue;
+                        const pa=P(a[0],a[1]), pbp=P(b[0],b[1]);
+                        let mx=(pa[0]+pbp[0])/2, my=(pa[1]+pbp[1])/2;
+                        let nx=-(pbp[1]-pa[1]), ny=(pbp[0]-pa[0]); const nl=Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+                        if((mx-cp[0])*nx+(my-cp[1])*ny < 0){ nx=-nx; ny=-ny; } // hacia afuera del predio
+                        const tx=mx+nx*14, ty=my+ny*14;
+                        const label=dM.toFixed(2)+' m';
+                        const tw=ctx.measureText(label).width;
+                        ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(tx-tw/2-3, ty-9, tw+6, 18);
+                        ctx.fillStyle='#B71C1C'; ctx.fillText(label, tx, ty);
+                    }
+
+                    // ── Flecha de Norte (arriba-derecha) ──
+                    const nX=W-pad-26, nY=pad+40;
+                    ctx.fillStyle='#222'; ctx.strokeStyle='#222'; ctx.lineWidth=2;
+                    ctx.beginPath(); ctx.moveTo(nX,nY-22); ctx.lineTo(nX-7,nY); ctx.lineTo(nX,nY-7); ctx.lineTo(nX+7,nY); ctx.closePath(); ctx.fill();
+                    ctx.font='bold 14px Segoe UI, Arial'; ctx.textAlign='center'; ctx.fillText('N', nX, nY+12);
+
+                    // ── Escala gráfica (abajo-izquierda) ──
+                    const targets=[5,10,20,25,50,100,200]; let segM=targets[0];
+                    for(const t of targets){ if(t*scale <= 170) segM=t; }
+                    const segPx=segM*scale, sX=pad+8, sY=H-pad-16;
+                    ctx.strokeStyle='#222'; ctx.fillStyle='#222'; ctx.lineWidth=2;
+                    ctx.beginPath(); ctx.moveTo(sX,sY); ctx.lineTo(sX+segPx,sY); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(sX,sY-4); ctx.lineTo(sX,sY+4); ctx.moveTo(sX+segPx,sY-4); ctx.lineTo(sX+segPx,sY+4); ctx.stroke();
+                    ctx.font='12px Segoe UI, Arial'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+                    ctx.fillText(segM+' m', sX, sY-6);
+
+                    return { dataUrl: canvas.toDataURL('image/png'), capas: usadas };
+                } catch(e) { console.warn('Error generando plano vectorial:', e); return null; }
+            }
+
             // Función para crear visualización de shapes para PDF con zoom en el predio consultado
             async function createShapesVisualizationForPDF(baseLayerType) {
                 if (visualizationMap) {
@@ -2670,21 +2785,24 @@
                 }).addTo(visualizationMap);
 
                 let allBounds = null;
+                let predioVizLayer = null;
 
                 // Agregar polígono CSV si existe
                 const csvGeoJSON = csvPolygon ? csvPolygon.toGeoJSON() : null;
 
                 if (csvPolygon) {
-                    const csvLayer = L.geoJSON(csvGeoJSON, {
+                    // El predio consultado es el elemento dominante: relleno amarillo y
+                    // borde rojo grueso. Se trae al frente tras dibujar las demás capas.
+                    predioVizLayer = L.geoJSON(csvGeoJSON, {
                         style: {
-                            color: '#FF0000',
-                            fillColor: '#FF0000',
-                            fillOpacity: 0.4,
-                            weight: 3
+                            color: '#D50000',
+                            fillColor: '#FFEB3B',
+                            fillOpacity: 0.55,
+                            weight: 4
                         }
                     }).addTo(visualizationMap);
 
-                    allBounds = csvLayer.getBounds();
+                    allBounds = predioVizLayer.getBounds();
                 } else {
                     console.log('No hay polígono CSV para visualizar');
                     return null;
@@ -2704,10 +2822,19 @@
                     10: 'Construcciones IA · Todas'
                 };
 
+                // Paleta de alto contraste para el plano del reporte (cada capa bien
+                // diferenciada y distinta del predio, que es amarillo/rojo).
                 const layerColors = {
-                    1: '#E67E22', 2: '#27AE60', 3: '#F1C40F',
-                    4: '#2980B9', 5: '#8E44AD', 6: '#E74C3C', 7: '#7F8C8D', 8: '#C0392B',
-                    9: '#9B59B6', 10: '#6C3483'
+                    1: '#FB8C00', // PUGS Urbano  - naranja
+                    2: '#2E7D32', // PUGS Rural   - verde
+                    3: '#00ACC1', // Eléctrica    - cian
+                    4: '#1976D2', // Agua         - azul medio
+                    5: '#5E35B1', // Telecom      - índigo
+                    6: '#1565C0', // Catastro     - azul
+                    7: '#111111', // Vialidad     - negro
+                    8: '#D81B60', // Líneas Fábrica - magenta
+                    9: '#6A1B9A', // IA no registradas - púrpura intenso
+                    10: '#CE93D8' // IA todas     - lila claro
                 };
 
                 // Agregar todas las capas activas con optimización ASÍNCRONA
@@ -2726,15 +2853,16 @@
                             // OPTIMIZAR LA CAPA ANTES DE RENDERIZAR (AWAIT)
                             // IMPORTANTE: Pasamos null como csvPolygonGeoJSON para desactivar el recorte estricto
                             // y usar el filtrado por bounds (con buffer de contexto)
-                            // Capas de alta precisión (vialidad, líneas de fábrica): sin simplificar ni submuestrear
-                            const highPrec = PDF_CONFIG.highPrecisionLayers.indexOf(i) !== -1;
+                            // Geometrías EXACTAS: sin simplificar ni submuestrear ninguna capa.
+                            // El área del reporte es pequeña, así que el costo es mínimo y se
+                            // evita la deformación de los predios (que aparecían como triángulos).
                             const optimizedGeoJSON = await optimizeLayerForPDF(
                                 layerGeoJSON,
                                 allBounds,
                                 null,
                                 null, // Forzar uso de bounds + buffer para visibilidad de contexto
                                 (msg) => showProgressBar(`${layerName}: ${msg}`),
-                                highPrec ? { tolerance: 0, noSampling: true } : {}
+                                { tolerance: 0, noSampling: true }
                             );
 
                             // Descartar geometrías degeneradas para que una feature inválida
@@ -2745,6 +2873,12 @@
                                 });
                             }
 
+                            // Estilo por capa: catastro con borde nítido y relleno casi nulo
+                            // (para no tapar), IA con relleno visible, vías con trazo grueso.
+                            const polyFill   = (i === 6) ? 0.05 : (i === 9) ? 0.40 : (i === 10) ? 0.28 : (i === 1 || i === 2) ? 0.13 : 0.20;
+                            const polyWeight = (i === 6) ? 1.2  : (i === 9 || i === 10) ? 0.6 : 1.5;
+                            const lineWeight = (i === 7) ? 2.8  : 2.2;
+
                             const layer = L.geoJSON(optimizedGeoJSON, {
                                 style: function (feature) {
                                     switch (feature.geometry.type) {
@@ -2752,16 +2886,16 @@
                                         case 'MultiPolygon':
                                             return {
                                                 color: layerColor,
-                                                weight: 2,
+                                                weight: polyWeight,
                                                 fillColor: layerColor,
-                                                fillOpacity: 0.25
+                                                fillOpacity: polyFill
                                             };
                                         case 'LineString':
                                         case 'MultiLineString':
                                             return {
                                                 color: layerColor,
-                                                weight: 2.5,
-                                                opacity: 0.8
+                                                weight: lineWeight,
+                                                opacity: 0.9
                                             };
                                         case 'Point':
                                         case 'MultiPoint':
@@ -2769,14 +2903,14 @@
                                                 color: layerColor,
                                                 radius: 4,
                                                 fillColor: layerColor,
-                                                fillOpacity: 0.8
+                                                fillOpacity: 0.85
                                             };
                                         default:
                                             return {
                                                 color: layerColor,
-                                                weight: 2,
+                                                weight: 1.5,
                                                 fillColor: layerColor,
-                                                fillOpacity: 0.25
+                                                fillOpacity: polyFill
                                             };
                                     }
                                 },
@@ -2787,7 +2921,7 @@
                                         color: layerColor,
                                         weight: 1,
                                         opacity: 1,
-                                        fillOpacity: 0.8
+                                        fillOpacity: 0.85
                                     });
                                 }
                             }).addTo(visualizationMap);
@@ -2805,6 +2939,9 @@
                         await new Promise(r => setTimeout(r, 100));
                     }
                 }
+
+                // Asegurar que el predio quede por encima de todas las capas
+                if (predioVizLayer) { try { predioVizLayer.bringToFront(); } catch (e) { } }
 
                 // Ajustar la vista para que el polígono CSV sea el centro, con un margen
                 if (allBounds) {
@@ -2935,7 +3072,7 @@
                     meta = {}, colindantes = {}, factibilidades = [], posteCercano,
                     hasLayer3, afectacionVial, construccionesIA, intersectionData = [], utmCoords = [],
                     normativaPUGS = null, qrDataUrl = null,
-                    mapImage, activeLayers = [],
+                    mapImage, activeLayers = [], planoVectorial = null,
                     nroInforme = '', fechaStr = '', vigenciaStr = ''
                 } = d;
 
@@ -3378,8 +3515,12 @@
                         doc.setTextColor(0, 0, 0);
                         doc.text('Leyenda:', mg, y);
                         y += 5;
-                        doc.setFillColor(139, 0, 0);
-                        doc.rect(mg, y, 3, 3, 'F');
+                        doc.setFillColor(255, 235, 59);
+                        doc.setDrawColor(213, 0, 0);
+                        doc.setLineWidth(0.6);
+                        doc.rect(mg, y, 3, 3, 'FD');
+                        doc.setLineWidth(0.2);
+                        doc.setDrawColor(0, 0, 0);
                         doc.text('Predio consultado', mg + 6, y + 2);
                         let lx = mg + 55;
                         let lrow = 0;
@@ -3404,6 +3545,46 @@
                     doc.setFontSize(9);
                     doc.text('Representacion grafica no disponible en este modo.', mg, y);
                     y += 10;
+                }
+
+                // Sección 8 - Plano vectorial del predio con cotas (sin imagen satelital)
+                if (planoVectorial && planoVectorial.dataUrl) {
+                    doc.addPage();
+                    y = mg;
+                    y = sectionHeader('8.  PLANO VECTORIAL DEL PREDIO (COTAS)', y);
+                    try {
+                        const imgW = pw - mg * 2;
+                        const ratio = 760 / 1000;
+                        let fW = imgW, fH = imgW * ratio;
+                        const maxH = ph - y - 34;
+                        if (fH > maxH) { fH = maxH; fW = maxH / ratio; }
+                        doc.addImage(planoVectorial.dataUrl, 'PNG', mg + (imgW - fW) / 2, y, fW, fH);
+                        y += fH + 5;
+                        // Leyenda del plano
+                        doc.setFontSize(8); doc.setTextColor(0, 0, 0);
+                        doc.text('Leyenda:', mg, y); y += 5;
+                        doc.setFillColor(255, 235, 59); doc.setDrawColor(213, 0, 0); doc.setLineWidth(0.6);
+                        doc.rect(mg, y, 3, 3, 'FD'); doc.setLineWidth(0.2); doc.setDrawColor(0, 0, 0);
+                        doc.text('Predio consultado', mg + 6, y + 2);
+                        const colP = { 1: [251,140,0], 2: [46,125,50], 6: [21,101,192], 7: [17,17,17], 8: [216,27,96], 9: [106,27,154], 10: [206,147,216] };
+                        const nomP = { 1: 'PUGS Urbano', 2: 'PUGS Rural', 6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Lineas de Fabrica', 9: 'Construcciones IA - No reg.', 10: 'Construcciones IA - Todas' };
+                        let lx = mg + 55, lrow = 0;
+                        (planoVectorial.capas || []).forEach((id) => {
+                            if (lrow >= 2) { y += 7; lx = mg; lrow = 0; }
+                            const c = colP[id] || [136, 136, 136];
+                            doc.setFillColor(c[0], c[1], c[2]);
+                            doc.rect(lx, y, 3, 3, 'F');
+                            doc.text(String(nomP[id] || ''), lx + 5, y + 2);
+                            lx += 75; lrow++;
+                        });
+                        y += 8;
+                        doc.setFontSize(7.5); doc.setTextColor(100, 100, 100);
+                        doc.text('Plano a escala con cotas de los lados del predio (en metros), elaborado solo con geometrias vectoriales del catastro y capas activas, sin imagen satelital. Cotas referenciales calculadas sobre la geometria catastral del GADMR.', mg, y, { maxWidth: pw - mg * 2 });
+                        doc.setTextColor(0, 0, 0);
+                        y += 10;
+                    } catch (e) {
+                        doc.setFontSize(9); doc.text('Plano vectorial no disponible.', mg, y); y += 10;
+                    }
                 }
 
                 // Pie de página
@@ -3534,6 +3715,11 @@
                         if (vizContainer) vizContainer.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;visibility:hidden;display:none';
                     }
 
+                    // ── Plano vectorial con cotas (canvas, sin satélite) ───
+                    showProgressBar('Generando plano vectorial con cotas...');
+                    let planoVectorial = null;
+                    try { planoVectorial = crearPlanoVectorialPredio(predioGeoJSON); } catch (e) { }
+
                     // ── Enviar al servidor Ubuntu para generar el PDF ──────
                     showProgressBar('Generando PDF...');
                     const reportData = {
@@ -3557,7 +3743,8 @@
                         qrDataUrl,
                         utmCoords:       csvUTMCoordinates || [],
                         mapImage,
-                        activeLayers
+                        activeLayers,
+                        planoVectorial
                     };
                     if (typeof incrementarMetricaDICAT === 'function') incrementarMetricaDICAT();
 
