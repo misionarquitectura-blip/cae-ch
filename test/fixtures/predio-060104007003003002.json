@@ -1,0 +1,27 @@
+{
+  "descripcion": "Levantamiento con estacion total del predio 060104007003003002 (COOP. DE VIVIENDA MONSENOR LEONIDAS PROANO), aportado por el CAE-CH el 2026-07-27. Sirve de patron de exactitud: la plataforma debe reproducir estas cifras.",
+  "origen": "DXF de levantamiento con estacion total, en poder del CAE-CH (no publicado en este repositorio)",
+  "clave": "060104007003003002",
+  "sistemaReferencia": "UTM WGS84 Zona 17S",
+  "superficieMedidaM2": 35972.5025,
+  "perimetroM": 806.0781,
+  "afectacionVialM2": 1427.8603,
+  "franjasAfectacionM2": [1183.2817, 109.5405, 105.0757, 29.9624],
+  "primerosVerticesUTM": [
+    [761899.5016, 9813120.9133],
+    [761908.8711, 9813113.3179],
+    [761931.0432, 9813095.1878],
+    [761946.6246, 9813082.5599],
+    [761958.3086, 9813073.0759],
+    [761958.3440, 9813073.0454],
+    [761966.1901, 9813066.3203],
+    [761966.2482, 9813066.2727]
+  ],
+  "numeroVertices": 62,
+  "regresionConocida": {
+    "descripcion": "Valores que producia la version anterior, antes de corregir el calculo. Sirven de guardia: si alguna prueba vuelve a arrojarlos, se reintrodujo el bug.",
+    "superficieM2": 36184.00,
+    "perimetroM": 809.52,
+    "afectacionVialM2": 28084.01
+  }
+}
