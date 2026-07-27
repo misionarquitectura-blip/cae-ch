@@ -9,12 +9,22 @@ package-lock.json
 # GeoVisor local (versión de desarrollo con servidor)
 GEOVISOR CAECH.html
 
-# DATA SET: excluir todo excepto los GeoJSON del GeoVisor
+# DATA SET: excluir todo excepto los GeoJSON que consume el GeoVisor
 DATA SET/CATASTRO RIOBAMBA FEB 2026/
 DATA SET/CERTIFICACION_EJES_VIALES.gdb/
 DATA SET/EERSA/
 DATA SET/*.csv
+DATA SET/*.zip
 ENLACES GEOPORTALES/
+
+# Descarga cruda de predios (95 MB) que ninguna capa del visor referencia.
+# El visor usa "DATA SET/Catastro GADMR.geojson".
+DATA SET/Predios.geojson
+
+# Levantamientos topograficos de referencia (DXF de estacion total).
+# Sirven de patron para test/fixtures pero no se publican: el repositorio
+# es publico y son documentos de trabajo del CAE-CH.
+FIX/
 
 # RESEARCH - datos crudos pesados (>50MB, no necesarios en producción)
 RESEARCH/CONSTRUCCIONES DETECTADAS POR IA.geojson
