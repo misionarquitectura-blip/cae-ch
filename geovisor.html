@@ -1258,6 +1258,20 @@
                     <button class="btn-generar-informe" id="btn-generar-informe" onclick="generarInformePredio()">
                         <i class="fas fa-file-pdf"></i> Generar DICAT
                     </button>
+                    <div style="display:flex;gap:6px;margin-top:6px">
+                        <button class="btn-generar-informe" id="btn-export-dxf"
+                                onclick="exportarPredioDXF()"
+                                title="Descarga el poligono en UTM WGS84 17S, listo para abrir en CAD"
+                                style="background:#1565C0;margin-top:0;font-size:12px;padding:8px 10px;flex:1">
+                            <i class="fas fa-drafting-compass"></i> DXF
+                        </button>
+                        <button class="btn-generar-informe" id="btn-export-csv"
+                                onclick="exportarPredioCSV()"
+                                title="Descarga la tabla de vertices en coordenadas UTM"
+                                style="background:#2E7D32;margin-top:0;font-size:12px;padding:8px 10px;flex:1">
+                            <i class="fas fa-table"></i> CSV
+                        </button>
+                    </div>
                     <button class="btn-generar-informe" id="btn-notif-predio"
                             onclick="abrirNotifModal()"
                             style="background:#5A5A5A;margin-top:6px;font-size:12px;padding:8px 12px">
@@ -1586,8 +1600,8 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h4>CAE-CH Núcleo Chimborazo</h4>
-                    <p>Colegio de Arquitectos del Ecuador - Núcleo Chimborazo. Comprometidos con la excelencia
+                    <h4>CAE-CH Provincial de Chimborazo</h4>
+                    <p>Colegio de Arquitectos del Ecuador - Provincial de Chimborazo. Comprometidos con la excelencia
                         arquitectónica en nuestra región.</p>
                 </div>
                 <div class="footer-column">
@@ -1836,42 +1850,93 @@
             }
 
             // Función para calcular el área de un polígono
-            function calculatePolygonArea(points) {
-                let area = 0;
-                const n = points.length;
-
-                for (let i = 0; i < n; i++) {
-                    const j = (i + 1) % n;
-                    area += points[i].lng * points[j].lat;
-                    area -= points[j].lng * points[i].lat;
-                }
-
-                area = Math.abs(area) / 2;
-
-                const avgLat = points.reduce((sum, point) => sum + point.lat, 0) / n;
-                const latToMeters = 111320;
-                const lngToMeters = 111319 * Math.cos(avgLat * Math.PI / 180);
-
-                return (area * latToMeters * lngToMeters).toFixed(2);
+            // Proyecta una lista de {lat,lng} a coordenadas planas UTM 17S.
+            // El catastro del GADMR se produce y se mide en esta proyección, por lo
+            // que el área y el perímetro planos coinciden con los valores oficiales
+            // (sup_pred_c / Shape__Area / Shape__Length) y con los levantamientos
+            // topográficos. Las aproximaciones equirectangulares (grados × 111320)
+            // introducían errores del orden del 0.5 % en área.
+            function pointsToUTM(points) {
+                return points.map(function (p) {
+                    const u = latLngToUTM(p.lat, p.lng, 17, true);
+                    return [u.easting, u.northing];
+                });
             }
 
-            // Función para calcular el perímetro de un polígono
-            function calculatePolygonPerimeter(points) {
-                let perimeter = 0;
-                const n = points.length;
-
+            // Área plana UTM por fórmula de Gauss (shoelace), en m².
+            function calculatePolygonArea(points) {
+                const u = pointsToUTM(points);
+                const n = u.length;
+                if (n < 3) return '0.00';
+                let s = 0;
                 for (let i = 0; i < n; i++) {
                     const j = (i + 1) % n;
-                    const dx = points[j].lng - points[i].lng;
-                    const dy = points[j].lat - points[i].lat;
-                    perimeter += Math.sqrt(dx * dx + dy * dy);
+                    s += u[i][0] * u[j][1] - u[j][0] * u[i][1];
                 }
+                return (Math.abs(s) / 2).toFixed(2);
+            }
 
-                const avgLat = points.reduce((sum, point) => sum + point.lat, 0) / n;
-                const latToMeters = 111320;
-                const lngToMeters = 111319 * Math.cos(avgLat * Math.PI / 180);
+            // ─────────────────────────────────────────────────────────────────
+            // Superficie y perímetro de una geometría completa (todos los anillos
+            // y partes), no sólo del anillo exterior.
+            //
+            // El catastro del GADMR entrega predios multi-parte (propiedad
+            // horizontal, lotes divididos por una via) como Polygon con varios
+            // anillos, lo que el estandar GeoJSON reservaria para huecos. Medir
+            // solo coordinates[0] subestimaba el area hasta un 12 %. Aqui se
+            // decide por geometria: el anillo que cae dentro del exterior es
+            // hueco y resta; el que cae fuera es otra parte y suma.
+            // ─────────────────────────────────────────────────────────────────
+            function anilloEnAnillo(interior, exterior) {
+                if (!interior.length || exterior.length < 3) return false;
+                const pt = interior[0];
+                let ins = false;
+                for (let i = 0, j = exterior.length - 1; i < exterior.length; j = i++) {
+                    const xi = exterior[i][0], yi = exterior[i][1], xj = exterior[j][0], yj = exterior[j][1];
+                    if (((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi)) ins = !ins;
+                }
+                return ins;
+            }
 
-                return (perimeter * Math.sqrt(latToMeters * lngToMeters)).toFixed(2);
+            function medirGeometria(geometry) {
+                if (!geometry) return null;
+                const partes = geometry.type === 'MultiPolygon' ? geometry.coordinates
+                    : geometry.type === 'Polygon' ? [geometry.coordinates] : null;
+                if (!partes) return null;
+                let area = 0, perim = 0, nAnillos = 0;
+                for (const anillos of partes) {
+                    if (!anillos || !anillos.length) continue;
+                    const ext = anillos[0];
+                    for (let k = 0; k < anillos.length; k++) {
+                        const r = anillos[k].map(function (c) { return { lat: c[1], lng: c[0] }; });
+                        if (r.length < 3) continue;
+                        const a = parseFloat(calculatePolygonArea(r));
+                        const p = parseFloat(calculatePolygonPerimeter(r));
+                        const esHueco = k > 0 && anilloEnAnillo(anillos[k], ext);
+                        area += esHueco ? -a : a;
+                        perim += p;               // el contorno de un hueco tambien es lindero
+                        nAnillos++;
+                    }
+                }
+                return {
+                    area: area.toFixed(2),
+                    perimetro: perim.toFixed(2),
+                    multiparte: nAnillos > 1,
+                    anillos: nAnillos
+                };
+            }
+
+            // Perímetro plano UTM (distancias euclidianas entre vértices), en m.
+            function calculatePolygonPerimeter(points) {
+                const u = pointsToUTM(points);
+                const n = u.length;
+                if (n < 2) return '0.00';
+                let p = 0;
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    p += Math.hypot(u[j][0] - u[i][0], u[j][1] - u[i][1]);
+                }
+                return p.toFixed(2);
             }
 
             // Función para parsear un archivo CSV
@@ -2605,7 +2670,7 @@
             // que las geometrías son exactas y consistentes entre sí (no dependen de
             // los tiles de Google). Devuelve un dataURL PNG para insertar en el PDF.
             // ══════════════════════════════════════════════════════════════
-            function crearPlanoVectorialPredio(predioGeoJSON) {
+            function crearPlanoVectorialPredio(predioGeoJSON, contornosAfectacion) {
                 try {
                     const COL = { 1:'#FB8C00', 2:'#2E7D32', 3:'#00ACC1', 6:'#1565C0', 7:'#111111', 8:'#D81B60', 9:'#6A1B9A', 10:'#CE93D8' };
                     const hexA = (hex, a) => {
@@ -2618,13 +2683,18 @@
                     const ring = geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : geom.coordinates[0];
                     if (!ring || ring.length < 4) return null;
 
-                    // Área a dibujar: bbox del predio + margen de contexto (~70%, mínimo ~18 m)
+                    // Área a dibujar: el predio ocupa el máximo posible del cuadro.
+                    // Sólo se deja el margen necesario para que las cotas, que se
+                    // rotulan por fuera de cada lado, no queden cortadas.
                     const pb = turf.bbox(predioGeoJSON);
-                    const padX = Math.max((pb[2]-pb[0])*0.7, 0.00018);
-                    const padY = Math.max((pb[3]-pb[1])*0.7, 0.00018);
+                    const padX = Math.max((pb[2]-pb[0])*0.06, 0.00004);
+                    const padY = Math.max((pb[3]-pb[1])*0.06, 0.00004);
                     const area = [pb[0]-padX, pb[1]-padY, pb[2]+padX, pb[3]+padY];
 
-                    const W=1000, H=760, pad=46;
+                    // Lienzo de alta resolución: al insertarse en el PDF a tamaño
+                    // fijo, más píxeles = texto relativamente más pequeño = más
+                    // espacio libre entre cotas.
+                    const W=1800, H=1360, pad=64;
                     const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
                     const ctx=canvas.getContext('2d');
                     const lat0=(area[1]+area[3])/2;
@@ -2653,14 +2723,19 @@
                     };
 
                     // Capas activas, de fondo a frente. Solo las features que solapan el área.
+                    // Se recortan al marco: al ampliar la escala, el contexto
+                    // desbordaría el cuadro del plano.
                     const orden=[1,2,10,9,6,8,7];
                     const usadas=[];
+                    ctx.save();
+                    ctx.beginPath(); ctx.rect(pad,pad,W-2*pad,H-2*pad); ctx.clip();
                     for(const i of orden){
                         const cb=document.getElementById('layer-'+i);
                         if(!cb || !cb.checked || !window.geojsonLayers || !window.geojsonLayers[i]) continue;
                         const col=COL[i]; let dibujo=false;
                         const fill = (i===6)? null : (i===9)? hexA(col,0.45) : (i===10)? hexA(col,0.32) : (i===1||i===2)? hexA(col,0.14) : null;
-                        const lw   = (i===7)? 2.6 : (i===8)? 2.0 : (i===6)? 1.1 : (i===9||i===10)? 0.6 : 1.3;
+                        // grosores escalados al lienzo de 1800 px
+                        const lw   = (i===7)? 4.2 : (i===8)? 3.2 : (i===6)? 1.8 : (i===9||i===10)? 1.0 : 2.1;
                         window.geojsonLayers[i].eachLayer(function(lyr){
                             if(!lyr.feature || !lyr.getBounds) return;
                             let b; try{ b=lyr.getBounds(); }catch(e){ return; }
@@ -2670,47 +2745,192 @@
                         });
                         if(dibujo) usadas.push(i);
                     }
+                    ctx.restore();
+                    ctx.strokeStyle='#CFCFCF'; ctx.lineWidth=1; ctx.strokeRect(pad,pad,W-2*pad,H-2*pad);
 
                     // Predio consultado (dominante)
-                    drawGeom(geom, '#D50000', hexA('#FFEB3B',0.55), 3.5);
-                    // Vértices
-                    ring.forEach(c=>{ const p=P(c[0],c[1]); ctx.beginPath(); ctx.arc(p[0],p[1],3.2,0,7); ctx.fillStyle='#D50000'; ctx.fill(); ctx.lineWidth=1; ctx.strokeStyle='#fff'; ctx.stroke(); });
+                    drawGeom(geom, '#D50000', hexA('#FFEB3B',0.55), 5);
 
-                    // ── Cotas: longitud de cada lado del predio ──
+                    // ── Franjas de afectación vial (entre línea de fábrica y lindero) ──
+                    // Se pintan sobre el predio para que el área declarada en la
+                    // sección 4C sea verificable visualmente.
+                    let hayAfect=false;
+                    const etiquetasAfect=[];
+                    if(Array.isArray(contornosAfectacion) && contornosAfectacion.length){
+                        ctx.save();
+                        contornosAfectacion.forEach(f=>{
+                            if(!f.latlng || f.latlng.length<3) return;
+                            hayAfect=true;
+                            ringPath(f.latlng); ctx.closePath();
+                            ctx.fillStyle='rgba(211,47,47,0.42)'; ctx.fill();
+                            ctx.setLineDash([9,5]); ctx.lineWidth=2.4; ctx.strokeStyle='#B71C1C'; ctx.stroke();
+                            ctx.setLineDash([]);
+                        });
+                        ctx.restore();
+                        // Los rótulos de área se posicionan aquí pero se pintan
+                        // después de las cotas, reservando su sitio para que
+                        // ninguna cota se les superponga.
+                        ctx.font='bold 14px Segoe UI, Arial';
+                        contornosAfectacion.forEach(f=>{
+                            if(!f.latlng || f.latlng.length<3 || f.area<40) return;
+                            let sx=0,sy=0; f.latlng.forEach(c=>{const p=P(c[0],c[1]); sx+=p[0]; sy+=p[1];});
+                            const cx=sx/f.latlng.length, cy=sy/f.latlng.length;
+                            const lab=f.area.toFixed(2)+' m²';
+                            const tw=ctx.measureText(lab).width;
+                            if(cx-tw/2-6<2||cx+tw/2+6>W-2||cy-12<2||cy+12>H-2) return;
+                            etiquetasAfect.push({cx,cy,lab,tw});
+                        });
+                    }
+
+                    // Vértices
+                    ring.forEach(c=>{ const p=P(c[0],c[1]); ctx.beginPath(); ctx.arc(p[0],p[1],4.2,0,7); ctx.fillStyle='#D50000'; ctx.fill(); ctx.lineWidth=1.4; ctx.strokeStyle='#fff'; ctx.stroke(); });
+
+                    // ── Acotación topográfica de los lados del predio ──
+                    // Convención de plano topográfico: líneas de extensión
+                    // perpendiculares desde los vértices, línea de cota paralela al
+                    // lado con marcas oblicuas en los extremos, y texto rotado
+                    // alineado con la cota (siempre legible, nunca cabeza abajo).
+                    // El texto rotado ocupa el largo del lado en vez del ancho de la
+                    // etiqueta, que es lo que permite acotar predios de muchos lados.
                     const cen=turf.centroid(predioGeoJSON).geometry.coordinates; const cp=P(cen[0],cen[1]);
-                    ctx.font='bold 13px Segoe UI, Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                    const FS=15;
+                    ctx.font=`bold ${FS}px Segoe UI, Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+
+                    // Colisiones sobre el rectángulo real (rotado) de cada texto
+                    const colocadas=[];
+                    const rectRot=(cx,cy,w,h,ang)=>{
+                        const c=Math.cos(ang), s=Math.sin(ang);
+                        return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]]
+                            .map(([x,y])=>[cx+x*c-y*s, cy+x*s+y*c]);
+                    };
+                    // SAT para dos polígonos convexos
+                    const solapan=(A,B)=>{
+                        for(const poly of [A,B]){
+                            for(let i=0;i<poly.length;i++){
+                                const j=(i+1)%poly.length;
+                                const ax=poly[j][0]-poly[i][0], ay=poly[j][1]-poly[i][1];
+                                const nx=-ay, ny=ax;
+                                let a0=Infinity,a1=-Infinity,b0=Infinity,b1=-Infinity;
+                                for(const p of A){const d=p[0]*nx+p[1]*ny; a0=Math.min(a0,d); a1=Math.max(a1,d);}
+                                for(const p of B){const d=p[0]*nx+p[1]*ny; b0=Math.min(b0,d); b1=Math.max(b1,d);}
+                                if(a1<b0||b1<a0) return false;
+                            }
+                        }
+                        return true;
+                    };
+                    const chocan=(r)=>colocadas.some(q=>solapan(r,q));
+
+                    // Reservar el sitio de los rótulos de afectación antes de repartir cotas
+                    etiquetasAfect.forEach(e=>{
+                        colocadas.push([
+                            [e.cx-e.tw/2-6, e.cy-12], [e.cx+e.tw/2+6, e.cy-12],
+                            [e.cx+e.tw/2+6, e.cy+12], [e.cx-e.tw/2-6, e.cy+12]
+                        ]);
+                    });
+
+                    // lados de mayor a menor: los largos (más informativos) toman sitio primero
+                    const lados=[];
                     for(let k=0;k<ring.length-1;k++){
+                        const dM=turf.distance(ring[k],ring[k+1],{units:'kilometers'})*1000;
+                        if(dM>=0.5) lados.push({k,dM});
+                    }
+                    lados.sort((u,v)=>v.dM-u.dM);
+
+                    let omitidas=0;
+                    for(const {k,dM} of lados){
                         const a=ring[k], b=ring[k+1];
-                        const dM=turf.distance(a,b,{units:'kilometers'})*1000;
-                        if(dM<0.5) continue;
                         const pa=P(a[0],a[1]), pbp=P(b[0],b[1]);
-                        let mx=(pa[0]+pbp[0])/2, my=(pa[1]+pbp[1])/2;
-                        let nx=-(pbp[1]-pa[1]), ny=(pbp[0]-pa[0]); const nl=Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
-                        if((mx-cp[0])*nx+(my-cp[1])*ny < 0){ nx=-nx; ny=-ny; } // hacia afuera del predio
-                        const tx=mx+nx*14, ty=my+ny*14;
+                        const mx=(pa[0]+pbp[0])/2, my=(pa[1]+pbp[1])/2;
+                        const lpx=Math.hypot(pbp[0]-pa[0], pbp[1]-pa[1]);
+                        if(lpx<1) { omitidas++; continue; }
+                        // dirección del lado y normal hacia afuera
+                        let ux=(pbp[0]-pa[0])/lpx, uy=(pbp[1]-pa[1])/lpx;
+                        let nx=-uy, ny=ux;
+                        if((mx-cp[0])*nx+(my-cp[1])*ny < 0){ nx=-nx; ny=-ny; }
+                        // ángulo del texto: siempre de izquierda a derecha
+                        let ang=Math.atan2(uy,ux);
+                        if(ang>Math.PI/2 || ang<-Math.PI/2){ ang+=Math.PI; }
+
                         const label=dM.toFixed(2)+' m';
                         const tw=ctx.measureText(label).width;
-                        ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(tx-tw/2-3, ty-9, tw+6, 18);
-                        ctx.fillStyle='#B71C1C'; ctx.fillText(label, tx, ty);
+
+                        let puesto=false;
+                        for(const off of [18,32,46,62,80]){
+                            const tx=mx+nx*off, ty=my+ny*off;
+                            const r=rectRot(tx,ty,tw+8,FS+6,ang);
+                            if(r.some(p=>p[0]<2||p[0]>W-2||p[1]<2||p[1]>H-2)) continue;
+                            if(chocan(r)) continue;
+                            colocadas.push(r);
+
+                            // extremos de la línea de cota, retranqueados del lado
+                            const e1=[pa[0]+nx*off, pa[1]+ny*off];
+                            const e2=[pbp[0]+nx*off, pbp[1]+ny*off];
+                            ctx.strokeStyle='rgba(183,28,28,0.55)'; ctx.lineWidth=1;
+                            // líneas de extensión desde cada vértice
+                            ctx.beginPath();
+                            ctx.moveTo(pa[0]+nx*4, pa[1]+ny*4);   ctx.lineTo(e1[0]+nx*5, e1[1]+ny*5);
+                            ctx.moveTo(pbp[0]+nx*4, pbp[1]+ny*4); ctx.lineTo(e2[0]+nx*5, e2[1]+ny*5);
+                            ctx.stroke();
+                            // línea de cota, interrumpida bajo el texto
+                            const hueco=(tw/2)+5;
+                            ctx.strokeStyle='#B71C1C'; ctx.lineWidth=1.3;
+                            ctx.beginPath();
+                            ctx.moveTo(e1[0], e1[1]); ctx.lineTo(tx-ux*hueco, ty-uy*hueco);
+                            ctx.moveTo(tx+ux*hueco, ty+uy*hueco); ctx.lineTo(e2[0], e2[1]);
+                            ctx.stroke();
+                            // marcas oblicuas a 45° en los extremos (norma topográfica)
+                            const tick=5;
+                            const ox=(ux+nx)/Math.SQRT2, oy=(uy+ny)/Math.SQRT2;
+                            ctx.lineWidth=1.6;
+                            ctx.beginPath();
+                            ctx.moveTo(e1[0]-ox*tick, e1[1]-oy*tick); ctx.lineTo(e1[0]+ox*tick, e1[1]+oy*tick);
+                            ctx.moveTo(e2[0]-ox*tick, e2[1]-oy*tick); ctx.lineTo(e2[0]+ox*tick, e2[1]+oy*tick);
+                            ctx.stroke();
+                            // texto rotado
+                            ctx.save();
+                            ctx.translate(tx,ty); ctx.rotate(ang);
+                            ctx.fillStyle='rgba(255,255,255,0.9)';
+                            ctx.fillRect(-tw/2-3, -FS/2-2, tw+6, FS+4);
+                            ctx.fillStyle='#B71C1C'; ctx.fillText(label,0,0);
+                            ctx.restore();
+                            puesto=true; break;
+                        }
+                        if(!puesto) omitidas++;
+                    }
+                    // Rótulos de área de las franjas de afectación, encima de las cotas
+                    ctx.font='bold 14px Segoe UI, Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                    etiquetasAfect.forEach(e=>{
+                        ctx.fillStyle='rgba(255,255,255,0.95)';
+                        ctx.fillRect(e.cx-e.tw/2-5, e.cy-11, e.tw+10, 22);
+                        ctx.strokeStyle='#B71C1C'; ctx.lineWidth=1.2;
+                        ctx.strokeRect(e.cx-e.tw/2-5, e.cy-11, e.tw+10, 22);
+                        ctx.fillStyle='#B71C1C'; ctx.fillText(e.lab, e.cx, e.cy);
+                    });
+
+                    if(omitidas>0){
+                        ctx.font='12px Segoe UI, Arial'; ctx.textAlign='right'; ctx.textBaseline='alphabetic';
+                        ctx.fillStyle='#666';
+                        ctx.fillText(`${omitidas} cota(s) omitida(s) por falta de espacio — ver tabla de vertices (seccion 6)`, W-pad, H-pad+18);
+                        ctx.textAlign='center'; ctx.textBaseline='middle';
                     }
 
                     // ── Flecha de Norte (arriba-derecha) ──
-                    const nX=W-pad-26, nY=pad+40;
+                    const nX=W-pad-30, nY=pad+48;
                     ctx.fillStyle='#222'; ctx.strokeStyle='#222'; ctx.lineWidth=2;
-                    ctx.beginPath(); ctx.moveTo(nX,nY-22); ctx.lineTo(nX-7,nY); ctx.lineTo(nX,nY-7); ctx.lineTo(nX+7,nY); ctx.closePath(); ctx.fill();
-                    ctx.font='bold 14px Segoe UI, Arial'; ctx.textAlign='center'; ctx.fillText('N', nX, nY+12);
+                    ctx.beginPath(); ctx.moveTo(nX,nY-28); ctx.lineTo(nX-9,nY); ctx.lineTo(nX,nY-9); ctx.lineTo(nX+9,nY); ctx.closePath(); ctx.fill();
+                    ctx.font='bold 18px Segoe UI, Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('N', nX, nY+14);
 
                     // ── Escala gráfica (abajo-izquierda) ──
                     const targets=[5,10,20,25,50,100,200]; let segM=targets[0];
-                    for(const t of targets){ if(t*scale <= 170) segM=t; }
-                    const segPx=segM*scale, sX=pad+8, sY=H-pad-16;
-                    ctx.strokeStyle='#222'; ctx.fillStyle='#222'; ctx.lineWidth=2;
+                    for(const t of targets){ if(t*scale <= W*0.17) segM=t; }
+                    const segPx=segM*scale, sX=pad+10, sY=H-pad-20;
+                    ctx.strokeStyle='#222'; ctx.fillStyle='#222'; ctx.lineWidth=2.5;
                     ctx.beginPath(); ctx.moveTo(sX,sY); ctx.lineTo(sX+segPx,sY); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(sX,sY-4); ctx.lineTo(sX,sY+4); ctx.moveTo(sX+segPx,sY-4); ctx.lineTo(sX+segPx,sY+4); ctx.stroke();
-                    ctx.font='12px Segoe UI, Arial'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-                    ctx.fillText(segM+' m', sX, sY-6);
+                    ctx.beginPath(); ctx.moveTo(sX,sY-5); ctx.lineTo(sX,sY+5); ctx.moveTo(sX+segPx,sY-5); ctx.lineTo(sX+segPx,sY+5); ctx.stroke();
+                    ctx.font='15px Segoe UI, Arial'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+                    ctx.fillText(segM+' m', sX, sY-8);
 
-                    return { dataUrl: canvas.toDataURL('image/png'), capas: usadas };
+                    return { dataUrl: canvas.toDataURL('image/png'), capas: usadas, conAfectacion: hayAfect };
                 } catch(e) { console.warn('Error generando plano vectorial:', e); return null; }
             }
 
@@ -3108,12 +3328,12 @@
                 doc.setFontSize(13);
                 doc.setFont('helvetica', 'bold');
                 doc.text('COLEGIO DE ARQUITECTOS DEL ECUADOR', pw / 2, 10, { align: 'center' });
-                doc.text('NUCLEO CHIMBORAZO', pw / 2, 17, { align: 'center' });
+                doc.text('PROVINCIAL DE CHIMBORAZO', pw / 2, 17, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.text('DIAGNOSTICO DE INFORMACION CATASTRAL Y TERRITORIAL - DICAT', pw / 2, 25, { align: 'center' });
                 doc.setFontSize(8);
-                doc.text('Plataforma Digital de Consulta Predial CAE-CH  caech.ec', pw / 2, 31, { align: 'center' });
+                doc.text('Plataforma Digital de Consulta Predial CAE-CH', pw / 2, 31, { align: 'center' });
                 doc.setFillColor(60, 0, 0);
                 doc.rect(0, 36, pw, 8, 'F');
                 doc.setFontSize(7.5);
@@ -3187,9 +3407,10 @@
                 y = at({
                     startY: y,
                     body: [
-                        ['Area del predio', `${meta.areaCalc || 'N/D'} m2`, 'Perimetro', `${meta.perimCalc || 'N/D'} m`],
+                        ['Superficie MEDIDA\n(geometria GIS)', `${meta.areaCalc || 'N/D'} m2`, 'Perimetro medido', `${meta.perimCalc || 'N/D'} m`],
+                        ['Superficie DECLARADA\n(catastro / escritura)', meta.areaCatastro ? `${meta.areaCatastro} m2` : 'N/D', 'Diferencia\n(medida - declarada)', meta.difArea || 'N/D'],
                         ['Superficie construida', `${meta.supCons || 'N/D'} m2`, 'Avaluo catastral', meta.avaluo && meta.avaluo !== 'N/D' ? `$ ${meta.avaluo}` : 'N/D'],
-                        ['Sistema de referencia', 'WGS84 Zona 17S', 'Fuente', meta.fuente || 'Catastro GADMR'],
+                        ['Sistema de referencia', 'UTM WGS84 Zona 17S', 'Fuente', meta.fuente || 'Catastro GADMR'],
                     ],
                     theme: 'grid',
                     styles: { fontSize: 9, cellPadding: 3 },
@@ -3201,6 +3422,27 @@
                     },
                     margin: { left: mg, right: mg },
                 });
+
+                // Nota metodológica: las dos superficies miden cosas distintas y
+                // discrepar no implica error en ninguna de las dos.
+                doc.setFontSize(7);
+                doc.setTextColor(90, 90, 90);
+                doc.setFont('helvetica', 'normal');
+                const notaSup =
+                    'SUPERFICIE MEDIDA: calculada por esta plataforma sobre la geometria del poligono catastral, en proyeccion UTM WGS84 ' +
+                    'Zona 17S (metodo de Gauss). Es la superficie que realmente encierra el contorno dibujado en el catastro. ' +
+                    'SUPERFICIE DECLARADA: valor del campo sup_pred_c del GADMR, proveniente de la escritura o de la ficha catastral; ' +
+                    'no se recalcula a partir de la geometria. Ambas cifras pueden diferir legitimamente (linderos redefinidos, ' +
+                    'levantamientos de distinta epoca, superficie de escritura no actualizada). Una diferencia significativa es un ' +
+                    'indicio a verificar con el GADMR, no un error del presente reporte.' +
+                    (meta.multiparte
+                        ? ' PREDIO MULTIPARTE: la geometria catastral esta compuesta por varios poligonos; la superficie medida los suma todos, ' +
+                          'mientras que la tabla de vertices de la seccion 6 y el plano de la seccion 8 representan unicamente el poligono principal.'
+                        : '');
+                doc.text(notaSup, mg, y + 3.5, { maxWidth: pw - mg * 2 });
+                y += 3.5 + doc.getTextDimensions(notaSup, { maxWidth: pw - mg * 2 }).h + 2;
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(9);
 
                 // Sección 3 - Colindantes
                 y = checkSpace(y, 50);
@@ -3317,7 +3559,20 @@
                 const filasAfect = [['Afectacion vial por linea de fabrica', textoAfect]];
                 if (tieneAfect && areaAfect > 0) {
                     filasAfect.push(['Area afectada (reserva vial)', `${areaAfect.toFixed(2)} m²`]);
-                    filasAfect.push(['Observacion', 'El area indicada corresponde a la franja del predio comprendida entre la linea de fabrica y el limite del lote hacia la via. Esta zona no es edificable segun normativa municipal.']);
+                    const franjas = afectacionVial && afectacionVial.franjas;
+                    if (franjas && franjas.length > 1) {
+                        filasAfect.push(['Desglose por frente', franjas.map(f => `${f.toFixed(2)} m²`).join('  +  ') + `  =  ${areaAfect.toFixed(2)} m²`]);
+                    }
+                    if (afectacionVial && afectacionVial.areaEdificable != null) {
+                        filasAfect.push(['Area util remanente', `${afectacionVial.areaEdificable.toFixed(2)} m²`]);
+                    }
+                    filasAfect.push(['Observacion', 'El area indicada corresponde a las franjas del predio comprendidas entre la linea de fabrica y el limite del lote hacia cada via circundante. Estas zonas no son edificables segun normativa municipal.']);
+                    if (afectacionVial && afectacionVial.lfProlongada) {
+                        filasAfect.push(['ADVERTENCIA - Trazado incompleto',
+                            'El trazado de la linea de fabrica de la capa municipal termina dentro del predio y no lo cruza por completo. ' +
+                            'Para cerrar la franja se prolongo el trazado siguiendo la direccion de su tramo final. El area resultante es REFERENCIAL ' +
+                            'y debe confirmarse con la linea de fabrica oficial emitida por el GADMR.']);
+                    }
                 } else if (tieneAfect) {
                     filasAfect.push(['Area afectada (reserva vial)', 'Geometria lineal – calculo de area no disponible']);
                 }
@@ -3335,9 +3590,17 @@
                         1: { cellWidth: 'auto' },
                     },
                     didParseCell(data) {
-                        if (data.column.index === 1 && data.row.index === 0 && data.section === 'body') {
+                        if (data.section !== 'body') return;
+                        if (data.column.index === 1 && data.row.index === 0) {
                             data.cell.styles.textColor = colorAfect;
                             data.cell.styles.fontStyle = 'bold';
+                        }
+                        // Fila de advertencia por trazado incompleto: destacar en rojo
+                        const et = (filasAfect[data.row.index] || [])[0] || '';
+                        if (et.indexOf('ADVERTENCIA') === 0) {
+                            data.cell.styles.textColor = [180, 30, 30];
+                            data.cell.styles.fontStyle = 'bold';
+                            data.cell.styles.fillColor = [253, 240, 240];
                         }
                     },
                     margin: { left: mg, right: mg },
@@ -3579,9 +3842,17 @@
                             doc.text(String(nomP[id] || ''), lx + 5, y + 2);
                             lx += 75; lrow++;
                         });
+                        if (planoVectorial.conAfectacion) {
+                            if (lrow >= 2) { y += 7; lx = mg; lrow = 0; }
+                            doc.setFillColor(211, 47, 47);
+                            doc.rect(lx, y, 3, 3, 'F');
+                            doc.text('Afectacion vial (no edificable)', lx + 5, y + 2);
+                        }
                         y += 8;
                         doc.setFontSize(7.5); doc.setTextColor(100, 100, 100);
-                        doc.text('Plano a escala con cotas de los lados del predio (en metros), elaborado solo con geometrias vectoriales del catastro y capas activas, sin imagen satelital. Cotas referenciales calculadas sobre la geometria catastral del GADMR.', mg, y, { maxWidth: pw - mg * 2 });
+                        const notaPlano = 'Plano a escala con cotas de los lados del predio (en metros), elaborado solo con geometrias vectoriales del catastro y capas activas, sin imagen satelital. Cotas referenciales calculadas sobre la geometria catastral del GADMR.' +
+                            (planoVectorial.conAfectacion ? ' Las franjas rojas rayadas son las areas afectadas por linea de fabrica detalladas en la seccion 4C; su superficie se rotula sobre cada franja.' : '');
+                        doc.text(notaPlano, mg, y, { maxWidth: pw - mg * 2 });
                         doc.setTextColor(0, 0, 0);
                         y += 10;
                     } catch (e) {
@@ -3631,9 +3902,19 @@
 
                     const csvPoints     = csvPolygon.getLatLngs()[0];
                     const polygonPoints = csvPoints.map(ll => ({ lat: ll.lat, lng: ll.lng }));
-                    const areaCalc      = csvPoints.length >= 3 ? calculatePolygonArea(polygonPoints)     : 'N/D';
-                    const perimCalc     = csvPoints.length >= 3 ? calculatePolygonPerimeter(polygonPoints) : 'N/D';
-                    const predioGeoJSON = csvPolygon.toGeoJSON();
+                    // 12 decimales: evita el redondeo por defecto de Leaflet (6 dec ~ 11 cm)
+                    const predioGeoJSON = csvPolygon.toGeoJSON(12);
+                    // Medición sobre la geometría catastral completa (todas las
+                    // partes y huecos); csvPolygon solo conserva el anillo exterior.
+                    const geomOriginal = (selectedPredioFeature && selectedPredioFeature.layer
+                        && selectedPredioFeature.layer.feature && selectedPredioFeature.layer.feature.geometry)
+                        || predioGeoJSON.geometry;
+                    const medida        = medirGeometria(geomOriginal);
+                    const areaCalc      = medida ? medida.area
+                        : (csvPoints.length >= 3 ? calculatePolygonArea(polygonPoints) : 'N/D');
+                    const perimCalc     = medida ? medida.perimetro
+                        : (csvPoints.length >= 3 ? calculatePolygonPerimeter(polygonPoints) : 'N/D');
+                    const multiparte    = !!(medida && medida.multiparte);
 
                     const nombre      = props ? ((props.gis_predio || '').trim() || (props.nombre_c || '').trim() || 'Sin nombre') : 'Consulta por coordenadas / CSV';
                     const clave       = props ? ((props.claves     || '').trim() || 'S/C') : 'S/C';
@@ -3641,6 +3922,19 @@
                     const tipoCatas   = props ? (props.tipo_catas === '1' ? 'Urbano' : props.tipo_catas === '2' ? 'Rural' : (props.tipo_catas || 'N/D')) : 'N/D';
                     const avaluo      = props && props.avaluo_c ? parseFloat(props.avaluo_c).toLocaleString('es-EC', { minimumFractionDigits: 2 }) : 'N/D';
                     const supCons     = props && props.sup_cons_c !== undefined ? props.sup_cons_c : 'N/D';
+                    // Superficie oficial declarada por el catastro, para contraste con la calculada
+                    const supPredC    = props ? parseFloat(props.sup_pred_c || props.Shape__Area || 0) : 0;
+                    const areaCatastro = supPredC > 0 ? supPredC.toFixed(2) : null;
+                    let difArea = 'N/D';
+                    if (areaCatastro && areaCalc !== 'N/D') {
+                        const d = parseFloat(areaCalc) - supPredC;
+                        const pct = supPredC > 0 ? (d / supPredC) * 100 : 0;
+                        difArea = `${d >= 0 ? '+' : ''}${d.toFixed(2)} m2 (${pct >= 0 ? '+' : ''}${pct.toFixed(2)} %)`;
+                        // Umbral de tolerancia habitual en levantamientos catastrales
+                        if (Math.abs(pct) >= 5) difArea += '\nDISCREPANCIA SIGNIFICATIVA - verificar con GADMR';
+                        else if (Math.abs(pct) >= 1) difArea += '\nDentro de tolerancia usual';
+                        else difArea += '\nCoincidencia';
+                    }
                     const selectedClave = props ? (props.claves || '').trim() : '';
                     const filePrefix  = props ? `DICAT_${clave.replace(/\s+/g, '_').substring(0, 18)}` : 'DICAT_coords';
 
@@ -3720,7 +4014,7 @@
                     // ── Plano vectorial con cotas (canvas, sin satélite) ───
                     showProgressBar('Generando plano vectorial con cotas...');
                     let planoVectorial = null;
-                    try { planoVectorial = crearPlanoVectorialPredio(predioGeoJSON); } catch (e) { console.warn('Plano vectorial falló:', e); }
+                    try { planoVectorial = crearPlanoVectorialPredio(predioGeoJSON, afectacionVial && afectacionVial.contornos); } catch (e) { console.warn('Plano vectorial falló:', e); }
 
                     // ── Enviar al servidor Ubuntu para generar el PDF ──────
                     showProgressBar('Generando PDF...');
@@ -3731,7 +4025,7 @@
                         vigenciaStr,
                         meta: {
                             nombre, clave, claveAux, tipoCatas, avaluo, supCons,
-                            areaCalc, perimCalc,
+                            areaCalc, perimCalc, areaCatastro, difArea, multiparte,
                             fuente: props ? 'Catastro GADMR' : 'Coordenadas ingresadas'
                         },
                         colindantes,
@@ -4643,7 +4937,15 @@
                 const nombre = (props.gis_predio || '').trim() || (props.nombre_c || '').trim() || 'Sin nombre';
                 const clave = (props.claves || 'S/C').trim();
                 const claveAux = (props.claves_aux || 'S/C').trim();
-                const area = props.Shape__Area ? parseFloat(props.Shape__Area).toFixed(2) : 'N/D';
+                // Misma medición que el DICAT (UTM 17S sobre la geometría completa),
+                // para que panel e informe nunca muestren cifras distintas.
+                let areaMedida = 'N/D';
+                try {
+                    const m = medirGeometria(layer.feature && layer.feature.geometry);
+                    if (m) areaMedida = m.area;
+                } catch (e) { }
+                if (areaMedida === 'N/D' && props.Shape__Area) areaMedida = parseFloat(props.Shape__Area).toFixed(2);
+                const areaDeclarada = props.sup_pred_c ? parseFloat(props.sup_pred_c).toFixed(2) : 'N/D';
                 const avaluo = props.avaluo_c ? `$${parseFloat(props.avaluo_c).toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : 'N/D';
                 const supCons = (props.sup_cons_c !== undefined && props.sup_cons_c !== null) ? props.sup_cons_c + ' m²' : 'N/D';
                 const tipoCatas = props.tipo_catas || 'N/D';
@@ -4655,7 +4957,8 @@
                     ['Clave catastral', clave],
                     ['Clave auxiliar', claveAux],
                     ['Tipo catastral', tipoCatas],
-                    ['Área del predio', area + ' m²'],
+                    ['Superficie medida', areaMedida + ' m²'],
+                    ['Sup. declarada', areaDeclarada === 'N/D' ? 'N/D' : areaDeclarada + ' m²'],
                     ['Sup. construida', supCons],
                     ['Avalúo catastral', avaluo],
                 ];
@@ -4786,112 +5089,321 @@
                 } catch (e) { return null; }
             }
 
-            // Busca el nombre de calle en la capa de vialidad que colinda con el predio en una dirección
-            // ─────────────────────────────────────────────────────────────────
-            // Calcula el área del predio afectada cuando una línea de fábrica
-            // lo atraviesa. Divide el predio en dos mitades con un semiplano y
-            // devuelve el área de la mitad menor (= zona afectada).
-            // ─────────────────────────────────────────────────────────────────
-            // ─────────────────────────────────────────────────────────────────
-            // Calcula el área del predio que queda entre la calle y la línea
-            // de fábrica (franja de retiro/reserva vial).
+            // ═════════════════════════════════════════════════════════════════
+            // GEOMETRÍA PLANA UTM PARA AFECTACIÓN VIAL
             //
-            // Estrategia:
-            //   1. Cortar el predio con un semiplano definido por la LF y su
-            //      normal → se obtienen dos sub-áreas (area1, area2).
-            //   2. Detectar de qué lado de la LF está la calle más cercana
-            //      (capa 7 Vialidad). El lado-calle es la afectación real.
-            //   3. Si la capa de Vialidad no está disponible o no hay vía a
-            //      una distancia razonable, fallback heurístico al lado de
-            //      menor área (asumiendo que el retiro es el pedazo chico).
-            // ─────────────────────────────────────────────────────────────────
-            function calcularAreaBajoLineaFabrica(predioGeoJSON, lineaFeat) {
-                try {
-                    let coords;
-                    const geomType = lineaFeat.geometry.type;
-                    if (geomType === 'LineString') {
-                        coords = lineaFeat.geometry.coordinates;
-                    } else if (geomType === 'MultiLineString') {
-                        coords = lineaFeat.geometry.coordinates.reduce(
-                            (longest, seg) => seg.length > longest.length ? seg : longest, []
-                        );
-                    }
-                    if (!coords || coords.length < 2) return null;
+            // Todo el cálculo de afectación se hace en coordenadas UTM 17S
+            // (metros), no en grados: es la proyección en la que el GADMR
+            // produce y mide el catastro, de modo que las áreas coinciden con
+            // los valores oficiales y con los levantamientos topográficos.
+            // ═════════════════════════════════════════════════════════════════
+            const AF_MAX_RETIRO = 25;   // ancho máximo plausible de una franja de afectación (m)
+            const AF_NODE_SNAP  = 1.0;  // tolerancia de nodo para encadenar líneas de fábrica (m)
 
-                    const x0 = coords[0][0], y0 = coords[0][1];
-                    const x1 = coords[coords.length - 1][0], y1 = coords[coords.length - 1][1];
-                    const dx = x1 - x0, dy = y1 - y0;
-                    const len = Math.sqrt(dx * dx + dy * dy);
-                    if (len < 1e-10) return null;
-
-                    // Vector normal unitario (perpendicular a la LF)
-                    const nx = -dy / len, ny = dx / len;
-                    const bigDist = 0.05;   // ~5 km en grados
-                    const extFactor = 10;   // extender la línea 10x su longitud
-
-                    const ex0 = [x0 - dx * extFactor, y0 - dy * extFactor];
-                    const ex1 = [x1 + dx * extFactor, y1 + dy * extFactor];
-
-                    // Semiplano rectangular en el lado "normal positivo"
-                    const halfPlane = turf.polygon([[
-                        ex0,
-                        [ex0[0] + nx * bigDist, ex0[1] + ny * bigDist],
-                        [ex1[0] + nx * bigDist, ex1[1] + ny * bigDist],
-                        ex1,
-                        ex0
-                    ]]);
-
-                    const part1 = turf.intersect(predioGeoJSON, halfPlane);
-                    const area1 = part1 ? turf.area(part1) : 0;
-                    const totalArea = turf.area(predioGeoJSON);
-                    const area2 = totalArea - area1;
-
-                    if (area1 < 0.01 && area2 < 0.01) return null;
-
-                    // ── Detectar lado calle usando capa 7 (Vialidad) ──
-                    let ladoCalle = null; // 'positivo' | 'negativo'
-                    if (geojsonLayers[7]) {
-                        try {
-                            const predioCentroid = turf.centroid(predioGeoJSON);
-                            const buffer80 = turf.buffer(predioGeoJSON, 0.08, { units: 'kilometers' });
-                            let bestDist = Infinity;
-                            let bestSign = 0;
-                            geojsonLayers[7].eachLayer(function (lyr) {
-                                if (!lyr.feature) return;
-                                try {
-                                    const vGeo = lyr.toGeoJSON();
-                                    if (!turf.booleanIntersects(buffer80, vGeo)) return;
-                                    const vc = turf.centroid(vGeo);
-                                    const d = turf.distance(predioCentroid, vc, { units: 'meters' });
-                                    if (d >= bestDist) return;
-                                    // Producto punto con la normal: signo = lado del semiplano
-                                    const px = vc.geometry.coordinates[0];
-                                    const py = vc.geometry.coordinates[1];
-                                    const dot = (px - x0) * nx + (py - y0) * ny;
-                                    if (Math.abs(dot) < 1e-12) return; // exactamente sobre la LF, ignorar
-                                    bestDist = d;
-                                    bestSign = dot;
-                                } catch (e) { }
-                            });
-                            if (bestDist < Infinity) {
-                                ladoCalle = bestSign > 0 ? 'positivo' : 'negativo';
-                            }
-                        } catch (e) { }
-                    }
-
-                    let afectacion;
-                    if (ladoCalle === 'positivo') {
-                        afectacion = area1;
-                    } else if (ladoCalle === 'negativo') {
-                        afectacion = area2;
-                    } else {
-                        // Fallback heurístico: la franja chica suele ser el retiro
-                        afectacion = Math.min(area1, area2);
-                    }
-                    return afectacion > 0.01 ? afectacion : null;
-                } catch (e) {
-                    return null;
+            function afUTM(c) { const u = latLngToUTM(c[1], c[0], 17, true); return [u.easting, u.northing]; }
+            function afShoelace(p) {
+                let s = 0;
+                for (let i = 0; i < p.length; i++) { const j = (i + 1) % p.length; s += p[i][0] * p[j][1] - p[j][0] * p[i][1]; }
+                return Math.abs(s) / 2;
+            }
+            function afBbox(p) {
+                let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+                for (const q of p) { a = Math.min(a, q[0]); b = Math.min(b, q[1]); c = Math.max(c, q[0]); d = Math.max(d, q[1]); }
+                return [a, b, c, d];
+            }
+            function afPip(pt, poly) {
+                let ins = false;
+                for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+                    if (((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi)) ins = !ins;
                 }
+                return ins;
+            }
+            function afDist2Seg(p, a, b) {
+                const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy;
+                if (L < 1e-18) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+                let t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L;
+                t = Math.max(0, Math.min(1, t));
+                return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+            }
+            function afDistToRing(p, poly) {
+                let m = Infinity;
+                for (let i = 0; i < poly.length; i++) m = Math.min(m, afDist2Seg(p, poly[i], poly[(i + 1) % poly.length]));
+                return m;
+            }
+            function afSegInt(a, b, c, d) {
+                const rx = b[0] - a[0], ry = b[1] - a[1], sx = d[0] - c[0], sy = d[1] - c[1];
+                const den = rx * sy - ry * sx;
+                if (Math.abs(den) < 1e-14) return null;
+                const t = ((c[0] - a[0]) * sy - (c[1] - a[1]) * sx) / den;
+                const u = ((c[0] - a[0]) * ry - (c[1] - a[1]) * rx) / den;
+                const E = 1e-9;
+                if (t < -E || t > 1 + E || u < -E || u > 1 + E) return null;
+                return { pt: [a[0] + t * rx, a[1] + t * ry], t: t };
+            }
+            function afDedupe(pts) {
+                const o = [];
+                for (const p of pts) { const q = o[o.length - 1]; if (q && Math.hypot(q[0] - p[0], q[1] - p[1]) < 1e-9) continue; o.push(p); }
+                return o;
+            }
+
+            // Sub-caminos de `line` que quedan dentro de `poly`, anclados al anillo.
+            function afInnerPaths(line, poly) {
+                const n = poly.length, events = [];
+                for (let i = 0; i < line.length - 1; i++) {
+                    for (let k = 0; k < n; k++) {
+                        const r = afSegInt(line[i], line[i + 1], poly[k], poly[(k + 1) % n]);
+                        if (r) events.push({ i: i, t: r.t, pt: r.pt, ringEdge: k });
+                    }
+                }
+                events.sort(function (a, b) { return a.i - b.i || a.t - b.t; });
+                const ev = [];
+                for (const e of events) {
+                    const p = ev[ev.length - 1];
+                    if (p && Math.hypot(p.pt[0] - e.pt[0], p.pt[1] - e.pt[1]) < 1e-6) continue;
+                    ev.push(e);
+                }
+                const paths = [];
+                for (let k = 0; k + 1 < ev.length; k++) {
+                    const A = ev[k], B = ev[k + 1];
+                    const pts = afDedupe([A.pt].concat(line.slice(A.i + 1, B.i + 1), [B.pt]));
+                    if (pts.length < 2) continue;
+                    let tot = 0;
+                    for (let i = 1; i < pts.length; i++) tot += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+                    if (tot < 1e-6) continue;
+                    // punto medio del sub-camino: define si el tramo va por dentro
+                    let acc = 0, mid = null;
+                    for (let i = 1; i < pts.length && !mid; i++) {
+                        const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+                        if (acc + l >= tot / 2) {
+                            const r = (tot / 2 - acc) / l;
+                            mid = [pts[i - 1][0] + r * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + r * (pts[i][1] - pts[i - 1][1])];
+                        }
+                        acc += l;
+                    }
+                    if (!mid || !afPip(mid, poly)) continue;
+                    paths.push({ pts: pts, eA: A, eB: B, len: tot });
+                }
+                return paths;
+            }
+
+            // Divide el anillo `poly` por un sub-camino interior → [ladoA, ladoB]
+            function afSplitByPath(poly, path) {
+                const n = poly.length, eA = path.eA, eB = path.eB;
+                const arc = function (from, to) {
+                    const out = [];
+                    let k = (from.ringEdge + 1) % n, g = 0;
+                    while (g++ <= n) { if (k === (to.ringEdge + 1) % n) break; out.push(poly[k]); k = (k + 1) % n; }
+                    return out;
+                };
+                return [
+                    afDedupe(path.pts.concat(arc(eB, eA))),
+                    afDedupe(path.pts.slice().reverse().concat(arc(eA, eB)))
+                ];
+            }
+
+            // Máxima separación entre un trazado y el borde del predio, muestreando
+            // a lo largo del recorrido y no sólo en los vértices: una recta que
+            // corta el lote en diagonal tiene sus dos extremos sobre el anillo
+            // (distancia 0) y sin muestreo intermedio parecería pegada al borde.
+            function afMaxSepBorde(pts, poly) {
+                let maxD = 0;
+                for (let i = 1; i < pts.length; i++) {
+                    const a = pts[i - 1], b = pts[i];
+                    const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                    const n = Math.max(1, Math.ceil(L / 2));   // una muestra cada ~2 m
+                    for (let k = 0; k <= n; k++) {
+                        const t = k / n;
+                        maxD = Math.max(maxD, afDistToRing([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])], poly));
+                    }
+                }
+                return maxD;
+            }
+
+            // Punto interior más profundo del predio (núcleo edificable). El lado
+            // del corte que lo contiene es el resto; el otro es la afectación.
+            function afNucleo(poly) {
+                const bb = afBbox(poly);
+                let best = null, bd = -1;
+                for (let gx = 0; gx <= 40; gx++) {
+                    for (let gy = 0; gy <= 40; gy++) {
+                        const p = [bb[0] + (bb[2] - bb[0]) * gx / 40, bb[1] + (bb[3] - bb[1]) * gy / 40];
+                        if (!afPip(p, poly)) continue;
+                        const d = afDistToRing(p, poly);
+                        if (d > bd) { bd = d; best = p; }
+                    }
+                }
+                return best;
+            }
+
+            // Extrae el anillo exterior del predio en UTM
+            function afRingUTM(predioGeoJSON) {
+                const g = predioGeoJSON.geometry;
+                let ring = g.type === 'MultiPolygon' ? g.coordinates[0][0] : g.coordinates[0];
+                if (!ring || ring.length < 4) return null;
+                ring = ring.slice();
+                const f = ring[0], l = ring[ring.length - 1];
+                if (f[0] === l[0] && f[1] === l[1]) ring.pop();
+                return afDedupe(ring.map(afUTM));
+            }
+
+            // Prolonga los extremos "colgantes" (que mueren dentro del predio)
+            // hasta salir del anillo, siguiendo la dirección del tramo terminal.
+            // Devuelve { pts, prolongado } — `prolongado` indica que el trazado
+            // municipal muere dentro del predio y hubo que interpretar su cierre.
+            function afExtender(line, poly) {
+                const out = line.slice();
+                let prolongado = false;
+                for (const end of [0, 1]) {
+                    const i = end ? out.length - 1 : 0, j = end ? out.length - 2 : 1;
+                    const a = out[i], b = out[j];
+                    if (!a || !b || !afPip(a, poly)) continue;
+                    const d = afDistToRing(a, poly);
+                    if (d > AF_MAX_RETIRO) continue;
+                    const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                    if (L < 1e-6) continue;
+                    const grow = d * 6 + 3;
+                    const p = [a[0] - (b[0] - a[0]) / L * grow, a[1] - (b[1] - a[1]) / L * grow];
+                    if (end) out.push(p); else out.unshift(p);
+                    prolongado = true;
+                }
+                return { pts: out, prolongado: prolongado };
+            }
+
+            // Recolecta las líneas de fábrica del entorno del predio y las encadena
+            // en polilíneas maximales. El catastro entrega la LF fragmentada y
+            // duplicada: sin este encadenado, tramos que mueren dentro del predio
+            // no llegan a cortarlo y la franja de retiro se pierde.
+            function afCadenasLF(P) {
+                const bbP = afBbox(P);
+                const key = function (p) { return Math.round(p[0] / AF_NODE_SNAP) + ',' + Math.round(p[1] / AF_NODE_SNAP); };
+                const segMap = new Map();
+                geojsonLayers[8].eachLayer(function (lyr) {
+                    if (!lyr.feature || !lyr.feature.geometry) return;
+                    const g = lyr.feature.geometry;
+                    let partes;
+                    if (g.type === 'LineString') partes = [g.coordinates];
+                    else if (g.type === 'MultiLineString') partes = g.coordinates;
+                    else return;
+                    for (const parte of partes) {
+                        let u;
+                        try { u = afDedupe(parte.map(afUTM)); } catch (e) { continue; }
+                        if (u.length < 2) continue;
+                        const bb = afBbox(u);
+                        if (bb[2] < bbP[0] - AF_MAX_RETIRO || bb[0] > bbP[2] + AF_MAX_RETIRO ||
+                            bb[3] < bbP[1] - AF_MAX_RETIRO || bb[1] > bbP[3] + AF_MAX_RETIRO) continue;
+                        for (let i = 0; i < u.length - 1; i++) {
+                            const a = u[i], b = u[i + 1];
+                            const ka = key(a), kb = key(b);
+                            if (ka === kb) continue;
+                            // sólo tramos que tocan el predio o su franja perimetral
+                            const inA = afPip(a, P), inB = afPip(b, P);
+                            const da = afDistToRing(a, P), db = afDistToRing(b, P);
+                            if (!((inA && da <= AF_MAX_RETIRO) || (inB && db <= AF_MAX_RETIRO) ||
+                                  (!inA && da <= 2) || (!inB && db <= 2))) continue;
+                            const k = ka < kb ? ka + '|' + kb : kb + '|' + ka;
+                            if (!segMap.has(k)) segMap.set(k, [a, b]);
+                        }
+                    }
+                });
+                const segs = Array.from(segMap.values()).map(function (s) { return { a: s[0], b: s[1], used: false }; });
+                const adj = new Map();
+                for (const s of segs) {
+                    for (const k of [key(s.a), key(s.b)]) { if (!adj.has(k)) adj.set(k, []); adj.get(k).push(s); }
+                }
+                const walk = function (startKey) {
+                    const path = [];
+                    let cur = startKey;
+                    for (;;) {
+                        const todos = adj.get(cur) || [];
+                        const opts = todos.filter(function (s) { return !s.used; });
+                        if (!opts.length) break;
+                        if (path.length && todos.length > 2) break;   // bifurcación: cortar cadena
+                        const s = opts[0];
+                        s.used = true;
+                        const next = (key(s.a) === cur) ? s.b : s.a;
+                        if (!path.length) path.push((key(s.a) === cur) ? s.a : s.b);
+                        path.push(next);
+                        cur = key(next);
+                    }
+                    return path;
+                };
+                const chains = [];
+                for (const entry of adj) { if (entry[1].length !== 2) { let p; while ((p = walk(entry[0])).length > 1) chains.push(p); } }
+                for (const s of segs) { if (!s.used) { const p = walk(key(s.a)); if (p.length > 1) chains.push(p); } }
+                return chains;
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Área del predio comprometida por las líneas de fábrica.
+            //
+            // Corta el anillo del predio con cada polilínea de LF encadenada y
+            // acumula las piezas que quedan del lado calle (las que NO contienen
+            // el núcleo edificable). Cubre todas las calles circundantes sin
+            // duplicar superficie, porque cada corte se aplica sobre el resto
+            // del corte anterior.
+            //
+            // Devuelve { total, franjas[], edificable } en m², o null.
+            // ─────────────────────────────────────────────────────────────────
+            function calcularFranjasAfectacion(predioGeoJSON) {
+                const P = afRingUTM(predioGeoJSON);
+                if (!P || P.length < 3) return null;
+                const areaPredio = afShoelace(P);
+                const NUC = afNucleo(P);
+                if (!NUC) return null;
+
+                // Cuerdas válidas: trazados de LF que se mantienen cerca del
+                // borde. Un trazado que se interna en el predio pertenece a otra
+                // manzana y no define retiro de este lote.
+                const cand = [];
+                let lfProlongada = false;
+                for (const chain of afCadenasLF(P)) {
+                    const ext = afExtender(chain, P);
+                    const paths = afInnerPaths(ext.pts, P).filter(function (p) {
+                        return afMaxSepBorde(p.pts, P) <= AF_MAX_RETIRO;
+                    });
+                    if (paths.length && ext.prolongado) lfProlongada = true;
+                    for (const p of paths) cand.push(p);
+                }
+                cand.sort(function (a, b) { return b.len - a.len; });
+
+                let resto = P.slice();
+                const piezas = [];
+                for (const orig of cand) {
+                    for (const path of afInnerPaths(orig.pts.slice(), resto)) {
+                        const par = afSplitByPath(resto, path);
+                        const A = par[0], B = par[1];
+                        if (A.length < 3 || B.length < 3) continue;
+                        const aA = afShoelace(A), aB = afShoelace(B);
+                        if (aA < 0.05 || aB < 0.05) continue;
+                        const keepA = afPip(NUC, A);
+                        const keep = keepA ? A : B, drop = keepA ? B : A;
+                        const ad = afShoelace(drop);
+                        if (ad / path.len > AF_MAX_RETIRO) continue;  // no es una franja de retiro
+                        resto = keep;
+                        piezas.push({ area: Math.round(ad * 100) / 100, ring: drop });
+                    }
+                }
+                piezas.sort(function (a, b) { return b.area - a.area; });
+                const total = piezas.reduce(function (s, v) { return s + v.area; }, 0);
+                // Contornos en lat/lng para poder dibujarlos y exportarlos
+                const contornos = piezas.map(function (p) {
+                    return {
+                        area: p.area,
+                        utm: p.ring,
+                        latlng: p.ring.map(function (q) {
+                            const ll = utmToLatLng(q[0], q[1], 17, true);
+                            return [ll[1], ll[0]];   // [lng, lat]
+                        })
+                    };
+                });
+                return {
+                    total: Math.round(total * 100) / 100,
+                    franjas: piezas.map(function (p) { return p.area; }),
+                    contornos: contornos,
+                    lfProlongada: lfProlongada,
+                    edificable: Math.round((areaPredio - total) * 100) / 100
+                };
             }
 
             // ─────────────────────────────────────────────────────────────────
@@ -4997,42 +5509,36 @@
                 if (!geojsonLayers[8]) return resultado;
                 resultado.capaDisponible = true;
 
+                // Franjas comprometidas por el trazado de las líneas de fábrica,
+                // considerando todas las calles circundantes.
+                let franjas = null;
+                try { franjas = calcularFranjasAfectacion(predioGeoJSON); } catch (e) { console.warn('Afectación vial:', e); }
+                if (franjas && franjas.total > 0.1) {
+                    resultado.tieneAfectacion = true;
+                    resultado.areaAfectadaM2 = franjas.total;
+                    resultado.franjas = franjas.franjas;
+                    resultado.contornos = franjas.contornos;
+                    resultado.lfProlongada = franjas.lfProlongada;
+                    resultado.areaEdificable = franjas.edificable;
+                }
+
+                // Superposición directa con LF poligonales (reservas dibujadas
+                // como polígono en lugar de eje), si las hubiera.
                 geojsonLayers[8].eachLayer(function (lyr) {
                     if (!lyr.feature) return;
                     try {
-                        const featGeo = lyr.toGeoJSON();
+                        const featGeo = lyr.toGeoJSON(12);
                         const geomType = featGeo.geometry && featGeo.geometry.type;
-                        if (!geomType) return;
-
-                        if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
-                            // Superposición directa: calcular área de intersección
-                            const interseccion = turf.intersect(predioGeoJSON, featGeo);
-                            if (interseccion) {
-                                const area = turf.area(interseccion);
-                                if (area > 0.1) {
-                                    resultado.tieneAfectacion = true;
-                                    resultado.areaAfectadaM2 += area;
-                                }
-                            }
-                        } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
-                            // Línea que atraviesa el polígono
-                            let cruza = false;
-                            try { cruza = turf.booleanCrosses(featGeo, predioGeoJSON); } catch (e) { }
-                            if (!cruza) {
-                                try { cruza = turf.booleanIntersects(featGeo, predioGeoJSON); } catch (e) { }
-                            }
-                            if (cruza) {
-                                resultado.tieneAfectacion = true;
-                                const areaEst = calcularAreaBajoLineaFabrica(predioGeoJSON, featGeo);
-                                if (areaEst !== null) resultado.areaAfectadaM2 += areaEst;
-                            }
+                        if (geomType !== 'Polygon' && geomType !== 'MultiPolygon') return;
+                        const interseccion = turf.intersect(predioGeoJSON, featGeo);
+                        if (!interseccion) return;
+                        const area = turf.area(interseccion);
+                        if (area > 0.1) {
+                            resultado.tieneAfectacion = true;
+                            resultado.areaAfectadaM2 = Math.round((resultado.areaAfectadaM2 + area) * 100) / 100;
                         }
                     } catch (e) { }
                 });
-
-                if (resultado.areaAfectadaM2 > 0) {
-                    resultado.areaAfectadaM2 = Math.round(resultado.areaAfectadaM2 * 100) / 100;
-                }
 
                 // ── Ancho de vía y acera: atributos → fallback perpendicular ──
                 let anchoVia = null, anchoAcera = null, fuenteAncho = null;
@@ -5430,43 +5936,155 @@
                 return results;
             }
 
-            // Prepara el polígono del predio catastral y delega a generarDICAT
-            window.generarInformePredio = async function () {
-                if (!selectedPredioFeature) return;
+            // Anillo exterior del predio seleccionado, en su precisión original.
+            // NO usar layer.toGeoJSON() sin argumento: Leaflet redondea a 6
+            // decimales (~11 cm), lo que desplazaba los vértices UTM del informe
+            // 3-5 cm respecto del levantamiento topográfico.
+            function geometriaPredioSeleccionado() {
+                if (!selectedPredioFeature) return null;
                 const { layer, props } = selectedPredioFeature;
-
-                const geoJSON = layer.toGeoJSON();
+                const geoJSON = (layer.feature && layer.feature.geometry)
+                    ? { type: 'Feature', properties: props || {}, geometry: layer.feature.geometry }
+                    : layer.toGeoJSON(12);
                 const geomType = geoJSON.geometry ? geoJSON.geometry.type : null;
                 let coordsRing;
+                if (geomType === 'Polygon') coordsRing = geoJSON.geometry.coordinates[0];
+                else if (geomType === 'MultiPolygon') coordsRing = geoJSON.geometry.coordinates[0][0];
+                else { alert('La geometría del predio no es un polígono válido.'); return null; }
+                if (!coordsRing || coordsRing.length < 3) { alert('El predio no tiene coordenadas suficientes.'); return null; }
 
-                if (geomType === 'Polygon') {
-                    coordsRing = geoJSON.geometry.coordinates[0];
-                } else if (geomType === 'MultiPolygon') {
-                    coordsRing = geoJSON.geometry.coordinates[0][0];
-                } else {
-                    alert('La geometría del predio no es un polígono válido.');
-                    return;
-                }
-                if (!coordsRing || coordsRing.length < 3) {
-                    alert('El predio no tiene coordenadas suficientes.');
-                    return;
-                }
-
-                let latLngs = coordsRing.map(function (c) { return [c[1], c[0]]; });
+                const latLngs = coordsRing.map(function (c) { return [c[1], c[0]]; });
                 if (latLngs.length > 1) {
                     const f = latLngs[0], l = latLngs[latLngs.length - 1];
                     if (f[0] === l[0] && f[1] === l[1]) latLngs.pop();
                 }
-                if (csvPolygon && window.map) window.map.removeLayer(csvPolygon);
-                csvPolygon = L.polygon(latLngs, {
-                    color: '#D50000', weight: 4, fillColor: '#FFEB3B', fillOpacity: 0.55
-                }).addTo(window.map);
-                csvUTMCoordinates = latLngs.map(function (ll) {
-                    const utm = latLngToUTM(ll[0], ll[1], 17, true);
-                    return { easting: utm.easting, northing: utm.northing, x: utm.easting, y: utm.northing };
+                const utm = latLngs.map(function (ll) {
+                    const u = latLngToUTM(ll[0], ll[1], 17, true);
+                    return { easting: u.easting, northing: u.northing, x: u.easting, y: u.northing };
+                });
+                return { geoJSON, props, latLngs, utm, clave: ((props && props.claves) || 'predio').toString().trim() };
+            }
+
+            function descargarArchivo(nombre, contenido, mime) {
+                const blob = new Blob([contenido], { type: mime || 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = nombre;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a);
+                setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Exportación DXF — coordenadas UTM WGS84 17S sin redondeo, para
+            // abrir directamente en CAD sobre el mismo sistema del levantamiento.
+            // ─────────────────────────────────────────────────────────────────
+            function construirDXF(utm, franjas, clave) {
+                const L = [];
+                const g = (c, v) => { L.push(String(c)); L.push(String(v)); };
+                const num = v => v.toFixed(4);
+
+                let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+                utm.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+
+                g(0, 'SECTION'); g(2, 'HEADER');
+                g(9, '$ACADVER'); g(1, 'AC1015');
+                g(9, '$INSUNITS'); g(70, 6);              // 6 = metros
+                g(9, '$EXTMIN'); g(10, num(x0)); g(20, num(y0)); g(30, '0.0');
+                g(9, '$EXTMAX'); g(10, num(x1)); g(20, num(y1)); g(30, '0.0');
+                g(0, 'ENDSEC');
+
+                g(0, 'SECTION'); g(2, 'TABLES');
+                g(0, 'TABLE'); g(2, 'LTYPE'); g(70, 1);
+                g(0, 'LTYPE'); g(2, 'CONTINUOUS'); g(70, 0); g(3, 'Solid line'); g(72, 65); g(73, 0); g(40, '0.0');
+                g(0, 'ENDTAB');
+                const capas = [
+                    ['PREDIO', 1], ['AFECTACION_VIAL', 5], ['VERTICES', 3], ['TEXTOS', 7]
+                ];
+                g(0, 'TABLE'); g(2, 'LAYER'); g(70, capas.length);
+                capas.forEach(([n, col]) => { g(0, 'LAYER'); g(2, n); g(70, 0); g(62, col); g(6, 'CONTINUOUS'); });
+                g(0, 'ENDTAB');
+                g(0, 'ENDSEC');
+
+                g(0, 'SECTION'); g(2, 'ENTITIES');
+
+                // Polígono del predio (cerrado)
+                g(0, 'LWPOLYLINE'); g(8, 'PREDIO'); g(100, 'AcDbEntity'); g(100, 'AcDbPolyline');
+                g(90, utm.length); g(70, 1);
+                utm.forEach(p => { g(10, num(p.x)); g(20, num(p.y)); });
+
+                // Franjas de afectación vial
+                (franjas || []).forEach(f => {
+                    if (!f.utm || f.utm.length < 3) return;
+                    g(0, 'LWPOLYLINE'); g(8, 'AFECTACION_VIAL'); g(100, 'AcDbEntity'); g(100, 'AcDbPolyline');
+                    g(90, f.utm.length); g(70, 1);
+                    f.utm.forEach(p => { g(10, num(p[0])); g(20, num(p[1])); });
                 });
 
-                await generarDICAT(props);
+                // Vértices y sus etiquetas
+                const alturaTexto = Math.max((Math.max(x1 - x0, y1 - y0)) / 120, 0.35);
+                utm.forEach((p, i) => {
+                    g(0, 'POINT'); g(8, 'VERTICES'); g(10, num(p.x)); g(20, num(p.y)); g(30, '0.0');
+                    g(0, 'TEXT'); g(8, 'TEXTOS'); g(10, num(p.x + alturaTexto * 0.6)); g(20, num(p.y + alturaTexto * 0.6)); g(30, '0.0');
+                    g(40, alturaTexto.toFixed(3)); g(1, 'V' + (i + 1));
+                });
+
+                g(0, 'ENDSEC'); g(0, 'EOF');
+                return L.join('\r\n') + '\r\n';
+            }
+
+            window.exportarPredioDXF = function () {
+                const d = geometriaPredioSeleccionado();
+                if (!d) return;
+                let franjas = null;
+                if (geojsonLayers[8]) {
+                    try {
+                        const r = calcularFranjasAfectacion(d.geoJSON);
+                        if (r && r.contornos && r.contornos.length) franjas = r.contornos;
+                    } catch (e) { console.warn('Afectación para DXF:', e); }
+                }
+                const dxf = construirDXF(d.utm, franjas, d.clave);
+                descargarArchivo(`PREDIO_${d.clave.substring(0, 18)}_UTM17S.dxf`, dxf, 'application/dxf');
+            };
+
+            // ─────────────────────────────────────────────────────────────────
+            // Exportación CSV — mismo formato de la tabla de vértices del DICAT
+            // ─────────────────────────────────────────────────────────────────
+            window.exportarPredioCSV = function () {
+                const d = geometriaPredioSeleccionado();
+                if (!d) return;
+                const u = d.utm, n = u.length;
+                const filas = ['VERTICE;ESTE_X_m;NORTE_Y_m;LADO;DISTANCIA_m'];
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    const dist = Math.hypot(u[j].x - u[i].x, u[j].y - u[i].y);
+                    filas.push(
+                        `V${i + 1};${u[i].x.toFixed(4)};${u[i].y.toFixed(4)};V${i + 1}-V${j + 1};${dist.toFixed(2)}`
+                    );
+                }
+                // Resumen métrico al pie
+                const pts = d.latLngs.map(ll => ({ lat: ll[0], lng: ll[1] }));
+                filas.push('');
+                filas.push(`# Clave catastral;${d.clave}`);
+                filas.push(`# Sistema de referencia;UTM WGS84 Zona 17S (EPSG:32717)`);
+                filas.push(`# Superficie medida (m2);${calculatePolygonArea(pts)}`);
+                filas.push(`# Perimetro medido (m);${calculatePolygonPerimeter(pts)}`);
+                if (d.props && d.props.sup_pred_c) filas.push(`# Superficie declarada catastro (m2);${d.props.sup_pred_c}`);
+                filas.push(`# Generado;${new Date().toLocaleString('es-EC')} - CAE-CH GeoVisor`);
+                // BOM para que Excel respete los acentos
+                descargarArchivo(`PREDIO_${d.clave.substring(0, 18)}_vertices.csv`, '﻿' + filas.join('\r\n'), 'text/csv;charset=utf-8');
+            };
+
+            // Prepara el polígono del predio catastral y delega a generarDICAT
+            window.generarInformePredio = async function () {
+                const d = geometriaPredioSeleccionado();
+                if (!d) return;
+                if (csvPolygon && window.map) window.map.removeLayer(csvPolygon);
+                csvPolygon = L.polygon(d.latLngs, {
+                    color: '#D50000', weight: 4, fillColor: '#FFEB3B', fillOpacity: 0.55
+                }).addTo(window.map);
+                csvUTMCoordinates = d.utm;
+                await generarDICAT(d.props);
             };
 
             if (searchInput) {
