@@ -15,6 +15,15 @@ DATA SET/CERTIFICACION_EJES_VIALES.gdb/
 DATA SET/EERSA/
 DATA SET/*.csv
 DATA SET/*.zip
+DATA SET/*.qmd
+
+# Descargas crudas de EMAPAR en EPSG:32717 (CAD). El visor consume las capas
+# ya reproyectadas que produce RESEARCH/build_servicios_basicos.js:
+# "DATA SET/agua_potable.geojson" y "DATA SET/alcantarillado.geojson".
+DATA SET/Cobertura Agua Potable.geojson
+DATA SET/Alcantarillado Sanitario.geojson
+DATA SET/Alcantarillado Fluvial.geojson
+DATA SET/Alcantarillado Combinado.geojson
 ENLACES GEOPORTALES/
 
 # Descarga cruda de predios (95 MB) que ninguna capa del visor referencia.

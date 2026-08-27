@@ -52,6 +52,33 @@ function cargarGeovisor(geojsonLayers) {
     return new Function('geojsonLayers', 'console', codigo)(geojsonLayers || {}, console);
 }
 
+// Funciones de servicios basicos (agua potable / alcantarillado). Van aparte
+// porque necesitan turf, que el resto del arnes no usa.
+const FUNCIONES_SERVICIOS = [
+    'latLngToUTM',
+    'servUTM', 'servPuntoEnAnillo', 'servDistPuntoSegmento',
+    'servSegmentosSeCortan', 'servDistSegmentos',
+    'analizarServiciosBasicos'
+];
+
+/**
+ * Carga el analisis de servicios basicos de geovisor.html.
+ * @param {object} geojsonLayers  stub de capas ({4: {...}, 11: {...}})
+ * @param {object} turf           implementacion de turf (o el minimo que use el codigo)
+ */
+function cargarServicios(geojsonLayers, turf) {
+    const src = fs.readFileSync(path.join(RAIZ, 'geovisor.html'), 'utf8');
+    let codigo = FUNCIONES_SERVICIOS.map(f => extraerFuncion(src, f)).join('\n') + '\n';
+    codigo += 'return {' + FUNCIONES_SERVICIOS.join(',') + '};';
+    return new Function('geojsonLayers', 'turf', 'console', codigo)(geojsonLayers || {}, turf, console);
+}
+
+// Capa como la ve Leaflet: eachLayer sobre features de un GeoJSON de produccion
+function stubCapa(rel) {
+    const fc = leerGeoJSON(rel);
+    return { eachLayer: cb => { for (const f of fc.features) cb({ feature: f }); } };
+}
+
 function leerGeoJSON(rel) {
     return JSON.parse(fs.readFileSync(path.join(RAIZ, rel), 'utf8'));
 }
@@ -101,6 +128,6 @@ function resumen(titulo) {
 }
 
 module.exports = {
-    cargarGeovisor, leerGeoJSON, stubLineasFabrica, buscarPredio, anillo,
-    chequear, casiIgual, resumen, RAIZ
+    cargarGeovisor, cargarServicios, leerGeoJSON, stubLineasFabrica, stubCapa,
+    buscarPredio, anillo, chequear, casiIgual, resumen, RAIZ
 };

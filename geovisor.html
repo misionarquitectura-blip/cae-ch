@@ -1335,11 +1335,11 @@
                                     </button>
                                 </div>
                             </li>
-                            <li class="layer-item layer-proximamente">
-                                <input type="checkbox" class="layer-checkbox" id="layer-4" disabled>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-4">
                                 <div class="layer-info" data-layer="4">
-                                    <div class="layer-name">Agua Potable y Alcantarillado <span class="badge-proximamente">Próximamente</span></div>
-                                    <div class="layer-source" id="layer-4-source">Riobamba EP</div>
+                                    <div class="layer-name">Cobertura Agua Potable</div>
+                                    <div class="layer-source" id="layer-4-source">EMAPAR – Riobamba EP · 8 zonas (4 664 ha)</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -1436,6 +1436,21 @@
                                         <i class="fas fa-info-circle"></i>
                                     </button>
                                     <button class="layer-action" title="Configuración" data-layer="10">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-11">
+                                <div class="layer-info" data-layer="11">
+                                    <div class="layer-name">Alcantarillado</div>
+                                    <div class="layer-source" id="layer-11-source">EMAPAR – Sanitario, pluvial y combinado · 566 km</div>
+                                </div>
+                                <div class="layer-actions">
+                                    <button class="layer-action" title="Información">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="layer-action" title="Configuración" data-layer="11">
                                         <i class="fas fa-cog"></i>
                                     </button>
                                 </div>
@@ -2008,6 +2023,36 @@
             }
 
             // Función para cargar un archivo GeoJSON para una capa específica
+            // ── Simbología del alcantarillado (capa 11) ──────────────────────
+            // Una sola capa con las tres redes: el color distingue el tipo y el
+            // grosor del trazo el diámetro, igual en el visor y en el reporte.
+            const COLORES_ALCANTARILLADO = {
+                Sanitario: '#6D4C41', // café
+                Pluvial:   '#29B6F6', // celeste
+                Combinado: '#00695C'  // verde petróleo
+            };
+            const COLOR_ALCANTARILLADO_BASE = '#00695C';
+
+            function colorAlcantarillado(feature) {
+                const t = feature && feature.properties ? feature.properties.tipo : null;
+                return COLORES_ALCANTARILLADO[t] || COLOR_ALCANTARILLADO_BASE;
+            }
+
+            // Grosor proporcional al diámetro nominal; los cajones (sin diámetro)
+            // son los colectores mayores, así que van con el trazo más grueso.
+            function grosorAlcantarillado(feature, escala) {
+                const p = (feature && feature.properties) || {};
+                const k = escala || 1;
+                if (p.seccion === 'Cajón') return 3.4 * k;
+                const d = parseFloat(p.diametro_mm);
+                if (!isFinite(d)) return 1.6 * k;
+                if (d <= 250) return 1.4 * k;
+                if (d <= 400) return 2.0 * k;
+                if (d <= 600) return 2.6 * k;
+                if (d <= 900) return 3.2 * k;
+                return 4.0 * k;
+            }
+
             function loadGeoJSONData(geojsonData, fileName, layerId) {
                 if (geojsonLayers[layerId] && window.map) {
                     window.map.removeLayer(geojsonLayers[layerId]);
@@ -2029,7 +2074,8 @@
                         7: '#111111', // Vialidad - negro
                         8: '#D81B60', // Líneas de Fábrica - magenta
                         9: '#6A1B9A', // Construcciones IA no registradas - púrpura
-                        10: '#CE93D8' // Construcciones IA todas - lila claro
+                        10: '#CE93D8', // Construcciones IA todas - lila claro
+                        11: COLOR_ALCANTARILLADO_BASE // Alcantarillado - verde petróleo
                     };
 
                     const layerColor = layerColors[layerId] || '#8B0000';
@@ -2039,6 +2085,32 @@
 
                     geojsonLayers[layerId] = L.geoJSON(geojsonData, {
                         style: function (feature) {
+                            // Capa 11 — Alcantarillado: color por red, grosor por diámetro
+                            if (layerId === 11) {
+                                return {
+                                    color: colorAlcantarillado(feature),
+                                    weight: grosorAlcantarillado(feature),
+                                    opacity: 0.85
+                                };
+                            }
+
+                            // Capa 4 — Cobertura de agua potable: las zonas van con
+                            // relleno tenue (deben dejar ver el predio debajo) y las
+                            // divisorias internas como línea punteada.
+                            if (layerId === 4) {
+                                if (feature.properties && feature.properties.tipo === 'divisoria') {
+                                    return { color: layerColor, weight: 1.5, opacity: 0.7, dashArray: '6,5' };
+                                }
+                                // Relleno muy tenue: las zonas son enormes (cientos
+                                // de hectareas) y taparian el catastro debajo.
+                                return {
+                                    color: '#0D47A1',
+                                    weight: 2.5,
+                                    fillColor: layerColor,
+                                    fillOpacity: 0.10
+                                };
+                            }
+
                             switch (feature.geometry.type) {
                                 case 'Polygon':
                                 case 'MultiPolygon':
@@ -2145,6 +2217,51 @@
                                             style="margin-top:7px;width:100%;padding:5px;background:#8B0000;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-weight:bold">
                                             <i class="fas fa-check-circle"></i> Seleccionar para informe
                                         </button>
+                                    </div>`;
+                            } else if (layerId === 4) {
+                                const p = feature.properties;
+                                if (p.tipo === 'divisoria') {
+                                    popupContent = `
+                                    <div style="font-family:Segoe UI,sans-serif;min-width:190px">
+                                        <div style="background:#1976D2;color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
+                                            <i class="fas fa-tint"></i> Lindero interno de cobertura
+                                        </div>
+                                        <table style="font-size:12px;width:100%;border-collapse:collapse">
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:50%">Longitud</td><td style="padding:3px 4px">${(p.longitud_m || 0).toLocaleString('es-EC')} m</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Fuente</td><td style="padding:3px 4px">${p.fuente || 'EMAPAR'}</td></tr>
+                                        </table>
+                                    </div>`;
+                                } else {
+                                    popupContent = `
+                                    <div style="font-family:Segoe UI,sans-serif;min-width:210px">
+                                        <div style="background:#1976D2;color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
+                                            <i class="fas fa-tint"></i> Cobertura de Agua Potable
+                                        </div>
+                                        <table style="font-size:12px;width:100%;border-collapse:collapse">
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Zona</td><td style="padding:3px 4px">${p.zona || 'N/D'}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Superficie</td><td style="padding:3px 4px">${(p.area_ha || 0).toLocaleString('es-EC')} ha</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Perímetro</td><td style="padding:3px 4px">${(p.perimetro_m || 0).toLocaleString('es-EC')} m</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Fuente</td><td style="padding:3px 4px">${p.fuente || 'EMAPAR'}</td></tr>
+                                        </table>
+                                        <p style="margin:7px 0 0;font-size:10.5px;color:#888;line-height:1.3">Área servida por la red de distribución. La factibilidad definitiva la certifica EMAPAR.</p>
+                                    </div>`;
+                                }
+                            } else if (layerId === 11) {
+                                const p = feature.properties;
+                                const diam = p.diametro_mm ? p.diametro_mm + ' mm' : (p.seccion === 'Cajón' ? 'Cajón (s/d)' : 'N/D');
+                                const colorRed = colorAlcantarillado(feature);
+                                popupContent = `
+                                    <div style="font-family:Segoe UI,sans-serif;min-width:200px">
+                                        <div style="background:${colorRed};color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
+                                            <i class="fas fa-water"></i> Alcantarillado ${p.tipo || ''}
+                                        </div>
+                                        <table style="font-size:12px;width:100%;border-collapse:collapse">
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Red</td><td style="padding:3px 4px">${p.tipo || 'N/D'}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Sección</td><td style="padding:3px 4px">${p.seccion || 'N/D'}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Diámetro</td><td style="padding:3px 4px">${diam}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Longitud del tramo</td><td style="padding:3px 4px">${(p.longitud_m || 0).toLocaleString('es-EC')} m</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Fuente</td><td style="padding:3px 4px">${p.fuente || 'EMAPAR'}</td></tr>
+                                        </table>
                                     </div>`;
                             } else if (layerId === 9) {
                                 const p = feature.properties;
@@ -2672,7 +2789,7 @@
             // ══════════════════════════════════════════════════════════════
             function crearPlanoVectorialPredio(predioGeoJSON, contornosAfectacion) {
                 try {
-                    const COL = { 1:'#FB8C00', 2:'#2E7D32', 3:'#00ACC1', 6:'#1565C0', 7:'#111111', 8:'#D81B60', 9:'#6A1B9A', 10:'#CE93D8' };
+                    const COL = { 1:'#FB8C00', 2:'#2E7D32', 3:'#00ACC1', 6:'#1565C0', 7:'#111111', 8:'#D81B60', 9:'#6A1B9A', 10:'#CE93D8', 11:COLOR_ALCANTARILLADO_BASE };
                     const hexA = (hex, a) => {
                         const h = hex.replace('#',''); const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
                         return `rgba(${r},${g},${b},${a})`;
@@ -2725,7 +2842,7 @@
                     // Capas activas, de fondo a frente. Solo las features que solapan el área.
                     // Se recortan al marco: al ampliar la escala, el contexto
                     // desbordaría el cuadro del plano.
-                    const orden=[1,2,10,9,6,8,7];
+                    const orden=[1,2,10,9,6,11,8,7];
                     const usadas=[];
                     ctx.save();
                     ctx.beginPath(); ctx.rect(pad,pad,W-2*pad,H-2*pad); ctx.clip();
@@ -2741,7 +2858,11 @@
                             let b; try{ b=lyr.getBounds(); }catch(e){ return; }
                             if(!b || !b.isValid || !b.isValid()) return;
                             if(b.getWest()>area[2]||b.getEast()<area[0]||b.getSouth()>area[3]||b.getNorth()<area[1]) return;
-                            drawGeom(lyr.feature.geometry, col, fill, lw); dibujo=true;
+                            // Alcantarillado: color por red y grosor por diametro,
+                            // igual que en el visor y en el plano del reporte.
+                            const c  = (i===11)? colorAlcantarillado(lyr.feature) : col;
+                            const w  = (i===11)? grosorAlcantarillado(lyr.feature, 1.3) : lw;
+                            drawGeom(lyr.feature.geometry, c, fill, w); dibujo=true;
                         });
                         if(dibujo) usadas.push(i);
                     }
@@ -3035,13 +3156,14 @@
                     1: 'PUGS Urbano',
                     2: 'PUGS Rural',
                     3: 'Infraestructura Eléctrica',
-                    4: 'Agua Potable y Alcantarillado',
+                    4: 'Cobertura Agua Potable',
                     5: 'Cobertura Telecomunicaciones',
                     6: 'Catastro GADMR',
                     7: 'Vialidad',
                     8: 'Líneas de Fábrica',
                     9: 'Construcciones IA · No registradas',
-                    10: 'Construcciones IA · Todas'
+                    10: 'Construcciones IA · Todas',
+                    11: 'Alcantarillado'
                 };
 
                 // Paleta de alto contraste para el plano del reporte (cada capa bien
@@ -3056,11 +3178,12 @@
                     7: '#111111', // Vialidad     - negro
                     8: '#D81B60', // Líneas Fábrica - magenta
                     9: '#6A1B9A', // IA no registradas - púrpura intenso
-                    10: '#CE93D8' // IA todas     - lila claro
+                    10: '#CE93D8', // IA todas     - lila claro
+                    11: COLOR_ALCANTARILLADO_BASE // Alcantarillado - verde petróleo
                 };
 
                 // Agregar todas las capas activas con optimización ASÍNCRONA
-                for (let i = 1; i <= 10; i++) {
+                for (let i = 1; i <= 11; i++) {
                     const checkbox = document.getElementById(`layer-${i}`);
                     if (checkbox && checkbox.checked && geojsonLayers[i]) {
 
@@ -3097,12 +3220,23 @@
 
                             // Estilo por capa: catastro con borde nítido y relleno casi nulo
                             // (para no tapar), IA con relleno visible, vías con trazo grueso.
-                            const polyFill   = (i === 6) ? 0.05 : (i === 9) ? 0.40 : (i === 10) ? 0.28 : (i === 1 || i === 2) ? 0.13 : 0.20;
+                            const polyFill   = (i === 6) ? 0.05 : (i === 9) ? 0.40 : (i === 10) ? 0.28 : (i === 1 || i === 2) ? 0.13 : (i === 4) ? 0.10 : 0.20;
                             const polyWeight = (i === 6) ? 1.2  : (i === 9 || i === 10) ? 0.6 : 1.5;
                             const lineWeight = (i === 7) ? 2.8  : 2.2;
 
                             const layer = L.geoJSON(optimizedGeoJSON, {
                                 style: function (feature) {
+                                    // Alcantarillado: misma lectura que en el visor
+                                    // (color por red, grosor por diámetro), algo más
+                                    // marcado porque el plano del PDF es pequeño.
+                                    if (i === 11) {
+                                        return {
+                                            color: colorAlcantarillado(feature),
+                                            weight: grosorAlcantarillado(feature, 1.2),
+                                            opacity: 0.95
+                                        };
+                                    }
+
                                     switch (feature.geometry.type) {
                                         case 'Polygon':
                                         case 'MultiPolygon':
@@ -3292,7 +3426,7 @@
 
                 const {
                     meta = {}, colindantes = {}, factibilidades = [], posteCercano,
-                    hasLayer3, afectacionVial, construccionesIA, intersectionData = [], utmCoords = [],
+                    hasLayer3, afectacionVial, construccionesIA, servicios = null, intersectionData = [], utmCoords = [],
                     normativaPUGS = null, qrDataUrl = null,
                     mapImage, activeLayers = [], planoVectorial = null,
                     nroInforme = '', fechaStr = '', vigenciaStr = ''
@@ -3505,6 +3639,76 @@
                     },
                     margin: { left: mg, right: mg },
                 });
+
+                // Detalle de servicios básicos (agua potable y alcantarillado).
+                // Va dentro de la sección 4 porque amplía sus dos filas de
+                // factibilidad, no es un análisis aparte.
+                const servAgua = servicios && servicios.agua ? servicios.agua : null;
+                const servAlc  = servicios && servicios.alcantarillado ? servicios.alcantarillado : null;
+                if ((servAgua && servAgua.capaDisponible) || (servAlc && servAlc.capaDisponible)) {
+                    const filasServ = [];
+
+                    if (servAgua && servAgua.capaDisponible) {
+                        const estadoAgua = servAgua.estado === 'DENTRO' ? 'DENTRO DEL AREA DE COBERTURA'
+                            : servAgua.estado === 'PARCIAL' ? 'PARCIALMENTE DENTRO DEL AREA DE COBERTURA'
+                            : 'FUERA DEL AREA DE COBERTURA REGISTRADA';
+                        filasServ.push(['Agua potable - cobertura', estadoAgua]);
+                        if (servAgua.zona) {
+                            filasServ.push(['Zona de cobertura', `${servAgua.zona}` +
+                                (servAgua.areaZonaHa ? ` (${servAgua.areaZonaHa} ha)` : '')]);
+                        }
+                    } else {
+                        filasServ.push(['Agua potable - cobertura', 'NO ANALIZADO - Capa de cobertura no activa']);
+                    }
+
+                    if (servAlc && servAlc.capaDisponible) {
+                        const t = servAlc.tramo;
+                        if (t) {
+                            const desc = `${t.tipo} - ${t.seccion}` + (t.diametro_mm ? ` ${t.diametro_mm} mm` : '');
+                            filasServ.push(['Alcantarillado - red mas cercana', desc]);
+                            filasServ.push(['Distancia al lindero del predio', t.atraviesa
+                                ? 'La red atraviesa el predio (0 m)'
+                                : `${t.distancia} m`]);
+                            if (t.longitud_m) filasServ.push(['Longitud del tramo', `${t.longitud_m} m`]);
+                        } else {
+                            filasServ.push(['Alcantarillado - red mas cercana', 'Sin tramos de red en el entorno analizado (radio aprox. 600 m)']);
+                        }
+                    } else {
+                        filasServ.push(['Alcantarillado - red mas cercana', 'NO ANALIZADO - Capa de alcantarillado no activa']);
+                    }
+
+                    filasServ.push(['Observacion', 'Informacion referencial de las redes de EMAPAR (Riobamba EP). La factibilidad definitiva de conexion de agua potable y alcantarillado la certifica la empresa prestadora del servicio.']);
+
+                    y = checkSpace(y, 42);
+                    y = at({
+                        startY: y,
+                        head: [['Servicio basico (EMAPAR - Riobamba EP)', 'Detalle']],
+                        body: filasServ,
+                        theme: 'grid',
+                        styles: { fontSize: 8.5, cellPadding: 3, overflow: 'linebreak' },
+                        headStyles: { fillColor: [21, 101, 192], textColor: [255, 255, 255], fontStyle: 'bold' },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', fillColor: [240, 246, 253], cellWidth: 62 },
+                            1: { cellWidth: 'auto' },
+                        },
+                        didParseCell(data) {
+                            if (data.section !== 'body' || data.column.index !== 1) return;
+                            const et = (filasServ[data.row.index] || [])[0] || '';
+                            const val = String((filasServ[data.row.index] || [])[1] || '');
+                            if (et === 'Agua potable - cobertura') {
+                                data.cell.styles.fontStyle = 'bold';
+                                data.cell.styles.textColor = val.indexOf('DENTRO DEL') === 0 ? [39, 174, 96]
+                                    : val.indexOf('PARCIAL') === 0 ? [200, 140, 30]
+                                    : val.indexOf('NO ANALIZADO') === 0 ? [120, 120, 120] : [192, 57, 43];
+                            }
+                            if (et === 'Distancia al lindero del predio' && val.indexOf('atraviesa') !== -1) {
+                                data.cell.styles.fontStyle = 'bold';
+                                data.cell.styles.textColor = [180, 30, 30];
+                            }
+                        },
+                        margin: { left: mg, right: mg },
+                    });
+                }
 
                 // Sección 4B - Poste eléctrico
                 if (hasLayer3) {
@@ -3831,8 +4035,8 @@
                         doc.setFillColor(255, 235, 59); doc.setDrawColor(213, 0, 0); doc.setLineWidth(0.6);
                         doc.rect(mg, y, 3, 3, 'FD'); doc.setLineWidth(0.2); doc.setDrawColor(0, 0, 0);
                         doc.text('Predio consultado', mg + 6, y + 2);
-                        const colP = { 1: [251,140,0], 2: [46,125,50], 6: [21,101,192], 7: [17,17,17], 8: [216,27,96], 9: [106,27,154], 10: [206,147,216] };
-                        const nomP = { 1: 'PUGS Urbano', 2: 'PUGS Rural', 6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Lineas de Fabrica', 9: 'Construcciones IA - No reg.', 10: 'Construcciones IA - Todas' };
+                        const colP = { 1: [251,140,0], 2: [46,125,50], 6: [21,101,192], 7: [17,17,17], 8: [216,27,96], 9: [106,27,154], 10: [206,147,216], 11: [0,105,92] };
+                        const nomP = { 1: 'PUGS Urbano', 2: 'PUGS Rural', 6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Lineas de Fabrica', 9: 'Construcciones IA - No reg.', 10: 'Construcciones IA - Todas', 11: 'Alcantarillado' };
                         let lx = mg + 55, lrow = 0;
                         (planoVectorial.capas || []).forEach((id) => {
                             if (lrow >= 2) { y += 7; lx = mg; lrow = 0; }
@@ -3944,8 +4148,11 @@
                         ? await calcularColindantes(predioGeoJSON, selectedClave)
                         : { Norte: [], Sur: [], Este: [], Oeste: [] };
 
+                    showProgressBar('Analizando agua potable y alcantarillado...');
+                    const servicios = analizarServiciosBasicos(predioGeoJSON);
+
                     showProgressBar('Verificando factibilidades...');
-                    const factibilidades = calcularFactibilidades(predioGeoJSON);
+                    const factibilidades = calcularFactibilidades(predioGeoJSON, servicios);
 
                     showProgressBar('Analizando poste eléctrico más cercano...');
                     const posteCercano = encontrarPosteMasCercano(predioGeoJSON);
@@ -4032,6 +4239,7 @@
                         factibilidades,
                         posteCercano,
                         hasLayer3:       !!geojsonLayers[3],
+                        servicios,
                         afectacionVial,
                         construccionesIA,
                         intersectionData,
@@ -4074,11 +4282,13 @@
                 const tableData = [];
                 const layerNames = {
                     1: 'PUGS Urbano', 2: 'PUGS Rural', 3: 'Infraestructura Electrica',
-                    4: 'Agua Potable y Alcantarillado', 5: 'Cobertura Telecomunicaciones',
-                    6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Líneas de Fábrica'
+                    4: 'Cobertura Agua Potable', 5: 'Cobertura Telecomunicaciones',
+                    6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Líneas de Fábrica',
+                    11: 'Alcantarillado'
                 };
 
-                for (let i = 1; i <= 8; i++) {
+                // Las capas 9 y 10 (construcciones IA) tienen su propia sección.
+                for (const i of [1, 2, 3, 4, 5, 6, 7, 8, 11]) {
                     const checkbox  = document.getElementById(`layer-${i}`);
                     const isActive  = checkbox && checkbox.checked;
                     const layerName = layerNames[i] || `Capa ${i}`;
@@ -4147,17 +4357,19 @@
                     1: 'PUGS Urbano',
                     2: 'PUGS Rural',
                     3: 'Infraestructura Eléctrica',
-                    4: 'Agua Potable y Alcantarillado',
+                    4: 'Cobertura Agua Potable',
                     5: 'Cobertura Telecomunicaciones',
                     6: 'Catastro GADMR',
                     7: 'Vialidad',
-                    8: 'Líneas de Fábrica'
+                    8: 'Líneas de Fábrica',
+                    11: 'Alcantarillado'
                 };
 
                 const activeLayers = [];
                 let totalIntersections = 0;
 
-                for (let i = 1; i <= 8; i++) {
+                // Las capas 9 y 10 (construcciones IA) tienen su propia sección.
+                for (const i of [1, 2, 3, 4, 5, 6, 7, 8, 11]) {
                     const checkbox = document.getElementById(`layer-${i}`);
                     const isActive = checkbox && checkbox.checked;
                     const layerName = layerNames[i] || `Capa ${i}`;
@@ -4484,15 +4696,17 @@
                     1: 'DATA SET/PUGS Urbano.geojson',
                     2: 'DATA SET/PUGS Rural.geojson',
                     3: 'DATA SET/LUMINARIA.geojson',
+                    4: 'DATA SET/agua_potable.geojson',
                     6: 'DATA SET/Catastro GADMR.geojson',
                     7: 'DATA SET/VIALIDAD_TOTAL.geojson',
                     8: 'DATA SET/LINEAS_FABRICA.geojson',
                     9: 'RESEARCH/no_registradas.geojson',
-                    10: 'RESEARCH/construcciones_ia.geojson'
+                    10: 'RESEARCH/construcciones_ia.geojson',
+                    11: 'DATA SET/alcantarillado.geojson'
                 };
 
-                // Manejar cambios en los checkboxes de las capas 1-10
-                for (let i = 1; i <= 10; i++) {
+                // Manejar cambios en los checkboxes de las capas 1-11
+                for (let i = 1; i <= 11; i++) {
                     const checkbox = document.getElementById(`layer-${i}`);
                     if (!checkbox || checkbox.disabled) continue;
                     checkbox.addEventListener('change', (function (layerId) {
@@ -5828,6 +6042,159 @@
                 };
             }
 
+            // ─────────────────────────────────────────────────────────────────
+            // Servicios básicos — Agua potable (capa 4) y alcantarillado (11)
+            //
+            // Agua potable: la capa son polígonos de zona servida, así que la
+            // pregunta es de pertenencia (dentro / parcial / fuera).
+            // Alcantarillado: la capa son tramos de tubería, así que la pregunta
+            // es de proximidad, igual que con el poste de la EERSA.
+            //
+            // Todas las distancias se miden en el plano UTM 17S (metros), nunca
+            // en grados: es la misma regla que usa el resto del informe.
+            // ─────────────────────────────────────────────────────────────────
+            function servUTM(c) {
+                const u = latLngToUTM(c[1], c[0], 17, true);
+                return [u.easting, u.northing];
+            }
+
+            function servPuntoEnAnillo(p, anillo) {
+                let dentro = false;
+                for (let i = 0, j = anillo.length - 1; i < anillo.length; j = i++) {
+                    const xi = anillo[i][0], yi = anillo[i][1];
+                    const xj = anillo[j][0], yj = anillo[j][1];
+                    if (((yi > p[1]) !== (yj > p[1])) &&
+                        (p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi)) dentro = !dentro;
+                }
+                return dentro;
+            }
+
+            function servDistPuntoSegmento(p, a, b) {
+                const dx = b[0] - a[0], dy = b[1] - a[1];
+                const len2 = dx * dx + dy * dy;
+                if (len2 === 0) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+                let t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2;
+                t = Math.max(0, Math.min(1, t));
+                return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+            }
+
+            function servSegmentosSeCortan(p1, p2, q1, q2) {
+                const o = (a, b, c) => Math.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
+                return o(p1, p2, q1) !== o(p1, p2, q2) && o(q1, q2, p1) !== o(q1, q2, p2);
+            }
+
+            function servDistSegmentos(p1, p2, q1, q2) {
+                if (servSegmentosSeCortan(p1, p2, q1, q2)) return 0;
+                return Math.min(
+                    servDistPuntoSegmento(p1, q1, q2),
+                    servDistPuntoSegmento(p2, q1, q2),
+                    servDistPuntoSegmento(q1, p1, p2),
+                    servDistPuntoSegmento(q2, p1, p2)
+                );
+            }
+
+            function analizarServiciosBasicos(predioGeoJSON) {
+                const res = {
+                    agua: { capaDisponible: !!geojsonLayers[4], estado: 'NO ANALIZADO', zona: null, areaZonaHa: null },
+                    alcantarillado: { capaDisponible: !!geojsonLayers[11], tramo: null, atraviesa: false }
+                };
+
+                const geom = predioGeoJSON && predioGeoJSON.geometry ? predioGeoJSON.geometry : null;
+                if (!geom) return res;
+                const anilloLL = geom.type === 'Polygon' ? geom.coordinates[0]
+                               : geom.type === 'MultiPolygon' ? geom.coordinates[0][0]
+                               : null;
+                if (!anilloLL || anilloLL.length < 3) return res;
+
+                // ── Agua potable: pertenencia a una zona de cobertura ─────────
+                if (geojsonLayers[4]) {
+                    let dentro = false, parcial = false;
+                    geojsonLayers[4].eachLayer(function (lyr) {
+                        if (dentro || !lyr.feature) return;
+                        const f = lyr.feature;
+                        if (!f.geometry || f.geometry.type !== 'Polygon') return;
+                        if (f.properties && f.properties.tipo === 'divisoria') return;
+                        try {
+                            const centro = turf.centroid(predioGeoJSON);
+                            if (turf.booleanPointInPolygon(centro, f)) {
+                                dentro = true;
+                                res.agua.zona = f.properties ? f.properties.zona : null;
+                                res.agua.areaZonaHa = f.properties ? f.properties.area_ha : null;
+                            } else if (!parcial && turf.booleanIntersects(predioGeoJSON, f)) {
+                                parcial = true;
+                                res.agua.zona = f.properties ? f.properties.zona : null;
+                                res.agua.areaZonaHa = f.properties ? f.properties.area_ha : null;
+                            }
+                        } catch (e) { }
+                    });
+                    res.agua.estado = dentro ? 'DENTRO' : (parcial ? 'PARCIAL' : 'FUERA');
+                }
+
+                // ── Alcantarillado: tramo de red más próximo ─────────────────
+                if (geojsonLayers[11]) {
+                    const anilloUTM = anilloLL.map(servUTM);
+                    const bbox = turf.bbox(predioGeoJSON);
+                    const buf = 0.006; // ~600 m en grados decimales
+                    const bboxExp = [bbox[0] - buf, bbox[1] - buf, bbox[2] + buf, bbox[3] + buf];
+
+                    let mejor = null;
+                    geojsonLayers[11].eachLayer(function (lyr) {
+                        if (!lyr.feature || !lyr.feature.geometry) return;
+                        const g = lyr.feature.geometry;
+                        const partes = g.type === 'LineString' ? [g.coordinates]
+                                     : g.type === 'MultiLineString' ? g.coordinates
+                                     : [];
+                        if (!partes.length) return;
+
+                        for (const parte of partes) {
+                            // Descartar por bbox antes de proyectar: la capa tiene
+                            // ~8 000 tramos y sólo interesan los del entorno.
+                            const cerca = parte.some(c => c[0] >= bboxExp[0] && c[0] <= bboxExp[2] &&
+                                                          c[1] >= bboxExp[1] && c[1] <= bboxExp[3]);
+                            if (!cerca) continue;
+
+                            const utm = parte.map(servUTM);
+                            let d = Infinity;
+                            let dentroPredio = false;
+                            for (let i = 0; i < utm.length - 1; i++) {
+                                for (let j = 0; j < anilloUTM.length - 1; j++) {
+                                    d = Math.min(d, servDistSegmentos(utm[i], utm[i + 1], anilloUTM[j], anilloUTM[j + 1]));
+                                    if (d === 0) break;
+                                }
+                                if (d === 0) break;
+                            }
+                            // Un tramo enteramente interior no corta el lindero:
+                            // su distancia al borde es > 0 pero atraviesa el predio.
+                            if (d > 0 && utm.some(p => servPuntoEnAnillo(p, anilloUTM))) {
+                                dentroPredio = true;
+                                d = 0;
+                            } else if (d === 0) {
+                                dentroPredio = true;
+                            }
+
+                            if (mejor === null || d < mejor.distancia) {
+                                const p = lyr.feature.properties || {};
+                                mejor = {
+                                    tipo: p.tipo || 'N/D',
+                                    seccion: p.seccion || 'N/D',
+                                    diametro_mm: p.diametro_mm || null,
+                                    longitud_m: p.longitud_m || null,
+                                    distancia: Math.round(d * 100) / 100,
+                                    atraviesa: dentroPredio
+                                };
+                            }
+                        }
+                    });
+
+                    if (mejor) {
+                        res.alcantarillado.tramo = mejor;
+                        res.alcantarillado.atraviesa = mejor.atraviesa;
+                    }
+                }
+
+                return res;
+            }
+
             function analizarConstruccionesIA(predioGeoJSON) {
                 const orden = { ALTO: 3, MEDIO: 2, BAJO: 1 };
                 const res = {
@@ -5873,12 +6240,13 @@
                 return res;
             }
 
-            function calcularFactibilidades(predioGeoJSON) {
+            function calcularFactibilidades(predioGeoJSON, servicios) {
                 const layerDefs = {
                     1: { name: 'Uso de Suelo Urbano (PUGS)', icon: '🏙' },
                     2: { name: 'Uso de Suelo Rural (PUGS)', icon: '🌾' },
                     3: { name: 'Infraestructura Eléctrica', icon: '⚡' },
-                    4: { name: 'Agua Potable y Alcantarillado', icon: '💧' },
+                    4: { name: 'Agua Potable (cobertura)', icon: '💧' },
+                    11: { name: 'Alcantarillado', icon: '🚱' },
                     5: { name: 'Telecomunicaciones', icon: '📡' },
                     7: { name: 'Vialidad', icon: '🛣' }
                 };
@@ -5895,6 +6263,39 @@
                     }
                     if (!hasLayer) {
                         results.push({ name: def.name, estado: 'SIN DATOS', detalle: 'Capa activa sin datos cargados', color: [200, 160, 50] });
+                        continue;
+                    }
+
+                    // Capas 4 y 11 — el veredicto lo da el análisis dedicado de
+                    // servicios básicos (pertenencia a zona / tramo más cercano),
+                    // no la simple intersección genérica.
+                    if (String(id) === '4' && servicios && servicios.agua) {
+                        const a = servicios.agua;
+                        const zona = a.zona ? `${a.zona} (${a.areaZonaHa} ha)` : 'zona de cobertura';
+                        if (a.estado === 'DENTRO') {
+                            results.push({ name: def.name, estado: 'DISPONIBLE', detalle: `Predio dentro de ${zona}`, color: [39, 174, 96] });
+                        } else if (a.estado === 'PARCIAL') {
+                            results.push({ name: def.name, estado: 'PARCIAL', detalle: `Predio parcialmente dentro de ${zona}`, color: [200, 140, 30] });
+                        } else {
+                            results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Fuera de las zonas de cobertura registradas', color: [192, 57, 43] });
+                        }
+                        continue;
+                    }
+
+                    if (String(id) === '11' && servicios && servicios.alcantarillado) {
+                        const t = servicios.alcantarillado.tramo;
+                        if (!t) {
+                            results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Sin tramos de red en el entorno analizado', color: [192, 57, 43] });
+                        } else {
+                            const diam = t.diametro_mm ? `Ø ${t.diametro_mm} mm` : t.seccion;
+                            if (t.atraviesa) {
+                                results.push({ name: def.name, estado: 'DISPONIBLE', detalle: `Red ${t.tipo} ${diam} atraviesa el predio`, color: [39, 174, 96] });
+                            } else if (t.distancia <= 100) {
+                                results.push({ name: def.name, estado: 'DISPONIBLE', detalle: `Red ${t.tipo} ${diam} a ${t.distancia} m del lindero`, color: [39, 174, 96] });
+                            } else {
+                                results.push({ name: def.name, estado: 'PROXIMO', detalle: `Red ${t.tipo} ${diam} a ${t.distancia} m del lindero`, color: [200, 140, 30] });
+                            }
+                        }
                         continue;
                     }
 

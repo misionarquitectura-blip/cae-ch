@@ -18,6 +18,10 @@ node test/exactitud-predio.js
 node test/regresion-catastro.js
 ```
 
+```bash
+node test/servicios-basicos.js
+```
+
 Si tienes el `package.json` local (está en `.gitignore`, no se publica), también vale:
 
 ```bash
@@ -70,6 +74,30 @@ Recorre una muestra de todo el catastro y comprueba:
   afectación + área útil cuadra con el polígono principal;
 - que el rendimiento se mantiene (media < 150 ms, ningún predio > 400 ms).
 
+### `servicios-basicos.js`
+
+Cubre las capas de EMAPAR: cobertura de agua potable (capa 4) y alcantarillado
+(capa 11), y el análisis que alimenta la sección 4 del DICAT.
+
+- **Las capas publicadas son sanas**: las 8 zonas de cobertura cierran anillo, no
+  se solapan entre sí (se muestrea el interior en rejilla, no los vértices: las
+  zonas comparten linderos), suman ~4 665 ha y todos los tramos de alcantarillado
+  llevan red y diámetro extraídos del nombre de capa CAD.
+- **La reproyección EPSG:32717 → WGS84 conserva las longitudes**: cada tramo se
+  vuelve a medir desde el archivo publicado y se contrasta con la longitud
+  calculada en UTM antes de convertir. Tolerancia 0,20 m por tramo — las
+  coordenadas se publican con 6 decimales (~11 cm), así que el error máximo
+  teórico de un tramo ronda los 17 cm — y 0,01 % sobre los 566,72 km de red.
+- **`analizarServiciosBasicos()` acierta**: sobre predios reales del catastro, la
+  distancia al tramo más cercano se contrasta con una búsqueda exhaustiva sobre
+  los 7 990 tramos, sin el prefiltro por bounding box de ~600 m que usa el visor.
+  Si ese prefiltro perdiera el tramo más cercano, la prueba lo delata.
+- Un predio sintético montado sobre un tramo real comprueba la rama de "la red
+  atraviesa el predio", que un muestreo del catastro rara vez toca porque la red
+  va por la vía.
+
+Acepta paso de muestreo: `node test/servicios-basicos.js 1500`.
+
 ## Notas sobre los datos
 
 **`sup_pred_c` no es la superficie de la geometría.** Es la superficie declarada
@@ -86,5 +114,8 @@ hasta un 12 %.
 
 ## Requisitos
 
-Node ≥ 18 y los GeoJSON presentes en `DATA SET/` (`Catastro GADMR.geojson` y
-`LINEAS_FABRICA.geojson`). No hay dependencias externas.
+Node ≥ 18 y los GeoJSON presentes en `DATA SET/` (`Catastro GADMR.geojson`,
+`LINEAS_FABRICA.geojson`, `agua_potable.geojson` y `alcantarillado.geojson`).
+No hay dependencias externas: `servicios-basicos.js` trae su propia
+implementación mínima de las cuatro funciones de turf que usa el visor, para no
+arrastrar la dependencia al repositorio.
