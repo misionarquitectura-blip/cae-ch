@@ -64,7 +64,7 @@ function utm17sToWgs84(easting, northing) {
     ];
 }
 
-const BASE = path.join(__dirname, '..', 'DATA SET');
+const BASE = __dirname;
 const leer = (n) => JSON.parse(fs.readFileSync(path.join(BASE, n), 'utf8'));
 const escribir = (n, fc) => {
     const p = path.join(BASE, n);

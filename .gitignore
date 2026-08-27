@@ -18,7 +18,7 @@ DATA SET/*.zip
 DATA SET/*.qmd
 
 # Descargas crudas de EMAPAR en EPSG:32717 (CAD). El visor consume las capas
-# ya reproyectadas que produce RESEARCH/build_servicios_basicos.js:
+# ya reproyectadas que produce DATA SET/build_servicios_basicos.js:
 # "DATA SET/agua_potable.geojson" y "DATA SET/alcantarillado.geojson".
 DATA SET/Cobertura Agua Potable.geojson
 DATA SET/Alcantarillado Sanitario.geojson

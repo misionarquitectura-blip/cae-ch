@@ -2,7 +2,7 @@
 //  Servicios basicos — cobertura de agua potable (capa 4) y alcantarillado (11)
 //
 //  Verifica tres cosas distintas:
-//    1. Las capas construidas por RESEARCH/build_servicios_basicos.js son sanas
+//    1. Las capas construidas por DATA SET/build_servicios_basicos.js son sanas
 //       (anillos cerrados, atributos completos, sin coordenadas fuera de rango).
 //    2. La reproyeccion EPSG:32717 -> WGS84 conserva las longitudes: se vuelve
 //       a medir cada tramo desde el archivo publicado y se contrasta con la
