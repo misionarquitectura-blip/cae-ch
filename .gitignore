@@ -44,6 +44,11 @@ RESEARCH/PUGS Urbano Research.geojson
 RESEARCH/preprocess.js
 RESEARCH/build_construcciones_ia.js
 
+# RESEARCH - equipamiento: trabajo interno del CAE-CH, no publicado. Ninguna
+# capa del visor lo referencia y arrastra intermedios pesados.
+RESEARCH/equipamiento/
+RESEARCH/equipamiento.html
+
 # Respaldos y configuración local
 *.bak
 .claude/
