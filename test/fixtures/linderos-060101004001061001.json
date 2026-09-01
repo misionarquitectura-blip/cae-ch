@@ -1,0 +1,28 @@
+{
+  "_fuente": "Tabla de vertices UTM WGS84 17S del DICAT (seccion 6) y CSV PREDIO_060101004001061001_vertices.csv, ambos generados por el propio GeoVisor. La seccion 3 y la seccion 8 tienen que declarar estas mismas longitudes.",
+  "clave": "060101004001061001",
+  "propietario": "YAUTIBUG CURICAMA MARIANO",
+  "perimetroM": 61.28,
+  "verticesUTM": [
+    [757442.6339, 9817801.1708],
+    [757439.9022, 9817813.7478],
+    [757457.2556, 9817817.0244],
+    [757459.6339, 9817803.6708]
+  ],
+  "lados": [
+    { "vertices": "V1-V2", "longitudM": 12.870, "orientacion": "Oeste" },
+    { "vertices": "V2-V3", "longitudM": 17.660, "orientacion": "Norte" },
+    { "vertices": "V3-V4", "longitudM": 13.564, "orientacion": "Este" },
+    { "vertices": "V4-V1", "longitudM": 17.183, "orientacion": "Sur" }
+  ],
+  "linderos": [
+    { "orientacion": "Norte", "nombre": "YUMI MULLO CARMELO", "dimensionM": 17.660 },
+    { "orientacion": "Sur", "nombre": "TENE ROLDAN MARIA JUANA", "dimensionM": 17.183 },
+    { "orientacion": "Este", "nombre": "(lado libre / via)", "dimensionM": 13.564 },
+    { "orientacion": "Oeste", "nombre": "(lado libre / via)", "dimensionM": 12.870 }
+  ],
+  "regresionConocida": {
+    "_nota": "Valores que imprimia el DICAT-2026-7175 antes del arreglo: 10.84 m salia de (Perim1+Perim2-PerimUnion)/2 y 15.95 m del alto del bounding box.",
+    "dimensionesErroneasM": [10.84, 15.95, 19.71]
+  }
+}

@@ -19,9 +19,11 @@ const FUNCIONES = [
     'afUTM', 'afShoelace', 'afBbox', 'afPip', 'afDist2Seg', 'afDistToRing',
     'afSegInt', 'afDedupe', 'afInnerPaths', 'afSplitByPath', 'afMaxSepBorde',
     'afNucleo', 'afRingUTM', 'afExtender', 'afCadenasLF',
-    'calcularFranjasAfectacion'
+    'calcularFranjasAfectacion',
+    'lindAnilloValido', 'lindAnillosExteriores', 'lindProyeccion', 'lindLongitudIntervalos',
+    'lindLadosPredio', 'lindMarcarVecino'
 ];
-const CONSTANTES = ['AF_MAX_RETIRO', 'AF_NODE_SNAP'];
+const CONSTANTES = ['AF_MAX_RETIRO', 'AF_NODE_SNAP', 'LIND_TOL_M', 'LIND_MIN_M'];
 
 function extraerFuncion(src, nombre) {
     const i = src.indexOf('function ' + nombre + '(');

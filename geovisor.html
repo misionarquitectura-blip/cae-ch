@@ -2949,10 +2949,16 @@
                         ]);
                     });
 
+                    // Las cotas se miden en el plano UTM 17S, exactamente igual que la
+                    // tabla de vértices de la sección 6, el CSV y el DXF. turf.distance
+                    // mide sobre una esfera de radio 6371 km y desviaba hasta 5 mm/m
+                    // (7 cm en un lado de 13 m), de modo que el plano no cuadraba con
+                    // las coordenadas del propio reporte.
+                    const ringUTM=ring.map(afUTM);
                     // lados de mayor a menor: los largos (más informativos) toman sitio primero
                     const lados=[];
                     for(let k=0;k<ring.length-1;k++){
-                        const dM=turf.distance(ring[k],ring[k+1],{units:'kilometers'})*1000;
+                        const dM=Math.hypot(ringUTM[k+1][0]-ringUTM[k][0], ringUTM[k+1][1]-ringUTM[k][1]);
                         if(dM>=0.5) lados.push({k,dM});
                     }
                     lados.sort((u,v)=>v.dM-u.dM);
@@ -3611,7 +3617,7 @@
                 });
                 if (hayViaRef) {
                     doc.setFontSize(7.5); doc.setTextColor(100, 100, 100);
-                    doc.text('(ref.) Nombre de via referencial obtenido de OpenStreetMap; no constituye denominacion catastral oficial. Dimension de lindero a via estimada.', mg, y, { maxWidth: pw - mg * 2 });
+                    doc.text('(ref.) Nombre de via referencial obtenido de OpenStreetMap; no constituye denominacion catastral oficial. La dimension corresponde al lado real del predio, medido en UTM WGS84 17S igual que la seccion 6.', mg, y, { maxWidth: pw - mg * 2 });
                     doc.setTextColor(0, 0, 0);
                     y += 8;
                 }
@@ -5281,26 +5287,114 @@
                 return '';
             }
 
-            // Calcula la longitud del lindero compartido entre dos polígonos
-            // Método: L_compartido = (Perim1 + Perim2 - Perim_Union) / 2
-            function calcularLinderoCompartido(poly1, poly2) {
-                try {
-                    const toLine = function (g) {
-                        try { return turf.polygonToLine(g); } catch (e) { return null; }
-                    };
-                    const l1 = toLine(poly1);
-                    const l2 = toLine(poly2);
-                    if (!l1 || !l2) return null;
-                    const unionPoly = turf.union(poly1, poly2);
-                    if (!unionPoly) return null;
-                    const lU = toLine(unionPoly);
-                    if (!lU) return null;
-                    const len1 = turf.length(l1, { units: 'meters' });
-                    const len2 = turf.length(l2, { units: 'meters' });
-                    const lenU = turf.length(lU, { units: 'meters' });
-                    const shared = (len1 + len2 - lenU) / 2;
-                    return shared > 0.1 ? shared : null;
-                } catch (e) { return null; }
+            // ═════════════════════════════════════════════════════════════════
+            // LINDEROS DEL PREDIO — geometría plana UTM 17S
+            //
+            // La sección 3 del DICAT debe declarar exactamente las mismas
+            // longitudes que la tabla de vértices (sección 6) y el plano acotado
+            // (sección 8). Por eso los linderos se arman lado a lado sobre el
+            // polígono y se miden en UTM. Lo anterior no cumplía eso:
+            //   · el lindero compartido salía de (Perim1+Perim2-PerimUnion)/2,
+            //     fórmula que se descuadra en cuanto los dos contornos no son
+            //     idénticos — y no lo son, porque Leaflet entrega la geometría
+            //     del vecino redondeada a 6 decimales (~11 cm);
+            //   · el frente a calle se declaraba con el ancho del bounding box,
+            //     que en un predio girado no es ningún lado real.
+            // ═════════════════════════════════════════════════════════════════
+
+            // Tolerancia lateral para dar por compartido un tramo de lindero:
+            // absorbe el redondeo a 6 decimales de la geometría de los vecinos.
+            const LIND_TOL_M  = 0.20;
+            // Tramo mínimo que se considera lindero propio (evita esquirlas).
+            const LIND_MIN_M  = 0.30;
+
+            // El catastro trae algunas features con anillos vacíos o truncados; se
+            // descartan aquí para que un vecino mal digitalizado no tumbe el cálculo.
+            function lindAnilloValido(r) {
+                return Array.isArray(r) && r.length >= 4 &&
+                    r.every(c => Array.isArray(c) && c.length >= 2 && isFinite(c[0]) && isFinite(c[1]));
+            }
+
+            function lindAnillosExteriores(geom) {
+                if (!geom) return [];
+                let anillos = [];
+                if (geom.type === 'Polygon') anillos = [geom.coordinates && geom.coordinates[0]];
+                else if (geom.type === 'MultiPolygon') anillos = (geom.coordinates || []).map(p => p && p[0]);
+                return anillos.filter(lindAnilloValido);
+            }
+
+            // Proyección de un punto sobre el segmento a-b: parámetro t sin acotar
+            // y distancia real al segmento.
+            function lindProyeccion(p, a, b) {
+                const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy;
+                if (L2 < 1e-12) return { t: 0, d: Infinity };
+                const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2;
+                const tc = Math.max(0, Math.min(1, t));
+                return { t, d: Math.hypot(p[0] - a[0] - tc * dx, p[1] - a[1] - tc * dy) };
+            }
+
+            // Une intervalos [t0,t1] solapados y devuelve la longitud total en metros.
+            function lindLongitudIntervalos(intervalos, L) {
+                if (!intervalos.length) return 0;
+                const iv = intervalos.slice().sort((u, v) => u[0] - v[0]);
+                const m = [];
+                for (const x of iv) {
+                    const ult = m[m.length - 1];
+                    if (ult && x[0] <= ult[1] + 1e-9) ult[1] = Math.max(ult[1], x[1]);
+                    else m.push([x[0], x[1]]);
+                }
+                return m.reduce((s, [a, b]) => s + (b - a) * L, 0);
+            }
+
+            // Lados del predio en UTM, cada uno con su longitud, su punto medio y
+            // su orientación tomada de la normal exterior (criterio de plano
+            // topográfico, no del centroide del vecino).
+            function lindLadosPredio(predioGeoJSON) {
+                const anillos = lindAnillosExteriores(predioGeoJSON && predioGeoJSON.geometry);
+                const anillosUTM = anillos.map(r => r.map(afUTM));
+                let sx = 0, sy = 0, n = 0;
+                anillosUTM.forEach(r => r.forEach(p => { sx += p[0]; sy += p[1]; n++; }));
+                if (!n) return [];
+                const cen = [sx / n, sy / n];
+                const lados = [];
+                anillosUTM.forEach(r => {
+                    for (let i = 0; i < r.length - 1; i++) {
+                        const a = r[i], b = r[i + 1];
+                        const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                        if (L < LIND_MIN_M) continue;
+                        const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+                        let nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L;
+                        if (nx * (mid[0] - cen[0]) + ny * (mid[1] - cen[1]) < 0) { nx = -nx; ny = -ny; }
+                        const dir = Math.abs(ny) >= Math.abs(nx)
+                            ? (ny >= 0 ? 'Norte' : 'Sur')
+                            : (nx >= 0 ? 'Este' : 'Oeste');
+                        lados.push({ a, b, L, mid, nx, ny, dir, vecinos: [], cubierto: [] });
+                    }
+                });
+                return lados;
+            }
+
+            // Marca sobre qué tramo de cada lado se apoya el contorno de un vecino.
+            function lindMarcarVecino(lados, geom, nombre) {
+                const anillos = lindAnillosExteriores(geom);
+                for (const anillo of anillos) {
+                    const r = anillo.map(afUTM);
+                    for (let i = 0; i < r.length - 1; i++) {
+                        for (const lado of lados) {
+                            const p1 = lindProyeccion(r[i], lado.a, lado.b);
+                            if (p1.d > LIND_TOL_M) continue;
+                            const p2 = lindProyeccion(r[i + 1], lado.a, lado.b);
+                            if (p2.d > LIND_TOL_M) continue;
+                            const t0 = Math.max(0, Math.min(p1.t, p2.t));
+                            const t1 = Math.min(1, Math.max(p1.t, p2.t));
+                            if ((t1 - t0) * lado.L < LIND_MIN_M) continue;
+                            lado.cubierto.push([t0, t1]);
+                            let v = lado.vecinos.find(x => x.nombre === nombre);
+                            if (!v) { v = { nombre, tramos: [] }; lado.vecinos.push(v); }
+                            v.tramos.push([t0, t1]);
+                        }
+                    }
+                }
             }
 
             // ═════════════════════════════════════════════════════════════════
@@ -5864,88 +5958,89 @@
 
             async function calcularColindantes(predioGeoJSON, selectedClave) {
                 const dirs = { Norte: [], Sur: [], Este: [], Oeste: [] };
-                if (!geojsonLayers[6]) return dirs;
+                const lados = lindLadosPredio(predioGeoJSON);
+                if (!lados.length) return dirs;
 
-                const centro = turf.centroid(predioGeoJSON);
-                const cLat = centro.geometry.coordinates[1];
-                const cLng = centro.geometry.coordinates[0];
+                // ── 1) Colindantes catastrales ────────────────────────────────
+                // Se mide el tramo realmente compartido con cada lado del predio,
+                // en el plano UTM y sobre la geometría original del vecino
+                // (lyr.toGeoJSON() la redondearía a 6 decimales, ~11 cm).
+                if (geojsonLayers[6]) {
+                    const bb = turf.bbox(predioGeoJSON);
+                    const hol = 0.0006; // ~66 m de holgura para el prefiltro
+                    geojsonLayers[6].eachLayer(function (lyr) {
+                        if (!lyr.feature) return;
+                        const p = lyr.feature.properties || {};
+                        const clave = (p.claves || '').trim();
+                        if (clave && clave === selectedClave) return;
+                        try {
+                            let b;
+                            try { b = lyr.getBounds && lyr.getBounds(); } catch (e) { }
+                            if (b && b.isValid && b.isValid()) {
+                                if (b.getWest() > bb[2] + hol || b.getEast()  < bb[0] - hol ||
+                                    b.getSouth() > bb[3] + hol || b.getNorth() < bb[1] - hol) return;
+                            }
+                            const nGeom = lyr.feature.geometry || (lyr.toGeoJSON(12) || {}).geometry;
+                            const nombre = (p.gis_predio || '').trim() || (p.nombre_c || '').trim() || 'Sin identificar';
+                            lindMarcarVecino(lados, nGeom, nombre);
+                        } catch (e) { }
+                    });
+                }
 
-                // Calcular perímetro del predio una sola vez
-                let predioPerim = null;
-                try {
-                    const predioLine = turf.polygonToLine(predioGeoJSON);
-                    predioPerim = turf.length(predioLine, { units: 'meters' });
-                } catch (e) { }
-
-                geojsonLayers[6].eachLayer(function (lyr) {
-                    if (!lyr.feature) return;
-                    const p = lyr.feature.properties;
-                    const clave = (p.claves || '').trim();
-                    if (clave && clave === selectedClave) return;
-                    try {
-                        const nGeo = lyr.toGeoJSON();
-                        if (!turf.booleanIntersects(predioGeoJSON, nGeo)) return;
-
-                        const nc = turf.centroid(nGeo);
-                        const nLat = nc.geometry.coordinates[1];
-                        const nLng = nc.geometry.coordinates[0];
-                        const dLat = nLat - cLat;
-                        const dLng = nLng - cLng;
-
-                        const nombre = (p.gis_predio || '').trim() || (p.nombre_c || '').trim() || 'Sin identificar';
-
-                        // Calcular dimensión del lindero compartido
-                        let dim = '—';
-                        const sharedLen = calcularLinderoCompartido(predioGeoJSON, nGeo);
-                        if (sharedLen !== null) {
-                            dim = sharedLen.toFixed(2) + ' m';
-                        }
-
-                        const entry = { nombre, dim };
-                        if (Math.abs(dLat) >= Math.abs(dLng)) {
-                            (dLat >= 0 ? dirs.Norte : dirs.Sur).push(entry);
-                        } else {
-                            (dLng >= 0 ? dirs.Este : dirs.Oeste).push(entry);
-                        }
-                    } catch (e) { }
-                });
-
-                // Para los lados sin colindante catastral (típicamente frente a calle en
-                // zona urbana): inferir el nombre de la vía por geocodificación inversa OSM.
-                // Se proyecta un punto ~9 m hacia afuera del borde del predio en cada dirección.
-                const bbox = turf.bbox(predioGeoJSON); // [minLng, minLat, maxLng, maxLat]
-                const off = 0.00008; // ~9 m
-                const midLng = (bbox[0] + bbox[2]) / 2;
-                const midLat = (bbox[1] + bbox[3]) / 2;
-                const puntoDir = {
-                    Norte: { lat: bbox[3] + off, lng: midLng },
-                    Sur:   { lat: bbox[1] - off, lng: midLng },
-                    Este:  { lat: midLat, lng: bbox[2] + off },
-                    Oeste: { lat: midLat, lng: bbox[0] - off }
-                };
-                // Frente aproximado del predio en cada orientación (ancho del bounding box)
-                let anchoEO = null, anchoNS = null;
-                try {
-                    anchoEO = turf.distance([bbox[0], midLat], [bbox[2], midLat], { units: 'meters' });
-                    anchoNS = turf.distance([midLng, bbox[1]], [midLng, bbox[3]], { units: 'meters' });
-                } catch (e) { }
-                const dimDir = { Norte: anchoEO, Sur: anchoEO, Este: anchoNS, Oeste: anchoNS };
-
+                // ── 2) Lados libres → vía colindante ──────────────────────────
+                // Los lados sin colindante catastral son, en zona urbana, el frente
+                // a calle. El nombre se infiere por geocodificación inversa (OSM),
+                // una consulta por orientación como máximo para respetar el límite
+                // de Nominatim; la dimensión es la del lado real, no una estimación.
+                const libres = [];
+                for (const lado of lados) {
+                    const libre = lado.L - lindLongitudIntervalos(lado.cubierto, lado.L);
+                    if (libre >= 1) { lado.libreM = libre; libres.push(lado); }
+                }
+                const calleDir = {};
                 let primera = true;
-                for (const dir of ['Norte', 'Sur', 'Este', 'Oeste']) {
-                    if (dirs[dir].length > 0) continue;
-                    const pt = puntoDir[dir];
+                for (const lado of libres) {
+                    if (calleDir[lado.dir] !== undefined) continue;
+                    // Punto ~9 m hacia afuera desde el centro del lado
+                    const pt = utmToLatLng(lado.mid[0] + lado.nx * 9, lado.mid[1] + lado.ny * 9, 17, true);
                     // Throttle entre peticiones para respetar el límite de Nominatim (1 req/s)
                     if (!primera) await new Promise(r => setTimeout(r, 1100));
                     primera = false;
-                    let calle = await geocodificarCalleOSM(pt.lat, pt.lng);
+                    let calle = await geocodificarCalleOSM(pt[0], pt[1]);
                     let ref = true;
-                    if (!calle) { calle = buscarCalleColindante(predioGeoJSON, dir); ref = !!calle; } // fallback: capa vialidad local
-                    if (calle) {
-                        const dim = (dimDir[dir] != null) ? dimDir[dir].toFixed(2) + ' m (aprox.)' : '—';
-                        dirs[dir].push({ nombre: 'Vía: ' + calle, dim, esVia: true, referencial: ref });
+                    if (!calle) { calle = buscarCalleColindante(predioGeoJSON, lado.dir); ref = !!calle; } // fallback: capa vialidad local
+                    calleDir[lado.dir] = calle ? { calle, ref } : null;
+                }
+
+                // ── 3) Volcado por orientación ────────────────────────────────
+                // Se acumula por (orientación, colindante): un predio rural puede
+                // tener cientos de lados y la tabla debe declarar un lindero por
+                // vecino y orientación, no un renglón por vértice.
+                const acum = {};
+                const anotar = (dir, nombre, m, extra) => {
+                    const k = dir + '|' + nombre;
+                    if (!acum[k]) { acum[k] = Object.assign({ dir, nombre, m: 0 }, extra || {}); }
+                    acum[k].m += m;
+                };
+                for (const lado of lados) {
+                    lado.vecinos.forEach(v => {
+                        const len = lindLongitudIntervalos(v.tramos, lado.L);
+                        if (len < LIND_MIN_M) return;
+                        anotar(lado.dir, v.nombre, len);
+                    });
+                    if (lado.libreM) {
+                        const c = calleDir[lado.dir];
+                        if (c) anotar(lado.dir, 'Vía: ' + c.calle, lado.libreM, { esVia: true, referencial: c.ref });
+                        else   anotar(lado.dir, 'Sin colindante catastral', lado.libreM);
                     }
-                    // Si tampoco hay vía, queda vacío (se mostrará como sin identificar)
+                }
+                // Dentro de cada orientación, primero los linderos más largos
+                Object.keys(acum).forEach(k => {
+                    const e = acum[k];
+                    dirs[e.dir].push({ nombre: e.nombre, dim: e.m.toFixed(2) + ' m', esVia: e.esVia, referencial: e.referencial });
+                });
+                for (const d of ['Norte', 'Sur', 'Este', 'Oeste']) {
+                    dirs[d].sort((u, v) => parseFloat(v.dim) - parseFloat(u.dim));
                 }
 
                 return dirs;
