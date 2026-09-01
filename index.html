@@ -4,18 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAE-CH | Colegio de Arquitectos del Ecuador - Provincial de Chimborazo</title>
-    <meta name="description" content="CAE-CH Provincial de Chimborazo: plataforma de interoperabilidad territorial con Geovisor SIG, datos institucionales georreferenciados y automatización de reportes técnicos para arquitectos en Riobamba.">
-    <meta name="keywords" content="arquitectos Chimborazo, Riobamba, CAE-CH, geovisor SIG, catastro GADMR, PUGS, BIM, interoperabilidad territorial, arquitectura Ecuador">
+    <meta name="description" content="CAE-CH Provincial de Chimborazo: plataforma de interoperabilidad territorial que unifica datos de instituciones públicas de Riobamba y genera el reporte DICAT, diagnóstico catastral y territorial del predio.">
+    <meta name="keywords" content="arquitectos Chimborazo, Riobamba, CAE-CH, reporte DICAT, catastro GADMR, PUGS, BIM, interoperabilidad territorial, arquitectura Ecuador">
     <meta name="author" content="CAE-CH Provincial de Chimborazo">
+    <link rel="canonical" href="https://www.cae-ch.org.ec/">
+    <meta name="theme-color" content="#8B0000">
     <meta property="og:title" content="CAE-CH | Colegio de Arquitectos del Ecuador - Provincial de Chimborazo">
-    <meta property="og:description" content="Plataforma digital con Geovisor, datos institucionales y servicios para arquitectos en Riobamba, Ecuador.">
+    <meta property="og:description" content="Plataforma de interoperabilidad territorial del CAE-CH: datos institucionales georreferenciados y reportes DICAT para Riobamba, Ecuador.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="LOGO/Logo Cae.jpg">
+    <meta property="og:url" content="https://www.cae-ch.org.ec/">
+    <meta property="og:locale" content="es_EC">
+    <meta property="og:image" content="https://www.cae-ch.org.ec/LOGO/Logo%20Cae.jpg">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="CAE-CH Provincial de Chimborazo">
-    <meta name="twitter:description" content="Plataforma digital para arquitectos en Riobamba. Geovisor y datos institucionales.">
+    <meta name="twitter:description" content="Plataforma de interoperabilidad territorial y reportes DICAT para Riobamba, Ecuador.">
+    <meta name="twitter:image" content="https://www.cae-ch.org.ec/LOGO/Logo%20Cae.jpg">
     <link rel="icon" type="image/jpeg" href="LOGO/366642214_122106418796007509_1566356946917218903_n.jpg">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="analytics.js"></script>
     <style>
         /* Estilos generales */
@@ -38,11 +44,14 @@
             --blanco-terciario: #E0E0E0;
         }
         
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             background-color: var(--gris-claro);
             color: var(--gris-oscuro);
             line-height: 1.6;
-            scroll-behavior: smooth;
         }
         
         .container {
@@ -394,7 +403,7 @@
             margin: 0 auto 20px;
         }
         
-        .step h4 {
+        .step h3 {
             margin-bottom: 10px;
             font-size: 18px;
             color: var(--gris-oscuro);
@@ -430,7 +439,7 @@
             color: var(--rojo-oscuro);
         }
         
-        .integration-item h4 {
+        .integration-item h3 {
             color: var(--gris-oscuro);
             margin-bottom: 10px;
         }
@@ -544,33 +553,6 @@
             gap: 40px;
         }
         
-        .form-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .form-tab {
-            padding: 12px 20px;
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--gris-medio);
-            border-bottom: 3px solid transparent;
-        }
-        
-        .form-tab.active {
-            color: var(--rojo-oscuro);
-            border-bottom: 3px solid var(--rojo-oscuro);
-        }
-        
-        .form-content {
-            display: none;
-        }
-        
-        .form-content.active {
-            display: block;
-        }
-        
         .contact-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -598,14 +580,14 @@
             min-width: 20px;
         }
         
-        .contact-form, .register-form {
+        .contact-form {
             background: var(--blanco);
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
         
-        .contact-form h3, .register-form h3 {
+        .contact-form h3 {
             color: var(--gris-oscuro);
             margin-bottom: 20px;
         }
@@ -727,90 +709,6 @@
             gap: 10px;
         }
         
-        .btn-social {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            background-color: var(--blanco);
-            color: var(--gris-oscuro);
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-social:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .btn-google {
-            border-color: #DB4437;
-            color: #DB4437;
-        }
-        
-        .btn-facebook {
-            border-color: #4267B2;
-            color: #4267B2;
-        }
-        
-        .divider {
-            text-align: center;
-            margin: 20px 0;
-            position: relative;
-            color: var(--gris-medio);
-        }
-        
-        .divider:before {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background-color: #ddd;
-            z-index: 1;
-        }
-        
-        .divider span {
-            background-color: var(--blanco);
-            padding: 0 15px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .forgot-password {
-            color: var(--rojo-oscuro);
-            text-decoration: none;
-        }
-        
-        .form-footer {
-            text-align: center;
-            margin-top: 20px;
-            color: var(--gris-medio);
-        }
-        
-        .form-footer a {
-            color: var(--rojo-oscuro);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
         /* Footer */
         footer {
             background-color: var(--gris-oscuro);
@@ -881,10 +779,6 @@
         }
         
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
             .hero {
                 padding: 80px 0;
             }
@@ -1054,7 +948,13 @@
             color: var(--blanco-primario);
         }
 
-        @media (max-width: 768px) {
+        /* El menu horizontal necesita mas ancho que el contenedor de 1200 px:
+           por debajo de 1100 px pasa a hamburguesa para que la pagina no se
+           desplace en horizontal. */
+        @media (max-width: 1100px) {
+            .nav-links {
+                display: none;
+            }
             .hamburger {
                 display: flex;
             }
@@ -1095,113 +995,6 @@
         .btn-geovisor:hover {
             background-color: var(--gris-medio);
             color: var(--blanco-primario) !important;
-        }
-
-        /* ===== REGISTRO - TARJETAS DE TIPO ===== */
-        .registro-opciones {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 35px;
-        }
-        .registro-opcion-card {
-            background: var(--blanco);
-            border-radius: 12px;
-            padding: 35px 25px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            border: 3px solid transparent;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .registro-opcion-card:hover,
-        .registro-opcion-card.activo {
-            border-color: var(--rojo-oscuro);
-            transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(139,0,0,0.15);
-        }
-        .registro-opcion-icon {
-            font-size: 52px;
-            margin-bottom: 18px;
-            color: var(--rojo-oscuro);
-            display: block;
-        }
-        .registro-opcion-card h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: var(--gris-oscuro);
-        }
-        .registro-opcion-card p {
-            color: var(--gris-medio);
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-        .registro-opcion-card .btn {
-            pointer-events: none;
-        }
-
-        /* ===== REGISTRO - FORMULARIOS ===== */
-        .registro-forms {
-            background: var(--blanco);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
-        .registro-form-titulo {
-            margin-bottom: 25px;
-            color: var(--rojo-oscuro);
-            font-size: 22px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        /* ===== REGISTRO - PANEL DE BENEFICIOS ===== */
-        .afiliacion-beneficios {
-            background: linear-gradient(135deg, #8B0000, #2F2F2F);
-            color: white;
-            border-radius: 12px;
-            padding: 30px;
-        }
-        .afiliacion-beneficios h3 {
-            color: white;
-            margin-bottom: 22px;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .beneficio-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 14px;
-            color: rgba(255,255,255,0.9);
-        }
-        .beneficio-item i {
-            color: #f0c060;
-            font-size: 16px;
-            margin-top: 3px;
-            flex-shrink: 0;
-        }
-        .beneficio-item span {
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 768px) {
-            .registro-opciones {
-                grid-template-columns: 1fr;
-            }
-            .form-row {
-                grid-template-columns: 1fr;
-            }
         }
 
         /* ===== SCROLL-SPY: enlace activo en navbar ===== */
@@ -1298,7 +1091,7 @@
             margin-bottom: 16px;
             display: block;
         }
-        .transparencia-card h4 {
+        .transparencia-card h3 {
             color: var(--blanco-primario);
             font-size: 18px;
             margin-bottom: 10px;
@@ -1418,162 +1211,73 @@
         /* ═══════════════════════════════════════════════
            DICAT — Solicitud de reporte
         ═══════════════════════════════════════════════ */
-        .dicat-login-prompt {
-            text-align: center;
-            padding: 60px 30px;
-            background: var(--blanco);
-            border-radius: 16px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
-            max-width: 500px;
+        #dicat-vias {
+            max-width: 860px;
             margin: 0 auto;
         }
-        .dicat-login-prompt > i {
-            font-size: 52px;
-            color: var(--rojo-oscuro);
-            opacity: 0.35;
-            margin-bottom: 20px;
-            display: block;
-        }
-        .dicat-login-prompt h3 {
-            margin-bottom: 10px;
-            color: var(--gris-oscuro);
-        }
-        .dicat-login-prompt p {
-            color: var(--gris-medio);
-            margin-bottom: 25px;
-        }
-        .dicat-container {
+        /* auto-fit en vez de dos columnas fijas: colapsa solo en pantallas
+           estrechas, sin necesidad de media query y sin desbordar el ancho. */
+        .dicat-vias-grid {
             display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 35px;
-            align-items: start;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-bottom: 28px;
         }
-        .dicat-form {
+        .dicat-via {
             background: var(--blanco);
             border-radius: 12px;
-            padding: 35px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
-        }
-        .dicat-form h3 {
-            color: var(--rojo-oscuro);
-            margin-bottom: 25px;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .pago-section { margin: 25px 0; }
-        .pago-section h4 {
-            font-size: 15px;
-            color: var(--gris-oscuro);
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .pago-opciones {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .pago-opcion {
-            border: 2px solid var(--blanco-terciario);
-            border-radius: 10px;
-            padding: 16px 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.09);
+            border-top: 4px solid var(--rojo-oscuro);
+            padding: 28px 28px 24px;
             text-align: center;
         }
-        .pago-opcion input[type="radio"] { display: none; }
-        .pago-opcion.seleccionado {
-            border-color: var(--rojo-oscuro);
-            background: rgba(139,0,0,0.04);
-        }
-        .pago-opcion i { font-size: 22px; color: var(--rojo-oscuro); }
-        .pago-opcion span { font-weight: 600; font-size: 14px; color: var(--gris-oscuro); }
-        .pago-opcion small { color: var(--gris-medio); font-size: 12px; }
-        .dicat-resumen {
-            background: var(--gris-claro);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .resumen-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 16px;
-            color: var(--gris-oscuro);
-        }
-        .resumen-item strong { font-size: 20px; color: var(--rojo-oscuro); }
-        .mis-solicitudes {
-            background: var(--blanco);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
-        }
-        .mis-solicitudes h3 {
-            color: var(--gris-oscuro);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 18px;
-        }
-        .sin-solicitudes {
-            color: var(--gris-medio);
-            text-align: center;
-            padding: 30px 0;
-            font-size: 14px;
-        }
-        .solicitud-card {
-            border: 1px solid var(--blanco-terciario);
-            border-radius: 8px;
-            padding: 15px;
+        .dicat-via-icon {
+            font-size: 40px;
             margin-bottom: 12px;
         }
-        .solicitud-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .dicat-via h3 {
             margin-bottom: 8px;
-        }
-        .solicitud-card-clave {
-            font-weight: 600;
+            font-size: 18px;
             color: var(--gris-oscuro);
-            font-size: 14px;
         }
-        .solicitud-card-fecha {
-            font-size: 12px;
+        .dicat-via p {
             color: var(--gris-medio);
+            font-size: 13.5px;
+            margin-bottom: 18px;
         }
-        .solicitud-estado {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .dicat-via-destacado {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 8px 0 4px !important;
         }
-        .estado-pendiente  { background: #FFF3CD; color: #856404; }
-        .estado-procesando { background: #CCE5FF; color: #004085; }
-        .estado-listo      { background: #D4EDDA; color: #155724; }
-        .btn-descargar {
+        .dicat-via-btn {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            margin-top: 8px;
+            gap: 8px;
+            font-size: 14px;
+            padding: 11px 24px;
+        }
+        .dicat-via-nota {
+            font-size: 11.5px !important;
+            color: #888 !important;
+            margin: 12px 0 0 !important;
+        }
+        .dicat-aviso {
+            display: flex;
+            gap: 10px;
+            background: #FFF8F0;
+            border: 1px solid #E8D5B0;
+            border-radius: 8px;
+            padding: 16px 20px;
             font-size: 13px;
-            padding: 6px 14px;
+            color: var(--gris-medio);
         }
-        @media (max-width: 900px) {
-            .dicat-container { grid-template-columns: 1fr; }
+        .dicat-aviso > i {
+            color: var(--rojo-oscuro);
+            margin-top: 3px;
+            flex-shrink: 0;
         }
+        .dicat-aviso p { margin: 0; }
         @media (max-width: 480px) {
             .pricing-grid { grid-template-columns: 1fr; }
             .pago-opciones { grid-template-columns: 1fr; }
@@ -1597,14 +1301,12 @@
                     <li><a href="#nosotros">Nosotros</a></li>
                     <li><a href="#plataforma">Plataforma</a></li>
                     <li><a href="#cursos" id="cursos-link">Cursos</a></li>
-                    <li><a href="#planes">Planes</a></li>
                     <li><a href="#solicitar">Solicitar DICAT</a></li>
                     <li><a href="#integracion">Integración</a></li>
                     <li><a href="#contacto">Contacto</a></li>
                     <li><a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer" style="color:#8B0000;font-weight:700"><i class="fas fa-microscope" style="margin-right:4px"></i>Investigación</a></li>
                 </ul>
                 <div class="nav-buttons">
-                    <a href="geovisor.html" class="btn btn-outline" target="_blank" rel="noopener noreferrer" id="geovisor-nav-btn"><i class="fas fa-map-marked-alt"></i> Geovisor</a>
                     <a href="mailto:caechoficial@gmail.com" class="btn btn-outline"><i class="fas fa-envelope"></i> Contacto</a>
                 </div>
             </nav>
@@ -1619,14 +1321,13 @@
                 <h2>Tecnología al Servicio del Territorio</h2>
                 <p>Plataforma de interoperabilidad que centraliza la información de instituciones públicas, automatizando la generación de reportes técnicos y diagnósticos de factibilidad con precisión geoespacial.</p>
                 <div class="hero-buttons">
-                    <a href="geovisor.html" class="btn btn-geovisor" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Acceder al Geovisor</a>
-                    <a href="#solicitar" class="btn"><i class="fas fa-file-invoice-dollar"></i> Solicitar Reporte DICAT</a>
-                    <a href="#planes" class="btn btn-secondary"><i class="fas fa-id-card"></i> Ver Planes de Acceso</a>
+                    <a href="#solicitar" class="btn"><i class="fas fa-file-lines"></i> Solicitar Reporte DICAT</a>
+                    <a href="#integracion" class="btn btn-secondary"><i class="fas fa-layer-group"></i> Ver Fuentes de Datos</a>
                     <a href="#cursos" class="btn btn-secondary" id="cursos-hero-btn">Ver Cursos</a>
                 </div>
                 <div class="stats">
                     <div class="stat-item">
-                        <div class="stat-number">5</div>
+                        <div class="stat-number">6</div>
                         <div class="stat-label">Fuentes de Datos Activas</div>
                     </div>
                     <div class="stat-item">
@@ -1796,28 +1497,28 @@
         <div class="container">
             <div class="section-title">
                 <h2>¿Cómo Funciona?</h2>
-                <p>Un proceso simple y eficiente diseñado para conectar rápidamente a profesionales con oportunidades</p>
+                <p>Del dato institucional al informe del predio, en cuatro pasos</p>
             </div>
             <div class="process-steps">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h4>Registro</h4>
-                    <p>Los profesionales y solicitantes se registran en la plataforma con su información básica.</p>
+                    <h3>Solicitud</h3>
+                    <p>Acércate a la sede del CAE-CH con la clave catastral o la dirección del predio. El equipo te atiende en el momento, sin trámites previos.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h4>Búsqueda y Conexión</h4>
-                    <p>Los solicitantes publican sus necesidades, mientras los profesionales buscan proyectos que coincidan con su experiencia.</p>
+                    <h3>Localización del predio</h3>
+                    <p>El equipo ubica el predio en el motor geoespacial y contrasta su geometría contra el catastro del GADMR, el PUGS y las líneas de fábrica.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
-                    <h4>Comunicación</h4>
-                    <p>Las partes interesadas se conectan directamente a través de la plataforma para discutir detalles del proyecto.</p>
+                    <h3>Generación del DICAT</h3>
+                    <p>La plataforma calcula superficie, linderos, afectación vial y factibilidad de servicios, y arma el reporte con el plano georreferenciado del predio.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
-                    <h4>Colaboración</h4>
-                    <p>Se establecen acuerdos y comienza la colaboración profesional, todo con el respaldo de CAE-CH.</p>
+                    <h3>Entrega</h3>
+                    <p>Recibes el DICAT en PDF, con la opción de versión impresa o digital firmada por el CAE-CH.</p>
                 </div>
             </div>
         </div>
@@ -1827,24 +1528,24 @@
     <section class="section section-dark">
         <div class="container">
             <div class="section-title">
-                <h2>Transparencia y Seguridad</h2>
-                <p>La plataforma garantiza transparencia en cada conexión y protege los intereses de profesionales y usuarios bajo el respaldo institucional del CAE-CH.</p>
+                <h2>Transparencia y Trazabilidad</h2>
+                <p>Cada cifra del reporte se puede rastrear hasta la institución que la publica y hasta el método con el que se midió.</p>
             </div>
             <div class="transparencia-grid">
                 <div class="transparencia-card">
-                    <i class="fas fa-id-badge"></i>
-                    <h4>Profesionales Verificados</h4>
-                    <p>Todos los arquitectos registrados son miembros activos y verificados del Colegio de Arquitectos del Ecuador, con credenciales validadas.</p>
+                    <i class="fas fa-building-columns"></i>
+                    <h3>Fuente Declarada</h3>
+                    <p>Cada capa lleva la institución que la publica y la fecha de corte de los datos. El DICAT es un documento técnico-informativo del CAE-CH y no reemplaza los documentos oficiales del GADMR.</p>
                 </div>
                 <div class="transparencia-card">
-                    <i class="fas fa-shield-alt"></i>
-                    <h4>Respaldo Institucional</h4>
-                    <p>Cada conexión y proceso dentro de la plataforma cuenta con el respaldo legal y ético del CAE-CH Provincial de Chimborazo.</p>
+                    <i class="fas fa-ruler-combined"></i>
+                    <h3>Medición Verificable</h3>
+                    <p>Superficies, linderos y coordenadas se calculan en UTM 17S, la misma proyección en la que el GADMR produce el catastro, y se contrastan contra levantamientos de estación total.</p>
                 </div>
                 <div class="transparencia-card">
-                    <i class="fas fa-handshake"></i>
-                    <h4>Proceso Transparente</h4>
-                    <p>Sistema de seguimiento de proyectos que protege los intereses de ambas partes y garantiza la calidad del servicio profesional.</p>
+                    <i class="fas fa-shield-halved"></i>
+                    <h3>Respaldo Institucional</h3>
+                    <p>La plataforma se desarrolla y se mantiene bajo el respaldo del CAE-CH Provincial de Chimborazo, organización profesional sin fines de lucro.</p>
                 </div>
             </div>
         </div>
@@ -1860,44 +1561,42 @@
             <div class="integration-grid">
                 <div class="integration-item">
                     <div class="integration-icon"><i class="fas fa-city"></i></div>
-                    <h4>Catastro GADMR</h4>
-                    <p>Información catastral georreferenciada del Gobierno Autónomo Descentralizado Municipal de Riobamba. <span style="display:inline-block;background:#eee;color:#555;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">Última actualización: mayo 2026</span></p>
+                    <h3>Catastro GADMR</h3>
+                    <p>Información catastral georreferenciada del Gobierno Autónomo Descentralizado Municipal de Riobamba. <span style="display:inline-block;background:#eee;color:#555;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">Última actualización: septiembre 2026</span></p>
                 </div>
                 <div class="integration-item">
                     <div class="integration-icon"><i class="fas fa-bolt"></i></div>
-                    <h4>Infraestructura Eléctrica</h4>
+                    <h3>Infraestructura Eléctrica</h3>
                     <p>Red eléctrica, cobertura y equipamiento de la Empresa Eléctrica de Riobamba (EERSA).</p>
                 </div>
                 <div class="integration-item">
                     <div class="integration-icon"><i class="fas fa-road"></i></div>
-                    <h4>Vialidad Urbana y Rural</h4>
+                    <h3>Vialidad Urbana y Rural</h3>
                     <p>Red vial urbana y rural, jerarquía de vías y accesibilidad territorial del cantón.</p>
                 </div>
                 <div class="integration-item">
                     <div class="integration-icon"><i class="fas fa-layer-group"></i></div>
-                    <h4>PUGS</h4>
+                    <h3>PUGS</h3>
                     <p>Plan de Uso y Gestión del Suelo: zonificación, usos permitidos y normativas del territorio cantonal.</p>
                 </div>
                 <div class="integration-item" style="border-top:3px solid #9B59B6;">
                     <div class="integration-icon" style="color:#9B59B6"><i class="fas fa-robot"></i></div>
-                    <h4>Construcciones IA</h4>
+                    <h3>Construcciones IA</h3>
                     <p>~96 K huellas de edificaciones detectadas por machine learning, con vista de todas las detectadas y de las no registradas en catastro. <span style="display:inline-block;background:#f0e6ff;color:#6c2fa0;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">Google Open Buildings 2024</span></p>
                 </div>
-                <div class="integration-item proximamente">
+                <div class="integration-item">
                     <div class="integration-icon"><i class="fas fa-tint"></i></div>
-                    <h4>Agua Potable</h4>
-                    <p>Datos de red de agua potable de la región.</p>
-                    <span class="badge-prox">Próximamente</span>
+                    <h3>Agua Potable</h3>
+                    <p>Zonas de cobertura de la red de distribución de EMAPAR, usadas para responder la factibilidad de agua del predio. <span style="display:inline-block;background:#e3f2fd;color:#1565c0;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">EMAPAR</span></p>
                 </div>
-                <div class="integration-item proximamente">
+                <div class="integration-item">
                     <div class="integration-icon"><i class="fas fa-water"></i></div>
-                    <h4>Alcantarillado</h4>
-                    <p>Red de alcantarillado y saneamiento urbano.</p>
-                    <span class="badge-prox">Próximamente</span>
+                    <h3>Alcantarillado</h3>
+                    <p>Redes sanitaria, pluvial y combinada de EMAPAR, con tipo, sección y diámetro de cada tramo. <span style="display:inline-block;background:#e3f2fd;color:#1565c0;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">EMAPAR</span></p>
                 </div>
                 <div class="integration-item proximamente">
                     <div class="integration-icon"><i class="fas fa-wifi"></i></div>
-                    <h4>Telecomunicaciones</h4>
+                    <h3>Telecomunicaciones</h3>
                     <p>Cobertura y disponibilidad de servicios de telecomunicaciones.</p>
                     <span class="badge-prox">Próximamente</span>
                 </div>
@@ -1905,73 +1604,6 @@
             <div class="section-title" style="margin-top: 60px;">
                 <h3>Base de Datos Unificada</h3>
                 <p>Toda la información institucional se integra en una sola plataforma, permitiendo a arquitectos y desarrolladores acceder a datos críticos para la planificación y ejecución de proyectos de manera eficiente y confiable.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         PLANES DE ACCESO
-    ══════════════════════════════════════════════════════ -->
-    <section class="section section-light" id="planes">
-        <div class="container">
-            <div class="section-title">
-                <h2>Planes de Acceso</h2>
-                <p>Elige el plan que se adapta a tus necesidades de consulta territorial</p>
-            </div>
-            <div class="pricing-grid">
-
-                <!-- AFILIADO CAE-CH -->
-                <div class="pricing-card featured">
-                    <div class="plan-badge">Afiliado CAE-CH</div>
-                    <div class="plan-icon"><i class="fas fa-id-card"></i></div>
-                    <div class="plan-price">GRATIS</div>
-                    <ul class="plan-features">
-                        <li>GeoVisor completo sin restricciones</li>
-                        <li>Consulta ilimitada de predios</li>
-                        <li>Generación de reportes DICAT</li>
-                        <li>Acceso a todas las capas institucionales</li>
-                        <li>Soporte técnico prioritario</li>
-                    </ul>
-                    <a href="geovisor.html" class="btn" style="width:100%;display:block;text-align:center" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-map-marked-alt"></i> Ir al Geovisor
-                    </a>
-                    <p class="plan-note">Tu membresía será verificada manualmente por el equipo CAE-CH contra el registro institucional de afiliados.</p>
-                </div>
-
-                <!-- PÚBLICO GENERAL -->
-                <div class="pricing-card">
-                    <div class="plan-badge">Público General</div>
-                    <div class="plan-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <div class="plan-price">$10 <span>/ reporte</span></div>
-                    <ul class="plan-features">
-                        <li>Reporte DICAT individual en PDF</li>
-                        <li>Datos catastrales y territoriales</li>
-                        <li>Factibilidad de servicios</li>
-                        <li>Coordenadas UTM del predio</li>
-                        <li>Entrega en 24–48 horas hábiles</li>
-                    </ul>
-                    <a href="#solicitar" class="btn" style="width:100%;text-align:center">
-                        <i class="fas fa-file-alt"></i> Solicitar Reporte
-                    </a>
-                </div>
-
-                <!-- SUSCRIPCIÓN — PRÓXIMAMENTE -->
-                <div class="pricing-card proximamente">
-                    <div class="plan-badge">Suscripción Mensual</div>
-                    <div class="plan-icon"><i class="fas fa-layer-group"></i></div>
-                    <div class="plan-price">TBD <span>/ mes</span></div>
-                    <ul class="plan-features">
-                        <li>Reportes DICAT ilimitados</li>
-                        <li>Acceso al GeoVisor en línea</li>
-                        <li>Panel de seguimiento de solicitudes</li>
-                        <li>Historial completo de reportes</li>
-                        <li>Soporte preferencial</li>
-                    </ul>
-                    <button class="btn btn-inactivo" disabled style="width:100%">
-                        <i class="fas fa-clock"></i> Próximamente
-                    </button>
-                </div>
-
             </div>
         </div>
     </section>
@@ -1986,115 +1618,41 @@
                 <p>Diagnóstico de Información Catastral y Territorial</p>
             </div>
 
-            <!-- Versión gratuita digital -->
-            <div id="dicat-libre" style="max-width:820px;margin:0 auto 32px auto;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;">
-                    <!-- Tarjeta digital gratuita -->
-                    <div style="background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.09);padding:28px 28px 24px;border-top:4px solid #8B0000;text-align:center;">
-                        <div style="font-size:40px;margin-bottom:12px;color:#8B0000"><i class="fas fa-file-pdf"></i></div>
-                        <h3 style="margin-bottom:8px;font-size:18px;color:#2F2F2F">Versión Digital</h3>
-                        <p style="font-size:26px;font-weight:700;color:#8B0000;margin:8px 0 4px">GRATUITO</p>
-                        <p style="color:#5A5A5A;font-size:13.5px;margin-bottom:18px">Genera tu reporte DICAT directamente desde el Geovisor en formato PDF — sin costo, sin registro.</p>
-                        <a href="geovisor.html" class="btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:11px 24px;">
-                            <i class="fas fa-map-marked-alt"></i> Abrir Geovisor
+            <div id="dicat-vias">
+                <div class="dicat-vias-grid">
+                    <!-- Solicitud presencial -->
+                    <div class="dicat-via">
+                        <div class="dicat-via-icon" style="color:var(--rojo-oscuro)"><i class="fas fa-building-columns"></i></div>
+                        <h3>En la sede del CAE-CH</h3>
+                        <p class="dicat-via-destacado" style="color:var(--rojo-oscuro)">Vía principal</p>
+                        <p>Acércate a nuestras oficinas con la clave catastral o la dirección del predio. El equipo genera el DICAT contigo y resuelve en el momento las dudas del informe.</p>
+                        <a href="#contacto" class="btn dicat-via-btn">
+                            <i class="fas fa-map-marker-alt"></i> Ver dirección y horarios
                         </a>
-                        <p style="font-size:11.5px;color:#888;margin-top:12px">Busca tu predio → selecciona → genera PDF</p>
+                        <p class="dicat-via-nota">Av. Daniel León Borja · Pasaje Centro de Arte y Cultura</p>
                     </div>
-                    <!-- Tarjeta oficial firmada -->
-                    <div style="background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.09);padding:28px 28px 24px;border-top:4px solid #5A5A5A;text-align:center;">
-                        <div style="font-size:40px;margin-bottom:12px;color:#5A5A5A"><i class="fas fa-stamp"></i></div>
-                        <h3 style="margin-bottom:8px;font-size:18px;color:#2F2F2F">Versión Oficial</h3>
-                        <p style="font-size:15px;font-weight:600;color:#5A5A5A;margin:8px 0 4px">Impresa o Digital Firmada</p>
-                        <p style="color:#5A5A5A;font-size:13.5px;margin-bottom:18px">Con firma y sello del CAE-CH. En proceso de homologación institucional para trámites municipales. Solicítala por correo electrónico.</p>
+                    <!-- Versión oficial firmada -->
+                    <div class="dicat-via" style="border-top-color:var(--gris-medio)">
+                        <div class="dicat-via-icon" style="color:var(--gris-medio)"><i class="fas fa-stamp"></i></div>
+                        <h3>Versión oficial firmada</h3>
+                        <p class="dicat-via-destacado" style="color:var(--gris-medio)">Impresa o digital</p>
+                        <p>Con firma y sello del CAE-CH, en proceso de homologación institucional para trámites municipales. Se solicita por correo electrónico.</p>
                         <a href="mailto:caechoficial@gmail.com?subject=Solicitud%20Reporte%20DICAT%20Oficial&body=Nombre%3A%0AClave%20catastral%3A%0ADirecci%C3%B3n%20del%20predio%3A%0ATipo%20de%20reporte%20(impreso%20%2F%20digital%20firmado)%3A%0AObservaciones%3A"
-                           class="btn btn-outline" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:11px 24px;">
-                            <i class="fas fa-envelope"></i> Solicitar por Email
+                           class="btn btn-outline dicat-via-btn">
+                            <i class="fas fa-envelope"></i> Solicitar por correo
                         </a>
-                        <p style="font-size:11.5px;color:#888;margin-top:12px">caechoficial@gmail.com</p>
+                        <p class="dicat-via-nota">caechoficial@gmail.com</p>
                     </div>
                 </div>
-                <div style="background:#FFF8F0;border:1px solid #E8D5B0;border-radius:8px;padding:16px 20px;font-size:13px;color:#5A5A5A;">
-                    <i class="fas fa-info-circle" style="color:#8B0000;margin-right:6px"></i>
-                    <strong>¿Cómo solicitar el reporte oficial?</strong> Envía tu correo indicando la clave catastral, nombre del propietario, dirección del predio y si necesitas versión impresa o digital firmada. El CAE-CH procesará tu solicitud en 24–48 horas hábiles.
-                </div>
-            </div>
-
-            <!-- Con sesión iniciada (legacy – oculto) -->
-            <div id="dicat-con-sesion" style="display:none">
-                <div class="dicat-container">
-
-                    <!-- Formulario de solicitud -->
-                    <form class="dicat-form" id="form-dicat">
-                        <h3><i class="fas fa-map-marked-alt"></i> Datos del Predio</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="dicat-clave">Clave Catastral *</label>
-                                <input type="text" id="dicat-clave" class="form-control"
-                                       placeholder="Ej: 06-01-01-001-000-000" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="dicat-propietario">Nombre del Propietario *</label>
-                                <input type="text" id="dicat-propietario" class="form-control"
-                                       placeholder="Según escritura o catastro" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="dicat-direccion-predio">Dirección del Predio *</label>
-                            <input type="text" id="dicat-direccion-predio" class="form-control"
-                                   placeholder="Calle principal y secundaria, sector o barrio" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="dicat-obs">Observaciones <span style="color:var(--gris-medio);font-weight:400">(opcional)</span></label>
-                            <textarea id="dicat-obs" class="form-control"
-                                      placeholder="Información adicional para identificar el predio..."></textarea>
-                        </div>
-
-                        <!-- Método de pago -->
-                        <div class="pago-section">
-                            <h4><i class="fas fa-credit-card"></i> Método de Pago</h4>
-                            <div class="pago-opciones">
-                                <label class="pago-opcion seleccionado" id="pago-online-label">
-                                    <input type="radio" name="metodo-pago" value="online" checked>
-                                    <i class="fas fa-credit-card"></i>
-                                    <span>Tarjeta / Online</span>
-                                    <small>Stripe — próximamente</small>
-                                </label>
-                                <label class="pago-opcion" id="pago-efectivo-label">
-                                    <input type="radio" name="metodo-pago" value="efectivo">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                    <span>Efectivo en caja</span>
-                                    <small>Pago presencial CAE-CH</small>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="dicat-resumen">
-                            <div class="resumen-item">
-                                <span>Reporte DICAT</span>
-                                <strong>$10.00 USD</strong>
-                            </div>
-                            <button type="submit" class="btn"
-                                    style="width:100%;margin-top:15px;font-size:15px;padding:14px">
-                                <i class="fas fa-paper-plane"></i> Enviar Solicitud
-                            </button>
-                        </div>
-                        <p class="form-note">
-                            * El reporte será procesado y entregado en 24–48 horas hábiles al correo de tu cuenta Google.
-                            El pago en efectivo se confirma presencialmente en las oficinas del CAE-CH.
-                        </p>
-                    </form>
-
-                    <!-- Panel mis solicitudes -->
-                    <div class="mis-solicitudes">
-                        <h3><i class="fas fa-history"></i> Mis Solicitudes</h3>
-                        <div id="lista-solicitudes">
-                            <p class="sin-solicitudes">
-                                <i class="fas fa-inbox" style="display:block;font-size:32px;margin-bottom:10px;opacity:0.3"></i>
-                                Aún no tienes solicitudes registradas.
-                            </p>
-                        </div>
-                    </div>
-
+                <div class="dicat-aviso">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <strong>El CAE-CH es una organización profesional sin fines de lucro.</strong>
+                        Por ahora el reporte se atiende de forma presencial, mientras se define el esquema de aportes
+                        o donaciones que sostenga el servicio. Ten a mano la clave catastral, el nombre del propietario
+                        y la dirección del predio. El DICAT es un documento técnico-informativo del CAE-CH y no
+                        reemplaza los documentos oficiales del GADMR.
+                    </p>
                 </div>
             </div>
         </div>
@@ -2171,31 +1729,31 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h4>CAE-CH Provincial Chimborazo</h4>
+                    <h3>CAE-CH Provincial Chimborazo</h3>
                     <p>Colegio de Arquitectos del Ecuador - Provincial de Chimborazo. Comprometidos con la excelencia arquitectónica en nuestra región.</p>
                     <div class="social-footer">
                         <a href="https://www.instagram.com/cae_chimborazo/" target="_blank" rel="noopener noreferrer" aria-label="Instagram CAE Chimborazo"><i class="fab fa-instagram"></i></a>
                     </div>
                 </div>
                 <div class="footer-column">
-                    <h4>Enlaces Rápidos</h4>
+                    <h3>Enlaces Rápidos</h3>
                     <ul class="footer-links">
                         <li><a href="#inicio">Inicio</a></li>
                         <li><a href="#nosotros">Nosotros</a></li>
                         <li><a href="#plataforma">Plataforma</a></li>
                         <li><a href="#cursos" class="cursos-footer-link">Cursos</a></li>
-                        <li><a href="#planes">Planes de Acceso</a></li>
                         <li><a href="#solicitar">Solicitar Reporte DICAT</a></li>
-                        <li><a href="geovisor.html" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Geovisor</a></li>
+                        <li><a href="#integracion">Fuentes de Datos</a></li>
+                        <li><a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer">Investigación</a></li>
                         <li><a href="#contacto">Contacto</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
-                    <h4>Legal</h4>
+                    <h3>Legal</h3>
                     <ul class="footer-links">
-                        <li><a href="#">Términos y Condiciones</a></li>
-                        <li><a href="#">Política de Privacidad</a></li>
-                        <li><a href="#">Código de Ética</a></li>
+                        <li><a href="legal.html#terminos">Términos y Condiciones</a></li>
+                        <li><a href="legal.html#privacidad">Política de Privacidad</a></li>
+                        <li><a href="legal.html#etica">Código de Ética</a></li>
                     </ul>
                 </div>
             </div>
@@ -2226,51 +1784,6 @@
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 350);
             }, 4500);
-        }
-
-        // ── VALIDACIÓN CÉDULA ECUATORIANA ────────────────────────
-        function validarCedula(cedula) {
-            if (!/^\d{10}$/.test(cedula)) return false;
-            const prov = parseInt(cedula.substring(0, 2));
-            if (prov < 1 || prov > 24) return false;
-            const d = cedula.split('').map(Number);
-            let suma = 0;
-            for (let i = 0; i < 9; i++) {
-                let val = d[i] * (i % 2 === 0 ? 2 : 1);
-                if (val > 9) val -= 9;
-                suma += val;
-            }
-            const mod = suma % 10;
-            return (mod === 0 ? 0 : 10 - mod) === d[9];
-        }
-
-        // ── FUNCIÓN GLOBAL REGISTRO ──────────────────────────────
-        // Función global para cambiar entre formularios de registro
-        function mostrarFormRegistro(tipo) {
-            const formUsuario = document.getElementById('form-registro-usuario');
-            const formArquitecto = document.getElementById('form-registro-arquitecto');
-            const panelUsuario = document.getElementById('panel-beneficios-usuario');
-            const panelArquitecto = document.getElementById('panel-beneficios-arquitecto');
-            const cardUsuario = document.getElementById('card-usuario');
-            const cardArquitecto = document.getElementById('card-arquitecto');
-
-            if (!formUsuario) return;
-
-            if (tipo === 'usuario') {
-                formUsuario.style.display = 'block';
-                formArquitecto.style.display = 'none';
-                panelUsuario.style.display = 'block';
-                panelArquitecto.style.display = 'none';
-                cardUsuario.classList.add('activo');
-                cardArquitecto.classList.remove('activo');
-            } else {
-                formUsuario.style.display = 'none';
-                formArquitecto.style.display = 'block';
-                panelUsuario.style.display = 'none';
-                panelArquitecto.style.display = 'block';
-                cardUsuario.classList.remove('activo');
-                cardArquitecto.classList.add('activo');
-            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -2316,99 +1829,6 @@
                 });
             });
             
-            // Funcionalidad para las pestañas del formulario de registro
-            const tabs = document.querySelectorAll('.form-tab');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    // Remover clase active de todas las pestañas
-                    tabs.forEach(t => t.classList.remove('active'));
-                    
-                    // Añadir clase active a la pestaña clickeada
-                    this.classList.add('active');
-                    
-                    // Ocultar todos los contenidos de formularios
-                    document.querySelectorAll('.form-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    
-                    // Mostrar el contenido correspondiente
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(`${tabId}-form`).classList.add('active');
-                });
-            });
-            
-
-            // Nuevos formularios de registro de sección
-            const formUsuarioReg = document.getElementById('form-usuario-registro');
-            const formArquitectoReg = document.getElementById('form-arquitecto-registro');
-
-            if (formUsuarioReg) {
-                formUsuarioReg.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const cedula = document.getElementById('usr-cedula').value.trim();
-                    if (!validarCedula(cedula)) {
-                        showToast('Número de cédula inválido. Verifica los 10 dígitos.', 'error');
-                        return;
-                    }
-                    const pass = document.getElementById('usr-password').value;
-                    const confirm = document.getElementById('usr-confirm').value;
-                    if (pass.length < 8) {
-                        showToast('La contraseña debe tener mínimo 8 caracteres.', 'error');
-                        return;
-                    }
-                    if (pass !== confirm) {
-                        showToast('Las contraseñas no coinciden. Por favor verifica.', 'error');
-                        return;
-                    }
-                    showToast('¡Registro recibido! Te enviaremos un correo de confirmación para activar tu cuenta.', 'success');
-                    this.reset();
-                });
-            }
-
-            if (formArquitectoReg) {
-                formArquitectoReg.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const cedula = document.getElementById('arq-cedula').value.trim();
-                    if (!validarCedula(cedula)) {
-                        showToast('Número de cédula inválido. Verifica los 10 dígitos.', 'error');
-                        return;
-                    }
-                    const pass = document.getElementById('arq-password').value;
-                    const confirm = document.getElementById('arq-confirm').value;
-                    if (pass.length < 8) {
-                        showToast('La contraseña debe tener mínimo 8 caracteres.', 'error');
-                        return;
-                    }
-                    if (pass !== confirm) {
-                        showToast('Las contraseñas no coinciden. Por favor verifica.', 'error');
-                        return;
-                    }
-                    showToast('¡Solicitud de afiliación recibida! El equipo del CAE-CH revisará tus credenciales y se pondrá en contacto contigo en los próximos días hábiles.', 'success');
-                    this.reset();
-                });
-            }
-
-            // Login y registro del modal
-            document.getElementById('login-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                showToast('Inicio de sesión en proceso. Próximamente disponible.', 'info');
-                modal.style.display = 'none';
-            });
-
-            document.getElementById('register-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                showToast('Registro en proceso. Próximamente disponible.', 'info');
-                modal.style.display = 'none';
-            });
-
-            // Redes sociales — Facebook próximamente
-            document.querySelectorAll('.btn-social:not(.btn-google)').forEach(button => {
-                button.addEventListener('click', function() {
-                    showToast('Autenticación con Facebook próximamente disponible.', 'info');
-                });
-            });
-
             // ── FORMULARIO DE CONTACTO ───────────────────────────
             const contactForm = document.getElementById('contact-form');
             if (contactForm) {
