@@ -26,9 +26,12 @@ DATA SET/Alcantarillado Fluvial.geojson
 DATA SET/Alcantarillado Combinado.geojson
 ENLACES GEOPORTALES/
 
-# Descarga cruda de predios (95 MB) que ninguna capa del visor referencia.
-# El visor usa "DATA SET/Catastro GADMR.geojson".
+# Descargas crudas del geoportal del GADMR que ninguna capa del visor
+# referencia. El visor usa "DATA SET/Catastro GADMR.geojson", que produce
+# DATA SET/build_catastro.js a partir de estos archivos.
 DATA SET/Predios.geojson
+DATA SET/DATOS GEOVISOR */
+DATA SET/__pycache__/
 
 # Levantamientos topograficos de referencia (DXF de estacion total).
 # Sirven de patron para test/fixtures pero no se publican: el repositorio

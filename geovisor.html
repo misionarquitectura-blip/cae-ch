@@ -4177,7 +4177,10 @@
 
                     showProgressBar('Generando código QR de verificación...');
                     // El QR abre el GeoVisor y, si hay clave catastral, centra y selecciona el predio.
-                    const qrBase = 'https://misionarquitectura-blip.github.io/cae-ch/geovisor.html';
+                    // OJO: el GeoVisor ya no se enlaza desde el sitio publico, pero esta URL viaja
+                    // impresa en cada DICAT que se entrega. Mientras el acceso siga siendo interno,
+                    // apunta al dominio institucional y no a la URL de GitHub Pages.
+                    const qrBase = 'https://www.cae-ch.org.ec/geovisor.html';
                     const qrUrl = `${qrBase}?verify=${encodeURIComponent(nroInforme)}` +
                         (clave && clave !== 'S/C' ? `&clave=${encodeURIComponent(clave)}` : '');
                     const qrDataUrl = await generarQRDataUrl(qrUrl);
@@ -6601,7 +6604,7 @@
     ══════════════════════════════════════════════════════════ -->
     <script>
     // ── Fecha de corte del catastro ───────────────────────────────
-    const CATASTRO_FECHA_CORTE = new Date(2026, 4, 1); // 1 mayo 2026, hora local
+    const CATASTRO_FECHA_CORTE = new Date(2026, 8, 1); // 1 septiembre 2026, hora local
 
     function calcularVigenciaCatastro() {
         const ahora = new Date();
@@ -6847,7 +6850,42 @@
                     <div class="historial-line" style="height:40px"></div>
                 </div>
                 <div class="historial-entry-content">
-                    <strong>Mejoras de Plataforma — Junio 2026</strong> — <span style="background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">NUEVO</span>
+                    <strong>Actualización Septiembre 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS VIGENTES</span>
+                    <div style="margin-top:4px">
+                        Catastro predial del GADMR al corte de <strong>septiembre 2026</strong>, tomado de la vista de publicación
+                        vigente del geoportal municipal. <strong id="hist-total-predios"></strong>
+                        Se recupera el campo <strong>tipo de catastro</strong> (urbano / rural) que faltaba desde mayo,
+                        se recalculan <strong>superficie y perímetro oficiales en UTM 17S</strong> — el servicio los publicaba en
+                        Web Mercator, con un 0,67 % de exceso en área — y se depura la tabla de atributos: se conservan
+                        los 10 campos que usa el reporte y se retiran los números de documento que la base de origen
+                        arrastraba junto al nombre del propietario.
+                    </div>
+                    <div class="historial-entry-date">Septiembre 2026 · Fuente: GADMR · Formato GeoJSON WGS84</div>
+                </div>
+            </div>
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line" style="height:40px"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Servicios básicos y linderos — Agosto 2026</strong>
+                    <div style="margin-top:4px">
+                        Nuevas capas de <strong>agua potable</strong> (zonas de cobertura) y <strong>alcantarillado</strong>
+                        (redes sanitaria, pluvial y combinada) de EMAPAR, con la factibilidad de servicios incorporada al DICAT.
+                        La sección de colindantes pasa a medirse lado a lado sobre el polígono, y las cotas del plano vectorial
+                        se calculan en UTM 17S.
+                    </div>
+                    <div class="historial-entry-date">Agosto 2026 · Fuente: EMAPAR · Mejora de funcionalidad</div>
+                </div>
+            </div>
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line" style="height:40px"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Mejoras de Plataforma — Junio 2026</strong>
                     <div style="margin-top:4px">
                         Nueva capa <strong>Construcciones IA · Todas</strong> (~96 K edificaciones detectadas) junto a la de no registradas.
                         El reporte DICAT ahora <strong>identifica las calles colindantes</strong> (referencial, OpenStreetMap) en los lados sin colindante catastral,
@@ -6862,8 +6900,8 @@
                     <div class="historial-line" style="height:40px"></div>
                 </div>
                 <div class="historial-entry-content">
-                    <strong>Actualización Mayo 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS VIGENTES</span>
-                    <div style="margin-top:4px">Integración del catastro predial GADMR con correcciones de clave catastral, propietarios y avalúos al corte de mayo 2026. <strong id="hist-total-predios"></strong></div>
+                    <strong>Actualización Mayo 2026</strong>
+                    <div style="margin-top:4px">Integración del catastro predial GADMR con correcciones de clave catastral, propietarios y avalúos al corte de mayo 2026.</div>
                     <div class="historial-entry-date">Mayo 2026 · Fuente: GADMR · Formato GeoJSON WGS84</div>
                 </div>
             </div>
