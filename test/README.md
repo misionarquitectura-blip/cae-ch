@@ -1,7 +1,8 @@
 # Pruebas geométricas — GeoVisor CAE-CH
 
-Verifican que el cálculo de superficie, perímetro, coordenadas UTM y afectación
-vial del DICAT sigue siendo exacto.
+Verifican que el cálculo de superficie, perímetro, coordenadas UTM, afectación
+vial y linderos del DICAT sigue siendo exacto, y que el reporte no se contradice
+a sí mismo entre secciones.
 
 Las pruebas **extraen las funciones reales de `geovisor.html`** y las ejecutan en
 Node contra los GeoJSON de producción. No hay una copia del algoritmo en `test/`:
@@ -20,6 +21,10 @@ node test/regresion-catastro.js
 
 ```bash
 node test/servicios-basicos.js
+```
+
+```bash
+node test/linderos-dicat.js
 ```
 
 Si tienes el `package.json` local (está en `.gitignore`, no se publica), también vale:
@@ -98,12 +103,47 @@ Cubre las capas de EMAPAR: cobertura de agua potable (capa 4) y alcantarillado
 
 Acepta paso de muestreo: `node test/servicios-basicos.js 1500`.
 
+### `linderos-dicat.js`
+
+Coherencia interna del DICAT: **todo lo que el reporte declara en metros tiene
+que salir del mismo plano UTM WGS84 17S**. La sección 3 (colindantes y
+dimensiones de linderos) y la sección 8 (plano acotado) deben coincidir con la
+tabla de vértices de la sección 6 y con el CSV/DXF que descarga el usuario.
+
+Sobre el predio `060101004001061001` comprueba que los cuatro lados miden
+12,87 / 17,66 / 13,56 / 17,18 m con tolerancia de **1 mm**, que cada uno orienta
+según su normal exterior, que el tramo compartido con cada vecino es el lado
+completo y que la suma cierra el perímetro de 61,28 m.
+
+Incluye **guardias anti-regresión** con los valores que producía la versión
+anterior: 10,84 m (lindero compartido por resta de perímetros), 15,95 y 19,71 m
+(ancho del bounding box declarado como frente a calle). Y un guardia sobre el
+propio fuente: las cotas de la sección 8 no pueden volver a invocar
+`turf.distance`, que mide sobre una esfera de 6371 km y desvía hasta 5 mm/m
+frente a la proyección oficial.
+
+Después barre una muestra del catastro para confirmar que los invariantes se
+cumplen en **todos** los predios, no sólo en el de referencia: ninguna
+excepción, toda dimensión finita y contenida en el perímetro, orientación
+siempre Norte/Sur/Este/Oeste, el perímetro de los lados nunca supera al de
+`medirGeometria()` y la tabla se mantiene acotada — sin agrupar por
+(orientación, colindante) un predio rural de 368 lados generaría 368 renglones.
+
+Acepta paso de muestreo: `node test/linderos-dicat.js 25`.
+
 ## Notas sobre los datos
 
 **`sup_pred_c` no es la superficie de la geometría.** Es la superficie declarada
 en escritura o ficha catastral y difiere legítimamente de lo que mide el
 polígono: mediana ~1 %, percentil 90 ~19 %. Para validar el cálculo hay que usar
 `Shape__Area`. El DICAT muestra ambas cifras por separado y su diferencia.
+
+**Hay esquirlas y solapes.** El catastro trae unas pocas features de área ~0
+(líneas dibujadas como polígono) y polígonos que se superponen: unidades de
+propiedad horizontal sobre su lote madre, o digitalizaciones duplicadas. En esos
+casos la sección 3 lista más de un colindante sobre el mismo lado y la suma de
+linderos puede superar el perímetro. Es fiel al dato de origen, no un error del
+cálculo: cada dimensión declarada sigue siendo la de un lado real del predio.
 
 **Hay predios multiparte.** El catastro codifica algunos predios (propiedad
 horizontal, lotes partidos por una vía) como `Polygon` con varios anillos, algo
