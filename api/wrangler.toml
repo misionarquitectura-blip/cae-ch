@@ -1,0 +1,52 @@
+#  CAE-CH · API de afiliados
+#  Despliegue:  npx wrangler deploy
+#  Ver README.md para el paso a paso completo.
+
+name = "caech-afiliados"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[observability]
+enabled = true
+
+# ── Base de datos D1 ────────────────────────────────────────────────
+# Pegue aqui el database_id que devuelve:
+#   npx wrangler d1 create caech-afiliados
+[[d1_databases]]
+binding = "DB"
+database_name = "caech-afiliados"
+database_id = "PENDIENTE-PEGAR-EL-ID-DE-D1"
+
+# ── Aseo automatico (sesiones vencidas y pases caducados) ───────────
+[triggers]
+crons = ["0 4 * * *"]
+
+# ── Variables publicas ──────────────────────────────────────────────
+# Los secretos NO van aqui. Se cargan con `npx wrangler secret put`:
+#   PIMIENTA         obligatorio — sal global para hashear IPs
+#   RESEND_API_KEY   solo si MAIL_PROVEEDOR = "resend"
+[vars]
+# Origenes que pueden llamar al API. Sin coincidencia, no se emite
+# Access-Control-Allow-Origin: se falla cerrado, no abierto.
+ORIGENES_PERMITIDOS = "https://www.cae-ch.org.ec,https://cae-ch.org.ec,https://misionarquitectura-blip.github.io,http://localhost:8788"
+
+# URL publica de este Worker (para armar el enlace de verificacion).
+API_URL = "https://caech-afiliados.NOMBRE-DE-SU-CUENTA.workers.dev"
+
+# Raiz del sitio, a donde vuelve el usuario tras verificar su correo.
+SITIO_URL = "https://misionarquitectura-blip.github.io/cae-ch"
+
+# Coste de PBKDF2-SHA256. Medido sobre el mismo motor nativo:
+#    50000 -> ~6 ms    100000 -> ~12 ms    210000 -> ~24 ms
+# El plan gratuito de Workers corta en 10 ms de CPU por invocacion, asi
+# que con plan gratuito use 50000; con Workers Paid deje 210000.
+HASH_ITERACIONES = "210000"
+
+# "consola" escribe el enlace en los logs (npx wrangler tail) sin enviar
+# nada: es el modo util mientras el dominio no este verificado.
+# "resend" envia de verdad (requiere RESEND_API_KEY y dominio verificado).
+MAIL_PROVEEDOR = "consola"
+MAIL_REMITENTE = "CAE-CH <no-responder@cae-ch.org.ec>"
+
+# "no" apaga la promocion de lanzamiento sin volver a desplegar.
+FREEMIUM_ACTIVO = "si"

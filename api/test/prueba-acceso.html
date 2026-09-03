@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Banco de pruebas · caech-acceso.js</title>
+<style>
+  :root{--rojo-oscuro:#8B0000;--rojo-medio:#A52A2A}
+  body{font-family:system-ui,sans-serif;margin:0;background:#F5F5F5}
+  header{background:#8B0000;color:#fff;padding:12px 20px}
+  .nav-buttons{display:flex;gap:10px;align-items:center}
+  .btn{padding:7px 12px;border-radius:5px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer;font-size:13px}
+  main{padding:20px;max-width:760px}
+  button.accion{padding:10px 16px;margin:4px;border:0;border-radius:5px;background:#1565C0;color:#fff;cursor:pointer}
+  #salida{background:#111;color:#0f0;padding:12px;border-radius:6px;font:12px ui-monospace,monospace;white-space:pre-wrap;min-height:120px}
+</style>
+</head>
+<body>
+<header><div class="nav-buttons"><span style="margin-right:auto;font-weight:600">GeoVisor (simulado)</span></div></header>
+<main>
+  <p>Cada boton pasa por <code>caechAcceso.autorizar()</code>, igual que en el visor real.</p>
+  <button class="accion" onclick="probar('dxf')">Exportar DXF</button>
+  <button class="accion" onclick="probar('csv')">Exportar CSV</button>
+  <button class="accion" onclick="probar('pdf')">Generar DICAT (PDF)</button>
+  <h3>Resultado</h3>
+  <div id="salida">esperando…</div>
+</main>
+<script>
+  window.CAECH_ACCESO_CONFIG = { activo: true, api: 'http://localhost:8787' };
+</script>
+<script src="../../caech-acceso.js"></script>
+<script>
+  function registrar(t){ document.getElementById('salida').textContent += t + '\n'; }
+  async function probar(formato){
+    caechAcceso.registrarAccion(formato, () => probar(formato));
+    registrar('→ solicitando ' + formato.toUpperCase() + '…');
+    const ok = await caechAcceso.autorizar(formato, '060150010101');
+    registrar(ok ? '   AUTORIZADO: se generaria el archivo ' + formato.toUpperCase()
+                 : '   BLOQUEADO: no se genera nada');
+  }
+</script>
+</body>
+</html>

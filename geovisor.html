@@ -10,6 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="analytics.js"></script>
+    <script src="caech-acceso.js"></script>
     <style>
         /* ── Métricas widget ─────────────────────────── */
         .metricas-btn {
@@ -3413,7 +3414,7 @@
                         }
                     };
                     img.onerror = function () { clearTimeout(timeout); resolve(null); };
-                    img.src = 'LOGO/logo.jpg';
+                    img.src = 'LOGO/logo-dicat.jpg';
                 });
             }
 
@@ -4093,6 +4094,15 @@
             }
 
             async function generarDICAT(props) {
+                // Puerta de acceso: afiliado con sesion, o pase de cortesia.
+                // Con caech-acceso.js inactivo esto devuelve true y el visor
+                // se comporta como siempre.
+                if (window.caechAcceso) {
+                    window.caechAcceso.registrarAccion('pdf', () => generarDICAT(props));
+                    const clave = props && props.claves ? String(props.claves).trim() : null;
+                    if (!await window.caechAcceso.autorizar('pdf', clave)) return;
+                }
+
                 showProgressBar('Preparando DICAT...');
 
                 if (!csvPolygon) {
@@ -6532,9 +6542,13 @@
                 return L.join('\r\n') + '\r\n';
             }
 
-            window.exportarPredioDXF = function () {
+            window.exportarPredioDXF = async function () {
                 const d = geometriaPredioSeleccionado();
                 if (!d) return;
+                if (window.caechAcceso) {
+                    window.caechAcceso.registrarAccion('dxf', window.exportarPredioDXF);
+                    if (!await window.caechAcceso.autorizar('dxf', d.clave)) return;
+                }
                 let franjas = null;
                 if (geojsonLayers[8]) {
                     try {
@@ -6549,9 +6563,13 @@
             // ─────────────────────────────────────────────────────────────────
             // Exportación CSV — mismo formato de la tabla de vértices del DICAT
             // ─────────────────────────────────────────────────────────────────
-            window.exportarPredioCSV = function () {
+            window.exportarPredioCSV = async function () {
                 const d = geometriaPredioSeleccionado();
                 if (!d) return;
+                if (window.caechAcceso) {
+                    window.caechAcceso.registrarAccion('csv', window.exportarPredioCSV);
+                    if (!await window.caechAcceso.autorizar('csv', d.clave)) return;
+                }
                 const u = d.utm, n = u.length;
                 const filas = ['VERTICE;ESTE_X_m;NORTE_Y_m;LADO;DISTANCIA_m'];
                 for (let i = 0; i < n; i++) {

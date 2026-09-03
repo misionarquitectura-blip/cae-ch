@@ -1,10 +1,12 @@
 # Dependencias Node.js
 node_modules/
 
-# Servidor local (no necesario en GitHub Pages)
-server.js
-package.json
-package-lock.json
+# Servidor local (no necesario en GitHub Pages). Anclados a la raiz: sin la
+# barra inicial estos patrones tambien tapaban api/package.json, que el
+# Worker de afiliados si necesita publicar.
+/server.js
+/package.json
+/package-lock.json
 
 # GeoVisor local (versión de desarrollo con servidor)
 GEOVISOR CAECH.html

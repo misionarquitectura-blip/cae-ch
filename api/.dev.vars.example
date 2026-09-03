@@ -1,0 +1,9 @@
+# Copie a `.dev.vars` para desarrollo local (ese archivo NO se versiona).
+# En produccion estos valores se cargan con `npx wrangler secret put NOMBRE`.
+
+# Sal global para hashear IPs. Genere una con:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+PIMIENTA="cambie-esto-por-una-cadena-aleatoria-larga"
+
+# Solo si MAIL_PROVEEDOR = "resend"
+RESEND_API_KEY=""

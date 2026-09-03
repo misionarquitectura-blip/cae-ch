@@ -8,21 +8,28 @@
     <meta name="keywords" content="arquitectos Chimborazo, Riobamba, CAE-CH, reporte DICAT, catastro GADMR, PUGS, BIM, interoperabilidad territorial, arquitectura Ecuador">
     <meta name="author" content="CAE-CH Provincial de Chimborazo">
     <link rel="canonical" href="https://www.cae-ch.org.ec/">
-    <meta name="theme-color" content="#8B0000">
+    <meta name="theme-color" content="#E31E24">
     <meta property="og:title" content="CAE-CH | Colegio de Arquitectos del Ecuador - Provincial de Chimborazo">
     <meta property="og:description" content="Plataforma de interoperabilidad territorial del CAE-CH: datos institucionales georreferenciados y reportes DICAT para Riobamba, Ecuador.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.cae-ch.org.ec/">
     <meta property="og:locale" content="es_EC">
-    <meta property="og:image" content="https://www.cae-ch.org.ec/LOGO/Logo%20Cae.jpg">
+    <meta property="og:image" content="https://www.cae-ch.org.ec/LOGO/og-caech.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="CAE-CH Provincial de Chimborazo">
     <meta name="twitter:description" content="Plataforma de interoperabilidad territorial y reportes DICAT para Riobamba, Ecuador.">
-    <meta name="twitter:image" content="https://www.cae-ch.org.ec/LOGO/Logo%20Cae.jpg">
-    <link rel="icon" type="image/jpeg" href="LOGO/366642214_122106418796007509_1566356946917218903_n.jpg">
+    <meta name="twitter:image" content="https://www.cae-ch.org.ec/LOGO/og-caech.jpg">
+    <link rel="icon" type="image/png" href="LOGO/favicon-caech.png">
+    <link rel="apple-touch-icon" href="LOGO/favicon-caech.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="analytics.js"></script>
+    <script src="caech-acceso.js"></script>
     <style>
         /* Estilos generales */
         * {
@@ -33,8 +40,8 @@
         }
         
         :root {
-            --rojo-oscuro: #8B0000;
-            --rojo-medio: #A52A2A;
+            --rojo-oscuro: #E31E24;   /* rojo del emblema CAE-Ch */
+            --rojo-medio: #B2141A;    /* el mismo, oscurecido para hover */
             --gris-oscuro: #2F2F2F;
             --gris-medio: #5A5A5A;
             --gris-claro: #F5F5F5;
@@ -1147,7 +1154,7 @@
         }
         .pricing-card.featured {
             border-color: var(--rojo-oscuro);
-            box-shadow: 0 8px 30px rgba(139,0,0,0.18);
+            box-shadow: 0 8px 30px rgba(227,30,36,0.18);
         }
         .pricing-card.proximamente { opacity: 0.6; }
         .plan-badge {
@@ -1156,7 +1163,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--rojo-oscuro);
-            background: rgba(139,0,0,0.08);
+            background: rgba(227,30,36,0.08);
             padding: 5px 15px;
             border-radius: 20px;
             margin-bottom: 22px;
@@ -1282,16 +1289,602 @@
             .pricing-grid { grid-template-columns: 1fr; }
             .pago-opciones { grid-template-columns: 1fr; }
         }
+
+        /* ══════════════════════════════════════════════════════════
+           IDENTIDAD 2025-2027 · derivada del isologo CAE-Ch
+           ──────────────────────────────────────────────────────────
+           Tres rasgos del logotipo gobiernan toda la página:
+             · la geométrica del wordmark "CAE-Ch"  → Montserrat
+             · las versalitas de trazo fino y espaciado muy abierto
+               de "COLEGIO DE ARQUITECTOS DEL ECUADOR"
+             · el filete rojo bajo el wordmark y el filete vertical
+               que separa el emblema del texto
+           El color deja de ser el granate y pasa al rojo vivo del
+           emblema sobre grafito, como en el propio logo.
+        ══════════════════════════════════════════════════════════ */
+
+        :root {
+            --rojo-caech:  #E31E24;   /* rojo del emblema circular */
+            --rojo-hondo:  #B2141A;   /* mismo rojo, para hover y degradados */
+            --grafito:     #2E3238;   /* gris del wordmark "CAE-Ch" */
+            --grafito-med: #565B63;   /* gris de la línea de versalitas */
+            --grafito-sua: #8B9098;
+            --hueso:       #F7F7F8;
+            --borde:       rgba(46, 50, 56, .12);
+            --sombra-1: 0 1px 2px rgba(46, 50, 56, .05), 0 2px 10px rgba(46, 50, 56, .05);
+            --sombra-2: 0 6px 18px rgba(46, 50, 56, .09), 0 18px 40px rgba(46, 50, 56, .09);
+            --radio: 4px;             /* el logo no tiene esquinas blandas */
+            --tracking-caps: .28em;
+        }
+
+        /* ── Tipografía ───────────────────────────────────────── */
+        body { background-color: var(--hueso); color: var(--grafito); }
+
+        h1, h2, h3, h4,
+        .btn, .nav-links a, .stat-number, .stat-label,
+        .eyebrow, .hero-eyebrow, .dicat-chip, .dicat-fuente,
+        .dicat-panel-seccion, .dicat-nav-btn, .dicat-contador,
+        .step-number, .badge-prox {
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, sans-serif;
+        }
+        h1, h2, h3 { color: var(--grafito); letter-spacing: -.02em; }
+
+        /* Versalitas del logo: trazo fino, caja alta, tracking abierto.
+           Es la firma gráfica que más se repite en la identidad. */
+        .versalitas {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-caps);
+        }
+        .versalitas strong { font-weight: 700; }
+
+        /* Filete rojo: el que subraya "CAE-Ch" en el isologo. */
+        .filete-rojo {
+            display: block;
+            height: 1.5px;
+            background: var(--rojo-caech);
+            border: 0;
+        }
+
+        /* ── Barra de progreso de lectura ─────────────────────── */
+        [hidden] { display: none !important; }
+
+        .progreso-lectura {
+            position: fixed;
+            top: 0; left: 0;
+            height: 2px;
+            width: 100%;
+            transform: scaleX(0);
+            transform-origin: 0 50%;
+            background: var(--rojo-caech);
+            z-index: 200;
+            will-change: transform;
+        }
+
+        /* ── Cabecera ─────────────────────────────────────────── */
+        header {
+            background-color: rgba(255, 255, 255, .92);
+            backdrop-filter: saturate(180%) blur(12px);
+            border-bottom: 1px solid var(--borde);
+            box-shadow: none;
+            transition: box-shadow .3s, background-color .3s;
+        }
+        header.compacta {
+            box-shadow: 0 1px 14px rgba(46, 50, 56, .10);
+            background-color: rgba(255, 255, 255, .98);
+        }
+        /* El isologo es horizontal: se fija el alto y el ancho se acomoda,
+           de modo que sirva igual si se reemplaza el archivo. */
+        .logo-img {
+            height: 44px;
+            width: auto;
+            max-width: 280px;
+            object-fit: contain;
+            display: block;
+        }
+        .nav-links a {
+            position: relative;
+            font-weight: 500;
+            font-size: 13px;
+            letter-spacing: .04em;
+            color: var(--grafito-med);
+            padding-bottom: 4px;
+        }
+        .nav-links a:hover { color: var(--grafito); }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: 0;
+            width: 100%;
+            height: 1.5px;
+            background: var(--rojo-caech);
+            transform: scaleX(0);
+            transform-origin: 100% 50%;
+            transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+        }
+        .nav-links a:hover::after,
+        .nav-links a.active::after { transform: scaleX(1); transform-origin: 0 50%; }
+        .nav-links a.active { color: var(--grafito); }
+
+        /* Filete vertical: el que separa el emblema del wordmark. */
+        .navbar { flex-wrap: wrap; row-gap: 10px; }
+        .nav-buttons {
+            position: relative;
+            padding-left: 22px;
+            flex-wrap: wrap;
+        }
+        .nav-buttons::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 50%;
+            transform: translateY(-50%);
+            width: 1px; height: 26px;
+            background: var(--borde);
+        }
+
+        /* ── Botones ──────────────────────────────────────────── */
+        .btn {
+            border-radius: var(--radio);
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            transition: transform .2s cubic-bezier(.4, 0, .2, 1), box-shadow .2s, background-color .25s, color .25s, border-color .25s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: var(--sombra-2); }
+        .btn:active { transform: translateY(0); }
+        .btn:not(.btn-outline):not(.btn-secondary) { background-color: var(--rojo-caech); }
+        .btn:not(.btn-outline):not(.btn-secondary):hover { background-color: var(--rojo-hondo); }
+        .btn-outline { border-color: var(--rojo-caech); color: var(--rojo-caech); }
+        .btn-outline:hover { background-color: var(--rojo-caech); color: #fff; }
+
+        /* ── Hero ─────────────────────────────────────────────── */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 120px 0 0;
+            background: linear-gradient(178deg, #24272C 0%, #2E3238 62%, #34383F 100%);
+            color: #fff;
+        }
+        /* Retícula catastral tenue: el oficio, insinuado sin ruido. */
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+            background-size: 96px 96px;
+            mask-image: radial-gradient(120% 90% at 50% 0%, #000 10%, transparent 72%);
+            -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 10%, transparent 72%);
+            pointer-events: none;
+        }
+        /* El relleno inferior reserva la banda que ocupa la cordillera,
+           para que las cifras no queden montadas sobre la silueta. */
+        .hero .container { position: relative; z-index: 2; padding-bottom: 172px; }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            font-size: 10.5px;
+            font-weight: 500;
+            letter-spacing: var(--tracking-caps);
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .72);
+            border: 1px solid rgba(255, 255, 255, .2);
+            padding: 8px 18px;
+            margin-bottom: 30px;
+        }
+        .hero-eyebrow .punto {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--rojo-caech);
+            box-shadow: 0 0 0 0 rgba(227, 30, 36, .8);
+            animation: latido 2.6s ease-out infinite;
+        }
+        @keyframes latido {
+            0%   { box-shadow: 0 0 0 0 rgba(227, 30, 36, .8); }
+            70%  { box-shadow: 0 0 0 8px rgba(227, 30, 36, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0); }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.4rem);
+            font-weight: 700;
+            letter-spacing: -.035em;
+            line-height: 1.04;
+            color: #fff;
+            margin-bottom: 0;
+        }
+        .hero h1 .destacado { color: var(--rojo-caech); }
+
+        /* Filete + línea de versalitas: la firma exacta del isologo. */
+        .hero-filete {
+            width: 260px;
+            max-width: 70%;
+            margin: 26px auto 16px;
+        }
+        .hero h2 {
+            font-size: clamp(.7rem, 1.5vw, .84rem);
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-caps);
+            color: rgba(255, 255, 255, .78);
+            margin-bottom: 30px;
+            line-height: 1.9;
+        }
+        .hero h2 strong { font-weight: 700; color: #fff; }
+
+        .hero p {
+            font-size: 16.5px;
+            color: rgba(255, 255, 255, .74);
+            max-width: 640px;
+            margin-bottom: 38px;
+        }
+        .hero p strong { color: #fff; font-weight: 600; }
+
+        .hero .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, .3);
+            color: #fff;
+        }
+        .hero .btn-secondary:hover { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .55); }
+
+        .stats {
+            margin-top: 54px;
+            padding-top: 34px;
+            border-top: 1px solid rgba(255, 255, 255, .14);
+            gap: 18px;
+        }
+        .stat-item { flex: 1 1 140px; }
+        .stat-number {
+            font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+            font-weight: 700;
+            letter-spacing: -.03em;
+            font-variant-numeric: tabular-nums;
+            color: #fff;
+        }
+        .stat-label {
+            font-size: 9.5px;
+            font-weight: 400;
+            letter-spacing: var(--tracking-caps);
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .5);
+            margin-top: 8px;
+        }
+
+        /* Silueta del Chimborazo y la catedral, como en el isologo. */
+        .hero-cordillera {
+            position: absolute;
+            left: 0; right: 0; bottom: -1px;
+            width: 100%;
+            height: 150px;
+            display: block;
+            z-index: 1;
+            pointer-events: none;
+        }
+        @media (max-width: 900px) {
+            .hero-cordillera { height: 104px; }
+            .hero .container { padding-bottom: 124px; }
+        }
+
+        /* ── Títulos de sección ───────────────────────────────── */
+        .section { padding: 90px 0; }
+        .section-title { margin-bottom: 56px; }
+        .section-title .eyebrow {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 500;
+            letter-spacing: var(--tracking-caps);
+            text-transform: uppercase;
+            color: var(--rojo-caech);
+            margin-bottom: 16px;
+        }
+        .section-dark .section-title .eyebrow { color: #FF6B6F; }
+        .section-title h2 {
+            font-size: clamp(1.7rem, 3.4vw, 2.35rem);
+            font-weight: 700;
+            letter-spacing: -.03em;
+        }
+        /* Filete fino y largo, como el que subraya "CAE-Ch". */
+        .section-title h2::after {
+            content: '';
+            display: block;
+            width: 132px;
+            height: 1.5px;
+            margin: 20px auto 0;
+            background: var(--rojo-caech);
+        }
+        .section-title p {
+            font-size: 16px;
+            max-width: 620px;
+            color: var(--grafito-med);
+            margin-top: 20px;
+        }
+        .section-dark { background-color: var(--grafito); }
+        .section-dark .section-title p { color: rgba(255, 255, 255, .72); }
+
+        /* ── Tarjetas ─────────────────────────────────────────── */
+        .about-card, .feature-card, .integration-item, .transparencia-card, .step {
+            border-radius: var(--radio);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s, border-color .3s;
+        }
+        .about-card:hover, .feature-card:hover, .integration-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--sombra-2);
+        }
+        .about-card h3, .feature-card h3, .integration-item h3, .step h3 {
+            font-weight: 700;
+            letter-spacing: -.015em;
+        }
+        .feature-icon, .about-icon, .integration-icon {
+            border-radius: var(--radio);
+            transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
+        }
+        .feature-card:hover .feature-icon,
+        .about-card:hover .about-icon,
+        .integration-item:hover .integration-icon { transform: scale(1.1); }
+        .step-number { font-weight: 700; }
+
+        /* ══════════════════════════════════════════════════════════
+           EXPLORADOR DEL DICAT
+        ══════════════════════════════════════════════════════════ */
+        .dicat-explorador {
+            display: grid;
+            grid-template-columns: minmax(280px, .85fr) minmax(320px, 1.15fr);
+            gap: 48px;
+            align-items: start;
+        }
+
+        .dicat-hoja-envoltorio {
+            position: sticky;
+            top: 96px;
+            background: #ECECEE;
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 28px;
+        }
+        .dicat-hoja {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 8px 22px rgba(46, 50, 56, .18));
+        }
+        .dicat-hoja .zona { cursor: pointer; }
+        .dicat-hoja .zona rect.golpe { fill: transparent; }
+        .dicat-hoja .zona .marco {
+            fill: rgba(227, 30, 36, 0);
+            stroke: rgba(227, 30, 36, 0);
+            stroke-width: 1.4;
+            transition: fill .28s, stroke .28s;
+        }
+        .dicat-hoja .zona:hover .marco { fill: rgba(227, 30, 36, .08); stroke: rgba(227, 30, 36, .4); }
+        .dicat-hoja .zona.activa .marco { fill: rgba(227, 30, 36, .13); stroke: var(--rojo-caech); }
+        .dicat-hoja .zona .chincheta circle {
+            fill: #FFFFFF;
+            stroke: var(--grafito-sua);
+            stroke-width: 1.2;
+            transition: fill .28s, stroke .28s;
+        }
+        .dicat-hoja .zona .chincheta text {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 7.5px;
+            font-weight: 700;
+            fill: var(--grafito-med);
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+            transition: fill .28s;
+        }
+        .dicat-hoja .zona.activa .chincheta circle { fill: var(--rojo-caech); stroke: var(--rojo-caech); }
+        .dicat-hoja .zona.activa .chincheta text { fill: #FFFFFF; }
+        .dicat-hoja .zona:focus { outline: none; }
+        .dicat-hoja .zona:focus-visible .marco { stroke: #1565C0; fill: rgba(21, 101, 192, .1); }
+
+        .dicat-hoja-pie {
+            margin: 18px 0 0;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9.5px;
+            font-weight: 400;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--grafito-sua);
+        }
+        .dicat-hoja-pie i { color: var(--rojo-caech); margin-right: 7px; }
+
+        /* --- Índice --- */
+        .dicat-indice {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 28px;
+        }
+        .dicat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--grafito-med);
+            background: transparent;
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 9px 14px;
+            cursor: pointer;
+            transition: all .22s;
+        }
+        .dicat-chip .num {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--grafito-sua);
+            transition: color .22s;
+        }
+        .dicat-chip:hover { border-color: var(--rojo-caech); color: var(--grafito); }
+        .dicat-chip[aria-selected="true"] {
+            background: var(--grafito);
+            border-color: var(--grafito);
+            color: #fff;
+        }
+        .dicat-chip[aria-selected="true"] .num { color: var(--rojo-caech); }
+
+        /* --- Panel --- */
+        .dicat-panel {
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-top: 2px solid var(--rojo-caech);
+            border-radius: var(--radio);
+            padding: 34px;
+            min-height: 380px;
+        }
+        .dicat-panel[data-animando="si"] .dicat-panel-cuerpo { opacity: 0; transform: translateY(6px); }
+        .dicat-panel-cuerpo { transition: opacity .28s, transform .28s; }
+
+        .dicat-panel-cabecera { margin-bottom: 22px; }
+        .dicat-panel-seccion {
+            display: block;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: var(--tracking-caps);
+            text-transform: uppercase;
+            color: var(--rojo-caech);
+            margin-bottom: 10px;
+        }
+        .dicat-panel-cabecera h3 {
+            font-size: 25px;
+            font-weight: 700;
+            letter-spacing: -.03em;
+            line-height: 1.2;
+            color: var(--grafito);
+        }
+        .dicat-panel-cabecera h3::after {
+            content: '';
+            display: block;
+            width: 72px;
+            height: 1.5px;
+            margin-top: 18px;
+            background: var(--rojo-caech);
+        }
+        .dicat-panel-cuerpo > p {
+            color: var(--grafito-med);
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 22px;
+        }
+        .dicat-panel-cuerpo > p strong { color: var(--grafito); font-weight: 600; }
+
+        .dicat-datos {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        .dicat-datos li {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            color: var(--grafito-med);
+            background: var(--hueso);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 8px 13px;
+        }
+
+        .dicat-nota {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            border-left: 2px solid var(--rojo-caech);
+            padding: 2px 0 2px 16px;
+            font-size: 13.5px;
+            line-height: 1.65;
+            color: var(--grafito-med);
+        }
+        .dicat-nota i { color: var(--rojo-caech); margin-top: 3px; flex-shrink: 0; }
+        .dicat-nota p { margin: 0; }
+
+        .dicat-fuente {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 22px;
+            font-size: 9.5px;
+            font-weight: 500;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: var(--grafito-sua);
+        }
+        .dicat-fuente i { color: var(--rojo-caech); }
+
+        .dicat-navegacion {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 30px;
+            padding-top: 22px;
+            border-top: 1px solid var(--borde);
+        }
+        .dicat-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--grafito-med);
+            background: none;
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 9px 15px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .dicat-nav-btn:hover:not(:disabled) { border-color: var(--rojo-caech); color: var(--rojo-caech); }
+        .dicat-nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+        .dicat-contador {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            color: var(--grafito-sua);
+            font-variant-numeric: tabular-nums;
+        }
+
+        @media (max-width: 900px) {
+            .dicat-explorador { grid-template-columns: 1fr; gap: 30px; }
+            .dicat-hoja-envoltorio { position: static; order: 2; padding: 18px; }
+            .dicat-panel { min-height: 0; order: 1; padding: 24px; }
+            .hero { padding-top: 90px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-eyebrow .punto { animation: none; }
+            .about-card, .feature-card, .integration-item,
+            .dicat-panel-cuerpo, .btn, .feature-icon,
+            .about-icon, .integration-icon { transition: none; }
+            .about-card:hover, .feature-card:hover,
+            .integration-item:hover, .btn:hover { transform: none; }
+        }
     </style>
 </head>
 <body>
+    <div class="progreso-lectura" aria-hidden="true"></div>
+
     <!-- Header -->
     <header>
         <div class="container">
             <nav class="navbar">
                 <div class="logo">
-                    <img src="LOGO/Isologo.jpg" alt="CAE - Provincial de Chimborazo" class="logo-img">
-                    <span style="display:inline-flex;align-items:center;background:#8B0000;color:#fff;font-size:10px;font-weight:700;letter-spacing:.8px;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle">BETA</span>
+                    <img src="LOGO/logo-caech.png" alt="CAE-Ch · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo"
+                         class="logo-img" width="520" height="188">
                 </div>
                 <button class="hamburger" id="hamburger-btn" aria-label="Abrir menú">
                     <span></span><span></span><span></span>
@@ -1301,10 +1894,12 @@
                     <li><a href="#nosotros">Nosotros</a></li>
                     <li><a href="#plataforma">Plataforma</a></li>
                     <li><a href="#cursos" id="cursos-link">Cursos</a></li>
+                    <li><a href="#dicat-interactivo">El DICAT</a></li>
+                    <li data-caech="con-sesion" hidden><a href="geovisor.html">GeoVisor</a></li>
                     <li><a href="#solicitar">Solicitar DICAT</a></li>
                     <li><a href="#integracion">Integración</a></li>
                     <li><a href="#contacto">Contacto</a></li>
-                    <li><a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer" style="color:#8B0000;font-weight:700"><i class="fas fa-microscope" style="margin-right:4px"></i>Investigación</a></li>
+                    <li><a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer" style="color:#E31E24;font-weight:700"><i class="fas fa-microscope" style="margin-right:4px"></i>Investigación</a></li>
                 </ul>
                 <div class="nav-buttons">
                     <a href="mailto:caechoficial@gmail.com" class="btn btn-outline"><i class="fas fa-envelope"></i> Contacto</a>
@@ -1317,36 +1912,62 @@
     <section class="hero" id="inicio">
         <div class="container">
             <div class="hero-content">
-                <h1>Riobamba, Ecuador</h1>
-                <h2>Tecnología al Servicio del Territorio</h2>
-                <p>Plataforma de interoperabilidad que centraliza la información de instituciones públicas, automatizando la generación de reportes técnicos y diagnósticos de factibilidad con precisión geoespacial.</p>
+                <span class="hero-eyebrow"><span class="punto"></span> Catastro actualizado a septiembre 2026</span>
+                <h1>El predio de Riobamba,<br><span class="destacado">leído por completo</span></h1>
+                <hr class="filete-rojo hero-filete">
+                <h2>Colegio de Arquitectos del Ecuador<br>Provincial de <strong>Chimborazo</strong></h2>
+                <p>Reunimos en un solo lugar el catastro del GADMR, el PUGS, la vialidad y las redes de EMAPAR y EERSA. De ahí sale el <strong>DICAT</strong>: el diagnóstico catastral y territorial de un predio, medido y con cada dato trazable hasta la institución que lo publica.</p>
                 <div class="hero-buttons">
-                    <a href="#solicitar" class="btn"><i class="fas fa-file-lines"></i> Solicitar Reporte DICAT</a>
-                    <a href="#integracion" class="btn btn-secondary"><i class="fas fa-layer-group"></i> Ver Fuentes de Datos</a>
+                    <a href="#dicat-interactivo" class="btn"><i class="fas fa-file-lines"></i> Ver qué contiene el DICAT</a>
+                    <a href="#integracion" class="btn btn-secondary"><i class="fas fa-layer-group"></i> Fuentes de datos</a>
                     <a href="#cursos" class="btn btn-secondary" id="cursos-hero-btn">Ver Cursos</a>
                 </div>
                 <div class="stats">
                     <div class="stat-item">
-                        <div class="stat-number">6</div>
-                        <div class="stat-label">Fuentes de Datos Activas</div>
+                        <div class="stat-number" data-contador="7" data-sufijo="">0</div>
+                        <div class="stat-label">Capas de datos activas</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">SIG</div>
-                        <div class="stat-label">Motor Geoespacial</div>
+                        <div class="stat-number" data-contador="8" data-sufijo="">0</div>
+                        <div class="stat-label">Secciones del reporte</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">UTM 17S</div>
+                        <div class="stat-label">Todo medido en plano</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">BIM</div>
-                        <div class="stat-label">En Hoja de Ruta</div>
+                        <div class="stat-label">En hoja de ruta</div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <svg class="hero-cordillera" viewBox="0 0 1440 170" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <!-- Cordillera lejana -->
+            <path d="M0 170V132l186-30 150 26 176-44 132 22 150-46 128 34 148-26 190 40 180-22v86z"
+                  fill="#FFFFFF" fill-opacity=".05"/>
+            <!-- Chimborazo: cumbre dominante y su filete rojo -->
+            <path d="M0 170v-22l210-26 168 20 158-52 120 28 168-88 136 96 152-34 158 42 170-18v54z"
+                  fill="#FFFFFF" fill-opacity=".08"/>
+            <path d="M656 118 824 30 960 126" fill="none" stroke="#E31E24" stroke-opacity=".9" stroke-width="2.2"/>
+            <path d="M763 62 824 30 869 62 851 55 836 66 818 53 800 65 782 56z" fill="#FFFFFF" fill-opacity=".5"/>
+            <!-- Catedral de Riobamba al pie -->
+            <g fill="#FFFFFF" fill-opacity=".22" transform="translate(600 92)">
+                <rect x="0" y="14" width="7" height="26"/><path d="M0 14 3.5 4 7 14z"/>
+                <rect x="41" y="14" width="7" height="26"/><path d="M41 14 44.5 4 48 14z"/>
+                <path d="M12 40V26a12 12 0 0 1 24 0v14z"/>
+                <rect x="23" y="6" width="2" height="9"/><rect x="20" y="9" width="8" height="2"/>
+                <rect x="-6" y="38" width="60" height="4"/>
+            </g>
+        </svg>
     </section>
 
     <!-- Sobre CAE-CH -->
     <section class="section" id="nosotros">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">Quiénes somos</span>
                 <h2>Sobre CAE-CH</h2>
                 <p>El Colegio de Arquitectos del Ecuador - Provincial de Chimborazo se consolida como referente en innovación territorial, impulsando tecnologías que optimizan la gestión integral del territorio y fortalecen la cohesión entre la planificación técnica y su realidad espacial.</p>
             </div>
@@ -1374,6 +1995,7 @@
     <section class="section section-dark" id="plataforma">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">La plataforma</span>
                 <h2>Infraestructura Tecnológica de Vanguardia</h2>
                 <p>Una plataforma web de interoperabilidad diseñada para centralizar datos georreferenciados, automatizar procesos técnicos y escalar hacia la integración de modelos BIM en el desarrollo arquitectónico y urbano contemporáneo.</p>
             </div>
@@ -1399,7 +2021,7 @@
                     </ul>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-file-chart-line"></i></div>
+                    <div class="feature-icon"><i class="fas fa-file-invoice"></i></div>
                     <h3>Automatización de Reportes (DICAT)</h3>
                     <p>Generación inmediata del Diagnóstico de Información Catastral y Territorial en PDF, transformando procesos manuales en flujos de trabajo ágiles y estandarizados.</p>
                     <ul class="feature-list">
@@ -1408,8 +2030,8 @@
                         <li>Código QR que abre el predio en el GeoVisor</li>
                     </ul>
                 </div>
-                <div class="feature-card" style="border-top:4px solid #8B0000; cursor:pointer;" onclick="window.open('RESEARCH/investigacion.html','_blank')">
-                    <div class="feature-icon" style="background:rgba(139,0,0,.1);color:#8B0000"><i class="fas fa-microscope"></i></div>
+                <div class="feature-card" style="border-top:4px solid #E31E24; cursor:pointer;" onclick="window.open('RESEARCH/investigacion.html','_blank')">
+                    <div class="feature-icon" style="background:rgba(227,30,36,.1);color:#E31E24"><i class="fas fa-microscope"></i></div>
                     <h3>Investigación Territorial</h3>
                     <p>Detección de construcciones no declaradas en el catastro de Riobamba mediante contraste entre datos catastrales y edificaciones identificadas por inteligencia artificial (<strong>Google Open Buildings 2024</strong>).</p>
                     <ul class="feature-list">
@@ -1419,7 +2041,7 @@
                     </ul>
                     <div style="margin-top:12px">
                         <a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer"
-                           style="display:inline-flex;align-items:center;gap:6px;background:#8B0000;color:#fff;border-radius:6px;padding:7px 16px;font-size:.82rem;font-weight:700;text-decoration:none">
+                           style="display:inline-flex;align-items:center;gap:6px;background:#E31E24;color:#fff;border-radius:4px;padding:7px 16px;font-size:.82rem;font-weight:700;text-decoration:none">
                             <i class="fas fa-chart-bar"></i> Ver análisis
                         </a>
                     </div>
@@ -1442,6 +2064,7 @@
     <section class="section courses-section" id="cursos">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">Formación</span>
                 <h2>Cursos y Capacitaciones</h2>
                 <p>Amplía tus conocimientos con nuestros cursos especializados para arquitectos</p>
             </div>
@@ -1496,6 +2119,7 @@
     <section class="section" id="funcionamiento">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">El proceso</span>
                 <h2>¿Cómo Funciona?</h2>
                 <p>Del dato institucional al informe del predio, en cuatro pasos</p>
             </div>
@@ -1528,6 +2152,7 @@
     <section class="section section-dark">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">De dónde sale cada cifra</span>
                 <h2>Transparencia y Trazabilidad</h2>
                 <p>Cada cifra del reporte se puede rastrear hasta la institución que la publica y hasta el método con el que se midió.</p>
             </div>
@@ -1555,6 +2180,7 @@
     <section class="section" id="integracion">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">Fuentes de datos</span>
                 <h2>Integración de Datos Institucionales</h2>
                 <p>Unificamos información georreferenciada de múltiples instituciones para proporcionar una visión completa del contexto de cada proyecto arquitectónico.</p>
             </div>
@@ -1609,11 +2235,200 @@
     </section>
 
     <!-- ══════════════════════════════════════════════════════
+         QUÉ CONTIENE EL DICAT · explorador interactivo
+    ══════════════════════════════════════════════════════ -->
+    <section class="section" id="dicat-interactivo">
+        <div class="container">
+            <div class="section-title">
+                <span class="eyebrow">El reporte, por dentro</span>
+                <h2>Qué contiene el DICAT</h2>
+                <p>Ocho secciones, de la ficha catastral al plano acotado. Toca cualquier bloque de la hoja para ver qué responde.</p>
+            </div>
+
+            <div class="dicat-explorador">
+                <!-- ── Maqueta de la hoja ───────────────────────── -->
+                <div class="dicat-hoja-envoltorio">
+                    <svg class="dicat-hoja" viewBox="0 0 300 424" role="img"
+                         aria-label="Esquema de las ocho secciones del reporte DICAT. Use el índice de secciones para navegarlas.">
+                        <defs>
+                            <linearGradient id="dicat-cab" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#E31E24"/>
+                                <stop offset="100%" stop-color="#B2141A"/>
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Hoja -->
+                        <rect x="0" y="0" width="300" height="424" rx="4" fill="#FFFFFF"/>
+
+                        <!-- 1 · Encabezado y QR -->
+                        <g class="zona" data-zona="1" role="button" tabindex="0" aria-label="Sección 1: encabezado, número de informe y código QR">
+                            <rect class="golpe" x="6" y="12" width="288" height="44"/>
+                            <rect x="24" y="16" width="258" height="34" rx="2" fill="url(#dicat-cab)"/>
+                            <rect x="30" y="23" width="52" height="6" rx="1" fill="#FFFFFF" opacity=".95"/>
+                            <rect x="30" y="33" width="80" height="4" rx="1" fill="#FFFFFF" opacity=".55"/>
+                            <rect x="30" y="40" width="62" height="3" rx="1" fill="#FFFFFF" opacity=".38"/>
+                            <rect x="253" y="21" width="24" height="24" rx="1" fill="#FFFFFF"/>
+                            <path d="M256 24h6v6h-6zM268 24h6v6h-6zM256 36h6v6h-6zM266 33h3v3h-3zM271 36h3v3h-3zM266 39h3v3h-3z" fill="#E31E24"/>
+                            <rect class="marco" x="20" y="13" width="266" height="40"/>
+                            <g class="chincheta"><circle cx="11" cy="33" r="8"/><text x="11" y="33">1</text></g>
+                        </g>
+
+                        <!-- 2 · Propietario y predio -->
+                        <g class="zona" data-zona="2" role="button" tabindex="0" aria-label="Sección 2: datos del propietario y del predio">
+                            <rect class="golpe" x="6" y="58" width="288" height="50"/>
+                            <rect x="24" y="62" width="76" height="5" rx="1" fill="#E31E24"/>
+                            <rect x="24" y="73" width="120" height="4" rx="1" fill="#D8D8DC"/>
+                            <rect x="152" y="73" width="130" height="4" rx="1" fill="#D8D8DC"/>
+                            <rect x="24" y="82" width="104" height="4" rx="1" fill="#D8D8DC"/>
+                            <rect x="152" y="82" width="112" height="4" rx="1" fill="#D8D8DC"/>
+                            <rect x="24" y="92" width="124" height="9" rx="1.5" fill="#FDEAEA"/>
+                            <rect x="152" y="92" width="130" height="9" rx="1.5" fill="#FDEAEA"/>
+                            <rect x="28" y="95" width="60" height="3" rx="1" fill="#C08A8A"/>
+                            <rect x="156" y="95" width="66" height="3" rx="1" fill="#C08A8A"/>
+                            <rect class="marco" x="20" y="59" width="266" height="46"/>
+                            <g class="chincheta"><circle cx="11" cy="82" r="8"/><text x="11" y="82">2</text></g>
+                        </g>
+
+                        <!-- 3 · Colindantes y linderos -->
+                        <g class="zona" data-zona="3" role="button" tabindex="0" aria-label="Sección 3: colindantes y dimensiones de linderos">
+                            <rect class="golpe" x="6" y="110" width="288" height="44"/>
+                            <rect x="24" y="114" width="88" height="5" rx="1" fill="#E31E24"/>
+                            <rect x="24" y="124" width="258" height="8" rx="1" fill="#E31E24" opacity=".85"/>
+                            <rect x="24" y="133" width="258" height="7" fill="#F4F4F6"/>
+                            <rect x="24" y="141" width="258" height="7" fill="#FBFBFC"/>
+                            <rect x="28" y="135" width="20" height="3" rx="1" fill="#9A9AA2"/>
+                            <rect x="60" y="135" width="96" height="3" rx="1" fill="#C6C6CC"/>
+                            <rect x="240" y="135" width="26" height="3" rx="1" fill="#C6C6CC"/>
+                            <rect x="28" y="143" width="20" height="3" rx="1" fill="#9A9AA2"/>
+                            <rect x="60" y="143" width="112" height="3" rx="1" fill="#C6C6CC"/>
+                            <rect x="240" y="143" width="26" height="3" rx="1" fill="#C6C6CC"/>
+                            <rect class="marco" x="20" y="111" width="266" height="40"/>
+                            <g class="chincheta"><circle cx="11" cy="131" r="8"/><text x="11" y="131">3</text></g>
+                        </g>
+
+                        <!-- 4 · Factibilidad de servicios -->
+                        <g class="zona" data-zona="4" role="button" tabindex="0" aria-label="Sección 4: factibilidad de servicios e infraestructura">
+                            <rect class="golpe" x="6" y="156" width="288" height="44"/>
+                            <rect x="24" y="160" width="96" height="5" rx="1" fill="#1565C0"/>
+                            <rect x="24" y="170" width="258" height="8" rx="1" fill="#1565C0" opacity=".85"/>
+                            <rect x="24" y="179" width="62" height="15" fill="#F0F6FD"/>
+                            <rect x="88" y="179" width="194" height="15" fill="#FBFBFC"/>
+                            <rect x="28" y="183" width="44" height="3" rx="1" fill="#7FA8D4"/>
+                            <rect x="28" y="189" width="36" height="3" rx="1" fill="#9FC0E0"/>
+                            <rect x="92" y="183" width="150" height="3" rx="1" fill="#C6C6CC"/>
+                            <rect x="92" y="189" width="120" height="3" rx="1" fill="#D8D8DC"/>
+                            <rect class="marco" x="20" y="157" width="266" height="40"/>
+                            <g class="chincheta"><circle cx="11" cy="177" r="8"/><text x="11" y="177">4</text></g>
+                        </g>
+
+                        <!-- 5 · Afectación vial -->
+                        <g class="zona" data-zona="5" role="button" tabindex="0" aria-label="Sección 5: afectación vial por línea de fábrica">
+                            <rect class="golpe" x="6" y="202" width="288" height="38"/>
+                            <rect x="24" y="206" width="104" height="5" rx="1" fill="#E31E24"/>
+                            <rect x="24" y="216" width="258" height="18" rx="2" fill="#FFF4E5"/>
+                            <path d="M28 220h64v10h-64z" fill="#F5A623" opacity=".5"/>
+                            <rect x="98" y="221" width="86" height="3" rx="1" fill="#B98A3E"/>
+                            <rect x="98" y="227" width="120" height="3" rx="1" fill="#D2B383"/>
+                            <rect x="238" y="221" width="40" height="9" rx="1.5" fill="#F5A623" opacity=".28"/>
+                            <rect class="marco" x="20" y="203" width="266" height="34"/>
+                            <g class="chincheta"><circle cx="11" cy="220" r="8"/><text x="11" y="220">5</text></g>
+                        </g>
+
+                        <!-- 6 · Detección IA -->
+                        <g class="zona" data-zona="6" role="button" tabindex="0" aria-label="Sección 6: detección de construcciones por inteligencia artificial">
+                            <rect class="golpe" x="6" y="242" width="288" height="34"/>
+                            <rect x="24" y="246" width="92" height="5" rx="1" fill="#6C2FA0"/>
+                            <rect x="24" y="256" width="258" height="14" rx="2" fill="#F6F0FC"/>
+                            <rect x="29" y="260" width="9" height="7" rx="1" fill="#9B59B6" opacity=".75"/>
+                            <rect x="41" y="260" width="7" height="7" rx="1" fill="#9B59B6" opacity=".5"/>
+                            <rect x="51" y="260" width="11" height="7" rx="1" fill="#9B59B6" opacity=".62"/>
+                            <rect x="72" y="261" width="118" height="3" rx="1" fill="#A98BC0"/>
+                            <rect x="72" y="266" width="86" height="3" rx="1" fill="#C9B6D8"/>
+                            <rect class="marco" x="20" y="243" width="266" height="30"/>
+                            <g class="chincheta"><circle cx="11" cy="258" r="8"/><text x="11" y="258">6</text></g>
+                        </g>
+
+                        <!-- 7 · PUGS y capas activas -->
+                        <g class="zona" data-zona="7" role="button" tabindex="0" aria-label="Sección 7: regulación urbanística PUGS y capas activas">
+                            <rect class="golpe" x="6" y="278" width="288" height="38"/>
+                            <rect x="24" y="282" width="110" height="5" rx="1" fill="#E31E24"/>
+                            <rect x="24" y="292" width="258" height="7" rx="1" fill="#E31E24" opacity=".85"/>
+                            <rect x="24" y="300" width="258" height="6" fill="#F4F4F6"/>
+                            <rect x="24" y="307" width="258" height="6" fill="#FBFBFC"/>
+                            <rect x="28" y="302" width="34" height="2.5" rx="1" fill="#9A9AA2"/>
+                            <rect x="72" y="302" width="30" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="112" y="302" width="150" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="28" y="309" width="34" height="2.5" rx="1" fill="#9A9AA2"/>
+                            <rect x="72" y="309" width="30" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="112" y="309" width="128" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect class="marco" x="20" y="279" width="266" height="34"/>
+                            <g class="chincheta"><circle cx="11" cy="296" r="8"/><text x="11" y="296">7</text></g>
+                        </g>
+
+                        <!-- 8 · Vértices UTM y planos -->
+                        <g class="zona" data-zona="8" role="button" tabindex="0" aria-label="Sección 8: vértices en coordenadas UTM y planos del predio">
+                            <rect class="golpe" x="6" y="318" width="288" height="94"/>
+                            <rect x="24" y="322" width="120" height="5" rx="1" fill="#E31E24"/>
+                            <!-- tabla de coordenadas -->
+                            <rect x="24" y="332" width="112" height="7" rx="1" fill="#E31E24" opacity=".85"/>
+                            <rect x="24" y="340" width="112" height="6" fill="#F4F4F6"/>
+                            <rect x="24" y="347" width="112" height="6" fill="#FBFBFC"/>
+                            <rect x="24" y="354" width="112" height="6" fill="#F4F4F6"/>
+                            <rect x="24" y="361" width="112" height="6" fill="#FBFBFC"/>
+                            <rect x="28" y="342" width="10" height="2.5" rx="1" fill="#9A9AA2"/>
+                            <rect x="46" y="342" width="36" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="90" y="342" width="36" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="28" y="349" width="10" height="2.5" rx="1" fill="#9A9AA2"/>
+                            <rect x="46" y="349" width="36" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="90" y="349" width="36" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="28" y="356" width="10" height="2.5" rx="1" fill="#9A9AA2"/>
+                            <rect x="46" y="356" width="36" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <rect x="90" y="356" width="36" height="2.5" rx="1" fill="#C6C6CC"/>
+                            <!-- plano del predio -->
+                            <rect x="146" y="332" width="136" height="72" rx="2" fill="#EEF2EC"/>
+                            <path d="M146 372h136M146 352h136M180 332v72M214 332v72M248 332v72" stroke="#DCE3D8" stroke-width="1"/>
+                            <path d="M172 348 L246 342 L254 384 L178 390 Z" fill="#FFEB3B" fill-opacity=".55" stroke="#E31E24" stroke-width="1.6"/>
+                            <circle cx="172" cy="348" r="2" fill="#E31E24"/>
+                            <circle cx="246" cy="342" r="2" fill="#E31E24"/>
+                            <circle cx="254" cy="384" r="2" fill="#E31E24"/>
+                            <circle cx="178" cy="390" r="2" fill="#E31E24"/>
+                            <rect class="marco" x="20" y="319" width="266" height="90"/>
+                            <g class="chincheta"><circle cx="11" cy="364" r="8"/><text x="11" y="364">8</text></g>
+                        </g>
+
+                        <rect x="24" y="414" width="258" height="2" rx="1" fill="#E4E4E8"/>
+                    </svg>
+                    <p class="dicat-hoja-pie"><i class="fas fa-hand-pointer"></i> Esquema ilustrativo &mdash; toca un bloque para leer qué responde</p>
+                </div>
+
+                <!-- ── Panel de explicación ─────────────────────── -->
+                <div>
+                    <div class="dicat-indice" role="tablist" aria-label="Secciones del reporte DICAT" id="dicat-indice"></div>
+
+                    <div class="dicat-panel" id="dicat-panel" role="tabpanel" aria-live="polite">
+                        <div class="dicat-panel-cuerpo" id="dicat-panel-cuerpo"></div>
+                        <div class="dicat-navegacion">
+                            <button class="dicat-nav-btn" id="dicat-anterior" type="button">
+                                <i class="fas fa-arrow-left"></i> Anterior
+                            </button>
+                            <span class="dicat-contador" id="dicat-contador">1 / 8</span>
+                            <button class="dicat-nav-btn" id="dicat-siguiente" type="button">
+                                Siguiente <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
          SOLICITAR REPORTE DICAT
     ══════════════════════════════════════════════════════ -->
     <section class="section" id="solicitar">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">Cómo obtenerlo</span>
                 <h2>Reporte DICAT</h2>
                 <p>Diagnóstico de Información Catastral y Territorial</p>
             </div>
@@ -1643,6 +2458,27 @@
                         </a>
                         <p class="dicat-via-nota">caechoficial@gmail.com</p>
                     </div>
+                    <!-- Acceso de afiliados. Nace oculto: solo aparece cuando el
+                         control de acceso esta desplegado y activo, y el enlace al
+                         GeoVisor se revela recien con la sesion iniciada. -->
+                    <div class="dicat-via" data-caech="modulo" hidden style="border-top-color:var(--rojo-caech)">
+                        <div class="dicat-via-icon" style="color:var(--rojo-caech)"><i class="fas fa-map-location-dot"></i></div>
+                        <h3>Afiliados del CAE-CH</h3>
+                        <p class="dicat-via-destacado" style="color:var(--rojo-caech)">Acceso al GeoVisor</p>
+                        <p>Con su cuenta de afiliado abre el GeoVisor, genera el DICAT y exporta el predio en DXF y CSV.</p>
+                        <div data-caech="sin-sesion" hidden>
+                            <button type="button" class="btn dicat-via-btn" onclick="caechAcceso.abrirIngreso()">
+                                <i class="fas fa-user-lock"></i> Ingresar con mi cuenta
+                            </button>
+                            <p class="dicat-via-nota">Las credenciales se entregan en la sede del CAE-CH</p>
+                        </div>
+                        <div data-caech="con-sesion" hidden>
+                            <a href="geovisor.html" class="btn dicat-via-btn">
+                                <i class="fas fa-map-location-dot"></i> Abrir el GeoVisor
+                            </a>
+                            <p class="dicat-via-nota">Sesión iniciada · caduca a las 8 horas</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="dicat-aviso">
                     <i class="fas fa-info-circle"></i>
@@ -1662,6 +2498,7 @@
     <section class="section" id="contacto">
         <div class="container">
             <div class="section-title">
+                <span class="eyebrow">Hablemos</span>
                 <h2>Contáctanos</h2>
                 <p>¿Tienes preguntas sobre la plataforma? Estamos aquí para ayudarte</p>
             </div>
@@ -1874,6 +2711,210 @@
             spySections.forEach(s => spyObserver.observe(s));
 
         });
+    </script>
+
+    <!-- ══════════════════════════════════════════════════════
+         Explorador del DICAT · contadores · progreso de lectura
+    ══════════════════════════════════════════════════════ -->
+    <script>
+    (function () {
+        'use strict';
+
+        // ── Contenido de las ocho secciones ──────────────────────
+        // Cada entrada corresponde a una seccion real del PDF que arma
+        // generarDICAT() en geovisor.html; si alli cambia la estructura,
+        // esta lista se actualiza con ella.
+        const SECCIONES = [
+            {
+                n: 1, chip: 'Portada', seccion: 'Encabezado', icono: 'fa-qrcode',
+                titulo: 'Número de informe y código QR',
+                texto: 'Cada reporte lleva su número, su fecha y una vigencia de dos años. El código QR impreso abre ese mismo predio en el GeoVisor, para comprobar en pantalla que corresponde al predio declarado.',
+                datos: ['Número de informe', 'Vigencia de 2 años', 'QR verificable'],
+                nota: 'El DICAT es un documento técnico-informativo del CAE-CH. No reemplaza los certificados oficiales que emite el GADMR.',
+                fuente: 'CAE-CH'
+            },
+            {
+                n: 2, chip: 'Predio', seccion: 'Secciones 1 y 2', icono: 'fa-id-card',
+                titulo: 'Datos del propietario y del predio',
+                texto: 'La ficha catastral y el dato que más discusiones evita: la superficie medida sobre la geometría frente a la declarada en catastro o escritura. Cuando no coinciden, el reporte lo muestra.',
+                datos: ['Titular y clave catastral', 'Superficie medida', 'Superficie declarada'],
+                fuente: 'Catastro GADMR'
+            },
+            {
+                n: 3, chip: 'Linderos', seccion: 'Sección 3', icono: 'fa-vector-square',
+                titulo: 'Colindantes y linderos',
+                texto: 'Los cuatro rumbos del predio: quién colinda por cada lado y cuánto mide ese lindero.',
+                datos: ['Norte, sur, este y oeste', 'Dimensión de cada lindero', 'Vías colindantes'],
+                fuente: 'Catastro GADMR'
+            },
+            {
+                n: 4, chip: 'Servicios', seccion: 'Sección 4', icono: 'fa-plug-circle-check',
+                titulo: 'Factibilidad de servicios',
+                texto: 'Responde la pregunta que abre cualquier anteproyecto: si el predio tiene servicios. Se cruza el polígono contra las redes de EMAPAR y la infraestructura de EERSA.',
+                datos: ['Agua potable', 'Alcantarillado', 'Red eléctrica'],
+                nota: 'Información referencial: la factibilidad definitiva de conexión la certifica cada empresa prestadora.',
+                fuente: 'EMAPAR · EERSA'
+            },
+            {
+                n: 5, chip: 'Afectación vial', seccion: 'Sección 4C', icono: 'fa-road-barrier',
+                titulo: 'Afectación por línea de fábrica',
+                texto: 'Si sobre el predio pesa una reserva vial, el reporte la cuantifica en vez de mencionarla: cuánta superficie queda comprometida y cuánta sigue siendo edificable.',
+                datos: ['Área afectada', 'Desglose por frente', 'Área útil remanente'],
+                nota: 'La afectación definitiva la confirma la línea de fábrica oficial del GADMR.',
+                fuente: 'Certificación de ejes viales'
+            },
+            {
+                n: 6, chip: 'Detección IA', seccion: 'Sección 4D', icono: 'fa-robot',
+                titulo: 'Construcciones detectadas por IA',
+                texto: 'Contrasta las huellas de edificación detectadas sobre imagen satelital contra lo que el catastro tiene registrado, y señala las que no constan.',
+                datos: ['Construcciones en el predio', 'Sin registro catastral', 'Nivel de confianza'],
+                nota: 'Es una señal para verificar en campo, no una declaración de irregularidad: el modelo detecta techos, no permisos.',
+                fuente: 'Google Open Buildings 2024'
+            },
+            {
+                n: 7, chip: 'Normativa', seccion: 'Secciones 4E y 5', icono: 'fa-scale-balanced',
+                titulo: 'Regulación urbanística',
+                texto: 'La zonificación del Plan de Uso y Gestión del Suelo que aplica al predio y los atributos de cada capa que interseca el polígono.',
+                datos: ['Zonificación PUGS', 'Usos permitidos', 'Capas que intersecan'],
+                fuente: 'PUGS · GADMR'
+            },
+            {
+                n: 8, chip: 'Planos', seccion: 'Secciones 6, 7 y 8', icono: 'fa-drafting-compass',
+                titulo: 'Coordenadas y planos del predio',
+                texto: 'El cierre técnico: los vértices en coordenadas UTM WGS84 17S, el plano georreferenciado y el plano vectorial acotado, listo para el tablero de CAD.',
+                datos: ['Vértices en UTM 17S', 'Plano georreferenciado', 'Plano acotado', 'Exportación DXF y CSV'],
+                fuente: 'EPSG:32717'
+            }
+        ];
+
+        const indice = document.getElementById('dicat-indice');
+        const panel = document.getElementById('dicat-panel');
+        const cuerpo = document.getElementById('dicat-panel-cuerpo');
+        const contador = document.getElementById('dicat-contador');
+        const btnAnterior = document.getElementById('dicat-anterior');
+        const btnSiguiente = document.getElementById('dicat-siguiente');
+        const zonas = document.querySelectorAll('.dicat-hoja .zona');
+
+        if (!indice || !panel || !cuerpo) return;
+
+        // -1 y no 0: asi el primer mostrar(0) no lo corta el guard de
+        // "ya estas en esa seccion" y el panel arranca pintado.
+        let actual = -1;
+        const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // ── Índice de chips ──────────────────────────────────
+        const chips = SECCIONES.map(function (s, i) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'dicat-chip';
+            b.setAttribute('role', 'tab');
+            b.setAttribute('aria-selected', 'false');
+            b.innerHTML = '<span class="num">' + s.n + '</span>' + s.chip;
+            b.addEventListener('click', function () { mostrar(i, true); });
+            b.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault(); mostrar((i + 1) % SECCIONES.length, true, true);
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault(); mostrar((i - 1 + SECCIONES.length) % SECCIONES.length, true, true);
+                }
+            });
+            indice.appendChild(b);
+            return b;
+        });
+
+        // ── Zonas de la hoja ─────────────────────────────────
+        zonas.forEach(function (zona) {
+            const i = parseInt(zona.dataset.zona, 10) - 1;
+            zona.addEventListener('click', function () { mostrar(i, true); });
+            zona.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); mostrar(i, true); }
+            });
+        });
+
+        function pintar(s) {
+            const datos = s.datos.map(function (d) { return '<li>' + d + '</li>'; }).join('');
+            const nota = s.nota
+                ? '<div class="dicat-nota"><i class="fas fa-circle-info"></i><p>' + s.nota + '</p></div>'
+                : '';
+            cuerpo.innerHTML =
+                '<div class="dicat-panel-cabecera">' +
+                '  <span class="dicat-panel-seccion"><i class="fas ' + s.icono + '"></i> ' + s.seccion + '</span>' +
+                '  <h3>' + s.titulo + '</h3>' +
+                '</div>' +
+                '<p>' + s.texto + '</p>' +
+                '<ul class="dicat-datos">' + datos + '</ul>' +
+                nota +
+                '<span class="dicat-fuente"><i class="fas fa-database"></i>' + s.fuente + '</span>';
+        }
+
+        function mostrar(i, porGesto, moverFoco) {
+            if (i === actual && porGesto !== true) return;
+            actual = i;
+            const s = SECCIONES[i];
+
+            chips.forEach(function (c, j) { c.setAttribute('aria-selected', j === i ? 'true' : 'false'); });
+            zonas.forEach(function (z, j) { z.classList.toggle('activa', j === i); });
+            contador.textContent = (i + 1) + ' / ' + SECCIONES.length;
+            btnAnterior.disabled = i === 0;
+            btnSiguiente.disabled = i === SECCIONES.length - 1;
+
+            if (reducido) {
+                pintar(s);
+            } else {
+                panel.dataset.animando = 'si';
+                setTimeout(function () {
+                    pintar(s);
+                    panel.dataset.animando = 'no';
+                }, 160);
+            }
+
+            if (moverFoco) chips[i].focus();
+            if (porGesto && window.caechTrack) caechTrack('dicat_seccion_' + s.n);
+        }
+
+        btnAnterior.addEventListener('click', function () { if (actual > 0) mostrar(actual - 1, true); });
+        btnSiguiente.addEventListener('click', function () { if (actual < SECCIONES.length - 1) mostrar(actual + 1, true); });
+
+        mostrar(0);
+
+        // ── Contadores del hero ──────────────────────────────
+        const contadores = document.querySelectorAll('[data-contador]');
+        if (contadores.length) {
+            const obs = new IntersectionObserver(function (entradas, o) {
+                entradas.forEach(function (e) {
+                    if (!e.isIntersecting) return;
+                    o.unobserve(e.target);
+                    const destino = parseInt(e.target.dataset.contador, 10);
+                    const sufijo = e.target.dataset.sufijo || '';
+                    if (reducido) { e.target.textContent = destino + sufijo; return; }
+                    const inicio = performance.now();
+                    (function paso(ahora) {
+                        const t = Math.min((ahora - inicio) / 900, 1);
+                        // Suavizado de salida: arranca rápido y frena al final.
+                        const v = Math.round(destino * (1 - Math.pow(1 - t, 3)));
+                        e.target.textContent = v + sufijo;
+                        if (t < 1) requestAnimationFrame(paso);
+                    })(inicio);
+                });
+            }, { threshold: 0.5 });
+            contadores.forEach(function (c) { obs.observe(c); });
+        }
+
+        // ── Barra de progreso y cabecera compacta ────────────
+        const barra = document.querySelector('.progreso-lectura');
+        const cabecera = document.querySelector('header');
+        let pendiente = false;
+        window.addEventListener('scroll', function () {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(function () {
+                const alto = document.documentElement.scrollHeight - window.innerHeight;
+                if (barra) barra.style.transform = 'scaleX(' + (alto > 0 ? window.scrollY / alto : 0) + ')';
+                if (cabecera) cabecera.classList.toggle('compacta', window.scrollY > 8);
+                pendiente = false;
+            });
+        }, { passive: true });
+    })();
     </script>
 </body>
 </html>
