@@ -8,6 +8,8 @@
 //             cae-ch.org.ec todavia no resuelve.
 // ════════════════════════════════════════════════════════════════════
 
+const SALTO = String.fromCharCode(10);
+
 function escapar(s) {
     return String(s).replace(/[&<>"']/g, c => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -65,6 +67,36 @@ const PIE = `
     Colegio de Arquitectos del Ecuador &mdash; N&uacute;cleo Chimborazo<br>
     Este es un correo autom&aacute;tico; no responda a esta direcci&oacute;n.
   </p>`;
+
+export function plantillaVerificacionRegistro(enlace, nombre) {
+    const url = escapar(enlace);
+    const saludo = nombre ? escapar(String(nombre).split(/\s+/)[0]) : '';
+    return {
+        asunto: 'Confirme su correo para activar su cuenta del CAE-CH',
+        html: `
+  <div style="font-family:Montserrat,system-ui,-apple-system,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#2E3238">
+    <h2 style="color:#E31E24;margin:0 0 16px;font-size:20px;font-weight:700">Confirme su correo</h2>
+    <p style="line-height:1.65;margin:0 0 20px">
+      ${saludo ? 'Hola ' + saludo + ': su' : 'Su'} cuenta del CAE-CH ya est&aacute; creada.
+      Solo falta confirmar esta direcci&oacute;n para poder ingresar y abrir el GeoVisor.
+    </p>
+    <p style="margin:0 0 20px">
+      <a href="${url}" style="display:inline-block;background:#E31E24;color:#fff;text-decoration:none;padding:13px 24px;border-radius:4px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px">
+        Confirmar mi correo
+      </a>
+    </p>
+    <p style="font-size:13px;color:#565B63;line-height:1.6;margin:0">
+      El enlace dura 24 horas. Si usted no creo esta cuenta, ignore este mensaje:
+      sin confirmar, la cuenta no puede usarse.
+    </p>
+    ${PIE}
+  </div>`,
+        textoPlano:
+            'Confirme su correo para activar su cuenta del CAE-CH y abrir el GeoVisor.' + SALTO + SALTO
+            + enlace + SALTO + SALTO
+            + 'El enlace dura 24 horas. Si usted no creo esta cuenta, ignore este mensaje.'
+    };
+}
 
 export function plantillaPaseFreemium(enlace, minutos) {
     const url = escapar(enlace);

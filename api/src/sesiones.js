@@ -38,7 +38,10 @@ export function perfilPublico(fila) {
         nombre: fila.nombre,
         correo: fila.correo,
         rol: fila.rol,
+        origen: fila.origen,
         estado: fila.estado,
+        correo_verificado: !!fila.correo_verificado,
+        pdf_cortesia_usado: !!fila.pdf_cortesia_en,
         nucleo: fila.nucleo,
         registro_profesional: fila.registro_profesional,
         vigencia_hasta: fila.vigencia_hasta,
@@ -47,12 +50,25 @@ export function perfilPublico(fila) {
     };
 }
 
-/** Que formatos puede descargar este afiliado, aqui y ahora. */
+/**
+ * Que puede hacer esta cuenta, aqui y ahora.
+ *   visor : abrir el GeoVisor y consultar el mapa
+ *   pdf   : generar el DICAT. Los colegiados, sin limite; quien se
+ *           registro por su cuenta, una unica vez (reporte de cortesia)
+ *   dxf/csv : exportaciones, exclusivas de afiliados y administracion
+ */
 export function permisos(fila) {
-    const habilitado = fila.estado === 'activo'
+    const base = fila.estado === 'activo'
         && !fila.requiere_cambio_clave
+        && !!fila.correo_verificado
         && (!fila.vigencia_hasta || !vencido(fila.vigencia_hasta));
-    return { pdf: habilitado, dxf: habilitado, csv: habilitado };
+    const colegiado = base && (fila.rol === 'afiliado' || fila.rol === 'admin');
+    return {
+        visor: base,
+        pdf: colegiado || (base && !fila.pdf_cortesia_en),
+        dxf: colegiado,
+        csv: colegiado
+    };
 }
 
 /** Politica de contrasena. Devuelve null si es aceptable, o el motivo. */
@@ -130,6 +146,20 @@ export async function iniciarSesion(env, request, { usuario, clave }) {
             detalle: 'intento ' + intentos + (bloqueo ? ' - cuenta bloqueada' : ''), ip_hash
         });
         return generico;
+    }
+
+    // Se comprueba DESPUES de validar la clave: de lo contrario cualquiera
+    // podria averiguar que direcciones estan registradas.
+    if (!fila.correo_verificado) {
+        await registrarEvento(env, { tipo: 'ingreso_sin_verificar', afiliado_id: fila.id, usuario: login, ip_hash });
+        return {
+            estado: 403,
+            cuerpo: {
+                ok: false,
+                error: 'Confirme su correo electronico antes de ingresar. Le enviamos un enlace al registrarse.',
+                correo_sin_verificar: true
+            }
+        };
     }
 
     if (fila.vigencia_hasta && vencido(fila.vigencia_hasta)) {

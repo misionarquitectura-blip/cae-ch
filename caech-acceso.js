@@ -96,6 +96,9 @@
             border:0;border-radius:5px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
         .caech-acc-btn:hover{background:var(--rojo-oscuro,#8B0000)}
         .caech-acc-btn:disabled{background:#bbb;cursor:not-allowed}
+        .caech-acc-btn-sec{margin-top:8px;background:transparent;color:var(--rojo-medio,#A52A2A);
+            border:1px solid var(--rojo-medio,#A52A2A)}
+        .caech-acc-btn-sec:hover{background:var(--rojo-medio,#A52A2A);color:#fff}
         .caech-acc-aviso{padding:9px 11px;border-radius:5px;font-size:13px;line-height:1.5;margin-bottom:12px;display:none}
         .caech-acc-aviso.error{display:block;background:#FDECEA;color:#8B0000;border:1px solid #F5C6C0}
         .caech-acc-aviso.exito{display:block;background:#E8F5E9;color:#1B5E20;border:1px solid #C8E6C9}
@@ -156,20 +159,34 @@
     // ── Ingreso de afiliados ────────────────────────────────────────
 
     function abrirIngreso(alEntrar) {
-        modal('caech-modal-ingreso', 'Acceso de afiliados',
+        modal('caech-modal-ingreso', 'Ingresar',
             '<div class="caech-acc-aviso"></div>' +
             '<div class="caech-acc-campo"><label for="caech-usuario">Usuario o correo</label>' +
             '  <input id="caech-usuario" type="text" autocomplete="username" autocapitalize="off" spellcheck="false"></div>' +
             '<div class="caech-acc-campo"><label for="caech-clave">Contrase&ntilde;a</label>' +
             '  <input id="caech-clave" type="password" autocomplete="current-password"></div>' +
             '<button class="caech-acc-btn" id="caech-entrar">Ingresar</button>' +
-            '<p class="caech-acc-pie">Las credenciales se entregan en la sede del CAE-CH.<br>' +
-            'Si olvid&oacute; su contrase&ntilde;a, sol&iacute;cite un restablecimiento en secretar&iacute;a.</p>',
+            '<button class="caech-acc-btn caech-acc-btn-sec" id="caech-reenviar" hidden>Reenviarme el enlace de confirmaci&oacute;n</button>' +
+            '<p class="caech-acc-pie">&iquest;No tiene cuenta? ' +
+            '<button class="caech-acc-enlace" id="caech-ir-registro">Cree una</button><br>' +
+            'Los afiliados del CAE-CH reciben sus credenciales en la sede.</p>',
             (overlay, cerrar) => {
                 const usuario = el('caech-usuario');
                 const clave = el('caech-clave');
                 const boton = el('caech-entrar');
+                const reenviar = el('caech-reenviar');
                 usuario.focus();
+
+                el('caech-ir-registro').addEventListener('click', () => { cerrar(); abrirRegistro(alEntrar); });
+
+                reenviar.addEventListener('click', async () => {
+                    reenviar.disabled = true;
+                    reenviar.textContent = 'Enviando...';
+                    const r = await api('POST', '/api/registro/reenviar', { correo: reenviar.dataset.correo || '' });
+                    reenviar.textContent = 'Reenviarme el enlace de confirmación';
+                    avisar(overlay, r.estado === 200 ? 'exito' : 'error',
+                        (r.datos && (r.datos.mensaje || r.datos.error)) || 'No se pudo reenviar.');
+                });
 
                 async function entrar() {
                     if (!usuario.value.trim() || !clave.value) {
@@ -181,7 +198,15 @@
                     boton.disabled = false;
                     boton.textContent = 'Ingresar';
 
-                    if (r.estado !== 200) return avisar(overlay, 'error', r.datos.error || 'No se pudo ingresar.');
+                    if (r.estado !== 200) {
+                        // Cuenta creada pero sin confirmar: se ofrece el reenvio
+                        // en el acto, que es lo unico que la desbloquea.
+                        if (r.datos && r.datos.correo_sin_verificar) {
+                            reenviar.hidden = false;
+                            reenviar.dataset.correo = usuario.value.trim();
+                        }
+                        return avisar(overlay, 'error', r.datos.error || 'No se pudo ingresar.');
+                    }
 
                     guardarToken(r.datos.token);
                     perfil = r.datos.afiliado;
@@ -199,6 +224,72 @@
                 boton.addEventListener('click', entrar);
                 [usuario, clave].forEach(campo => campo.addEventListener('keydown', e => {
                     if (e.key === 'Enter') entrar();
+                }));
+            });
+    }
+
+    // ── Registro publico ────────────────────────────────────────────
+
+    /**
+     * Alta de cuenta para el publico general. Nace con rol 'usuario': abre
+     * el GeoVisor y tiene un DICAT de cortesia; DXF y CSV siguen siendo de
+     * los afiliados. No se pide nombre de usuario: el servidor lo deriva
+     * del correo, y el correo tambien sirve para ingresar.
+     */
+    function abrirRegistro(alTerminar) {
+        modal('caech-modal-registro', 'Crear una cuenta',
+            '<div class="caech-acc-aviso"></div>' +
+            '<p>Con una cuenta puede abrir el GeoVisor y consultar el mapa. ' +
+            'Las exportaciones DXF y CSV son exclusivas de los afiliados del CAE-CH.</p>' +
+            '<div class="caech-acc-campo"><label for="caech-reg-nombre">Nombre completo</label>' +
+            '  <input id="caech-reg-nombre" type="text" autocomplete="name"></div>' +
+            '<div class="caech-acc-campo"><label for="caech-reg-correo">Correo electr&oacute;nico</label>' +
+            '  <input id="caech-reg-correo" type="email" autocomplete="email" autocapitalize="off" spellcheck="false"></div>' +
+            '<div class="caech-acc-campo"><label for="caech-reg-clave">Contrase&ntilde;a</label>' +
+            '  <input id="caech-reg-clave" type="password" autocomplete="new-password"></div>' +
+            '<div class="caech-acc-campo"><label for="caech-reg-repetir">Rep&iacute;tala</label>' +
+            '  <input id="caech-reg-repetir" type="password" autocomplete="new-password"></div>' +
+            '<button class="caech-acc-btn" id="caech-reg-crear">Crear mi cuenta</button>' +
+            '<p class="caech-acc-pie">M&iacute;nimo 12 caracteres, con may&uacute;sculas, min&uacute;sculas y n&uacute;meros.<br>' +
+            '&iquest;Ya tiene cuenta? <button class="caech-acc-enlace" id="caech-ir-ingreso-2">Ingrese</button></p>',
+            (overlay, cerrar) => {
+                const nombre = el('caech-reg-nombre');
+                const correo = el('caech-reg-correo');
+                const clave = el('caech-reg-clave');
+                const repetir = el('caech-reg-repetir');
+                const boton = el('caech-reg-crear');
+                nombre.focus();
+
+                el('caech-ir-ingreso-2').addEventListener('click', () => { cerrar(); abrirIngreso(alTerminar); });
+
+                async function crear() {
+                    if (!nombre.value.trim() || !correo.value.trim() || !clave.value) {
+                        return avisar(overlay, 'error', 'Complete todos los campos.');
+                    }
+                    if (clave.value !== repetir.value) {
+                        return avisar(overlay, 'error', 'Las dos contraseñas no coinciden.');
+                    }
+                    boton.disabled = true;
+                    boton.textContent = 'Creando...';
+                    const r = await api('POST', '/api/registro', {
+                        nombre: nombre.value, correo: correo.value, clave: clave.value
+                    });
+                    boton.disabled = false;
+                    boton.textContent = 'Crear mi cuenta';
+
+                    if (r.estado !== 201) {
+                        return avisar(overlay, 'error', (r.datos && r.datos.error) || 'No se pudo crear la cuenta.');
+                    }
+                    // La cuenta existe pero no sirve hasta confirmar el correo,
+                    // asi que no se inicia sesion: se explica el paso que falta.
+                    avisar(overlay, 'exito', r.datos.mensaje);
+                    [nombre, correo, clave, repetir].forEach(c => { c.disabled = true; });
+                    boton.disabled = true;
+                }
+
+                boton.addEventListener('click', crear);
+                [nombre, correo, clave, repetir].forEach(campo => campo.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') crear();
                 }));
             });
     }
@@ -338,8 +429,8 @@
             caja.innerHTML = '';
             const entrar = document.createElement('button');
             entrar.className = 'btn btn-outline';
-            entrar.title = 'Acceso de afiliados del CAE-CH';
-            entrar.innerHTML = '<i class="fas fa-user-lock"></i> Afiliados';
+            entrar.title = 'Ingresar o crear una cuenta';
+            entrar.innerHTML = '<i class="fas fa-user"></i> Ingresar';
             entrar.addEventListener('click', () => abrirIngreso());
             caja.appendChild(entrar);
         }
@@ -426,6 +517,30 @@
         ya_utilizado:    'Ese correo ya uso su reporte de cortesia.'
     };
 
+    const CUENTA = {
+        verificada:      ['exito', 'Correo confirmado. Ya puede ingresar con su cuenta.'],
+        ya_verificada:   ['info',  'Esta cuenta ya estaba confirmada. Ingrese con su correo y contraseña.'],
+        enlace_caducado: ['error', 'El enlace de confirmación caducó. Ingrese y pida que se lo reenviemos.'],
+        enlace_invalido: ['error', 'El enlace de confirmación no es válido.']
+    };
+
+    /** Vuelta desde el enlace de confirmacion del registro. */
+    function procesarRetornoCuenta() {
+        const params = new URLSearchParams(location.search);
+        const clave = params.get('cuenta');
+        if (!clave) return;
+
+        params.delete('cuenta');
+        history.replaceState(null, '',
+            location.pathname + (params.toString() ? '?' + params : '') + location.hash);
+
+        const aviso = CUENTA[clave] || ['error', 'No se pudo confirmar la cuenta.'];
+        setTimeout(function () {
+            alert(aviso[1]);
+            if (clave === 'verificada' || clave === 'ya_verificada') abrirIngreso();
+        }, 400);
+    }
+
     function procesarRetorno() {
         const params = new URLSearchParams(location.search);
         const p = params.get('pase');
@@ -456,6 +571,7 @@
         inyectarEstilos();
         if (!CONFIG.activo) return;
         pintarBarra();
+        procesarRetornoCuenta();
         procesarRetorno();
         recuperarSesion();
     }
@@ -471,6 +587,7 @@
         config: CONFIG,
         autorizar: autorizar,
         abrirIngreso: abrirIngreso,
+        abrirRegistro: abrirRegistro,
         abrirFreemium: abrirFreemium,
         cerrarSesion: cerrarSesion,
         perfil: () => perfil,

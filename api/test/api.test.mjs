@@ -350,6 +350,85 @@ seccion('Freemium: un PDF por correo verificado');
     comprobar('un pase inventado responde 401', paseFalso.estado === 401);
 }
 
+// ── 10b. Registro publico de usuarios ───────────────────────────────
+seccion('Registro publico de usuarios');
+let tokenUsuario = null;
+const CORREO_USR = 'vecino' + Date.now() + '@example.com';
+const CLAVE_USR  = 'RiobambaVecino2026';
+{
+    const corta = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: 'corta1A' }
+    });
+    comprobar('rechaza una clave debil', corta.estado === 400, corta.datos);
+
+    const correoMalo = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Juan Vecino', correo: 'no-es-correo', clave: CLAVE_USR }
+    });
+    comprobar('rechaza un correo mal formado', correoMalo.estado === 400);
+
+    const alta = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: CLAVE_USR }
+    });
+    comprobar('crea la cuenta', alta.estado === 201, alta.datos);
+    comprobar('no entrega token: la cuenta aun no sirve', !alta.datos.token);
+
+    const sinConfirmar = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_USR, clave: CLAVE_USR } });
+    comprobar('sin confirmar el correo NO se puede ingresar', sinConfirmar.estado === 403, sinConfirmar.datos);
+    comprobar('la respuesta lo senala para poder reenviar', sinConfirmar.datos?.correo_sin_verificar === true);
+
+    const repetido = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Otro Nombre', correo: CORREO_USR, clave: CLAVE_USR }
+    });
+    comprobar('un correo ya registrado responde igual que un alta (no filtra el padron)',
+        repetido.estado === 201, repetido.datos);
+
+    if (LOG) {
+        let m = null;
+        for (let i = 0; i < 20 && !m; i++) {
+            await new Promise(r => setTimeout(r, 250));
+            m = [...readFileSync(LOG, 'utf8').matchAll(/registro\/verificar\?t=([A-Za-z0-9_-]+)/g)].pop();
+        }
+        comprobar('el enlace de confirmacion aparece en el log', !!m);
+
+        if (m) {
+            const r = await fetch(API + '/api/registro/verificar?t=' + m[1], { redirect: 'manual' });
+            const destino = r.headers.get('location') || '';
+            comprobar('confirmar redirige al sitio', r.status === 302 && destino.includes('cuenta=verificada'), destino);
+
+            const repite = await fetch(API + '/api/registro/verificar?t=' + m[1], { redirect: 'manual' });
+            comprobar('el enlace muere tras usarse',
+                (repite.headers.get('location') || '').includes('enlace_invalido'));
+
+            const ingreso = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_USR, clave: CLAVE_USR } });
+            comprobar('ya confirmado, puede ingresar', ingreso.estado === 200, ingreso.datos);
+            comprobar('nace con rol usuario', ingreso.datos?.afiliado?.rol === 'usuario');
+            comprobar('no exige cambio de clave: la eligio el', ingreso.datos?.afiliado?.requiere_cambio_clave === false);
+            tokenUsuario = ingreso.datos?.token;
+
+            const p = ingreso.datos?.permisos;
+            comprobar('puede abrir el visor', p?.visor === true, p);
+            comprobar('tiene su PDF de cortesia', p?.pdf === true, p);
+            comprobar('NO puede exportar DXF', p?.dxf === false, p);
+            comprobar('NO puede exportar CSV', p?.csv === false, p);
+
+            const dxf = await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'dxf' } });
+            comprobar('el servidor rechaza el DXF de un usuario', dxf.estado === 403, dxf.datos);
+            comprobar('y explica que es exclusivo de afiliados', dxf.datos?.solo_afiliados === true);
+
+            const pdf1 = await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' } });
+            comprobar('el primer PDF se autoriza', pdf1.estado === 200, pdf1.datos);
+
+            const pdf2 = await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'pdf' } });
+            comprobar('el segundo PDF ya no', pdf2.estado === 403, pdf2.datos);
+
+            const admin = await llamar('GET', '/api/admin/afiliados', { token: tokenUsuario });
+            comprobar('un usuario no llega a la administracion', admin.estado === 403);
+        }
+    } else {
+        console.log('  – tramo de confirmacion omitido (no se paso el log de wrangler)');
+    }
+}
+
 // ── 11. Bitacora ────────────────────────────────────────────────────
 seccion('Bitacora y auditoria');
 {
@@ -365,6 +444,16 @@ seccion('Bitacora y auditoria');
         eventos.datos?.eventos?.some(e => e.tipo === 'afiliado_creado'));
     comprobar('la bitacora nunca guarda la IP en claro',
         !JSON.stringify(eventos.datos).match(/\b\d{1,3}(\.\d{1,3}){3}\b/));
+
+    if (tokenUsuario) {
+        const yo = await llamar('GET', '/api/sesion', { token: tokenUsuario });
+        const ascenso = await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
+            token: tokenAdmin, cuerpo: { rol: 'afiliado' }
+        });
+        comprobar('el admin asciende un usuario a afiliado', ascenso.estado === 200, ascenso.datos);
+        const tras = await llamar('GET', '/api/sesion', { token: tokenUsuario });
+        comprobar('ascendido, ya puede exportar DXF', tras.datos?.permisos?.dxf === true, tras.datos?.permisos);
+    }
 
     const cierre = await llamar('DELETE', '/api/sesion', { token: tokenAdmin });
     comprobar('el cierre de sesion responde 200', cierre.estado === 200);

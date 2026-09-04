@@ -2,11 +2,24 @@
 
 Control de acceso a los productos del GeoVisor, sobre **Cloudflare Workers + D1**.
 
-| Formato | Quién puede | Cómo |
+Hay tres roles:
+
+| Rol | Cómo se obtiene |
+|---|---|
+| `usuario` | **registro público** en el sitio, confirmando el correo |
+| `afiliado` | alta por la administración; credenciales entregadas en la sede |
+| `admin` | además gestiona el padrón |
+
+Y esto puede cada uno:
+
+| | `usuario` | `afiliado` / `admin` |
 |---|---|---|
-| **PDF** (DICAT) | afiliados · público general | afiliados sin límite; el público, **un (1) reporte por correo verificado** |
-| **DXF** | solo afiliados | sesión activa y afiliación vigente |
-| **CSV** | solo afiliados | sesión activa y afiliación vigente |
+| Abrir el GeoVisor | sí | sí |
+| **PDF** (DICAT) | **uno**, de cortesía | sin límite |
+| **DXF** | no | sí |
+| **CSV** | no | sí |
+
+El público que no quiera crearse cuenta conserva el pase freemium: **un (1) reporte en PDF por correo verificado**, sin registro.
 
 Cada descarga queda registrada en la tabla `descargas` con quién, qué formato y qué clave catastral.
 
@@ -73,7 +86,21 @@ Anote la URL que devuelve (`https://caech-afiliados.SU-CUENTA.workers.dev`) y
 péguela en `wrangler.toml` como `API_URL`. Ajuste también `SITIO_URL` a la raíz
 pública del visor. Vuelva a desplegar para que los cambios tomen efecto.
 
-### 5. Crear el primer administrador
+### 5. Registro público de usuarios
+
+`REGISTRO_ACTIVO` viene en `"no"` a propósito. El alta envía un correo de
+confirmación y **sin correo saliente la cuenta queda a medio crear**: se
+puede registrar pero nunca ingresar. Póngalo en `"si"` recién cuando
+`MAIL_PROVEEDOR` sea `"resend"` y el dominio esté verificado (punto 8).
+
+Quien se registra nace con rol `usuario`. Para ascenderlo a afiliado,
+después de verificar su colegiatura:
+
+```bash
+curl -X PATCH https://caech-afiliados.SU-CUENTA.workers.dev/api/admin/afiliados/<id>   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json"   -H "Origin: https://www.cae-ch.org.ec" -d '{"rol":"afiliado"}'
+```
+
+### 6. Crear el primer administrador
 
 No existe endpoint de registro: sería justo la puerta que no queremos en un
 sistema institucional cerrado. El primer admin nace por SQL directo.
@@ -88,7 +115,7 @@ Imprime la clave temporal y la sentencia `INSERT`. Ejecute la sentencia con
 visor con esa clave y cámbiela de inmediato: el sistema lo exige antes de
 permitir cualquier descarga.
 
-### 6. Elegir el número de iteraciones (importante para el plan gratuito)
+### 7. Elegir el número de iteraciones (importante para el plan gratuito)
 
 `HASH_ITERACIONES` fija el coste de PBKDF2-SHA256 en cada ingreso. Medido sobre
 el mismo motor nativo que usa Workers:
@@ -109,7 +136,7 @@ El **plan gratuito de Workers corta en 10 ms de CPU por invocación**, así que:
 Subir el valor después no invalida las cuentas: cada hash guarda sus propias
 iteraciones y se re-hashea solo, en el siguiente ingreso correcto.
 
-### 7. Activar el candado en el visor
+### 8. Activar el candado en el visor
 
 Mientras `activo` sea `false` en [`caech-acceso.js`](../caech-acceso.js), el
 visor funciona exactamente como antes, sin candados. Recién cuando el Worker
@@ -127,7 +154,7 @@ Confirme que `ORIGENES_PERMITIDOS` en `wrangler.toml` incluye el dominio real
 desde el que se sirve el visor. Sin coincidencia el API no emite la cabecera
 CORS y el navegador bloquea la llamada: **falla cerrado, no abierto**.
 
-### 8. Correo del pase de cortesía
+### 9. Correo del pase de cortesía
 
 Cloudflare Email Routing **solo recibe** correo, no envía. El emisor es externo:
 
@@ -208,10 +235,10 @@ curl -X POST https://caech-afiliados.SU-CUENTA.workers.dev/api/admin/afiliados \
 
 ## Pruebas
 
-`test/api.test.mjs` levanta 69 comprobaciones contra el Worker real corriendo en
-local: ingreso, cambio de clave obligatorio, permisos por formato, separación
-admin/afiliado, suspensión, vigencia, fuerza bruta, ciclo completo del freemium,
-CORS y bitácora.
+`test/api.test.mjs` levanta 93 comprobaciones contra el Worker real corriendo en
+local: registro público y confirmación de correo, permisos por rol, ingreso,
+cambio de clave obligatorio, separación admin/afiliado/usuario, suspensión,
+vigencia, fuerza bruta, ciclo completo del freemium, CORS y bitácora.
 
 ```bash
 cd api

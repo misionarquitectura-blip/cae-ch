@@ -21,8 +21,14 @@ CREATE TABLE IF NOT EXISTS afiliados (
     nombre                TEXT    NOT NULL,
     registro_profesional  TEXT,                             -- SENESCYT / CAE, opcional
     nucleo                TEXT    NOT NULL DEFAULT 'Chimborazo',
-    rol                   TEXT    NOT NULL DEFAULT 'afiliado'
-                                  CHECK (rol IN ('afiliado', 'admin')),
+    -- usuario  : se registro por su cuenta. Abre el GeoVisor y consulta el
+    --            mapa; DXF y CSV siguen siendo exclusivos de los afiliados.
+    -- afiliado : colegiado del CAE-CH, alta por la administracion.
+    -- admin    : ademas gestiona el padron.
+    rol                   TEXT    NOT NULL DEFAULT 'usuario'
+                                  CHECK (rol IN ('usuario', 'afiliado', 'admin')),
+    origen                TEXT    NOT NULL DEFAULT 'admin'
+                                  CHECK (origen IN ('registro', 'admin')),
     estado                TEXT    NOT NULL DEFAULT 'activo'
                                   CHECK (estado IN ('activo', 'suspendido', 'baja')),
 
@@ -30,6 +36,18 @@ CREATE TABLE IF NOT EXISTS afiliados (
     hash_clave            TEXT    NOT NULL,
     requiere_cambio_clave INTEGER NOT NULL DEFAULT 1,
     clave_cambiada_en     TEXT,
+
+    -- Verificacion del correo. Las cuentas que crea la administracion nacen
+    -- verificadas: el CAE-CH responde por ellas y la clave se entrega en mano.
+    -- Las del registro publico no pueden ingresar hasta confirmar el correo.
+    correo_verificado     INTEGER NOT NULL DEFAULT 0,
+    verificado_en         TEXT,
+    token_verificacion    TEXT,                             -- SHA-256 del token, nunca el token
+    token_expira          TEXT,
+    reenvios_verificacion INTEGER NOT NULL DEFAULT 0,
+
+    -- Reporte de cortesia ya gastado por esta cuenta (rol 'usuario').
+    pdf_cortesia_en       TEXT,
 
     vigencia_hasta        TEXT,                             -- ISO-8601; NULL = sin caducidad
     creado_en             TEXT    NOT NULL,
@@ -42,6 +60,8 @@ CREATE TABLE IF NOT EXISTS afiliados (
 );
 
 CREATE INDEX IF NOT EXISTS idx_afiliados_estado ON afiliados (estado);
+CREATE INDEX IF NOT EXISTS idx_afiliados_rol    ON afiliados (rol);
+CREATE INDEX IF NOT EXISTS idx_afiliados_token  ON afiliados (token_verificacion);
 
 -- ── Sesiones ────────────────────────────────────────────────────────
 -- Se guarda el SHA-256 del token, nunca el token. Una filtracion de la

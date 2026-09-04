@@ -11,7 +11,7 @@ import { ahora, texto, correoValido } from './http.js';
 import { iteraciones, registrarEvento, perfilPublico, permisos } from './sesiones.js';
 
 const ESTADOS = ['activo', 'suspendido', 'baja'];
-const ROLES   = ['afiliado', 'admin'];
+const ROLES   = ['usuario', 'afiliado', 'admin'];
 
 function usuarioValido(u) {
     return /^[a-z0-9](?:[a-z0-9._-]{2,29})$/.test(u);
@@ -69,10 +69,11 @@ export async function crearAfiliado(env, request, sesion, datos) {
     const t = ahora();
 
     await env.DB.prepare(
-        'INSERT INTO afiliados (id, usuario, correo, nombre, registro_profesional, nucleo, rol, estado, ' +
-        ' hash_clave, requiere_cambio_clave, vigencia_hasta, creado_en, actualizado_en) ' +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', ?, 1, ?, ?, ?)"
-    ).bind(id, usuario, correo, nombre, registro, nucleo, rol, hash, vigencia ? new Date(vigencia).toISOString() : null, t, t).run();
+        'INSERT INTO afiliados (id, usuario, correo, nombre, registro_profesional, nucleo, rol, origen, estado, ' +
+        ' hash_clave, requiere_cambio_clave, correo_verificado, verificado_en, vigencia_hasta, creado_en, actualizado_en) ' +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', 'activo', ?, 1, 1, ?, ?, ?, ?)"
+    ).bind(id, usuario, correo, nombre, registro, nucleo, rol, hash, t,
+            vigencia ? new Date(vigencia).toISOString() : null, t, t).run();
 
     await registrarEvento(env, {
         tipo: 'afiliado_creado', afiliado_id: id, usuario: usuario,

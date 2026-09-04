@@ -48,10 +48,10 @@ const t = new Date().toISOString();
 const escapar = s => String(s).replace(/'/g, "''");
 
 const sql =
-    'INSERT INTO afiliados (id, usuario, correo, nombre, nucleo, rol, estado, hash_clave, ' +
-    'requiere_cambio_clave, creado_en, actualizado_en) VALUES (' +
+    'INSERT INTO afiliados (id, usuario, correo, nombre, nucleo, rol, origen, estado, hash_clave, ' +
+    'requiere_cambio_clave, correo_verificado, verificado_en, creado_en, actualizado_en) VALUES (' +
     `'${escapar(id)}', '${escapar(usuario)}', '${escapar(correo)}', '${escapar(nombre)}', ` +
-    `'Chimborazo', 'admin', 'activo', '${escapar(hash)}', 1, '${t}', '${t}');`;
+    `'Chimborazo', 'admin', 'admin', 'activo', '${escapar(hash)}', 1, 1, '${t}', '${t}', '${t}');`;
 
 console.log('\n══ Administrador inicial ═══════════════════════════════════');
 console.log('  usuario         :', usuario);

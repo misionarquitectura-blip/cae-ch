@@ -26,6 +26,7 @@ import {
     listarDescargas, listarEventos, listarPases
 } from './admin.js';
 import { solicitarPase, verificarPase, consumirPase, estadoPase } from './freemium.js';
+import { registrar, verificarCorreo, reenviarVerificacion } from './registro.js';
 
 const FORMATOS = ['pdf', 'dxf', 'csv'];
 
@@ -104,12 +105,33 @@ async function enrutar(request, env, url, ruta, metodo) {
         const formato = texto(datos.formato, 10).toLowerCase();
         if (!FORMATOS.includes(formato)) return error('Formato no reconocido.', 400, request, env);
 
-        const p = permisos(sesion.afiliado);
+        const a = sesion.afiliado;
+        const p = permisos(a);
         if (!p[formato]) {
-            const motivo = sesion.afiliado.requiere_cambio_clave
-                ? 'Debe cambiar su contrasena temporal antes de descargar.'
-                : 'Su afiliacion no esta vigente. Renuevela en la sede del CAE-CH.';
-            return error(motivo, 403, request, env, { requiere_cambio_clave: !!sesion.afiliado.requiere_cambio_clave });
+            let motivo;
+            if (a.requiere_cambio_clave) {
+                motivo = 'Debe cambiar su contrasena temporal antes de descargar.';
+            } else if (a.rol === 'usuario' && (formato === 'dxf' || formato === 'csv')) {
+                motivo = 'Las exportaciones ' + formato.toUpperCase() + ' son exclusivas de los afiliados del CAE-CH.';
+            } else if (a.rol === 'usuario' && formato === 'pdf') {
+                motivo = 'Ya uso su reporte de cortesia. Para acceso continuo, afiliese en la sede del CAE-CH.';
+            } else {
+                motivo = 'Su afiliacion no esta vigente. Renuevela en la sede del CAE-CH.';
+            }
+            return error(motivo, 403, request, env, {
+                requiere_cambio_clave: !!a.requiere_cambio_clave,
+                solo_afiliados: a.rol === 'usuario'
+            });
+        }
+
+        // Quien se registro por su cuenta gasta aqui su unico DICAT.
+        if (a.rol === 'usuario' && formato === 'pdf') {
+            const r = await env.DB.prepare(
+                'UPDATE afiliados SET pdf_cortesia_en = ? WHERE id = ? AND pdf_cortesia_en IS NULL'
+            ).bind(ahora(), a.id).run();
+            if (!r.meta || r.meta.changes === 0) {
+                return error('Ya uso su reporte de cortesia.', 409, request, env);
+            }
         }
 
         const clave = texto(datos.clave_catastral, 60) || null;
@@ -121,6 +143,23 @@ async function enrutar(request, env, url, ruta, metodo) {
         ).run();
 
         return ok({ formato: formato, autorizado: true }, request, env);
+    }
+
+    // ── Registro publico ────────────────────────────────────────────
+    if (ruta === '/api/registro' && metodo === 'POST') {
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+        return responder(await registrar(env, request, datos));
+    }
+
+    if (ruta === '/api/registro/verificar' && metodo === 'GET') {
+        return verificarCorreo(env, request, url);   // devuelve una redireccion
+    }
+
+    if (ruta === '/api/registro/reenviar' && metodo === 'POST') {
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+        return responder(await reenviarVerificacion(env, request, datos));
     }
 
     // ── Freemium ────────────────────────────────────────────────────

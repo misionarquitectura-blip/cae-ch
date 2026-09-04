@@ -48,5 +48,10 @@ HASH_ITERACIONES = "210000"
 MAIL_PROVEEDOR = "consola"
 MAIL_REMITENTE = "CAE-CH <no-responder@cae-ch.org.ec>"
 
+# "no" apaga el registro publico de usuarios sin volver a desplegar.
+# Dejelo en "no" mientras MAIL_PROVEEDOR sea "consola": sin correo
+# saliente nadie puede confirmar su cuenta y quedaria a medio crear.
+REGISTRO_ACTIVO = "no"
+
 # "no" apaga la promocion de lanzamiento sin volver a desplegar.
 FREEMIUM_ACTIVO = "si"
