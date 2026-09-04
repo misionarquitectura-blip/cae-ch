@@ -3408,7 +3408,17 @@
             // props = propiedades catastro (búsqueda) | null (CSV/coordenadas)
             // Requiere: csvPolygon y csvUTMCoordinates ya establecidos
             // ══════════════════════════════════════════════════════════════
-            // Carga el logo institucional como base64 para incrustar en el PDF
+            // Carga el logo institucional como base64 para incrustar en el PDF.
+            //
+            // Es el EMBLEMA CIRCULAR (LOGO/logo.jpg, 1182x1182, exactamente
+            // 1:1), no el lockup horizontal: la cabecera del informe ya
+            // escribe "COLEGIO DE ARQUITECTOS DEL ECUADOR / PROVINCIAL DE
+            // CHIMBORAZO" en texto, de modo que el lockup repetiria lo que
+            // ya se lee, y ademas al ser 2,77:1 salia aplastado en la caja
+            // cuadrada. Es tambien el que usa server.js.
+            //
+            // Devuelve {dataUrl, ancho, alto} para que quien lo dibuje pueda
+            // respetar la proporcion aunque algun dia se cambie el archivo.
             function cargarLogoBase64() {
                 return new Promise((resolve) => {
                     // Timeout de seguridad: si algo falla silenciosamente, continuar sin logo
@@ -3421,14 +3431,18 @@
                             canvas.width = img.naturalWidth;
                             canvas.height = img.naturalHeight;
                             canvas.getContext('2d').drawImage(img, 0, 0);
-                            resolve(canvas.toDataURL('image/jpeg'));
+                            resolve({
+                                dataUrl: canvas.toDataURL('image/jpeg'),
+                                ancho: img.naturalWidth,
+                                alto: img.naturalHeight
+                            });
                         } catch (e) {
                             // canvas.toDataURL() lanza SecurityError en file:// (canvas tainted)
                             resolve(null);
                         }
                     };
                     img.onerror = function () { clearTimeout(timeout); resolve(null); };
-                    img.src = 'LOGO/logo-dicat.jpg';
+                    img.src = 'LOGO/logo.jpg';
                 });
             }
 
@@ -3477,7 +3491,19 @@
                 doc.setFillColor(139, 0, 0);
                 doc.rect(0, 0, pw, 42, 'F');
                 if (logoB64) {
-                    try { doc.addImage(logoB64, 'JPEG', mg, 3, 26, 26); } catch (e) { }
+                    // Se encaja en un cuadro de 26x26 mm RESPETANDO la
+                    // proporcion y centrado dentro de el. Con el emblema 1:1
+                    // ocupa el cuadro entero; si alguien cambia el archivo por
+                    // uno apaisado, encogera en vez de deformarse.
+                    try {
+                        const LADO = 26, LX = mg, LY = 3;
+                        const img = (typeof logoB64 === 'string') ? { dataUrl: logoB64 } : logoB64;
+                        const prop = (img.ancho && img.alto) ? img.ancho / img.alto : 1;
+                        const lw = prop >= 1 ? LADO : LADO * prop;
+                        const lh = prop >= 1 ? LADO / prop : LADO;
+                        doc.addImage(img.dataUrl, 'JPEG',
+                                     LX + (LADO - lw) / 2, LY + (LADO - lh) / 2, lw, lh);
+                    } catch (e) { }
                 }
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(13);
@@ -3518,7 +3544,7 @@
                     y += 11;
                 }
 
-                // Aviso beta
+                // Aviso: no es acto administrativo
                 doc.setFillColor(255, 243, 205);
                 doc.setDrawColor(204, 153, 0);
                 doc.setLineWidth(0.4);
@@ -3526,12 +3552,12 @@
                 doc.setTextColor(120, 80, 0);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(8.5);
-                doc.text('AVISO IMPORTANTE - VERSION BETA', mg + 3, y + 5);
+                doc.text('AVISO IMPORTANTE', mg + 3, y + 5);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(7.5);
                 doc.setTextColor(60, 40, 0);
                 const avisoTxt =
-                    'Este documento corresponde a un reporte automatizado en version beta y NO constituye acto administrativo ' +
+                    'Este documento es un reporte automatizado del CAE-CH y NO constituye acto administrativo ' +
                     'alguno. La informacion presentada es un compendio de los shapes (capas geograficas) obtenidos de las ' +
                     'distintas instituciones publicas y sus sistemas de gestion de datos, integrados con fines tecnico-informativos. ' +
                     'Para tramites oficiales debe acudirse a las entidades competentes (GADMR, EERSA, Riobamba EP, CNT, etc.).';

@@ -105,6 +105,9 @@
         }
         
         .nav-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             text-decoration: none;
             color: var(--gris-oscuro);
             font-weight: 500;
@@ -112,6 +115,8 @@
             font-size: 15px;
             white-space: nowrap;
         }
+        .nav-links a > i { font-size: .9em; line-height: 1; }
+        .nav-links a.nav-destacado { color: var(--rojo-caech); font-weight: 700; }
         
         .nav-links a:hover {
             color: var(--rojo-oscuro);
@@ -343,12 +348,25 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
+        /* La tarjeta que lleva a las investigaciones: el filete rojo del
+           isologo en el canto superior, y cursor de enlace. */
+        .feature-card-destacada {
+            border-top: 3px solid var(--rojo-caech);
+            cursor: pointer;
+        }
         
         .feature-icon {
-            font-size: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
             margin-bottom: 20px;
-            color: var(--rojo-oscuro);
+            font-size: 26px;
+            color: var(--rojo-caech);
+            background: var(--rojo-humo);
         }
+        .feature-icon > i { line-height: 1; }
         
         .feature-card h3 {
             margin-bottom: 15px;
@@ -449,108 +467,6 @@
         .integration-item h3 {
             color: var(--gris-oscuro);
             margin-bottom: 10px;
-        }
-        
-        /* Sección de Cursos */
-        .courses-section {
-            display: none;
-        }
-        
-        .courses-section.active {
-            display: block;
-        }
-        
-        .courses-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
-        .course-card {
-            background: var(--blanco);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        
-        .course-header {
-            padding: 20px;
-            background-color: var(--rojo-oscuro);
-            color: var(--blanco-primario);
-        }
-        
-        .course-header h3 {
-            font-size: 22px;
-            margin-bottom: 10px;
-        }
-        
-        .course-level {
-            display: inline-block;
-            background-color: rgba(255,255,255,0.2);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-        
-        .course-body {
-            padding: 20px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .course-description {
-            margin-bottom: 20px;
-            color: var(--gris-medio);
-        }
-        
-        .course-features {
-            list-style: none;
-            margin-bottom: 20px;
-        }
-        
-        .course-features li {
-            margin-bottom: 8px;
-            position: relative;
-            padding-left: 25px;
-            color: var(--gris-medio);
-        }
-        
-        .course-features li:before {
-            content: "✓";
-            color: var(--rojo-oscuro);
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-        
-        .course-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: auto;
-        }
-        
-        .course-price {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--rojo-oscuro);
-        }
-        
-        .course-price .original {
-            font-size: 16px;
-            color: var(--gris-medio);
-            text-decoration: line-through;
-            margin-left: 5px;
         }
         
         /* Formularios */
@@ -825,15 +741,6 @@
                 margin-bottom: 30px;
             }
             
-            .courses-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .course-footer {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
             
             .nav-buttons {
                 flex-direction: column;
@@ -913,31 +820,6 @@
         }
         .integration-item.proximamente .integration-icon {
             color: var(--gris-medio);
-        }
-        .cursos-prox-banner {
-            text-align: center;
-            padding: 30px;
-            background: var(--blanco-terciario);
-            border-radius: 10px;
-            margin-bottom: 30px;
-            border: 2px dashed var(--gris-medio);
-        }
-        .cursos-prox-banner i {
-            font-size: 36px;
-            color: var(--gris-medio);
-            margin-bottom: 12px;
-            display: block;
-        }
-        .cursos-prox-banner p {
-            color: var(--gris-medio);
-            font-size: 16px;
-            margin: 0;
-        }
-        .course-card .btn[disabled] {
-            background-color: var(--gris-medio);
-            cursor: not-allowed;
-            pointer-events: none;
-            opacity: 0.7;
         }
 
         /* ===== SOCIAL FOOTER ===== */
@@ -1100,9 +982,6 @@
             line-height: 1.6;
         }
 
-        /* ===== BOTÓN CURSO DESHABILITADO ===== */
-        /* .btn-inactivo: ver caech-ui.css. */
-
         /* ===== INTEGRATION GRID ajuste para 7 items ===== */
         @media (min-width: 1024px) {
             .integration-grid {
@@ -1202,66 +1081,137 @@
            DICAT — Solicitud de reporte
         ═══════════════════════════════════════════════ */
         #dicat-vias {
-            max-width: 860px;
+            max-width: 980px;
             margin: 0 auto;
         }
-        /* auto-fit en vez de dos columnas fijas: colapsa solo en pantallas
-           estrechas, sin necesidad de media query y sin desbordar el ancho. */
+        /* Un fondo con dos manchas de color muy tenues: es lo que da
+           sentido al desenfoque de las tarjetas. Sin algo detras que
+           difuminar, el vidrio no se ve. */
+        #solicitar {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+        }
+        #solicitar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(520px 340px at 12% 18%, rgba(227, 30, 36, .13), transparent 70%),
+                radial-gradient(620px 420px at 88% 82%, rgba(46, 50, 56, .12), transparent 70%),
+                linear-gradient(180deg, var(--hueso), #EEEFF1);
+        }
+        /* auto-fit en vez de columnas fijas: colapsa solo en pantallas
+           estrechas, sin media query y sin desbordar el ancho. */
         .dicat-vias-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 22px;
+            margin-bottom: 24px;
         }
+        /* Tarjeta de vidrio: fondo casi blanco, desenfoque de lo que hay
+           detras y un filo claro que sugiere el canto. Solo un toque. */
         .dicat-via {
-            background: var(--blanco);
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.09);
-            border-top: 4px solid var(--rojo-oscuro);
-            padding: 28px 28px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
+            padding: 30px 26px 26px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .66);
+            -webkit-backdrop-filter: blur(16px) saturate(1.3);
+            backdrop-filter: blur(16px) saturate(1.3);
+            border: 1px solid rgba(255, 255, 255, .78);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, .9),
+                0 8px 28px rgba(46, 50, 56, .10);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s;
+        }
+        .dicat-via:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, .9),
+                0 18px 44px rgba(46, 50, 56, .16);
         }
         .dicat-via-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 58px;
+            height: 58px;
+            margin-bottom: 16px;
+            border-radius: 50%;
+            font-size: 24px;
+            color: var(--rojo-caech);
+            background: var(--rojo-humo);
+            box-shadow: inset 0 0 0 1px rgba(227, 30, 36, .18);
         }
+        .dicat-via-icon > i { line-height: 1; }
         .dicat-via h3 {
-            margin-bottom: 8px;
-            font-size: 18px;
-            color: var(--gris-oscuro);
+            margin-bottom: 6px;
+            font-size: 17px;
+            color: var(--grafito);
         }
         .dicat-via p {
-            color: var(--gris-medio);
+            color: var(--grafito-med);
             font-size: 13.5px;
             margin-bottom: 18px;
         }
+        /* Etiqueta bajo el titulo: la misma para las tres tarjetas. */
         .dicat-via-destacado {
-            font-size: 15px;
-            font-weight: 600;
-            margin: 8px 0 4px !important;
+            display: inline-block;
+            margin: 0 0 12px !important;
+            padding: 3px 11px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--rojo-caech);
+            background: var(--rojo-humo);
         }
-        .dicat-via-btn { margin-top: 4px; }
+        /* Los botones de la tarjeta: a todo el ancho de ella y con permiso
+           para partir el texto en dos lineas. Con `nowrap` y mayusculas
+           espaciadas, "Crear cuenta con mi registro" se salia 45 px. */
+        .dicat-via .btn,
+        .dicat-via [data-caech] {
+            width: 100%;
+        }
+        .dicat-via .btn {
+            margin-top: auto;
+            white-space: normal;
+            line-height: 1.25;
+            text-align: center;
+        }
         .dicat-via-nota {
             font-size: 11.5px !important;
-            color: #888 !important;
+            color: var(--grafito-sua) !important;
             margin: 12px 0 0 !important;
         }
+        .dicat-via-nota .caech-acc-enlace { font-size: 11.5px; }
+        /* El aviso, en el mismo vidrio que las tarjetas. */
         .dicat-aviso {
             display: flex;
-            gap: 10px;
-            background: #FFF8F0;
-            border: 1px solid #E8D5B0;
-            border-radius: 8px;
+            gap: 12px;
             padding: 16px 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .55);
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, .75);
+            border-left: 3px solid var(--rojo-caech);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
             font-size: 13px;
-            color: var(--gris-medio);
+            color: var(--grafito-med);
         }
         .dicat-aviso > i {
-            color: var(--rojo-oscuro);
+            color: var(--rojo-caech);
             margin-top: 3px;
             flex-shrink: 0;
         }
         .dicat-aviso p { margin: 0; }
+        .dicat-aviso strong { color: var(--grafito); }
         @media (max-width: 480px) {
             .pricing-grid { grid-template-columns: 1fr; }
             .pago-opciones { grid-template-columns: 1fr; }
@@ -1873,13 +1823,12 @@
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#nosotros">Nosotros</a></li>
                     <li><a href="#plataforma">Plataforma</a></li>
-                    <li><a href="#cursos" id="cursos-link">Cursos</a></li>
                     <li><a href="#dicat-interactivo">El DICAT</a></li>
                     <li><a href="geovisor.html">GeoVisor</a></li>
                     <li><a href="#solicitar">Solicitar DICAT</a></li>
                     <li><a href="#integracion">Integración</a></li>
                     <li><a href="#contacto">Contacto</a></li>
-                    <li><a href="RESEARCH/index.html" style="color:#E31E24;font-weight:700"><i class="fas fa-microscope" style="margin-right:4px"></i>Investigación</a></li>
+                    <li><a href="RESEARCH/index.html" class="nav-destacado"><i class="fas fa-microscope"></i>Investigación</a></li>
                 </ul>
                 <div class="nav-buttons">
                     <a href="mailto:caechoficial@gmail.com" class="btn btn-outline"><i class="fas fa-envelope"></i> Contacto</a>
@@ -1904,7 +1853,6 @@
                     </a>
                     <a href="#dicat-interactivo" class="btn btn-secondary"><i class="fas fa-file-lines"></i> Qué contiene el DICAT</a>
                     <a href="#integracion" class="btn btn-secondary"><i class="fas fa-layer-group"></i> Fuentes de datos</a>
-                    <a href="#cursos" class="btn btn-secondary" id="cursos-hero-btn"><i class="fas fa-graduation-cap"></i> Ver cursos</a>
                 </div>
                 <div class="stats">
                     <div class="stat-item">
@@ -2014,8 +1962,8 @@
                         <li>Código QR que abre el predio en el GeoVisor</li>
                     </ul>
                 </div>
-                <div class="feature-card" style="border-top:4px solid #E31E24; cursor:pointer;" onclick="location.href='RESEARCH/index.html'">
-                    <div class="feature-icon" style="background:rgba(227,30,36,.1);color:#E31E24"><i class="fas fa-microscope"></i></div>
+                <div class="feature-card feature-card-destacada" onclick="location.href='RESEARCH/index.html'">
+                    <div class="feature-icon"><i class="fas fa-microscope"></i></div>
                     <h3>Investigación Territorial</h3>
                     <p>Dos líneas de investigación permanentes sobre Riobamba, con su método, sus cifras y sus límites publicados. <strong>Abiertas a todo público, sin cuenta.</strong></p>
                     <ul class="feature-list">
@@ -2039,61 +1987,6 @@
                         <li>Integración nativa con el Geovisor SIG</li>
                         <li>Ciclo de vida del edificio completo</li>
                     </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Sección de Cursos (Inicialmente oculta) -->
-    <section class="section courses-section" id="cursos">
-        <div class="container">
-            <div class="section-title">
-                <span class="eyebrow">Formación</span>
-                <h2>Cursos y Capacitaciones</h2>
-                <p>Amplía tus conocimientos con nuestros cursos especializados para arquitectos</p>
-            </div>
-            <div class="cursos-prox-banner">
-                <i class="fas fa-clock"></i>
-                <p>Los cursos estarán disponibles <strong>próximamente</strong>. ¡Mantente atento a nuestras redes sociales!</p>
-            </div>
-            <div class="courses-grid">
-                <div class="course-card">
-                    <div class="course-header">
-                        <h3>Contratación Pública</h3>
-                        <span class="course-level">Intermedio</span>
-                    </div>
-                    <div class="course-body">
-                        <p class="course-description">Procesos y normativas de contratación pública aplicados a proyectos arquitectónicos.</p>
-                        <div class="course-footer">
-                            <span class="btn btn-inactivo" data-course="contratacion-publica">Próximamente</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="course-card">
-                    <div class="course-header">
-                        <h3>Revit Intermedio</h3>
-                        <span class="course-level">Intermedio-Avanzado</span>
-                    </div>
-                    <div class="course-body">
-                        <p class="course-description">Técnicas avanzadas de modelado BIM con Revit para proyectos arquitectónicos complejos.</p>
-                        <div class="course-footer">
-                            <span class="btn btn-inactivo" data-course="revit-intermedio">Próximamente</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="course-card">
-                    <div class="course-header">
-                        <h3>Sistemas de Información Geográfica</h3>
-                        <span class="course-level">Básico-Intermedio</span>
-                    </div>
-                    <div class="course-body">
-                        <p class="course-description">Herramientas SIG para análisis territorial y planificación urbana.</p>
-                        <div class="course-footer">
-                            <span class="btn btn-inactivo" data-course="sistemas-informacion-geografica">Próximamente</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -2421,21 +2314,21 @@
                 <div class="dicat-vias-grid">
                     <!-- Solicitud presencial -->
                     <div class="dicat-via">
-                        <div class="dicat-via-icon" style="color:var(--rojo-oscuro)"><i class="fas fa-building-columns"></i></div>
+                        <div class="dicat-via-icon"><i class="fas fa-building-columns"></i></div>
                         <h3>En la sede del CAE-CH</h3>
-                        <p class="dicat-via-destacado" style="color:var(--rojo-oscuro)">Vía principal</p>
+                        <p class="dicat-via-destacado">Vía principal</p>
                         <p>Acércate a nuestras oficinas con la clave catastral o la dirección del predio. El equipo genera el DICAT contigo y resuelve en el momento las dudas del informe.</p>
                         <a href="#contacto" class="btn dicat-via-btn">
-                            <i class="fas fa-map-marker-alt"></i> Ver dirección y horarios
+                            <i class="fas fa-map-marker-alt"></i> Dirección y horarios
                         </a>
                         <p class="dicat-via-nota">Av. Daniel León Borja · Pasaje Centro de Arte y Cultura</p>
                     </div>
                     <!-- Versión oficial firmada -->
-                    <div class="dicat-via" style="border-top-color:var(--gris-medio)">
-                        <div class="dicat-via-icon" style="color:var(--gris-medio)"><i class="fas fa-stamp"></i></div>
+                    <div class="dicat-via">
+                        <div class="dicat-via-icon"><i class="fas fa-stamp"></i></div>
                         <h3>Versión oficial firmada</h3>
-                        <p class="dicat-via-destacado" style="color:var(--gris-medio)">Impresa o digital</p>
-                        <p>Con firma y sello del CAE-CH, en proceso de homologación institucional para trámites municipales. Se solicita por correo electrónico.</p>
+                        <p class="dicat-via-destacado">Impresa o digital</p>
+                        <p>Con firma y sello del CAE-CH, impresa o en PDF firmado. Se solicita por correo electrónico indicando la clave catastral del predio.</p>
                         <a href="mailto:caechoficial@gmail.com?subject=Solicitud%20Reporte%20DICAT%20Oficial&body=Nombre%3A%0AClave%20catastral%3A%0ADirecci%C3%B3n%20del%20predio%3A%0ATipo%20de%20reporte%20(impreso%20%2F%20digital%20firmado)%3A%0AObservaciones%3A"
                            class="btn btn-outline dicat-via-btn">
                             <i class="fas fa-envelope"></i> Solicitar por correo
@@ -2446,14 +2339,14 @@
                          (data-caech="modulo"): solo aparece cuando el control de
                          acceso esta desplegado y activo. El enlace al GeoVisor, en
                          cambio, ya no depende de la sesion: el mapa es publico. -->
-                    <div class="dicat-via" data-caech="modulo" hidden style="border-top-color:var(--rojo-caech)">
-                        <div class="dicat-via-icon" style="color:var(--rojo-caech)"><i class="fas fa-map-location-dot"></i></div>
+                    <div class="dicat-via" data-caech="modulo" hidden>
+                        <div class="dicat-via-icon"><i class="fas fa-map-location-dot"></i></div>
                         <h3>Usted mismo, en el GeoVisor</h3>
-                        <p class="dicat-via-destacado" style="color:var(--rojo-caech)">Cuenta de colegiado</p>
+                        <p class="dicat-via-destacado">Cuenta de colegiado</p>
                         <p>El mapa está abierto para todos. Para <strong>descargar</strong> el DICAT en PDF —o exportar el predio en CSV y DXF— hace falta una cuenta, y las cuentas se otorgan solo a miembros del CAE: al crearla se pide el número de registro del colegiado.</p>
                         <div data-caech="sin-sesion" hidden>
                             <button type="button" class="btn dicat-via-btn" onclick="caechAcceso.abrirRegistro()">
-                                <i class="fas fa-id-card"></i> Crear cuenta con mi registro
+                                <i class="fas fa-id-card"></i> Crear mi cuenta
                             </button>
                             <p class="dicat-via-nota">¿Ya tiene una?
                                 <button type="button" class="caech-acc-enlace" onclick="caechAcceso.abrirIngreso()">Ingrese</button>
@@ -2523,8 +2416,8 @@
                             <i class="fas fa-clock"></i>
                             <div>
                                 <strong>Horario de Atención</strong><br>
-                                Lunes a Viernes: 8:00 AM - 5:00 PM<br>
-                                Sábados: 9:00 AM - 1:00 PM
+                                Lunes a Viernes<br>
+                                9:00 AM – 1:00 PM &nbsp;·&nbsp; 3:00 PM – 6:00 PM
                             </div>
                         </div>
                     </div>
@@ -2568,7 +2461,6 @@
                         <li><a href="#inicio">Inicio</a></li>
                         <li><a href="#nosotros">Nosotros</a></li>
                         <li><a href="#plataforma">Plataforma</a></li>
-                        <li><a href="#cursos" class="cursos-footer-link">Cursos</a></li>
                         <li><a href="#solicitar">Solicitar Reporte DICAT</a></li>
                         <li><a href="#integracion">Fuentes de Datos</a></li>
                         <li><a href="RESEARCH/index.html">Investigación</a></li>
@@ -2626,36 +2518,6 @@
                     document.getElementById('hamburger-btn').classList.remove('open');
                 });
             });
-            // Referencias a elementos importantes
-            const cursosSection = document.getElementById('cursos');
-            const cursosLink = document.getElementById('cursos-link');
-            const cursosHeroBtn = document.getElementById('cursos-hero-btn');
-            const cursosFooterLinks = document.querySelectorAll('.cursos-footer-link');
-            
-            // Función para mostrar la sección de cursos
-            function mostrarCursos() {
-                cursosSection.classList.add('active');
-                cursosSection.scrollIntoView({ behavior: 'smooth' });
-            }
-            
-            // Event listeners para mostrar cursos
-            cursosLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarCursos();
-            });
-            
-            cursosHeroBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarCursos();
-            });
-            
-            cursosFooterLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    mostrarCursos();
-                });
-            });
-            
             // ── FORMULARIO DE CONTACTO ───────────────────────────
             const contactForm = document.getElementById('contact-form');
             if (contactForm) {
