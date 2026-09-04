@@ -4,7 +4,7 @@
    PASO ÚNICO DE CONFIGURACIÓN:
    1. Entra a https://analytics.google.com  → Administrar → Crear propiedad.
    2. Crea un flujo de datos "Web" con la URL del sitio
-      (https://www.cae-ch.org.ec/).
+      (https://cae-ch.org/).
    3. Copia el "ID de medición" (formato G-XXXXXXXXXX).
    4. Pégalo abajo en GA_ID, reemplazando el valor de ejemplo.
 

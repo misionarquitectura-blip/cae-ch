@@ -4,7 +4,7 @@
 //  El token de sesion viaja en `Authorization: Bearer <token>`, no en
 //  cookie. Motivo: el sitio vive en GitHub Pages y el API en workers.dev,
 //  o sea dominios distintos; una cookie ahi es de terceros y Safari y
-//  Chrome la bloquean. Cuando el API pase a api.cae-ch.org.ec conviene
+//  Chrome la bloquean. Cuando el API pase a api.cae-ch.org conviene
 //  migrar a cookie HttpOnly + SameSite=Lax (ver README).
 // ════════════════════════════════════════════════════════════════════
 

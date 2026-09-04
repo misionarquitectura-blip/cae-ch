@@ -4187,10 +4187,18 @@
 
                     showProgressBar('Generando código QR de verificación...');
                     // El QR abre el GeoVisor y, si hay clave catastral, centra y selecciona el predio.
-                    // OJO: el GeoVisor ya no se enlaza desde el sitio publico, pero esta URL viaja
-                    // impresa en cada DICAT que se entrega. Mientras el acceso siga siendo interno,
-                    // apunta al dominio institucional y no a la URL de GitHub Pages.
-                    const qrBase = 'https://www.cae-ch.org.ec/geovisor.html';
+                    // OJO: esta URL viaja IMPRESA en cada DICAT que se entrega, y en
+                    // papel ya no se corrige. Por eso no se fija a mano un dominio:
+                    // se toma el origen real desde el que se sirve el visor, de modo
+                    // que el QR siga al sitio si cambia de dominio y nunca apunte a
+                    // un host inexistente. Solo se recurre al dominio institucional
+                    // cuando el visor se abre en local o desde un archivo.
+                    const SITIO_CAECH = 'https://cae-ch.org';
+                    const enLocal = location.protocol === 'file:'
+                        || /^(localhost|127\.|0\.0\.0\.0|\[?::1\]?$)/.test(location.hostname);
+                    const qrBase = enLocal
+                        ? SITIO_CAECH + '/geovisor.html'
+                        : location.origin + location.pathname;
                     const qrUrl = `${qrBase}?verify=${encodeURIComponent(nroInforme)}` +
                         (clave && clave !== 'S/C' ? `&clave=${encodeURIComponent(clave)}` : '');
                     const qrDataUrl = await generarQRDataUrl(qrUrl);

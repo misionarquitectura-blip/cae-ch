@@ -20,7 +20,7 @@ import { readFileSync } from 'node:fs';
 const API = process.env.API || 'http://127.0.0.1:8787';
 const CLAVE_TEMPORAL = process.argv[2];
 const LOG = process.argv[3];
-const ORIGEN = 'https://www.cae-ch.org.ec';
+const ORIGEN = 'https://cae-ch.org';
 
 if (!CLAVE_TEMPORAL) {
     console.error('Uso: node test/api.test.mjs <clave-temporal-del-admin> [log-de-wrangler]');

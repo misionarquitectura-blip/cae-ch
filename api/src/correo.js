@@ -5,7 +5,7 @@
 //    resend   produccion (requiere dominio verificado + RESEND_API_KEY)
 //    consola  desarrollo: no envia, escribe el enlace en los logs del
 //             Worker (`npx wrangler tail`). Es el modo util mientras
-//             cae-ch.org.ec todavia no resuelve.
+//             cae-ch.org todavia no resuelve.
 // ════════════════════════════════════════════════════════════════════
 
 const SALTO = String.fromCharCode(10);
@@ -41,7 +41,7 @@ export async function enviarCorreo(env, { para, asunto, html, textoPlano }) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: env.MAIL_REMITENTE || 'CAE-CH <no-responder@cae-ch.org.ec>',
+                    from: env.MAIL_REMITENTE || 'CAE-CH <no-responder@cae-ch.org>',
                     to: [para],
                     subject: asunto,
                     html,
