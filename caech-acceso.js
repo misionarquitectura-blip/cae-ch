@@ -38,10 +38,20 @@
 
     const el = id => document.getElementById(id);
 
-    function token()          { try { return sessionStorage.getItem(LLAVE_TOKEN); } catch (e) { return null; } }
-    function guardarToken(t)  { try { t ? sessionStorage.setItem(LLAVE_TOKEN, t) : sessionStorage.removeItem(LLAVE_TOKEN); } catch (e) {} }
-    function pase()           { try { return sessionStorage.getItem(LLAVE_PASE); } catch (e) { return null; } }
-    function guardarPase(p)   { try { p ? sessionStorage.setItem(LLAVE_PASE, p) : sessionStorage.removeItem(LLAVE_PASE); } catch (e) {} }
+    // localStorage y no sessionStorage: este ultimo es POR PESTANA, de modo
+    // que abrir el visor en una pestana nueva dejaba al afiliado sin sesion
+    // y sin el boton, sin ninguna explicacion visible. La sesion sigue
+    // caducando a las 8 horas en el servidor y "Salir" la revoca, que es
+    // donde de verdad se controla su duracion.
+    function leer(llave)   { try { return localStorage.getItem(llave); } catch (e) { return null; } }
+    function grabar(llave, v) {
+        try { v ? localStorage.setItem(llave, v) : localStorage.removeItem(llave); } catch (e) {}
+    }
+
+    function token()          { return leer(LLAVE_TOKEN); }
+    function guardarToken(t)  { grabar(LLAVE_TOKEN, t); }
+    function pase()           { return leer(LLAVE_PASE); }
+    function guardarPase(p)   { grabar(LLAVE_PASE, p); }
 
     async function api(metodo, ruta, cuerpo) {
         const cabeceras = {};
