@@ -57,13 +57,14 @@ HASH_ITERACIONES = "50000"
 MAIL_PROVEEDOR = "consola"
 MAIL_REMITENTE = "CAE-CH <no-responder@cae-ch.org>"
 
-# "no" apaga el registro publico de usuarios sin volver a desplegar.
-# Dejelo en "no" mientras MAIL_PROVEEDOR sea "consola": sin correo
-# saliente nadie puede confirmar su cuenta y quedaria a medio crear.
-REGISTRO_ACTIVO = "no"
+# "no" apaga el registro publico de cuentas sin volver a desplegar.
+# Queda en "si", pero el alta se sigue negando sola mientras
+# MAIL_PROVEEDOR sea "consola": sin correo saliente nadie podria confirmar
+# su cuenta. Basta configurar Resend para que el registro funcione.
+REGISTRO_ACTIVO = "si"
 
-# "no" apaga la promocion de lanzamiento sin volver a desplegar.
-# Apagada mientras MAIL_PROVEEDOR sea "consola": en ese modo el envio
-# reporta exito pero no manda nada, y el publico quedaria esperando un
-# correo que nunca llega. Se enciende junto con Resend.
+# Pase de cortesia (un DICAT por correo verificado). RETIRADO el
+# 2026-09-04: el mapa se abrio al publico y, a cambio, los productos
+# -PDF, CSV y DXF- pasaron a exigir cuenta de colegiado. No volver a
+# encenderlo sin revisar `permisos()` en src/sesiones.js.
 FREEMIUM_ACTIVO = "no"

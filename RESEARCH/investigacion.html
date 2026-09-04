@@ -9,19 +9,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="../analytics.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
+        /* Identidad 2025-2027. Estos cuatro primeros nombres los
+           redefine tambien caech-ui.css, que carga despues; se dejan
+           aqui con el valor correcto para que el archivo se lea solo. */
         :root {
-            --rojo: #8B0000;
-            --rojo-medio: #A52A2A;
-            --gris-oscuro: #2F2F2F;
-            --gris-medio: #5A5A5A;
-            --gris-claro: #F5F5F5;
+            --rojo: #E31E24;
+            --rojo-medio: #B2141A;
+            --gris-oscuro: #2E3238;
+            --gris-medio: #565B63;
+            --gris-claro: #F7F7F8;
+            /* Escala de alerta: es semantica, no de marca. Se queda. */
             --alto: #C0392B;
             --medio: #E67E22;
             --bajo: #F1C40F;
-            --predio: #2980B9;
+            --predio: #2563A8;
         }
 
         body { background: var(--gris-claro); color: var(--gris-oscuro); }
@@ -38,32 +46,30 @@
             padding: 12px 20px;
         }
         .logo-area { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-area img { height: 44px; border-radius: 4px; }
+        .logo-area img { height: 46px; width: auto; display: block; }
         .logo-text { font-size: 20px; font-weight: 700; color: var(--rojo); line-height: 1.1; }
         .logo-sub { font-size: 11px; color: var(--gris-medio); letter-spacing: .5px; }
-        .back-btn {
-            display: flex; align-items: center; gap: 6px;
-            background: var(--rojo); color: #fff;
-            border: none; border-radius: 6px; padding: 8px 16px;
-            font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;
-            transition: background .2s;
-        }
-        .back-btn:hover { background: var(--rojo-medio); }
+        /* .back-btn, .btn-aplicar y .bm-btn los dibuja caech-ui.css:
+           un solo boton para todo el sitio. Aqui solo su disposicion. */
+        .barra-nav { display: flex; gap: 8px; flex-wrap: wrap; }
 
         /* ── Hero band ── */
         .hero-band {
-            background: linear-gradient(135deg, var(--rojo) 0%, #5a0000 100%);
+            background: linear-gradient(135deg, #3A2024 0%, var(--gris-oscuro) 55%, #23262B 100%);
             color: #fff; padding: 28px 20px 24px;
-            border-bottom: 4px solid #6a0000;
+            border-bottom: 3px solid var(--rojo);
         }
         .hero-band .inner { max-width: 1400px; margin: 0 auto; }
         .hero-band h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 6px; }
         .hero-band p  { font-size: .95rem; opacity: .87; max-width: 720px; }
+        /* Fila de distintivos: envuelve en vez de desbordarse. */
+        .badge-fila { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
         .badge-ia {
-            display: inline-flex; align-items: center; gap: 5px;
-            background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
-            border-radius: 20px; padding: 3px 12px; font-size: .78rem; margin-top: 10px;
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+            border-radius: 100px; padding: 4px 13px; font-size: .76rem;
         }
+        .badge-ia i { color: var(--rojo); }
 
         /* ── KPI cards ── */
         .kpi-row {
@@ -122,13 +128,7 @@
             font-size: .75rem; color: var(--gris-medio); margin-top: 3px;
         }
 
-        .btn-aplicar {
-            width: 100%; background: var(--rojo); color: #fff;
-            border: none; border-radius: 7px; padding: 9px;
-            font-size: .85rem; font-weight: 700; cursor: pointer;
-            transition: background .2s; margin-top: 6px;
-        }
-        .btn-aplicar:hover { background: var(--rojo-medio); }
+        .btn-aplicar { margin-top: 8px; }
 
         /* Leyenda */
         .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: .82rem; }
@@ -155,19 +155,12 @@
             position: absolute; bottom: 90px; right: 10px; z-index: 900;
             display: flex; flex-direction: column; gap: 4px;
         }
-        .bm-btn {
-            background: #fff; border: 2px solid #ccc; border-radius: 6px;
-            padding: 5px 10px; font-size: .75rem; font-weight: 700; cursor: pointer;
-            box-shadow: 0 1px 4px rgba(0,0,0,.2); transition: all .15s; white-space: nowrap;
-            color: var(--gris-oscuro);
-        }
-        .bm-btn.active { background: var(--rojo); color: #fff; border-color: var(--rojo); }
-        .bm-btn:hover:not(.active) { background: #f0f0f0; }
+        .bm-btn { box-shadow: var(--sombra-1); }
 
         /* Loading overlay */
         #loading {
             position: fixed; inset: 0;
-            background: rgba(139,0,0,.92);
+            background: rgba(46,50,56,.94);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 9999; color: #fff; gap: 16px;
         }
@@ -205,6 +198,9 @@
             font-size: .79rem; color: #856404; line-height: 1.5;
         }
     </style>
+    <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
+         Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
+    <link rel="stylesheet" href="../caech-ui.css">
 </head>
 <body>
 
@@ -220,7 +216,7 @@
         <p style="margin-top:10px;font-size:.8rem;opacity:.85">
             Verifica tu conexión a internet e intenta nuevamente.
         </p>
-        <button onclick="location.reload()" style="margin-top:12px;background:#fff;color:#8B0000;border:none;border-radius:6px;padding:7px 18px;font-weight:700;cursor:pointer">
+        <button class="btn" onclick="location.reload()" style="margin-top:12px;background:#fff;color:var(--rojo)">
             <i class="fas fa-redo"></i> Reintentar
         </button>
     </div>
@@ -230,28 +226,37 @@
 <header>
     <div class="navbar">
         <a class="logo-area" href="../index.html">
-            <img src="../LOGO/Logo Cae.jpg" alt="CAE-CH" onerror="this.style.display='none'">
-            <div>
-                <div class="logo-text">CAE-CH</div>
-                <div class="logo-sub">Chimborazo</div>
-            </div>
+            <img src="../LOGO/logo-caech.png" width="520" height="188"
+                 alt="CAE-Ch · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo"
+                 onerror="this.style.display='none'">
         </a>
-        <a class="back-btn" href="../index.html"><i class="fas fa-arrow-left"></i> Inicio</a>
+        <nav class="barra-nav" aria-label="Navegación de la investigación">
+            <a class="btn btn-sm" href="index.html"><i class="fas fa-arrow-left"></i> Investigación</a>
+            <a class="btn btn-sm btn-linea" href="equipamiento.html"><i class="fas fa-city"></i> Línea 2</a>
+            <a class="btn btn-sm btn-linea" href="../index.html"><i class="fas fa-house"></i> Inicio</a>
+        </nav>
     </div>
 </header>
 
 <!-- ── HERO ── -->
 <div class="hero-band">
     <div class="inner">
-        <h1><i class="fas fa-microscope"></i> Investigación Territorial</h1>
+        <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.2em;opacity:.8;margin-bottom:10px">
+            <a href="index.html" style="color:inherit;text-decoration:none">Investigación territorial</a>
+            &nbsp;·&nbsp; Línea 1 &nbsp;·&nbsp; Catastro y suelo construido
+        </div>
+        <h1><i class="fas fa-microscope"></i> Construcciones no registradas</h1>
         <p>Detección de construcciones no declaradas en el catastro municipal de Riobamba mediante análisis de inteligencia artificial y contraste con datos catastrales oficiales.</p>
-        <div class="badge-ia"><i class="fas fa-robot"></i> Fuente IA: Google Open Buildings · ML</div>
+        <div class="badge-fila">
+            <span class="badge-ia"><i class="fas fa-robot"></i> Fuente IA: Google Open Buildings · ML</span>
+            <span class="badge-ia"><i class="fas fa-lock-open"></i> Acceso libre, sin cuenta</span>
+        </div>
     </div>
 </div>
 
 <!-- ── KPIs ── -->
 <div class="kpi-row" id="kpi-row">
-    <div class="kpi-card" style="--color:#8B0000">
+    <div class="kpi-card" style="--color:#E31E24">
         <div class="val" id="kpi-nr">—</div>
         <div class="lbl">Construcciones no registradas</div>
         <div class="sub">detectadas por IA en predios sin declaración</div>
@@ -405,8 +410,10 @@ const map = L.map('map', { center: [-1.6716, -78.6480], zoom: 13, zoomControl: t
 
 // ── Basemaps ─────────────────────────────────────────────────────────────────
 const BASEMAPS = {
-    carto: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap © CARTO', maxZoom: 20
+    // Lienzo gris de Esri, no CARTO: sus teselas pasaron a exigir clave de
+    // API y devolvian "API KEY REQUIRED" sobre todo el mapa.
+    carto: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors', maxZoom: 16
     }),
     satelite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles © Esri — Source: Esri, USGS, NOAA', maxZoom: 20

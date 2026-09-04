@@ -36,7 +36,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         :root {
@@ -995,15 +995,6 @@
         }
 
         /* ===== GEOVISOR ===== */
-        .btn-geovisor {
-            background-color: var(--gris-oscuro);
-            color: var(--blanco-primario) !important;
-        }
-        .btn-geovisor:hover {
-            background-color: var(--gris-medio);
-            color: var(--blanco-primario) !important;
-        }
-
         /* ===== SCROLL-SPY: enlace activo en navbar ===== */
         .nav-links a.active {
             color: var(--rojo-oscuro);
@@ -1110,15 +1101,7 @@
         }
 
         /* ===== BOTÓN CURSO DESHABILITADO ===== */
-        .btn-inactivo {
-            background-color: var(--gris-medio);
-            cursor: not-allowed;
-            opacity: 0.75;
-            pointer-events: none;
-        }
-        .btn-inactivo:hover {
-            background-color: var(--gris-medio);
-        }
+        /* .btn-inactivo: ver caech-ui.css. */
 
         /* ===== INTEGRATION GRID ajuste para 7 items ===== */
         @media (min-width: 1024px) {
@@ -1257,13 +1240,7 @@
             font-weight: 600;
             margin: 8px 0 4px !important;
         }
-        .dicat-via-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            padding: 11px 24px;
-        }
+        .dicat-via-btn { margin-top: 4px; }
         .dicat-via-nota {
             font-size: 11.5px !important;
             color: #888 !important;
@@ -1410,34 +1387,16 @@
         /* Filete vertical: el que separa el emblema del wordmark. */
         .navbar { flex-wrap: wrap; row-gap: 10px; }
         .nav-buttons {
-            position: relative;
             padding-left: 22px;
-            flex-wrap: wrap;
+            margin-left: 22px;
+            border-left: 1px solid var(--borde);
         }
-        .nav-buttons::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 50%;
-            transform: translateY(-50%);
-            width: 1px; height: 26px;
-            background: var(--borde);
+        @media (max-width: 900px) {
+            /* Apilada, la barra ya no separa nada: el filete sobra. */
+            .nav-buttons { padding-left: 0; margin-left: 0; border-left: 0; }
         }
 
-        /* ── Botones ──────────────────────────────────────────── */
-        .btn {
-            border-radius: var(--radio);
-            font-weight: 600;
-            font-size: 13px;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            transition: transform .2s cubic-bezier(.4, 0, .2, 1), box-shadow .2s, background-color .25s, color .25s, border-color .25s;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: var(--sombra-2); }
-        .btn:active { transform: translateY(0); }
-        .btn:not(.btn-outline):not(.btn-secondary) { background-color: var(--rojo-caech); }
-        .btn:not(.btn-outline):not(.btn-secondary):hover { background-color: var(--rojo-hondo); }
-        .btn-outline { border-color: var(--rojo-caech); color: var(--rojo-caech); }
-        .btn-outline:hover { background-color: var(--rojo-caech); color: #fff; }
+        /* Botones: ver caech-ui.css. */
 
         /* ── Hero ─────────────────────────────────────────────── */
         .hero {
@@ -1524,6 +1483,24 @@
             margin-bottom: 38px;
         }
         .hero p strong { color: #fff; font-weight: 600; }
+
+        /* Linea que aclara que el mapa es libre y solo se cobra el
+           tramite de la cuenta para descargar. Sube pegada al parrafo
+           anterior, de ahi el margen superior negativo. */
+        .hero-acceso {
+            display: block;
+            max-width: 640px;
+            margin: -24px auto 34px;
+            padding: 11px 16px;
+            border-left: 3px solid var(--rojo-caech, #E31E24);
+            background: rgba(255, 255, 255, .06);
+            border-radius: 0 6px 6px 0;
+            font-size: 15px;
+            line-height: 1.6;
+            text-align: left;
+            color: rgba(255, 255, 255, .82);
+        }
+        .hero-acceso i { color: var(--rojo-caech, #E31E24); margin-right: 6px; }
 
         .hero .btn-secondary {
             background: transparent;
@@ -1874,6 +1851,9 @@
             .integration-item:hover, .btn:hover { transform: none; }
         }
     </style>
+    <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
+         Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
+    <link rel="stylesheet" href="caech-ui.css">
 </head>
 <body>
     <div class="progreso-lectura" aria-hidden="true"></div>
@@ -1895,11 +1875,11 @@
                     <li><a href="#plataforma">Plataforma</a></li>
                     <li><a href="#cursos" id="cursos-link">Cursos</a></li>
                     <li><a href="#dicat-interactivo">El DICAT</a></li>
-                    <li data-caech="con-sesion" hidden><a href="geovisor.html">GeoVisor</a></li>
+                    <li><a href="geovisor.html">GeoVisor</a></li>
                     <li><a href="#solicitar">Solicitar DICAT</a></li>
                     <li><a href="#integracion">Integración</a></li>
                     <li><a href="#contacto">Contacto</a></li>
-                    <li><a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer" style="color:#E31E24;font-weight:700"><i class="fas fa-microscope" style="margin-right:4px"></i>Investigación</a></li>
+                    <li><a href="RESEARCH/index.html" style="color:#E31E24;font-weight:700"><i class="fas fa-microscope" style="margin-right:4px"></i>Investigación</a></li>
                 </ul>
                 <div class="nav-buttons">
                     <a href="mailto:caechoficial@gmail.com" class="btn btn-outline"><i class="fas fa-envelope"></i> Contacto</a>
@@ -1917,17 +1897,14 @@
                 <hr class="filete-rojo hero-filete">
                 <h2>Colegio de Arquitectos del Ecuador<br>Provincial de <strong>Chimborazo</strong></h2>
                 <p>Reunimos en un solo lugar el catastro del GADMR, el PUGS, la vialidad y las redes de EMAPAR y EERSA. De ahí sale el <strong>DICAT</strong>: el diagnóstico catastral y territorial de un predio, medido y con cada dato trazable hasta la institución que lo publica.</p>
+                <p class="hero-acceso"><i class="fas fa-unlock"></i> <strong>El mapa se consulta libremente, sin crear ninguna cuenta.</strong> Solo las descargas —el DICAT en PDF, el CSV y el DXF— piden una cuenta de colegiado del CAE.</p>
                 <div class="hero-buttons">
-                    <a href="geovisor.html" class="btn" data-caech="con-sesion" hidden>
+                    <a href="geovisor.html" class="btn btn-lg">
                         <i class="fas fa-map-location-dot"></i> Abrir el GeoVisor
                     </a>
-                    <button type="button" class="btn" data-caech="sin-sesion" hidden
-                            onclick="caechAcceso.abrirRegistro()">
-                        <i class="fas fa-user-plus"></i> Crear cuenta y abrir el GeoVisor
-                    </button>
-                    <a href="#dicat-interactivo" class="btn"><i class="fas fa-file-lines"></i> Ver qué contiene el DICAT</a>
+                    <a href="#dicat-interactivo" class="btn btn-secondary"><i class="fas fa-file-lines"></i> Qué contiene el DICAT</a>
                     <a href="#integracion" class="btn btn-secondary"><i class="fas fa-layer-group"></i> Fuentes de datos</a>
-                    <a href="#cursos" class="btn btn-secondary" id="cursos-hero-btn">Ver Cursos</a>
+                    <a href="#cursos" class="btn btn-secondary" id="cursos-hero-btn"><i class="fas fa-graduation-cap"></i> Ver cursos</a>
                 </div>
                 <div class="stats">
                     <div class="stat-item">
@@ -2037,19 +2014,19 @@
                         <li>Código QR que abre el predio en el GeoVisor</li>
                     </ul>
                 </div>
-                <div class="feature-card" style="border-top:4px solid #E31E24; cursor:pointer;" onclick="window.open('RESEARCH/investigacion.html','_blank')">
+                <div class="feature-card" style="border-top:4px solid #E31E24; cursor:pointer;" onclick="location.href='RESEARCH/index.html'">
                     <div class="feature-icon" style="background:rgba(227,30,36,.1);color:#E31E24"><i class="fas fa-microscope"></i></div>
                     <h3>Investigación Territorial</h3>
-                    <p>Detección de construcciones no declaradas en el catastro de Riobamba mediante contraste entre datos catastrales y edificaciones identificadas por inteligencia artificial (<strong>Google Open Buildings 2024</strong>).</p>
+                    <p>Dos líneas de investigación permanentes sobre Riobamba, con su método, sus cifras y sus límites publicados. <strong>Abiertas a todo público, sin cuenta.</strong></p>
                     <ul class="feature-list">
-                        <li>20 K+ construcciones no registradas detectadas</li>
-                        <li>Análisis por nivel de confianza IA (Google Open Buildings 2024)</li>
-                        <li>Mapa interactivo con filtros y capa integrada en GeoVisor</li>
+                        <li><strong>Línea 1 · Catastro y suelo:</strong> 20 089 construcciones sin registrar, detectadas por IA</li>
+                        <li><strong>Línea 2 · Equipamiento urbano:</strong> 1,37 m² de área verde por habitante frente a los 9 m² de la OMS</li>
+                        <li>Presentación en diapositivas y mapas interactivos con filtros</li>
                     </ul>
                     <div style="margin-top:12px">
-                        <a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer"
+                        <a href="RESEARCH/index.html"
                            style="display:inline-flex;align-items:center;gap:6px;background:#E31E24;color:#fff;border-radius:4px;padding:7px 16px;font-size:.82rem;font-weight:700;text-decoration:none">
-                            <i class="fas fa-chart-bar"></i> Ver análisis
+                            <i class="fas fa-chart-bar"></i> Ver las dos investigaciones
                         </a>
                     </div>
                 </div>
@@ -2465,17 +2442,18 @@
                         </a>
                         <p class="dicat-via-nota">caechoficial@gmail.com</p>
                     </div>
-                    <!-- Acceso de afiliados. Nace oculto: solo aparece cuando el
-                         control de acceso esta desplegado y activo, y el enlace al
-                         GeoVisor se revela recien con la sesion iniciada. -->
+                    <!-- Descarga por cuenta propia. El bloque completo nace oculto
+                         (data-caech="modulo"): solo aparece cuando el control de
+                         acceso esta desplegado y activo. El enlace al GeoVisor, en
+                         cambio, ya no depende de la sesion: el mapa es publico. -->
                     <div class="dicat-via" data-caech="modulo" hidden style="border-top-color:var(--rojo-caech)">
                         <div class="dicat-via-icon" style="color:var(--rojo-caech)"><i class="fas fa-map-location-dot"></i></div>
-                        <h3>Con una cuenta</h3>
-                        <p class="dicat-via-destacado" style="color:var(--rojo-caech)">Acceso al GeoVisor</p>
-                        <p>Cualquiera puede crear una cuenta y abrir el GeoVisor. Los afiliados del CAE-CH además exportan el predio en DXF y CSV.</p>
+                        <h3>Usted mismo, en el GeoVisor</h3>
+                        <p class="dicat-via-destacado" style="color:var(--rojo-caech)">Cuenta de colegiado</p>
+                        <p>El mapa está abierto para todos. Para <strong>descargar</strong> el DICAT en PDF —o exportar el predio en CSV y DXF— hace falta una cuenta, y las cuentas se otorgan solo a miembros del CAE: al crearla se pide el número de registro del colegiado.</p>
                         <div data-caech="sin-sesion" hidden>
                             <button type="button" class="btn dicat-via-btn" onclick="caechAcceso.abrirRegistro()">
-                                <i class="fas fa-user-plus"></i> Crear una cuenta
+                                <i class="fas fa-id-card"></i> Crear cuenta con mi registro
                             </button>
                             <p class="dicat-via-nota">¿Ya tiene una?
                                 <button type="button" class="caech-acc-enlace" onclick="caechAcceso.abrirIngreso()">Ingrese</button>
@@ -2492,11 +2470,14 @@
                 <div class="dicat-aviso">
                     <i class="fas fa-info-circle"></i>
                     <p>
-                        <strong>El CAE-CH es una organización profesional sin fines de lucro.</strong>
-                        Por ahora el reporte se atiende de forma presencial, mientras se define el esquema de aportes
-                        o donaciones que sostenga el servicio. Ten a mano la clave catastral, el nombre del propietario
-                        y la dirección del predio. El DICAT es un documento técnico-informativo del CAE-CH y no
-                        reemplaza los documentos oficiales del GADMR.
+                        <strong>Consultar es libre; descargar pide cuenta.</strong>
+                        El GeoVisor muestra todas las capas a cualquiera que entre: catastro, PUGS, vialidad,
+                        agua potable, alcantarillado y redes eléctricas. Lo que exige una cuenta verificada por
+                        correo son los tres productos que salen de ahí —el DICAT en PDF, el CSV y el DXF—, porque
+                        el CAE-CH responde por ellos y deja constancia de cada descarga. Esas cuentas se otorgan
+                        únicamente a miembros del CAE, que se identifican con su número de registro.
+                        El DICAT es un documento técnico-informativo del CAE-CH y no reemplaza los documentos
+                        oficiales del GADMR.
                     </p>
                 </div>
             </div>
@@ -2590,7 +2571,7 @@
                         <li><a href="#cursos" class="cursos-footer-link">Cursos</a></li>
                         <li><a href="#solicitar">Solicitar Reporte DICAT</a></li>
                         <li><a href="#integracion">Fuentes de Datos</a></li>
-                        <li><a href="RESEARCH/investigacion.html" target="_blank" rel="noopener noreferrer">Investigación</a></li>
+                        <li><a href="RESEARCH/index.html">Investigación</a></li>
                         <li><a href="#contacto">Contacto</a></li>
                     </ul>
                 </div>

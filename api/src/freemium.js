@@ -41,7 +41,10 @@ async function excesoDeSolicitudes(env, ip_hash) {
 // ── 1. Solicitud ────────────────────────────────────────────────────
 
 export async function solicitarPase(env, request, datos) {
-    if (String(env.FREEMIUM_ACTIVO || 'si').toLowerCase() === 'no') {
+    // RETIRADO el 2026-09-04: al abrir el mapa al publico, el DICAT paso a
+    // exigir cuenta de colegiado. El endpoint sigue en pie para no romper
+    // enlaces viejos, pero nace apagado: el valor por omision es "no".
+    if (String(env.FREEMIUM_ACTIVO || 'no').toLowerCase() === 'no') {
         return { estado: 503, cuerpo: { ok: false, error: 'La promocion de lanzamiento no esta activa.' } };
     }
 

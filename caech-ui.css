@@ -1,0 +1,351 @@
+/* ══════════════════════════════════════════════════════════════════
+   CAE-Ch · Sistema de interfaz compartido
+   ──────────────────────────────────────────────────────────────────
+   Una sola paleta, una sola tipografía y UN SOLO botón para todo el
+   sitio: landing, páginas legales, GeoVisor y las dos investigaciones.
+
+   Antes de esto convivían dos identidades —el granate #8B0000 del
+   diseño viejo y el rojo vivo #E31E24 del isologo 2025-2027— y cuatro
+   maneras distintas de dibujar un botón, cada una con su tamaño, su
+   radio y sus iconos descuadrados.
+
+   CÓMO SE CARGA: con un <link> AL FINAL del <head>, después del
+   <style> propio de cada página. El orden importa: así estos tokens y
+   estas reglas de botón ganan a las locales sin pelear a golpe de
+   !important. Si alguna vez una página necesita salirse de aquí, que
+   lo haga con una clase propia y más específica, no reordenando.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · Tokens ─────────────────────────────────────────────────── */
+
+:root {
+    /* Rojo del emblema circular del isologo, y el mismo oscurecido. */
+    --rojo-caech:  #E31E24;
+    --rojo-hondo:  #B2141A;
+    --rojo-brasa:  #8E1015;               /* pulsado */
+    --rojo-humo:   rgba(227, 30, 36, .10); /* fondos y realces suaves */
+
+    /* Grises del wordmark "CAE-Ch" y de su línea de versalitas. */
+    --grafito:     #2E3238;
+    --grafito-med: #565B63;
+    --grafito-sua: #8B9098;
+    --hueso:       #F7F7F8;
+    --blanco:      #FFFFFF;
+
+    --borde:        rgba(46, 50, 56, .12);
+    --borde-marcado:rgba(46, 50, 56, .24);
+
+    --sombra-1: 0 1px 2px rgba(46, 50, 56, .05), 0 2px 10px rgba(46, 50, 56, .05);
+    --sombra-2: 0 6px 18px rgba(46, 50, 56, .09), 0 18px 40px rgba(46, 50, 56, .09);
+    --sombra-btn: 0 4px 14px rgba(227, 30, 36, .26);
+
+    --radio: 4px;                 /* el isologo no tiene esquinas blandas */
+    --tracking-caps: .28em;
+
+    --fuente-ui: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --fuente-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+
+    /* Los dos colores de línea del eje de investigación. Se aclararon
+       respecto de los originales para que convivan con el rojo sin
+       ensuciar: son acentos, no una segunda identidad. */
+    --linea-1: #2563A8;
+    --linea-2: #1E8449;
+
+    /* ── Alias heredados ──────────────────────────────────────────
+       Las páginas viejas escriben estos nombres por todas partes.
+       Redefinirlos aquí retiñe el sitio entero sin tocar mil reglas.
+       No añada nombres nuevos a esta lista: son deuda, no API.      */
+    --rojo:        var(--rojo-caech);
+    --rojo-oscuro: var(--rojo-caech);
+    --rojo-medio:  var(--rojo-hondo);
+    --gris-oscuro: var(--grafito);
+    --gris-medio:  var(--grafito-med);
+    --gris-claro:  var(--hueso);
+    --neutro:      var(--grafito-sua);
+}
+
+/* ── 2 · Tipografía ─────────────────────────────────────────────── */
+
+body { font-family: var(--fuente-ui); }
+
+h1, h2, h3, h4, h5, h6 { letter-spacing: -.02em; }
+
+code, kbd, samp, pre, .caech-acc-clave { font-family: var(--fuente-mono); }
+
+/* Versalitas del logo: caja alta, trazo fino, tracking muy abierto.
+   Es la firma gráfica que más se repite en la identidad. */
+.versalitas {
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+}
+
+/* Filete rojo: el que subraya "CAE-Ch" en el isologo. */
+.filete, .filete-rojo {
+    display: block;
+    height: 1.5px;
+    border: 0;
+    background: var(--rojo-caech);
+}
+
+/* ── 3 · El botón ───────────────────────────────────────────────── */
+/* Una sola base para todas las variantes que existían sueltas por el
+   sitio. `inline-flex` con centrado en los dos ejes es lo que arregla
+   de raíz los iconos descolgados: antes los botones eran
+   `inline-block` y el <i> se apoyaba en la línea base del texto.     */
+
+.btn,
+.back-btn,
+.btn-aplicar,
+.bm-btn,
+.dicat-nav-btn,
+.deck-nav button,
+.caech-acc-btn,
+.leyenda button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .58em;
+
+    padding: .8em 1.45em;
+    min-height: 42px;
+
+    border: 1px solid transparent;
+    border-radius: var(--radio);
+
+    font-family: var(--fuente-ui);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+
+    background-color: var(--rojo-caech);
+    color: var(--blanco);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+
+    transition: background-color .22s, border-color .22s, color .22s,
+                transform .18s cubic-bezier(.4, 0, .2, 1), box-shadow .22s;
+}
+
+/* Caja fija para el glifo. Los iconos de Font Awesome tienen anchos
+   distintos —fa-house es ancha, fa-arrow-left estrecha—, así que sin
+   esto una fila de botones sale con la separación icono-texto bailando
+   y el texto desalineado entre uno y otro. */
+.btn > i,      .btn > svg,
+.back-btn > i, .back-btn > svg,
+.btn-aplicar > i,
+.bm-btn > i,
+.dicat-nav-btn > i,
+.deck-nav button > i,
+.caech-acc-btn > i,
+.leyenda button > i {
+    flex: 0 0 auto;
+    width: 1.08em;
+    font-size: 1.02em;
+    line-height: 1;
+    text-align: center;
+    margin: 0;
+}
+
+.btn:hover,
+.back-btn:hover,
+.btn-aplicar:hover,
+.caech-acc-btn:hover:not(:disabled) {
+    background-color: var(--rojo-hondo);
+    color: var(--blanco);
+    transform: translateY(-1px);
+    box-shadow: var(--sombra-btn);
+}
+
+.btn:active,
+.back-btn:active,
+.btn-aplicar:active,
+.caech-acc-btn:active:not(:disabled) {
+    background-color: var(--rojo-brasa);
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Foco visible de verdad: el anillo aparece al navegar con teclado y
+   no ensucia el clic con el ratón. */
+.btn:focus-visible,
+.back-btn:focus-visible,
+.btn-aplicar:focus-visible,
+.bm-btn:focus-visible,
+.dicat-nav-btn:focus-visible,
+.deck-nav button:focus-visible,
+.caech-acc-btn:focus-visible,
+.leyenda button:focus-visible,
+.caech-acc-enlace:focus-visible,
+.puntos button:focus-visible {
+    outline: 2px solid var(--rojo-caech);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"],
+.back-btn:disabled,
+.btn-aplicar:disabled,
+.dicat-nav-btn:disabled,
+.deck-nav button:disabled,
+.caech-acc-btn:disabled,
+.bm-btn:disabled {
+    opacity: .42;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ── 3.1 · Variantes ────────────────────────────────────────────── */
+
+/* Contorno rojo sobre fondo claro. */
+.btn-outline {
+    background-color: transparent;
+    border-color: var(--rojo-caech);
+    color: var(--rojo-caech);
+}
+.btn-outline:hover {
+    background-color: var(--rojo-caech);
+    border-color: var(--rojo-caech);
+    color: var(--blanco);
+}
+
+/* Sobre fondo oscuro: hero, cabeceras, franjas grafito. */
+.btn-secondary {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, .32);
+    color: var(--blanco);
+}
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .62);
+    color: var(--blanco);
+    box-shadow: none;
+}
+
+/* Neutro sobre claro: navegación secundaria, filtros, controles.
+   `.deck-nav button` va nombrado aquí y no delegado a `.btn-linea`
+   porque la regla base ya lo nombra igual: con la misma especificidad
+   gana la última, y una clase suelta (0,1,0) no le ganaría a un
+   descendiente (0,1,1). */
+.btn-linea,
+.dicat-nav-btn,
+.bm-btn,
+.deck-nav button,
+.leyenda button {
+    background-color: var(--blanco);
+    border-color: var(--borde);
+    color: var(--grafito);
+}
+.btn-linea:hover,
+.dicat-nav-btn:hover:not(:disabled),
+.bm-btn:hover:not(.active),
+.deck-nav button:hover:not(:disabled),
+.leyenda button:hover {
+    background-color: var(--blanco);
+    border-color: var(--rojo-caech);
+    color: var(--rojo-caech);
+    transform: translateY(-1px);
+    box-shadow: var(--sombra-1);
+}
+.bm-btn.active {
+    background-color: var(--rojo-caech);
+    border-color: var(--rojo-caech);
+    color: var(--blanco);
+}
+
+/* Todavía no disponible: los "Próximamente" de la parrilla de cursos.
+   Va aquí y no en la página porque la base de arriba pinta de rojo todo
+   lo que sea `.btn`, y en rojo un botón inerte parece una llamada a la
+   acción que no responde. */
+.btn-inactivo,
+.btn-inactivo:hover {
+    background-color: var(--grafito-sua);
+    border-color: var(--grafito-sua);
+    color: var(--blanco);
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Sobre la franja oscura de la cabecera de las investigaciones, el
+   botón neutro se invierte para no abrir un agujero blanco. */
+.hero-band .btn-linea,
+.barra-oscura .btn-linea {
+    background-color: rgba(255, 255, 255, .08);
+    border-color: rgba(255, 255, 255, .3);
+    color: var(--blanco);
+}
+
+/* ── 3.2 · Tamaños ──────────────────────────────────────────────── */
+
+.btn-sm,
+.btn-small,
+.dicat-nav-btn,
+.bm-btn,
+.leyenda button,
+.deck-nav button {
+    min-height: 34px;
+    padding: .58em 1.05em;
+    font-size: 11px;
+    letter-spacing: .1em;
+}
+
+.btn-lg {
+    min-height: 50px;
+    padding: .95em 1.9em;
+    font-size: 14px;
+}
+
+/* El botón de un panel ocupa su ancho: es la única acción que hay. */
+.btn-aplicar,
+.caech-acc-btn,
+.btn-bloque { width: 100%; }
+
+/* ── 3.3 · Grupos ───────────────────────────────────────────────── */
+/* Toda fila de botones envuelve y respira igual. Es lo que evita que
+   en pantallas estrechas se pisen o se salgan del contenedor.        */
+
+.btn-grupo,
+.hero-buttons,
+.nav-acciones,
+.nav-buttons,
+.deck-nav,
+.leyenda,
+.basemap-ctrl {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.hero-buttons { justify-content: center; gap: 12px; }
+.basemap-ctrl { flex-direction: column; align-items: stretch; gap: 6px; }
+.basemap-ctrl .bm-btn { justify-content: flex-start; }
+
+/* Enlace de texto con el acento de la casa. */
+.caech-acc-enlace,
+.enlace-rojo {
+    font-family: var(--fuente-ui);
+    color: var(--rojo-caech);
+}
+
+@media (max-width: 640px) {
+    /* En móvil una fila de tres botones cabe mal en horizontal: se
+       dejan crecer para que el texto no se corte. */
+    .hero-buttons .btn { flex: 1 1 220px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn, .back-btn, .btn-aplicar, .bm-btn,
+    .dicat-nav-btn, .deck-nav button, .caech-acc-btn, .leyenda button {
+        transition: none;
+    }
+    .btn:hover, .back-btn:hover, .btn-aplicar:hover { transform: none; }
+}

@@ -2,24 +2,39 @@
 
 Control de acceso a los productos del GeoVisor, sobre **Cloudflare Workers + D1**.
 
+## La regla, en una línea
+
+**El mapa es público; los productos exigen cuenta de colegiado.**
+
+Desde el 2026-09-04 el GeoVisor se abre sin cuenta y sin registro: cualquiera
+consulta todas las capas. Lo que pasa por este API son las tres descargas —DICAT
+en PDF, CSV y DXF—, y para ellas hace falta una cuenta con el correo confirmado
+y el **número de registro del CAE ya cotejado** contra el padrón del colegio.
+
+El pase de cortesía (un PDF por correo verificado) quedó **retirado** al abrir el
+mapa: `FREEMIUM_ACTIVO = "no"` y ese es además el valor por omisión del código.
+
 Hay tres roles:
 
 | Rol | Cómo se obtiene |
 |---|---|
-| `usuario` | **registro público** en el sitio, confirmando el correo |
+| `usuario` | **registro público**, declarando su número de registro del CAE y confirmando el correo |
 | `afiliado` | alta por la administración; credenciales entregadas en la sede |
 | `admin` | además gestiona el padrón |
 
 Y esto puede cada uno:
 
-| | `usuario` | `afiliado` / `admin` |
-|---|---|---|
-| Abrir el GeoVisor | sí | sí |
-| **PDF** (DICAT) | **uno**, de cortesía | sin límite |
-| **DXF** | no | sí |
-| **CSV** | no | sí |
+| | `usuario` sin validar | `usuario` validado | `afiliado` / `admin` |
+|---|---|---|---|
+| Abrir el GeoVisor | sí (no hace falta cuenta) | sí | sí |
+| **PDF** (DICAT) | no | sí | sí |
+| **DXF** | no | sí | sí |
+| **CSV** | no | sí | sí |
 
-El público que no quiera crearse cuenta conserva el pase freemium: **un (1) reporte en PDF por correo verificado**, sin registro.
+Un `usuario` nace con `registro_validado = 0`: puede entrar y consultar, pero no
+descarga nada hasta que un administrador coteje su número contra el padrón con
+`PATCH /api/admin/afiliados/:id {registro_validado: true}`. Las cuentas que crea
+la administración nacen ya validadas, porque las hace con el padrón delante.
 
 Cada descarga queda registrada en la tabla `descargas` con quién, qué formato y qué clave catastral.
 
@@ -29,7 +44,8 @@ Cada descarga queda registrada en la tabla `descargas` con quién, qué formato 
 
 El visor se sirve estático desde GitHub Pages y `DATA SET/Catastro GADMR.geojson`
 es un archivo **público del repositorio**. Este API blinda la *herramienta* de
-exportación y deja auditoría de cada descarga; **no vuelve secreta la geometría**,
+exportación y deja auditoría de cada descarga; **no vuelve secreta la geometría**
+—y desde que el visor es público, tampoco pretende hacerlo—,
 que además es información municipal pública. Quien sepa manejar QGIS puede
 descargar ese GeoJSON y armarse su propio DXF sin pasar por aquí.
 
@@ -64,6 +80,15 @@ Copie el `database_id` que imprime y péguelo en `wrangler.toml`, reemplazando
 
 ```bash
 npx wrangler d1 execute caech-afiliados --remote --file=schema.sql
+```
+
+**Si la base ya existía**, `schema.sql` no la altera: hay que aplicar las
+migraciones de `migraciones/` en orden. La última, `002-numero-de-registro.sql`,
+añade el número de registro del CAE y su estado de validación, y da por validadas
+las cuentas que creó la administración:
+
+```bash
+npx wrangler d1 execute caech-afiliados --remote --file=migraciones/002-numero-de-registro.sql
 ```
 
 ### 3. Cargar el secreto obligatorio
@@ -154,7 +179,7 @@ Confirme que `ORIGENES_PERMITIDOS` en `wrangler.toml` incluye el dominio real
 desde el que se sirve el visor. Sin coincidencia el API no emite la cabecera
 CORS y el navegador bloquea la llamada: **falla cerrado, no abierto**.
 
-### 9. Correo del pase de cortesía
+### 9. Correo de confirmación del registro
 
 Cloudflare Email Routing **solo recibe** correo, no envía. El emisor es externo:
 
@@ -168,9 +193,16 @@ Cloudflare Email Routing **solo recibe** correo, no envía. El emisor es externo
 npx wrangler secret put RESEND_API_KEY
 ```
 
-Con el freemium en modo `consola` nadie del público recibirá su enlace. Si el
-lanzamiento va a ocurrir antes de tener el dominio, apague la promoción con
-`FREEMIUM_ACTIVO = "no"` y deje solo el acceso de afiliados.
+**El registro público se niega solo mientras `MAIL_PROVEEDOR` sea `"consola"`.**
+En ese modo el envío reporta éxito pero no manda nada, así que abrir el alta
+dejaría cuentas muertas y gente esperando un correo que no existe: el Worker
+responde 503 explicando que el alta se habilita en cuanto haya emisor de correo.
+Configurar Resend basta para que el registro empiece a funcionar; no hay que
+volver a tocar `REGISTRO_ACTIVO`, que ya viene en `"si"`.
+
+Para las pruebas locales ese freno se levanta a propósito con
+`--var PERMITIR_CORREO_CONSOLA:si` — lo hace `test/reiniciar.sh`, que necesita
+justamente leer el enlace del log. Nunca en producción.
 
 ---
 
@@ -181,6 +213,8 @@ Todo se hace desde `/api/admin/*` con la sesión de un administrador.
 | Acción | Petición |
 |---|---|
 | Listar afiliados | `GET /api/admin/afiliados` |
+| **Ver los registros por cotejar** | `GET /api/admin/afiliados?pendientes=1` |
+| **Validar el número de registro** | `PATCH /api/admin/afiliados/:id` `{registro_validado: true}` |
 | Dar de alta | `POST /api/admin/afiliados` `{nombre, usuario, correo, registro_profesional?, vigencia_hasta?}` |
 | Suspender / reactivar | `PATCH /api/admin/afiliados/:id` `{estado: "suspendido"\|"activo"}` |
 | Renovar afiliación | `PATCH /api/admin/afiliados/:id` `{vigencia_hasta: "2027-12-31"}` |
@@ -188,7 +222,7 @@ Todo se hace desde `/api/admin/*` con la sesión de un administrador.
 | Restablecer contraseña | `POST /api/admin/afiliados/:id/clave` |
 | Ver descargas | `GET /api/admin/descargas` |
 | Ver bitácora | `GET /api/admin/eventos` |
-| Ver pases de cortesía | `GET /api/admin/pases` |
+| Ver pases de cortesía (histórico) | `GET /api/admin/pases` |
 
 El alta y el restablecimiento devuelven la clave temporal **una sola vez** —
 anótela y entréguela en persona. No queda en claro en ninguna parte; si se
@@ -227,18 +261,23 @@ curl -X POST https://caech-afiliados.SU-CUENTA.workers.dev/api/admin/afiliados \
 - **Último administrador**: no se puede suspender ni degradar al único admin
   activo, ni puede uno hacérselo a sí mismo.
 - **IP**: nunca se guarda en claro, solo `SHA-256(PIMIENTA + ip)`.
-- **Pase de cortesía**: el token del correo se **rota** al verificarse, de modo
-  que el enlace que queda en la bandeja deja de servir. El consumo usa
-  `WHERE consumido_en IS NULL` para cerrar la carrera de dos pestañas.
+- **Número de registro**: índice único parcial en `afiliados`, de modo que un
+  mismo número no puede tener dos cuentas. Declararlo no habilita nada: hasta
+  que un administrador lo valide, `permisos()` devuelve `false` en los tres
+  formatos.
+- **Pase de cortesía** (retirado): el endpoint sigue en pie para no romper
+  enlaces viejos, pero nace apagado. Cuando estuvo activo, el token del correo
+  se rotaba al verificarse y el consumo usaba `WHERE consumido_en IS NULL`.
 
 ---
 
 ## Pruebas
 
-`test/api.test.mjs` levanta 93 comprobaciones contra el Worker real corriendo en
-local: registro público y confirmación de correo, permisos por rol, ingreso,
-cambio de clave obligatorio, separación admin/afiliado/usuario, suspensión,
-vigencia, fuerza bruta, ciclo completo del freemium, CORS y bitácora.
+`test/api.test.mjs` levanta 98 comprobaciones contra el Worker real corriendo en
+local: registro público con número de registro y confirmación de correo, el ciclo
+completo de validación del número por la administración, permisos por rol,
+ingreso, cambio de clave obligatorio, separación admin/afiliado/usuario,
+suspensión, vigencia, fuerza bruta, el pase de cortesía apagado, CORS y bitácora.
 
 ```bash
 cd api

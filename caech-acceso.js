@@ -2,10 +2,13 @@
    CAE-CH · Control de acceso a los productos del GeoVisor
    Cliente del Worker `caech-afiliados` (api/).
 
-   Reglas:
-     · DXF y CSV  — solo afiliados con la afiliacion vigente.
-     · PDF        — afiliados, o publico general con un (1) pase de
-                    cortesia por correo verificado.
+   Reglas (desde el 2026-09-04):
+     · El GeoVisor  — abierto. El mapa entero se consulta sin cuenta.
+     · PDF, CSV, DXF — los tres exigen cuenta con el correo confirmado y
+                      el numero de registro del CAE ya cotejado por la
+                      administracion contra el padron del colegio.
+
+   Ya no hay pase de cortesia: se retiro al abrir el visor al publico.
 
    `activo` es el interruptor general. Si alguna vez hay que apagar el
    control -por una caida del Worker, por ejemplo- basta ponerlo en false
@@ -18,9 +21,9 @@
     const CONFIG = {
         activo: true,
         api: 'https://api.cae-ch.org',
-        // Formatos que exigen afiliacion. El PDF no esta aqui: lo cubre
-        // el pase de cortesia.
-        soloAfiliados: ['dxf', 'csv']
+        // Formatos que exigen cuenta. Estan los tres: el mapa es libre,
+        // los productos no.
+        conCuenta: ['pdf', 'dxf', 'csv']
     };
 
     // Permite apuntar a otro Worker sin tocar este archivo: basta definir
@@ -29,7 +32,6 @@
     if (window.CAECH_ACCESO_CONFIG) Object.assign(CONFIG, window.CAECH_ACCESO_CONFIG);
 
     const LLAVE_TOKEN = 'caech_sesion_token';
-    const LLAVE_PASE  = 'caech_pase_freemium';
 
     let perfil = null;
     let permisos = { pdf: false, dxf: false, csv: false };
@@ -50,8 +52,6 @@
 
     function token()          { return leer(LLAVE_TOKEN); }
     function guardarToken(t)  { grabar(LLAVE_TOKEN, t); }
-    function pase()           { return leer(LLAVE_PASE); }
-    function guardarPase(p)   { grabar(LLAVE_PASE, p); }
 
     async function api(metodo, ruta, cuerpo) {
         const cabeceras = {};
@@ -83,49 +83,68 @@
         const s = document.createElement('style');
         s.id = 'caech-acceso-estilos';
         s.textContent = `
-        .caech-acc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;
-            align-items:center;justify-content:center;z-index:100000;padding:16px}
+        /* Identidad CAE-Ch 2025-2027. Los valores de reserva de var()
+           llevan el hex correcto porque este archivo se inyecta tambien
+           en paginas que quiza no carguen caech-ui.css. */
+        .caech-acc-overlay{position:fixed;inset:0;background:rgba(46,50,56,.62);display:none;
+            align-items:center;justify-content:center;z-index:100000;padding:16px;
+            font-family:'Montserrat','Segoe UI',Tahoma,sans-serif}
         .caech-acc-overlay.activo{display:flex}
-        .caech-acc-caja{background:#fff;border-radius:10px;max-width:420px;width:100%;
-            box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden;font-size:14px}
-        .caech-acc-cab{background:var(--rojo-oscuro,#8B0000);color:#fff;padding:14px 18px;
-            display:flex;justify-content:space-between;align-items:center}
-        .caech-acc-cab h3{margin:0;font-size:16px;font-weight:600}
-        .caech-acc-cerrar{background:none;border:0;color:#fff;font-size:22px;line-height:1;
-            cursor:pointer;opacity:.85}
+        .caech-acc-caja{background:#fff;border-radius:var(--radio,4px);max-width:430px;width:100%;
+            box-shadow:0 18px 50px rgba(46,50,56,.32);overflow:hidden;font-size:14px}
+        .caech-acc-cab{background:var(--grafito,#2E3238);color:#fff;padding:15px 20px;
+            display:flex;justify-content:space-between;align-items:center;gap:12px;
+            border-bottom:3px solid var(--rojo-caech,#E31E24)}
+        .caech-acc-cab h3{margin:0;font-size:14px;font-weight:700;letter-spacing:.04em;
+            text-transform:uppercase}
+        .caech-acc-cerrar{background:none;border:0;color:#fff;font-size:24px;line-height:1;
+            cursor:pointer;opacity:.75;padding:0 2px;font-family:inherit}
         .caech-acc-cerrar:hover{opacity:1}
-        .caech-acc-cuerpo{padding:18px}
-        .caech-acc-cuerpo p{margin:0 0 14px;line-height:1.55;color:#444}
-        .caech-acc-campo{margin-bottom:12px}
-        .caech-acc-campo label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
-        .caech-acc-campo input{width:100%;padding:9px 10px;border:1px solid #ccc;border-radius:5px;
-            font-size:14px;box-sizing:border-box;font-family:inherit}
-        .caech-acc-campo input:focus{outline:none;border-color:var(--rojo-medio,#A52A2A)}
-        .caech-acc-btn{width:100%;padding:10px;background:var(--rojo-medio,#A52A2A);color:#fff;
-            border:0;border-radius:5px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
-        .caech-acc-btn:hover{background:var(--rojo-oscuro,#8B0000)}
-        .caech-acc-btn:disabled{background:#bbb;cursor:not-allowed}
-        .caech-acc-btn-sec{margin-top:8px;background:transparent;color:var(--rojo-medio,#A52A2A);
-            border:1px solid var(--rojo-medio,#A52A2A)}
-        .caech-acc-btn-sec:hover{background:var(--rojo-medio,#A52A2A);color:#fff}
-        .caech-acc-aviso{padding:9px 11px;border-radius:5px;font-size:13px;line-height:1.5;margin-bottom:12px;display:none}
-        .caech-acc-aviso.error{display:block;background:#FDECEA;color:#8B0000;border:1px solid #F5C6C0}
-        .caech-acc-aviso.exito{display:block;background:#E8F5E9;color:#1B5E20;border:1px solid #C8E6C9}
-        .caech-acc-aviso.info{display:block;background:#E3F2FD;color:#0D47A1;border:1px solid #BBDEFB}
-        .caech-acc-pie{font-size:12px;color:#777;margin:12px 0 0;line-height:1.5;text-align:center}
-        .caech-acc-enlace{background:none;border:0;color:var(--rojo-medio,#A52A2A);
+        .caech-acc-cuerpo{padding:20px}
+        .caech-acc-cuerpo p{margin:0 0 14px;line-height:1.6;color:var(--grafito-med,#565B63)}
+        .caech-acc-campo{margin-bottom:13px}
+        .caech-acc-campo label{display:block;font-size:11px;font-weight:600;
+            letter-spacing:.08em;text-transform:uppercase;color:var(--grafito-med,#565B63);
+            margin-bottom:5px}
+        .caech-acc-campo input{width:100%;padding:10px 12px;
+            border:1px solid var(--borde-marcado,rgba(46,50,56,.24));border-radius:var(--radio,4px);
+            font-size:14px;box-sizing:border-box;font-family:inherit;color:var(--grafito,#2E3238)}
+        .caech-acc-campo input:focus{outline:none;border-color:var(--rojo-caech,#E31E24);
+            box-shadow:0 0 0 3px rgba(227,30,36,.12)}
+        /* La forma del boton la pone caech-ui.css; aqui solo el matiz
+           secundario, que no existe en la hoja compartida. */
+        .caech-acc-btn:disabled{background:var(--grafito-sua,#8B9098)}
+        .caech-acc-btn-sec{margin-top:8px;background:transparent;
+            color:var(--rojo-caech,#E31E24);border:1px solid var(--rojo-caech,#E31E24)}
+        .caech-acc-btn-sec:hover{background:var(--rojo-caech,#E31E24);color:#fff}
+        .caech-acc-aviso{padding:10px 12px;border-radius:var(--radio,4px);font-size:13px;
+            line-height:1.55;margin-bottom:13px;display:none;border-left-width:3px}
+        .caech-acc-aviso.error{display:block;background:#FDECEA;color:#8E1015;border:1px solid #F5C6C0;border-left:3px solid var(--rojo-caech,#E31E24)}
+        .caech-acc-aviso.exito{display:block;background:#E9F5EC;color:#14532D;border:1px solid #C8E6D0;border-left:3px solid #1E8449}
+        .caech-acc-aviso.info{display:block;background:#EAF1F8;color:#17375E;border:1px solid #C7DAEC;border-left:3px solid #2563A8}
+        .caech-acc-pie{font-size:12px;color:var(--grafito-sua,#8B9098);margin:14px 0 0;
+            line-height:1.6;text-align:center}
+        .caech-acc-enlace{background:none;border:0;color:var(--rojo-caech,#E31E24);
             text-decoration:underline;cursor:pointer;font-size:12px;padding:0;font-family:inherit}
+        /* Reserva por si caech-ui.css no esta cargada en esta pagina:
+           sin ella, el boton del modal se quedaria sin forma. */
+        .caech-acc-btn{display:inline-flex;align-items:center;justify-content:center;gap:.55em;
+            width:100%;min-height:42px;padding:.8em 1.4em;background:var(--rojo-caech,#E31E24);
+            color:#fff;border:1px solid transparent;border-radius:var(--radio,4px);
+            font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.06em;
+            line-height:1.15;text-transform:uppercase;cursor:pointer}
         .caech-acc-sesion{display:flex;align-items:center;gap:8px;color:inherit;
             font-size:13px;min-width:0}
         .caech-acc-sesion .caech-acc-quien{display:inline-flex;align-items:center;gap:6px;
             min-width:0;max-width:150px;overflow:hidden;text-overflow:ellipsis;
             white-space:nowrap;color:var(--gris-oscuro,#2F2F2F)}
-        .caech-acc-sesion .caech-acc-quien i{color:var(--rojo-oscuro,#8B0000);flex-shrink:0}
+        .caech-acc-sesion .caech-acc-quien i{color:var(--rojo-caech,#E31E24);flex-shrink:0}
         .caech-acc-sesion b{font-weight:600}
         @media (max-width:1100px){ .caech-acc-sesion .caech-acc-quien{display:none} }
-        .caech-acc-clave{font-family:ui-monospace,Consolas,monospace;font-size:16px;
-            letter-spacing:1px;background:#F5F5F5;padding:10px;border-radius:5px;
-            text-align:center;user-select:all;margin-bottom:12px}
+        .caech-acc-clave{font-family:var(--fuente-mono,ui-monospace),Consolas,monospace;
+            font-size:16px;letter-spacing:1px;background:var(--hueso,#F7F7F8);
+            border:1px solid var(--borde,rgba(46,50,56,.12));padding:12px;
+            border-radius:var(--radio,4px);text-align:center;user-select:all;margin-bottom:13px}
         `;
         document.head.appendChild(s);
     }
@@ -177,8 +196,8 @@
             '<button class="caech-acc-btn" id="caech-entrar">Ingresar</button>' +
             '<button class="caech-acc-btn caech-acc-btn-sec" id="caech-reenviar" hidden>Reenviarme el enlace de confirmaci&oacute;n</button>' +
             '<p class="caech-acc-pie">&iquest;No tiene cuenta? ' +
-            '<button class="caech-acc-enlace" id="caech-ir-registro">Cree una</button><br>' +
-            'Los afiliados del CAE-CH reciben sus credenciales en la sede.</p>',
+            '<button class="caech-acc-enlace" id="caech-ir-registro">Cr&eacute;ela con su n&uacute;mero de registro</button><br>' +
+            'El mapa del GeoVisor es libre; la cuenta solo hace falta para descargar.</p>',
             (overlay, cerrar) => {
                 const usuario = el('caech-usuario');
                 const clave = el('caech-clave');
@@ -240,18 +259,26 @@
     // ── Registro publico ────────────────────────────────────────────
 
     /**
-     * Alta de cuenta para el publico general. Nace con rol 'usuario': abre
-     * el GeoVisor y tiene un DICAT de cortesia; DXF y CSV siguen siendo de
-     * los afiliados. No se pide nombre de usuario: el servidor lo deriva
-     * del correo, y el correo tambien sirve para ingresar.
+     * Alta de cuenta. Las cuentas son solo para miembros del CAE, de modo
+     * que el alta exige el NUMERO DE REGISTRO del colegiado. Se acepta tal
+     * como se escribe y queda pendiente: la cuenta nace con rol 'usuario' y
+     * el registro sin validar, lo que permite ingresar pero no descargar
+     * hasta que la administracion lo coteje contra el padron.
+     *
+     * No se pide nombre de usuario: el servidor lo deriva del correo, y el
+     * correo tambien sirve para ingresar.
      */
     function abrirRegistro(alTerminar) {
         modal('caech-modal-registro', 'Crear una cuenta',
             '<div class="caech-acc-aviso"></div>' +
-            '<p>Con una cuenta puede abrir el GeoVisor y consultar el mapa. ' +
-            'Las exportaciones DXF y CSV son exclusivas de los afiliados del CAE-CH.</p>' +
+            '<p>El mapa del GeoVisor se consulta libremente, sin cuenta. ' +
+            'La cuenta hace falta para <b>descargar el DICAT en PDF, el CSV y el DXF</b>, ' +
+            'y se otorga solo a miembros del CAE.</p>' +
             '<div class="caech-acc-campo"><label for="caech-reg-nombre">Nombre completo</label>' +
             '  <input id="caech-reg-nombre" type="text" autocomplete="name"></div>' +
+            '<div class="caech-acc-campo"><label for="caech-reg-registro">N&uacute;mero de registro del CAE</label>' +
+            '  <input id="caech-reg-registro" type="text" autocapitalize="characters" spellcheck="false" ' +
+            '         placeholder="Como consta en su credencial"></div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-correo">Correo electr&oacute;nico</label>' +
             '  <input id="caech-reg-correo" type="email" autocomplete="email" autocapitalize="off" spellcheck="false"></div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-clave">Contrase&ntilde;a</label>' +
@@ -259,10 +286,13 @@
             '<div class="caech-acc-campo"><label for="caech-reg-repetir">Rep&iacute;tala</label>' +
             '  <input id="caech-reg-repetir" type="password" autocomplete="new-password"></div>' +
             '<button class="caech-acc-btn" id="caech-reg-crear">Crear mi cuenta</button>' +
-            '<p class="caech-acc-pie">M&iacute;nimo 12 caracteres, con may&uacute;sculas, min&uacute;sculas y n&uacute;meros.<br>' +
+            '<p class="caech-acc-pie">Contrase&ntilde;a: m&iacute;nimo 12 caracteres, con may&uacute;sculas, min&uacute;sculas y n&uacute;meros.<br>' +
+            'Confirmar&aacute; su correo por enlace; luego el CAE-CH cotejar&aacute; su n&uacute;mero de registro ' +
+            'contra el padr&oacute;n y habilitar&aacute; las descargas.<br>' +
             '&iquest;Ya tiene cuenta? <button class="caech-acc-enlace" id="caech-ir-ingreso-2">Ingrese</button></p>',
             (overlay, cerrar) => {
                 const nombre = el('caech-reg-nombre');
+                const registro = el('caech-reg-registro');
                 const correo = el('caech-reg-correo');
                 const clave = el('caech-reg-clave');
                 const repetir = el('caech-reg-repetir');
@@ -272,7 +302,8 @@
                 el('caech-ir-ingreso-2').addEventListener('click', () => { cerrar(); abrirIngreso(alTerminar); });
 
                 async function crear() {
-                    if (!nombre.value.trim() || !correo.value.trim() || !clave.value) {
+                    if (!nombre.value.trim() || !registro.value.trim()
+                        || !correo.value.trim() || !clave.value) {
                         return avisar(overlay, 'error', 'Complete todos los campos.');
                     }
                     if (clave.value !== repetir.value) {
@@ -281,7 +312,10 @@
                     boton.disabled = true;
                     boton.textContent = 'Creando...';
                     const r = await api('POST', '/api/registro', {
-                        nombre: nombre.value, correo: correo.value, clave: clave.value
+                        nombre: nombre.value,
+                        registro_profesional: registro.value,
+                        correo: correo.value,
+                        clave: clave.value
                     });
                     boton.disabled = false;
                     boton.textContent = 'Crear mi cuenta';
@@ -292,12 +326,12 @@
                     // La cuenta existe pero no sirve hasta confirmar el correo,
                     // asi que no se inicia sesion: se explica el paso que falta.
                     avisar(overlay, 'exito', r.datos.mensaje);
-                    [nombre, correo, clave, repetir].forEach(c => { c.disabled = true; });
+                    [nombre, registro, correo, clave, repetir].forEach(c => { c.disabled = true; });
                     boton.disabled = true;
                 }
 
                 boton.addEventListener('click', crear);
-                [nombre, correo, clave, repetir].forEach(campo => campo.addEventListener('keydown', e => {
+                [nombre, registro, correo, clave, repetir].forEach(campo => campo.addEventListener('keydown', e => {
                     if (e.key === 'Enter') crear();
                 }));
             });
@@ -343,47 +377,6 @@
                     pintarBarra();
                     if (alTerminar) alTerminar();
                 });
-            });
-    }
-
-    // ── Pase de cortesia (publico general) ──────────────────────────
-
-    function abrirFreemium() {
-        modal('caech-modal-freemium', 'Reporte DICAT de cortes&iacute;a',
-            '<div class="caech-acc-aviso"></div>' +
-            '<p>Por lanzamiento, el CAE-CH entrega <b>un (1) reporte DICAT en PDF</b> ' +
-            'por cada correo verificado. Escriba el suyo y le enviaremos el enlace de acceso.</p>' +
-            '<div class="caech-acc-campo"><label for="caech-correo">Correo electr&oacute;nico</label>' +
-            '  <input id="caech-correo" type="email" autocomplete="email" placeholder="nombre@correo.com"></div>' +
-            '<button class="caech-acc-btn" id="caech-pedir-pase">Enviarme el enlace</button>' +
-            '<p class="caech-acc-pie">&iquest;Es afiliado del CAE-CH? ' +
-            '<button class="caech-acc-enlace" id="caech-ir-ingreso">Ingrese con su usuario</button></p>',
-            (overlay, cerrar) => {
-                const correo = el('caech-correo');
-                const boton = el('caech-pedir-pase');
-                correo.focus();
-
-                el('caech-ir-ingreso').addEventListener('click', () => { cerrar(); abrirIngreso(); });
-
-                async function pedir() {
-                    if (!correo.value.trim()) return avisar(overlay, 'error', 'Escriba su correo electrónico.');
-                    boton.disabled = true;
-                    boton.textContent = 'Enviando...';
-                    const r = await api('POST', '/api/freemium/solicitar', { correo: correo.value });
-                    boton.disabled = false;
-                    boton.textContent = 'Enviarme el enlace';
-
-                    if (r.estado === 200) {
-                        avisar(overlay, 'exito', r.datos.mensaje);
-                        correo.disabled = true;
-                        boton.disabled = true;
-                    } else {
-                        avisar(overlay, 'error', r.datos.error || 'No se pudo procesar la solicitud.');
-                    }
-                }
-
-                boton.addEventListener('click', pedir);
-                correo.addEventListener('keydown', e => { if (e.key === 'Enter') pedir(); });
             });
     }
 
@@ -466,13 +459,14 @@
     // ── Puerta de autorizacion ──────────────────────────────────────
 
     /**
-     * Punto unico por el que pasan DXF, CSV y PDF antes de generarse.
+     * Punto unico por el que pasan PDF, CSV y DXF antes de generarse. El
+     * mapa NO pasa por aqui: se consulta sin cuenta.
      * @returns {Promise<boolean>} true si se puede continuar.
      */
     async function autorizar(formato, claveCatastral) {
         if (!CONFIG.activo) return true;   // interruptor de despliegue
 
-        // Afiliado con sesion viva: se pide autorizacion y queda auditada.
+        // Con sesion viva: se pide autorizacion y la descarga queda auditada.
         if (perfil) {
             const r = await api('POST', '/api/descargas', {
                 formato: formato,
@@ -483,31 +477,39 @@
                 abrirCambioClave(null, () => reintentar(formato, claveCatastral));
                 return false;
             }
+            // Cuenta creada pero con el numero de registro sin cotejar: no
+            // es un error del usuario, es un tramite en curso. Se explica
+            // en vez de dejarlo con un "no autorizado" seco.
+            if (r.datos && r.datos.registro_pendiente) {
+                avisarPendiente(r.datos.error);
+                return false;
+            }
             alert(r.datos.error || 'No se pudo autorizar la descarga.');
             return false;
         }
 
-        // Sin sesion: DXF y CSV exigen afiliacion, sin excepcion.
-        if (CONFIG.soloAfiliados.indexOf(formato) !== -1) {
+        // Sin sesion: los tres productos exigen cuenta, sin excepcion.
+        if (CONFIG.conCuenta.indexOf(formato) !== -1) {
             abrirIngreso(() => reintentar(formato, claveCatastral));
             return false;
         }
+        return true;
+    }
 
-        // PDF sin sesion: sirve el pase de cortesia si lo hay.
-        const p = pase();
-        if (p) {
-            const r = await api('POST', '/api/freemium/consumir', {
-                pase: p, clave_catastral: claveCatastral || null
-            });
-            guardarPase(null);   // el pase es de un solo uso, valga o no
-            if (r.estado === 200) return true;
-            alert(r.datos.error || 'El pase de cortesia ya no es valido.');
-            abrirFreemium();
-            return false;
-        }
-
-        abrirFreemium();
-        return false;
+    /** Aviso de "su registro sigue en revision", con el tono correcto. */
+    function avisarPendiente(mensaje) {
+        modal('caech-modal-pendiente', 'Registro en revisi&oacute;n',
+            '<div class="caech-acc-aviso info">' +
+            (mensaje || 'Su n&uacute;mero de registro del CAE todav&iacute;a no ha sido validado.') +
+            '</div>' +
+            '<p>Las cuentas se otorgan solo a miembros del CAE, as&iacute; que la administraci&oacute;n ' +
+            'coteja cada n&uacute;mero de registro contra el padr&oacute;n del colegio antes de habilitar ' +
+            'las descargas. Es un paso manual y puede tomar algunas horas.</p>' +
+            '<p>Mientras tanto el <b>mapa completo del GeoVisor sigue abierto</b>: puede consultar ' +
+            'predios, capas y medidas sin ninguna restricci&oacute;n.</p>' +
+            '<p class="caech-acc-pie">&iquest;Cree que hay un error? Escriba a ' +
+            '<a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a> ' +
+            'indicando su n&uacute;mero de registro.</p>');
     }
 
     // Tras ingresar o cambiar la clave, se retoma la accion pendiente.
@@ -518,13 +520,6 @@
     }
 
     // ── Retorno desde el enlace del correo ──────────────────────────
-
-    const MOTIVOS = {
-        token_ausente:   'El enlace de verificacion esta incompleto.',
-        enlace_invalido: 'El enlace de verificacion no es valido.',
-        enlace_caducado: 'El enlace de verificacion caduco. Solicite uno nuevo.',
-        ya_utilizado:    'Ese correo ya uso su reporte de cortesia.'
-    };
 
     const CUENTA = {
         verificada:      ['exito', 'Correo confirmado. Ya puede ingresar con su cuenta.'],
@@ -550,30 +545,6 @@
         }, 400);
     }
 
-    function procesarRetorno() {
-        const params = new URLSearchParams(location.search);
-        const p = params.get('pase');
-        const err = params.get('pase_error');
-        if (!p && !err) return;
-
-        // Se limpia la URL: el pase no debe quedar en el historial ni
-        // filtrarse por Referer a los servidores de teselas.
-        params.delete('pase');
-        params.delete('pase_error');
-        const limpia = location.pathname + (params.toString() ? '?' + params : '') + location.hash;
-        history.replaceState(null, '', limpia);
-
-        if (p) {
-            guardarPase(p);
-            setTimeout(() => alert(
-                'Correo verificado. Ya puede generar su reporte DICAT de cortesia: '
-                + 'seleccione un predio en el mapa y pulse "Generar DICAT".'
-            ), 400);
-        } else {
-            setTimeout(() => alert(MOTIVOS[err] || 'No se pudo verificar el enlace.'), 400);
-        }
-    }
-
     // ── Arranque ────────────────────────────────────────────────────
 
     function arrancar() {
@@ -581,7 +552,6 @@
         if (!CONFIG.activo) return;
         pintarBarra();
         procesarRetornoCuenta();
-        procesarRetorno();
         recuperarSesion();
     }
 
@@ -597,7 +567,6 @@
         autorizar: autorizar,
         abrirIngreso: abrirIngreso,
         abrirRegistro: abrirRegistro,
-        abrirFreemium: abrirFreemium,
         cerrarSesion: cerrarSesion,
         perfil: () => perfil,
         refrescar: pintarBarra,

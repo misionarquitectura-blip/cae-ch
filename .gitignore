@@ -49,10 +49,15 @@ RESEARCH/PUGS Urbano Research.geojson
 RESEARCH/preprocess.js
 RESEARCH/build_construcciones_ia.js
 
-# RESEARCH - equipamiento: trabajo interno del CAE-CH, no publicado. Ninguna
-# capa del visor lo referencia y arrastra intermedios pesados.
+# RESEARCH - equipamiento: los intermedios del analisis (predios_urbanos.json
+# y companyia, >6 MB) se quedan fuera. La PAGINA si se publica desde el
+# 2026-09-04: es la Linea 2 del eje de investigacion y el CAE-CH la abrio a
+# todo publico. Es autocontenida —lleva sus datos embebidos— asi que basta
+# con ella.
+# Ojo: `plantilla.html`, de donde `build.js` la genera, queda sin versionar
+# por esta misma regla. Todo cambio en la pagina hay que hacerlo en las dos.
 RESEARCH/equipamiento/
-RESEARCH/equipamiento.html
+!RESEARCH/equipamiento.html
 
 # Respaldos y configuración local
 *.bak

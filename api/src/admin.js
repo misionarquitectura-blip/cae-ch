@@ -26,16 +26,30 @@ async function contarAdminsActivos(env, excluyendoId) {
 
 // ── Listado ─────────────────────────────────────────────────────────
 
-export async function listarAfiliados(env) {
-    const { results } = await env.DB.prepare(
-        'SELECT * FROM afiliados ORDER BY estado, nombre COLLATE NOCASE'
-    ).all();
+/**
+ * @param {URL} [url] con `?pendientes=1` devuelve solo las cuentas del
+ *        registro publico cuyo numero del CAE espera cotejo contra el padron.
+ *        Es la bandeja de trabajo del administrador.
+ */
+export async function listarAfiliados(env, url) {
+    const soloPendientes = !!(url && url.searchParams.get('pendientes'));
+    const sql = soloPendientes
+        ? "SELECT * FROM afiliados WHERE origen = 'registro' AND registro_validado = 0 "
+          + "AND estado = 'activo' ORDER BY creado_en"
+        : 'SELECT * FROM afiliados ORDER BY estado, nombre COLLATE NOCASE';
+
+    const { results } = await env.DB.prepare(sql).all();
     const afiliados = (results || []).map(f => Object.assign(perfilPublico(f), {
         permisos: permisos(f),
         creado_en: f.creado_en,
+        registro_validado_en: f.registro_validado_en,
+        registro_validado_por: f.registro_validado_por,
         bloqueado: !!(f.bloqueado_hasta && new Date(f.bloqueado_hasta) > new Date())
     }));
-    return { estado: 200, cuerpo: { ok: true, total: afiliados.length, afiliados: afiliados } };
+    return {
+        estado: 200,
+        cuerpo: { ok: true, total: afiliados.length, pendientes: soloPendientes, afiliados: afiliados }
+    };
 }
 
 // ── Alta ────────────────────────────────────────────────────────────
@@ -62,17 +76,27 @@ export async function crearAfiliado(env, request, sesion, datos) {
             ? 'Ya existe un afiliado con ese usuario.'
             : 'Ya existe un afiliado con ese correo.', 409);
     }
+    if (registro) {
+        const choqueReg = await env.DB.prepare(
+            'SELECT id FROM afiliados WHERE registro_profesional = ? LIMIT 1'
+        ).bind(registro).first();
+        if (choqueReg) return malo('Ese numero de registro ya pertenece a otra cuenta.', 409);
+    }
 
     const id = generarId('afi');
     const claveTemporal = generarClaveTemporal();
     const hash = await hashearClave(claveTemporal, iteraciones(env));
     const t = ahora();
 
+    // El alta la hace la administracion con el padron delante, asi que el
+    // numero de registro nace validado y la cuenta descarga desde el primer
+    // ingreso (tras cambiar la clave temporal).
     await env.DB.prepare(
-        'INSERT INTO afiliados (id, usuario, correo, nombre, registro_profesional, nucleo, rol, origen, estado, ' +
+        'INSERT INTO afiliados (id, usuario, correo, nombre, registro_profesional, registro_validado, ' +
+        ' registro_validado_en, registro_validado_por, nucleo, rol, origen, estado, ' +
         ' hash_clave, requiere_cambio_clave, correo_verificado, verificado_en, vigencia_hasta, creado_en, actualizado_en) ' +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', 'activo', ?, 1, 1, ?, ?, ?, ?)"
-    ).bind(id, usuario, correo, nombre, registro, nucleo, rol, hash, t,
+        "VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'admin', 'activo', ?, 1, 1, ?, ?, ?, ?)"
+    ).bind(id, usuario, correo, nombre, registro, t, sesion.afiliado.usuario, nucleo, rol, hash, t,
             vigencia ? new Date(vigencia).toISOString() : null, t, t).run();
 
     await registrarEvento(env, {
@@ -117,7 +141,25 @@ export async function actualizarAfiliado(env, request, sesion, id, datos) {
         campos.push('correo = ?'); valores.push(correo); cambios.push('correo');
     }
     if (typeof datos.registro_profesional === 'string') {
-        campos.push('registro_profesional = ?'); valores.push(texto(datos.registro_profesional, 40) || null); cambios.push('registro');
+        const reg = texto(datos.registro_profesional, 40).replace(/\s+/g, '').toUpperCase() || null;
+        if (reg) {
+            const choqueReg = await env.DB.prepare(
+                'SELECT id FROM afiliados WHERE registro_profesional = ? AND id != ?'
+            ).bind(reg, id).first();
+            if (choqueReg) return malo('Ese numero de registro ya pertenece a otra cuenta.', 409);
+        }
+        campos.push('registro_profesional = ?'); valores.push(reg); cambios.push('registro');
+    }
+    // Cotejo del numero contra el padron del CAE-CH: es lo que abre PDF,
+    // CSV y DXF a una cuenta nacida del registro publico.
+    if (datos.registro_validado !== undefined) {
+        const validado = datos.registro_validado === true || datos.registro_validado === 1;
+        if (validado && !(typeof datos.registro_profesional === 'string' ? datos.registro_profesional : fila.registro_profesional)) {
+            return malo('No se puede validar una cuenta sin numero de registro.');
+        }
+        campos.push('registro_validado = ?', 'registro_validado_en = ?', 'registro_validado_por = ?');
+        valores.push(validado ? 1 : 0, validado ? ahora() : null, validado ? sesion.afiliado.usuario : null);
+        cambios.push(validado ? 'registro validado' : 'registro invalidado');
     }
     if (datos.vigencia_hasta !== undefined) {
         const v = datos.vigencia_hasta;

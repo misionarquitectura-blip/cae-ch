@@ -19,10 +19,20 @@ CREATE TABLE IF NOT EXISTS afiliados (
     usuario               TEXT    NOT NULL UNIQUE,          -- minusculas, sin espacios
     correo                TEXT    NOT NULL UNIQUE,          -- minusculas
     nombre                TEXT    NOT NULL,
-    registro_profesional  TEXT,                             -- SENESCYT / CAE, opcional
+
+    -- Numero de registro del colegiado en el CAE. El alta publica lo exige
+    -- -las cuentas son solo para miembros- y lo guarda tal como lo escribe
+    -- quien se registra; `registro_validado` dice si la administracion ya lo
+    -- coteja contra el padron. Sin validar se abre el visor, pero no se
+    -- descarga nada.
+    registro_profesional  TEXT,
+    registro_validado     INTEGER NOT NULL DEFAULT 0,
+    registro_validado_en  TEXT,
+    registro_validado_por TEXT,                             -- usuario del admin que valido
+
     nucleo                TEXT    NOT NULL DEFAULT 'Chimborazo',
-    -- usuario  : se registro por su cuenta. Abre el GeoVisor y consulta el
-    --            mapa; DXF y CSV siguen siendo exclusivos de los afiliados.
+    -- usuario  : se registro por su cuenta. Abre el GeoVisor y, una vez
+    --            validado su numero de registro, descarga como afiliado.
     -- afiliado : colegiado del CAE-CH, alta por la administracion.
     -- admin    : ademas gestiona el padron.
     rol                   TEXT    NOT NULL DEFAULT 'usuario'
@@ -46,7 +56,8 @@ CREATE TABLE IF NOT EXISTS afiliados (
     token_expira          TEXT,
     reenvios_verificacion INTEGER NOT NULL DEFAULT 0,
 
-    -- Reporte de cortesia ya gastado por esta cuenta (rol 'usuario').
+    -- Reporte de cortesia del esquema anterior. Se conserva por historia:
+    -- desde 2026-09-04 no hay pases de cortesia, toda descarga exige cuenta.
     pdf_cortesia_en       TEXT,
 
     vigencia_hasta        TEXT,                             -- ISO-8601; NULL = sin caducidad
@@ -62,6 +73,11 @@ CREATE TABLE IF NOT EXISTS afiliados (
 CREATE INDEX IF NOT EXISTS idx_afiliados_estado ON afiliados (estado);
 CREATE INDEX IF NOT EXISTS idx_afiliados_rol    ON afiliados (rol);
 CREATE INDEX IF NOT EXISTS idx_afiliados_token  ON afiliados (token_verificacion);
+
+-- Un numero de registro identifica a un colegiado y solo a uno.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_afiliados_registro
+    ON afiliados (registro_profesional)
+    WHERE registro_profesional IS NOT NULL;
 
 -- ── Sesiones ────────────────────────────────────────────────────────
 -- Se guarda el SHA-256 del token, nunca el token. Una filtracion de la

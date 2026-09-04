@@ -109,29 +109,22 @@ async function enrutar(request, env, url, ruta, metodo) {
         const p = permisos(a);
         if (!p[formato]) {
             let motivo;
+            const pendiente = a.rol === 'usuario' && !a.registro_validado;
             if (a.requiere_cambio_clave) {
                 motivo = 'Debe cambiar su contrasena temporal antes de descargar.';
-            } else if (a.rol === 'usuario' && (formato === 'dxf' || formato === 'csv')) {
-                motivo = 'Las exportaciones ' + formato.toUpperCase() + ' son exclusivas de los afiliados del CAE-CH.';
-            } else if (a.rol === 'usuario' && formato === 'pdf') {
-                motivo = 'Ya uso su reporte de cortesia. Para acceso continuo, afiliese en la sede del CAE-CH.';
+            } else if (!a.correo_verificado) {
+                motivo = 'Confirme su correo antes de descargar. Le enviamos el enlace al registrarse.';
+            } else if (pendiente) {
+                motivo = 'Su numero de registro del CAE todavia no ha sido validado por la administracion. '
+                       + 'El mapa sigue abierto; las descargas se habilitan en cuanto lo aprobemos.';
             } else {
                 motivo = 'Su afiliacion no esta vigente. Renuevela en la sede del CAE-CH.';
             }
             return error(motivo, 403, request, env, {
                 requiere_cambio_clave: !!a.requiere_cambio_clave,
-                solo_afiliados: a.rol === 'usuario'
+                registro_pendiente: pendiente,
+                solo_afiliados: pendiente
             });
-        }
-
-        // Quien se registro por su cuenta gasta aqui su unico DICAT.
-        if (a.rol === 'usuario' && formato === 'pdf') {
-            const r = await env.DB.prepare(
-                'UPDATE afiliados SET pdf_cortesia_en = ? WHERE id = ? AND pdf_cortesia_en IS NULL'
-            ).bind(ahora(), a.id).run();
-            if (!r.meta || r.meta.changes === 0) {
-                return error('Ya uso su reporte de cortesia.', 409, request, env);
-            }
         }
 
         const clave = texto(datos.clave_catastral, 60) || null;
@@ -197,7 +190,8 @@ async function enrutar(request, env, url, ruta, metodo) {
         }
 
         if (ruta === '/api/admin/afiliados') {
-            if (metodo === 'GET') return responder(await listarAfiliados(env));
+            // ?pendientes=1 devuelve la bandeja de numeros de registro por cotejar.
+            if (metodo === 'GET') return responder(await listarAfiliados(env, url));
             if (metodo === 'POST') {
                 const datos = await cuerpoJSON(request);
                 if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);

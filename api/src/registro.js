@@ -1,12 +1,19 @@
 // ════════════════════════════════════════════════════════════════════
 //  Registro publico de usuarios.
 //
-//  Quien se registra nace con rol 'usuario': abre el GeoVisor y consulta
-//  el mapa, y dispone de UN reporte DICAT de cortesia. DXF y CSV siguen
-//  siendo exclusivos de los afiliados, cuyas altas hace la administracion.
+//  El GeoVisor es publico: el mapa se abre sin cuenta. Lo que exige cuenta
+//  son los PRODUCTOS -DICAT en PDF, CSV y DXF- y esas cuentas son solo para
+//  miembros del CAE, de modo que el alta pide el NUMERO DE REGISTRO del
+//  colegiado.
+//
+//  El numero se acepta tal como lo escribe quien se registra y queda
+//  pendiente: la cuenta nace con rol 'usuario' y `registro_validado = 0`,
+//  que deja entrar pero bloquea toda descarga hasta que la administracion
+//  lo coteje contra el padron del CAE-CH (PATCH /api/admin/afiliados/:id
+//  con {registro_validado: true}).
 //
 //  Flujo:
-//    1. POST /api/registro            {nombre, usuario, correo, clave}
+//    1. POST /api/registro            {nombre, registro_profesional, correo, clave}
 //       Crea la cuenta sin verificar y envia el enlace de confirmacion.
 //    2. GET  /api/registro/verificar?t=<token>
 //       Marca el correo verificado y redirige al sitio.
@@ -30,6 +37,23 @@ const MAX_POR_IP_HORA = 5;
 
 function usuarioValido(u) {
     return /^[a-z0-9](?:[a-z0-9._-]{2,29})$/.test(u);
+}
+
+/**
+ * Numero de registro del colegiado. No se conoce una mascara unica -hay
+ * numeros con prefijo de nucleo, con guiones y sin ellos-, asi que solo se
+ * exige que traiga digitos y que no venga con basura: entre 3 y 20
+ * caracteres de digitos, letras, guion, barra o punto -los espacios ya los
+ * quito `normalizarRegistro`-. Quien decide si el numero es real es la
+ * administracion al cotejar el padron.
+ */
+function registroValido(r) {
+    return /^[A-Za-z0-9][A-Za-z0-9.\-\/]{2,19}$/.test(r) && /[0-9]/.test(r);
+}
+
+/** Forma canonica para comparar: sin espacios y en mayusculas. */
+function normalizarRegistro(r) {
+    return r.replace(/\s+/g, '').toUpperCase();
 }
 
 /** Propone un usuario a partir del correo, si quien se registra no da uno. */
@@ -72,14 +96,41 @@ export async function registrar(env, request, datos) {
     if (String(env.REGISTRO_ACTIVO || 'si').toLowerCase() === 'no') {
         return { estado: 503, cuerpo: { ok: false, error: 'El registro de usuarios no esta disponible por ahora.' } };
     }
+    // La cuenta no sirve hasta confirmar el correo, y el proveedor 'consola'
+    // no envia nada: solo escribe el enlace en los logs. Abrir el alta en
+    // ese modo dejaria cuentas muertas y gente esperando un correo que no
+    // existe, asi que se falla cerrado y se dice por que.
+    //
+    // PERMITIR_CORREO_CONSOLA="si" levanta el freno a proposito. Lo usa la
+    // suite de pruebas, que necesita justamente leer el enlace del log
+    // (`wrangler dev --var PERMITIR_CORREO_CONSOLA:si`). Nunca en produccion.
+    if (String(env.MAIL_PROVEEDOR || 'consola').toLowerCase() === 'consola'
+        && String(env.PERMITIR_CORREO_CONSOLA || 'no').toLowerCase() !== 'si') {
+        return {
+            estado: 503,
+            cuerpo: {
+                ok: false,
+                error: 'El alta de cuentas se habilita en cuanto el CAE-CH termine de configurar el envio '
+                     + 'de correo. Mientras tanto escriba a caechoficial@gmail.com con su numero de registro. '
+                     + 'El mapa del GeoVisor sigue abierto sin cuenta.'
+            }
+        };
+    }
 
     const nombre  = texto(datos.nombre, 120);
     const correo  = texto(datos.correo, 254).toLowerCase();
     const clave   = typeof datos.clave === 'string' ? datos.clave : '';
     let   usuario = texto(datos.usuario, 30).toLowerCase();
+    const registro = normalizarRegistro(texto(datos.registro_profesional, 40));
 
     if (nombre.length < 3)     return malo('Escriba su nombre completo.');
     if (!correoValido(correo)) return malo('El correo no tiene un formato valido.');
+    if (!registro) {
+        return malo('Indique su numero de registro del CAE. Las cuentas son solo para colegiados.');
+    }
+    if (!registroValido(registro)) {
+        return malo('El numero de registro no parece valido. Escribalo tal como consta en su credencial del CAE.');
+    }
 
     if (!usuario) usuario = usuarioDesdeCorreo(correo);
     if (!usuarioValido(usuario)) {
@@ -92,6 +143,17 @@ export async function registrar(env, request, datos) {
     const ip_hash = await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA);
     if (await excesoDeRegistros(env, ip_hash)) {
         return { estado: 429, cuerpo: { ok: false, error: 'Demasiados registros desde esta conexion. Intente mas tarde.' } };
+    }
+
+    // Un numero de registro es de un solo colegiado. Aqui SI se dice que ya
+    // esta tomado: no es un dato que se pueda sondear a ciegas -hay que
+    // conocer el numero- y callarlo dejaria al colegiado sin saber por que
+    // su alta no prospera.
+    const choqueRegistro = await env.DB.prepare(
+        'SELECT id FROM afiliados WHERE registro_profesional = ? AND correo != ? LIMIT 1'
+    ).bind(registro, correo).first();
+    if (choqueRegistro) {
+        return malo('Ese numero de registro ya tiene una cuenta. Si es el suyo, ingrese o escriba a la sede del CAE-CH.', 409);
     }
 
     const choque = await env.DB.prepare(
@@ -123,17 +185,20 @@ export async function registrar(env, request, datos) {
     const id = generarId('usr');
     const t = ahora();
     await env.DB.prepare(
-        'INSERT INTO afiliados (id, usuario, correo, nombre, nucleo, rol, origen, estado, hash_clave, ' +
-        ' requiere_cambio_clave, correo_verificado, creado_en, actualizado_en) ' +
-        "VALUES (?, ?, ?, ?, 'Chimborazo', 'usuario', 'registro', 'activo', ?, 0, 0, ?, ?)"
-    ).bind(id, usuario, correo, nombre, await hashearClave(clave, iteraciones(env)), t, t).run();
+        'INSERT INTO afiliados (id, usuario, correo, nombre, registro_profesional, registro_validado, ' +
+        ' nucleo, rol, origen, estado, hash_clave, requiere_cambio_clave, correo_verificado, ' +
+        ' creado_en, actualizado_en) ' +
+        "VALUES (?, ?, ?, ?, ?, 0, 'Chimborazo', 'usuario', 'registro', 'activo', ?, 0, 0, ?, ?)"
+    ).bind(id, usuario, correo, nombre, registro,
+            await hashearClave(clave, iteraciones(env)), t, t).run();
 
     const fila = await env.DB.prepare('SELECT * FROM afiliados WHERE id = ?').bind(id).first();
     const envio = await enviarEnlace(env, fila);
 
     await registrarEvento(env, {
         tipo: 'registro', afiliado_id: id, usuario: usuario,
-        detalle: envio.enviado ? 'enlace enviado via ' + envio.proveedor : 'FALLO ENVIO: ' + envio.detalle,
+        detalle: 'registro CAE ' + registro + ' pendiente de validar; '
+               + (envio.enviado ? 'enlace enviado via ' + envio.proveedor : 'FALLO ENVIO: ' + envio.detalle),
         ip_hash: ip_hash
     });
 
@@ -159,7 +224,9 @@ function respuestaAlta() {
         cuerpo: {
             ok: true,
             mensaje: 'Le enviamos un enlace para confirmar su correo. Revise su bandeja de entrada '
-                   + 'y la carpeta de correo no deseado; el enlace dura 24 horas.'
+                   + 'y la carpeta de correo no deseado; el enlace dura 24 horas. '
+                   + 'Despues la administracion del CAE-CH cotejara su numero de registro contra el '
+                   + 'padron y habilitara las descargas.'
         }
     };
 }

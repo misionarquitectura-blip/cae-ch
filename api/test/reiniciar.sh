@@ -36,7 +36,12 @@ grep -m1 "^INSERT INTO" /tmp/caech-admin.txt > /tmp/caech-admin.sql
 npx wrangler d1 execute caech-afiliados --local --file=/tmp/caech-admin.sql > /dev/null 2>&1
 
 rm -f /tmp/caech-wrangler.log
-npx wrangler dev --port 8787 --local > /tmp/caech-wrangler.log 2>&1 &
+# El registro publico viene apagado en wrangler.toml (espera a Resend) y
+# ademas se niega solo con MAIL_PROVEEDOR="consola". Aqui se enciende a
+# proposito: las pruebas leen el enlace de confirmacion de ese mismo log.
+npx wrangler dev --port 8787 --local \
+    --var REGISTRO_ACTIVO:si --var PERMITIR_CORREO_CONSOLA:si \
+    > /tmp/caech-wrangler.log 2>&1 &
 for i in $(seq 1 40); do
     sleep 1
     grep -q "Ready on" /tmp/caech-wrangler.log && break

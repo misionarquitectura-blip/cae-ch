@@ -11,8 +11,10 @@
  *
  *   node test/api.test.mjs <clave-temporal-del-admin> [ruta-al-log-de-wrangler]
  *
- * El log de wrangler solo hace falta para el tramo freemium: con
- * MAIL_PROVEEDOR="consola" el enlace de verificacion se escribe ahi.
+ * El log de wrangler hace falta para el tramo de registro: con
+ * MAIL_PROVEEDOR="consola" el enlace de confirmacion se escribe ahi.
+ * Por eso `reiniciar.sh` arranca el Worker con
+ * `--var REGISTRO_ACTIVO:si --var PERMITIR_CORREO_CONSOLA:si`.
  */
 
 import { readFileSync } from 'node:fs';
@@ -293,61 +295,19 @@ seccion('Freno de fuerza bruta');
     comprobar('el admin puede desbloquear la cuenta', desbloquear.estado === 200, desbloquear.datos);
 }
 
-// ── 10. Freemium ────────────────────────────────────────────────────
-seccion('Freemium: un PDF por correo verificado');
+// ── 10. Pase de cortesia retirado ───────────────────────────────────
+seccion('El pase de cortesia esta retirado');
 {
-    const correoMalo = await llamar('POST', '/api/freemium/solicitar', { cuerpo: { correo: 'no-es-un-correo' } });
-    comprobar('rechaza un correo mal formado', correoMalo.estado === 400, correoMalo.datos);
-
-    const correo = 'ciudadano' + Date.now() + '@example.com';
-    const solicitud = await llamar('POST', '/api/freemium/solicitar', { cuerpo: { correo } });
-    comprobar('acepta la solicitud y dice haber enviado el enlace', solicitud.estado === 200, solicitud.datos);
-
-    if (!LOG) {
-        console.log('  – tramo de verificacion omitido (no se paso el log de wrangler)');
-    } else {
-        // En modo "consola" el enlace queda escrito en los logs del Worker.
-        // wrangler vuelca stdout de forma asincrona, asi que se espera a
-        // que aparezca en vez de leer el archivo una sola vez.
-        let m = null;
-        for (let intento = 0; intento < 20 && !m; intento++) {
-            await new Promise(r => setTimeout(r, 250));
-            const texto = readFileSync(LOG, 'utf8');
-            m = [...texto.matchAll(/verificar\?t=([A-Za-z0-9_-]+)/g)].pop();
-        }
-        comprobar('el enlace de verificacion aparece en el log', !!m);
-
-        if (m) {
-            const token = m[1];
-            const r = await fetch(API + '/api/freemium/verificar?t=' + token, { redirect: 'manual' });
-            const destino = r.headers.get('location') || '';
-            comprobar('verificar redirige al visor', r.status === 302 && destino.includes('/geovisor.html?pase='), destino);
-
-            const pase = new URL(destino).searchParams.get('pase');
-            comprobar('el pase entregado es distinto del token del correo', pase && pase !== token);
-
-            const viejo = await fetch(API + '/api/freemium/verificar?t=' + token, { redirect: 'manual' });
-            comprobar('el enlace del correo muere tras usarse',
-                (viejo.headers.get('location') || '').includes('pase_error'), viejo.headers.get('location'));
-
-            const estado = await llamar('GET', '/api/freemium/estado?pase=' + encodeURIComponent(pase));
-            comprobar('el pase figura como valido', estado.datos?.valido === true, estado.datos);
-
-            const consumo = await llamar('POST', '/api/freemium/consumir', {
-                cuerpo: { pase, clave_catastral: '060150010101' }
-            });
-            comprobar('el pase autoriza un PDF', consumo.estado === 200 && consumo.datos.formato === 'pdf', consumo.datos);
-
-            const segundo = await llamar('POST', '/api/freemium/consumir', { cuerpo: { pase } });
-            comprobar('el mismo pase NO sirve dos veces', segundo.estado === 409, segundo.datos);
-
-            const otraVez = await llamar('POST', '/api/freemium/solicitar', { cuerpo: { correo } });
-            comprobar('el correo ya gastado no puede pedir otro reporte', otraVez.estado === 409, otraVez.datos);
-        }
-    }
+    // Desde 2026-09-04 el mapa se abre al publico y, a cambio, los tres
+    // productos exigen cuenta de colegiado. Los endpoints siguen en pie
+    // para no romper enlaces viejos, pero nacen apagados.
+    const solicitud = await llamar('POST', '/api/freemium/solicitar', {
+        cuerpo: { correo: 'ciudadano' + Date.now() + '@example.com' }
+    });
+    comprobar('solicitar un pase responde 503', solicitud.estado === 503, solicitud.datos);
 
     const paseFalso = await llamar('POST', '/api/freemium/consumir', { cuerpo: { pase: 'pase-inventado' } });
-    comprobar('un pase inventado responde 401', paseFalso.estado === 401);
+    comprobar('un pase inventado no autoriza nada', paseFalso.estado >= 400, paseFalso.datos);
 }
 
 // ── 10b. Registro publico de usuarios ───────────────────────────────
@@ -355,21 +315,38 @@ seccion('Registro publico de usuarios');
 let tokenUsuario = null;
 const CORREO_USR = 'vecino' + Date.now() + '@example.com';
 const CLAVE_USR  = 'RiobambaVecino2026';
+const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
 {
+    const sinRegistro = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: CLAVE_USR }
+    });
+    comprobar('sin numero de registro del CAE no hay alta', sinRegistro.estado === 400, sinRegistro.datos);
+
+    const registroRaro = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: 'ab', correo: CORREO_USR, clave: CLAVE_USR }
+    });
+    comprobar('rechaza un numero de registro con mala pinta', registroRaro.estado === 400, registroRaro.datos);
+
     const corta = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: 'corta1A' }
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: 'corta1A' }
     });
     comprobar('rechaza una clave debil', corta.estado === 400, corta.datos);
 
     const correoMalo = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', correo: 'no-es-correo', clave: CLAVE_USR }
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: 'no-es-correo', clave: CLAVE_USR }
     });
     comprobar('rechaza un correo mal formado', correoMalo.estado === 400);
 
     const alta = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: CLAVE_USR }
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR }
     });
     comprobar('crea la cuenta', alta.estado === 201, alta.datos);
+
+    const registroTomado = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Otra Persona', registro_profesional: REGISTRO_USR,
+                  correo: 'otra' + Date.now() + '@example.com', clave: CLAVE_USR }
+    });
+    comprobar('un numero de registro ya usado responde 409', registroTomado.estado === 409, registroTomado.datos);
     comprobar('no entrega token: la cuenta aun no sirve', !alta.datos.token);
 
     const sinConfirmar = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_USR, clave: CLAVE_USR } });
@@ -377,7 +354,7 @@ const CLAVE_USR  = 'RiobambaVecino2026';
     comprobar('la respuesta lo senala para poder reenviar', sinConfirmar.datos?.correo_sin_verificar === true);
 
     const repetido = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Otro Nombre', correo: CORREO_USR, clave: CLAVE_USR }
+        cuerpo: { nombre: 'Otro Nombre', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR }
     });
     comprobar('un correo ya registrado responde igual que un alta (no filtra el padron)',
         repetido.estado === 201, repetido.datos);
@@ -405,24 +382,71 @@ const CLAVE_USR  = 'RiobambaVecino2026';
             comprobar('no exige cambio de clave: la eligio el', ingreso.datos?.afiliado?.requiere_cambio_clave === false);
             tokenUsuario = ingreso.datos?.token;
 
+            comprobar('guarda el numero de registro que declaro',
+                ingreso.datos?.afiliado?.registro_profesional === REGISTRO_USR, ingreso.datos?.afiliado);
+            comprobar('el numero nace SIN validar',
+                ingreso.datos?.afiliado?.registro_validado === false, ingreso.datos?.afiliado);
+
+            // Mientras el numero no se coteje contra el padron: se entra,
+            // se consulta el mapa (que ademas es publico) y no se descarga.
             const p = ingreso.datos?.permisos;
-            comprobar('puede abrir el visor', p?.visor === true, p);
-            comprobar('tiene su PDF de cortesia', p?.pdf === true, p);
+            comprobar('NO puede descargar el PDF', p?.pdf === false, p);
             comprobar('NO puede exportar DXF', p?.dxf === false, p);
             comprobar('NO puede exportar CSV', p?.csv === false, p);
 
             const dxf = await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'dxf' } });
-            comprobar('el servidor rechaza el DXF de un usuario', dxf.estado === 403, dxf.datos);
-            comprobar('y explica que es exclusivo de afiliados', dxf.datos?.solo_afiliados === true);
+            comprobar('el servidor rechaza el DXF', dxf.estado === 403, dxf.datos);
+            comprobar('y explica que el registro esta pendiente', dxf.datos?.registro_pendiente === true, dxf.datos);
 
-            const pdf1 = await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' } });
-            comprobar('el primer PDF se autoriza', pdf1.estado === 200, pdf1.datos);
-
-            const pdf2 = await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'pdf' } });
-            comprobar('el segundo PDF ya no', pdf2.estado === 403, pdf2.datos);
+            const pdfPendiente = await llamar('POST', '/api/descargas', {
+                token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' }
+            });
+            comprobar('tampoco autoriza el PDF', pdfPendiente.estado === 403, pdfPendiente.datos);
 
             const admin = await llamar('GET', '/api/admin/afiliados', { token: tokenUsuario });
             comprobar('un usuario no llega a la administracion', admin.estado === 403);
+
+            // ── El admin coteja el padron y valida el numero ──
+            const yo = await llamar('GET', '/api/sesion', { token: tokenUsuario });
+            const pendientes = await llamar('GET', '/api/admin/afiliados?pendientes=1', { token: tokenAdmin });
+            comprobar('la bandeja de pendientes lista la cuenta nueva',
+                pendientes.estado === 200 && pendientes.datos.afiliados.some(a => a.id === yo.datos.afiliado.id),
+                pendientes.datos?.total);
+
+            const validar = await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
+                token: tokenAdmin, cuerpo: { registro_validado: true }
+            });
+            comprobar('el admin valida el numero de registro', validar.estado === 200, validar.datos);
+            comprobar('la cuenta queda marcada como validada',
+                validar.datos?.afiliado?.registro_validado === true, validar.datos?.afiliado);
+
+            const tras = await llamar('GET', '/api/sesion', { token: tokenUsuario });
+            comprobar('validado, ya puede descargar el PDF', tras.datos?.permisos?.pdf === true, tras.datos?.permisos);
+            comprobar('validado, ya puede exportar DXF', tras.datos?.permisos?.dxf === true, tras.datos?.permisos);
+            comprobar('validado, ya puede exportar CSV', tras.datos?.permisos?.csv === true, tras.datos?.permisos);
+
+            const pdfOk = await llamar('POST', '/api/descargas', {
+                token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' }
+            });
+            comprobar('y el servidor lo autoriza de verdad', pdfOk.estado === 200, pdfOk.datos);
+
+            const pdfOtro = await llamar('POST', '/api/descargas', {
+                token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010102' }
+            });
+            comprobar('sin limite de uno: el segundo PDF tambien', pdfOtro.estado === 200, pdfOtro.datos);
+
+            const invalidar = await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
+                token: tokenAdmin, cuerpo: { registro_validado: false }
+            });
+            comprobar('el admin puede revocar la validacion', invalidar.estado === 200, invalidar.datos);
+            const revocado = await llamar('GET', '/api/sesion', { token: tokenUsuario });
+            comprobar('revocado, vuelve a quedarse sin descargas',
+                revocado.datos?.permisos?.pdf === false, revocado.datos?.permisos);
+
+            // Se deja validado para lo que sigue.
+            await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
+                token: tokenAdmin, cuerpo: { registro_validado: true }
+            });
         }
     } else {
         console.log('  – tramo de confirmacion omitido (no se paso el log de wrangler)');
@@ -452,7 +476,10 @@ seccion('Bitacora y auditoria');
         });
         comprobar('el admin asciende un usuario a afiliado', ascenso.estado === 200, ascenso.datos);
         const tras = await llamar('GET', '/api/sesion', { token: tokenUsuario });
-        comprobar('ascendido, ya puede exportar DXF', tras.datos?.permisos?.dxf === true, tras.datos?.permisos);
+        comprobar('como afiliado conserva todos los permisos',
+            tras.datos?.permisos?.dxf === true && tras.datos?.permisos?.pdf === true, tras.datos?.permisos);
+        comprobar('la bitacora deja constancia de la validacion del registro',
+            eventos.datos?.eventos?.some(e => (e.detalle || '').includes('registro validado')));
     }
 
     const cierre = await llamar('DELETE', '/api/sesion', { token: tokenAdmin });

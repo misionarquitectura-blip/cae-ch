@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAE-CH | Investigación territorial — líneas abiertas</title>
+<meta name="description" content="Las dos líneas de investigación territorial del CAE-CH sobre Riobamba: construcciones no registradas detectadas por IA, y equipamiento e infraestructura urbana frente a la norma. Acceso libre, sin cuenta.">
+<meta name="theme-color" content="#E31E24">
+<link rel="canonical" href="https://cae-ch.org/RESEARCH/">
+<meta property="og:title" content="CAE-CH | Investigación territorial">
+<meta property="og:description" content="Dos líneas de investigación sobre Riobamba: construcciones no registradas y equipamiento urbano. Abiertas a todo público.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cae-ch.org/RESEARCH/">
+<meta property="og:locale" content="es_EC">
+<link rel="icon" type="image/png" href="../LOGO/favicon-caech.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="../analytics.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   Identidad CAE-Ch 2025-2027: Montserrat, rojo #E31E24 sobre grafito,
+   versalitas de tracking abierto y filete rojo. Misma paleta que la
+   landing, para que el salto entre paginas no se note.
+   ════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* La paleta, la tipografia, .versalitas y .filete vienen de
+   caech-ui.css, enganchada al final de este <head>. Aqui solo los dos
+   colores de linea, que son propios de esta pagina. */
+:root {
+  --azul:  var(--linea-1);   /* linea 1 · catastro y suelo */
+  --verde: var(--linea-2);   /* linea 2 · equipamiento */
+}
+
+body {
+  background: var(--hueso);
+  color: var(--grafito);
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { line-height: 1.22; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+a { color: var(--rojo-caech); }
+
+/* ── Cabecera ──────────────────────────────────────────────────── */
+header {
+  background: var(--blanco);
+  border-bottom: 1px solid var(--borde);
+  position: sticky; top: 0; z-index: 50;
+}
+.navbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; padding: 12px 0;
+}
+.logo-area { display: flex; align-items: center; text-decoration: none; }
+.logo-area img { height: 46px; width: auto; display: block; }
+/* .nav-acciones, .btn y .btn-linea: ver caech-ui.css. */
+
+/* ── Portada ───────────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #3A2024 0%, var(--grafito) 55%, #23262B 100%);
+  color: #fff; padding: 62px 0 56px;
+}
+.hero .eyebrow {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: .62rem; font-weight: 300; text-transform: uppercase;
+  letter-spacing: var(--tracking-caps); color: rgba(255,255,255,.7);
+}
+.hero .eyebrow .punto {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--rojo-caech);
+  flex-shrink: 0;
+}
+.hero h1 {
+  font-size: clamp(1.9rem, 4.4vw, 3rem); font-weight: 700;
+  color: #fff; margin: 16px 0 0; max-width: 20ch;
+}
+.hero h1 em { font-style: normal; color: var(--rojo-caech); }
+.hero .filete { width: 190px; margin: 22px 0 18px; }
+.hero p { max-width: 66ch; color: rgba(255,255,255,.78); font-size: 1rem; }
+.hero .abierto {
+  display: inline-flex; align-items: flex-start; gap: 10px;
+  margin-top: 26px; padding: 12px 16px; max-width: 66ch;
+  background: rgba(255,255,255,.07); border-left: 3px solid var(--rojo-caech);
+  border-radius: 0 var(--radio) var(--radio) 0;
+  color: rgba(255,255,255,.85); font-size: .9rem;
+}
+.hero .abierto i { color: var(--rojo-caech); margin-top: 3px; flex-shrink: 0; }
+
+/* ── Estructura de secciones ───────────────────────────────────── */
+/* La cabecera es pegajosa, asi que un salto de ancla dejaria el titulo
+   escondido debajo. `scroll-margin-top` reserva su altura. */
+section { padding: 62px 0; scroll-margin-top: 78px; }
+section.claro { background: var(--blanco); border-top: 1px solid var(--borde); border-bottom: 1px solid var(--borde); }
+.titulo { margin-bottom: 34px; max-width: 74ch; }
+.titulo .eyebrow {
+  display: block; font-size: .62rem; font-weight: 300;
+  text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  color: var(--rojo-caech); margin-bottom: 12px;
+}
+.titulo h2 { font-size: clamp(1.45rem, 3vw, 2.05rem); font-weight: 700; }
+.titulo p { color: var(--grafito-med); margin-top: 12px; }
+
+/* ── Las dos lineas ────────────────────────────────────────────── */
+.lineas { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 26px; }
+.linea {
+  display: flex; flex-direction: column;
+  background: var(--blanco); border: 1px solid var(--borde);
+  border-top: 4px solid var(--tono); border-radius: var(--radio);
+  box-shadow: var(--sombra-1); padding: 26px 26px 24px;
+  transition: box-shadow .2s, transform .2s;
+}
+.linea:hover { box-shadow: var(--sombra-2); transform: translateY(-2px); }
+.linea-clave {
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  font-size: .6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .16em; color: var(--tono);
+  border: 1px solid var(--tono); border-radius: 100px; padding: 4px 11px;
+}
+.linea h3 { font-size: 1.22rem; font-weight: 700; margin: 15px 0 4px; }
+.linea .campo {
+  font-size: .7rem; font-weight: 300; text-transform: uppercase;
+  letter-spacing: .18em; color: var(--grafito-sua); margin-bottom: 14px;
+}
+.linea > p { color: var(--grafito-med); font-size: .92rem; }
+.linea ul { list-style: none; margin: 16px 0 0; display: grid; gap: 9px; }
+.linea li { position: relative; padding-left: 20px; font-size: .87rem; color: var(--grafito-med); }
+.linea li::before {
+  content: ""; position: absolute; left: 0; top: .62em;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--tono);
+}
+.linea .cifras {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 14px; margin: 20px 0 0; padding-top: 18px; border-top: 1px solid var(--borde);
+}
+.linea .cifra strong {
+  display: block; font-size: 1.32rem; font-weight: 700; color: var(--tono);
+  letter-spacing: -.03em; line-height: 1.15;
+}
+.linea .cifra span {
+  display: block; font-size: .66rem; color: var(--grafito-sua);
+  text-transform: uppercase; letter-spacing: .09em; margin-top: 4px; line-height: 1.4;
+}
+.linea .pie { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+.linea .btn { background: var(--tono); border-color: var(--tono); }
+.linea .btn:hover { filter: brightness(.88); }
+
+/* ── Presentacion en diapositivas ──────────────────────────────── */
+/* Regla de oro anti-solape: SOLO la diapositiva activa esta en el
+   flujo (las demas llevan `hidden`), nada se posiciona en absoluto y
+   toda la maqueta interna es flex/grid con `gap`. Si un texto crece,
+   la caja crece con el: nunca se monta sobre lo de al lado.          */
+.deck {
+  background: var(--blanco); border: 1px solid var(--borde);
+  border-radius: var(--radio); box-shadow: var(--sombra-2); overflow: hidden;
+}
+.deck-cab {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+  padding: 13px 22px; background: var(--grafito); color: #fff;
+}
+.deck-cab .marca {
+  font-size: .6rem; font-weight: 300; text-transform: uppercase;
+  letter-spacing: var(--tracking-caps); color: rgba(255,255,255,.7);
+}
+.deck-cab .contador {
+  font-size: .72rem; font-weight: 600; color: rgba(255,255,255,.92);
+  font-variant-numeric: tabular-nums;
+}
+
+.slide {
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 40px clamp(22px, 4vw, 48px) 44px;
+  min-height: 430px;
+}
+.slide[hidden] { display: none; }
+.slide .tono-barra { width: 64px; height: 3px; background: var(--tono, var(--rojo-caech)); flex-shrink: 0; }
+.slide .rotulo {
+  font-size: .6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .2em; color: var(--tono, var(--rojo-caech));
+}
+.slide h3 { font-size: clamp(1.3rem, 2.7vw, 1.85rem); font-weight: 700; max-width: 28ch; }
+.slide p { color: var(--grafito-med); font-size: clamp(.92rem, 1.5vw, 1rem); max-width: 72ch; }
+.slide p strong { color: var(--grafito); font-weight: 600; }
+.slide ul { list-style: none; display: grid; gap: 11px; max-width: 72ch; }
+.slide ul li { position: relative; padding-left: 22px; color: var(--grafito-med); font-size: .93rem; }
+.slide ul li::before {
+  content: ""; position: absolute; left: 0; top: .58em;
+  width: 8px; height: 8px; border-radius: 2px; background: var(--tono, var(--rojo-caech));
+}
+.slide ul li strong { color: var(--grafito); font-weight: 600; }
+
+/* Rejilla de cifras: auto-fit, de modo que nunca se aprietan ni se
+   desbordan; en movil caen a una columna por si solas. */
+.slide .datos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 18px; margin-top: 4px;
+}
+.slide .dato {
+  background: var(--hueso); border: 1px solid var(--borde);
+  border-left: 3px solid var(--tono, var(--rojo-caech));
+  border-radius: 0 var(--radio) var(--radio) 0; padding: 15px 16px;
+}
+.slide .dato b {
+  display: block; font-size: clamp(1.25rem, 2.6vw, 1.6rem); font-weight: 700;
+  color: var(--tono, var(--rojo-caech)); letter-spacing: -.03em; line-height: 1.12;
+}
+.slide .dato span {
+  display: block; font-size: .68rem; color: var(--grafito-med);
+  text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; line-height: 1.45;
+}
+.slide .nota {
+  margin-top: auto; padding: 13px 16px; background: var(--hueso);
+  border-left: 3px solid var(--grafito-sua); border-radius: 0 var(--radio) var(--radio) 0;
+  font-size: .82rem; color: var(--grafito-med); max-width: 78ch;
+}
+.slide .nota i { color: var(--grafito-sua); margin-right: 7px; }
+
+/* Portada y cierre de la presentacion */
+.slide.caratula { justify-content: center; align-items: flex-start; gap: 14px; }
+.slide.caratula h3 { font-size: clamp(1.6rem, 4vw, 2.5rem); max-width: 20ch; }
+.slide.caratula h3 em { font-style: normal; color: var(--rojo-caech); }
+
+/* Controles: en su PROPIA fila, debajo de la lamina. Nunca encima. */
+.deck-pie {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  padding: 14px 22px; border-top: 1px solid var(--borde); background: var(--hueso);
+}
+/* .deck-nav y sus botones: ver caech-ui.css (variante .btn-linea). */
+.puntos { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; flex: 1 1 200px; }
+.puntos button {
+  width: 9px; height: 9px; padding: 0; border-radius: 50%;
+  border: 1px solid var(--grafito-sua); background: transparent; cursor: pointer;
+  transition: background .16s, border-color .16s, transform .16s;
+}
+.puntos button:hover { transform: scale(1.35); }
+.puntos button[aria-current="true"] { background: var(--rojo-caech); border-color: var(--rojo-caech); }
+.deck-ayuda { font-size: .68rem; color: var(--grafito-sua); }
+.deck-ayuda kbd {
+  font-family: ui-monospace, Consolas, monospace; font-size: .66rem;
+  background: var(--blanco); border: 1px solid var(--borde);
+  border-radius: 3px; padding: 1px 5px; color: var(--grafito-med);
+}
+
+/* ── Aviso de acceso ───────────────────────────────────────────── */
+.acceso {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 22px;
+}
+.acceso .caja {
+  background: var(--blanco); border: 1px solid var(--borde);
+  border-radius: var(--radio); padding: 24px; box-shadow: var(--sombra-1);
+}
+.acceso .caja h3 { font-size: 1.04rem; font-weight: 700; margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+.acceso .caja h3 i { color: var(--rojo-caech); }
+.acceso .caja p { color: var(--grafito-med); font-size: .9rem; }
+.acceso .caja p + p { margin-top: 10px; }
+
+/* ── Pie ───────────────────────────────────────────────────────── */
+footer {
+  background: var(--grafito); color: rgba(255,255,255,.62);
+  padding: 30px 0; font-size: .8rem;
+}
+footer .wrap { display: flex; gap: 14px; justify-content: space-between; flex-wrap: wrap; }
+footer a { color: rgba(255,255,255,.85); }
+
+@media (max-width: 640px) {
+  section { padding: 46px 0; }
+  .slide { min-height: 0; padding: 30px 20px 34px; }
+  .deck-ayuda { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+<!-- Sistema de interfaz compartido: paleta, tipografia y botones.
+     Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
+<link rel="stylesheet" href="../caech-ui.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap navbar">
+    <a class="logo-area" href="../index.html">
+      <img src="../LOGO/logo-caech.png" width="520" height="188"
+           alt="CAE-Ch · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo">
+    </a>
+    <div class="nav-acciones">
+      <a class="btn btn-linea" href="../index.html"><i class="fas fa-arrow-left"></i> Inicio</a>
+      <a class="btn btn-linea" href="../geovisor.html"><i class="fas fa-map-location-dot"></i> GeoVisor</a>
+      <a class="btn" href="#presentacion"><i class="fas fa-play"></i> Ver la presentación</a>
+    </div>
+  </div>
+</header>
+
+<!-- ══ Portada ═══════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="wrap">
+    <span class="eyebrow"><span class="punto"></span> Investigación territorial · CAE-CH</span>
+    <h1>Dos preguntas sobre Riobamba,<br><em>medidas con datos abiertos</em></h1>
+    <hr class="filete">
+    <p>El CAE-CH mantiene dos líneas de investigación permanentes sobre el territorio del cantón.
+       Una mira el <strong>suelo construido</strong>: cuánto se edifica sin que el catastro lo registre.
+       La otra mira el <strong>soporte de la ciudad</strong>: qué equipamiento e infraestructura existe
+       y cuánto falta frente a la norma. Ambas se publican con su método, sus cifras y sus límites a la vista.</p>
+    <p class="abierto">
+      <i class="fas fa-lock-open"></i>
+      <span><strong>Acceso libre y permanente.</strong> Las dos investigaciones —sus mapas, sus tablas y
+      esta presentación— están abiertas a todo público, sin cuenta y sin registro. La cuenta de colegiado
+      solo hace falta para descargar los productos del GeoVisor (DICAT en PDF, CSV y DXF).</span>
+    </p>
+  </div>
+</div>
+
+<!-- ══ Clasificación: las dos líneas ═════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="titulo">
+      <span class="eyebrow">Cómo se clasifica</span>
+      <h2>Dos líneas, dos objetos de estudio</h2>
+      <p>Hasta ahora los dos estudios vivían por separado y sin un lugar común desde donde entrar.
+         Aquí quedan bajo un mismo techo y clasificados por lo que cada uno mide.</p>
+    </div>
+
+    <div class="lineas">
+
+      <!-- LÍNEA 1 -->
+      <article class="linea" style="--tono:var(--azul)">
+        <span class="linea-clave"><i class="fas fa-layer-group"></i> Línea 1</span>
+        <h3>Construcciones no registradas</h3>
+        <div class="campo versalitas">Catastro y suelo construido</div>
+        <p>Contraste entre las huellas de edificación que detecta la inteligencia artificial sobre
+           imagen satelital y lo que el catastro municipal declara construido en cada predio.
+           Donde hay techo y el catastro dice cero, hay un hallazgo.</p>
+        <ul>
+          <li>Fuente IA: <strong>Google Open Buildings</strong> (detección ML de huellas)</li>
+          <li>Base catastral: predios del GADMR con <strong>superficie construida en cero</strong></li>
+          <li>Mapa interactivo con filtro por confianza, nivel de alerta y área mínima</li>
+        </ul>
+        <div class="cifras">
+          <div class="cifra"><strong>20 089</strong><span>construcciones detectadas</span></div>
+          <div class="cifra"><strong>8 964</strong><span>predios afectados</span></div>
+          <div class="cifra"><strong>181 ha</strong><span>superficie no declarada</span></div>
+        </div>
+        <div class="pie">
+          <a class="btn" href="investigacion.html"><i class="fas fa-chart-bar"></i> Abrir el estudio</a>
+        </div>
+      </article>
+
+      <!-- LÍNEA 2 -->
+      <article class="linea" style="--tono:var(--verde)">
+        <span class="linea-clave"><i class="fas fa-city"></i> Línea 2</span>
+        <h3>Equipamiento e infraestructura urbana</h3>
+        <div class="campo versalitas">El ser y el deber ser</div>
+        <p>Inventario del equipamiento que existe dentro del polígono urbano —cruzando catastro
+           municipal con OpenStreetMap— contrastado con los estándares normativos de dotación por
+           habitante, sobre la población del Censo 2022 del INEC.</p>
+        <ul>
+          <li>Cruce espacial <strong>catastro × OSM</strong> con regla de 120 m para no contar dos veces</li>
+          <li>Demanda real por grupos de edad y por parroquia urbana</li>
+          <li>Balance por subtipo: unidades y superficie frente a la norma</li>
+        </ul>
+        <div class="cifras">
+          <div class="cifra"><strong>800</strong><span>equipamientos consolidados</span></div>
+          <div class="cifra"><strong>1,37 m²</strong><span>área verde por habitante</span></div>
+          <div class="cifra"><strong>15 %</strong><span>del mínimo OMS de 9 m²</span></div>
+        </div>
+        <div class="pie">
+          <a class="btn" href="equipamiento.html"><i class="fas fa-scale-balanced"></i> Abrir el estudio</a>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ Presentación ══════════════════════════════════════════════ -->
+<section class="claro" id="presentacion">
+  <div class="wrap">
+    <div class="titulo">
+      <span class="eyebrow">Presentación</span>
+      <h2>Las dos investigaciones, lámina por lámina</h2>
+      <p>Qué pregunta cada estudio, con qué método responde, qué encontró y qué no puede afirmar.
+         Avance con los botones, con los puntos o con las flechas del teclado.</p>
+    </div>
+
+    <div class="deck" id="deck">
+      <div class="deck-cab">
+        <span class="marca versalitas">CAE-Ch · Investigación territorial</span>
+        <span class="contador" id="contador">1 / 13</span>
+      </div>
+
+      <!-- ── 1 · Carátula ── -->
+      <div class="slide caratula" data-slide style="--tono:var(--rojo)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Colegio de Arquitectos del Ecuador · Chimborazo</span>
+        <h3>Investigación territorial sobre <em>Riobamba</em></h3>
+        <p>Dos líneas abiertas: el suelo que se construye sin declarar, y el equipamiento
+           que la ciudad tiene frente al que la norma le exige. Todo el material es público.</p>
+        <div class="datos">
+          <div class="dato" style="--tono:var(--azul)"><b>Línea 1</b><span>Construcciones no registradas</span></div>
+          <div class="dato" style="--tono:var(--verde)"><b>Línea 2</b><span>Equipamiento e infraestructura</span></div>
+        </div>
+        <p class="nota"><i class="fas fa-lock-open"></i> Sin cuenta, sin registro y sin caducidad:
+           las dos investigaciones son de acceso libre para cualquier persona.</p>
+      </div>
+
+      <!-- ── 2 · Clasificación ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--rojo)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Cómo se clasifican</span>
+        <h3>Dos objetos de estudio distintos</h3>
+        <ul>
+          <li><strong>Línea 1 — Catastro y suelo construido.</strong> Mide la diferencia entre lo
+              edificado y lo declarado. Unidad de análisis: el predio.</li>
+          <li><strong>Línea 2 — Equipamiento e infraestructura urbana.</strong> Mide la diferencia
+              entre la dotación existente y la exigida por norma. Unidad de análisis: la parroquia
+              urbana y el subtipo de equipamiento.</li>
+        </ul>
+        <p>Comparten método —cruzar fuentes independientes sobre el mismo territorio y publicar
+           el resultado con sus supuestos— y comparten límite: <strong>ninguna de las dos constituye
+           un acto administrativo</strong>. Son insumos técnicos para la discusión pública.</p>
+        <p class="nota"><i class="fas fa-diagram-project"></i> Ambas parten del mismo extracto del
+           catastro del GADMR que alimenta el GeoVisor, de modo que sus cifras son comparables entre sí.</p>
+      </div>
+
+      <!-- ── 3 · Línea 1: la pregunta ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--azul)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 1 · La pregunta</span>
+        <h3>¿Cuánto se construye sin que el catastro se entere?</h3>
+        <p>El avalúo, la planificación de redes y el cálculo de la demanda de servicios parten de
+           la superficie construida que consta en el catastro. Si esa cifra está por debajo de la
+           realidad, todo lo que se deduce de ella queda corto.</p>
+        <p>La pregunta es medible: hoy existen huellas de edificación detectadas automáticamente
+           sobre imagen satelital, y existe el catastro predial. <strong>Basta superponerlos.</strong></p>
+        <p class="nota"><i class="fas fa-circle-info"></i> El estudio no señala infractores: señala
+           dónde el registro y el territorio no coinciden, que es un problema de información antes
+           que de conducta.</p>
+      </div>
+
+      <!-- ── 4 · Línea 1: método ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--azul)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 1 · Método</span>
+        <h3>Superponer dos fuentes que no se hablan</h3>
+        <ul>
+          <li><strong>Fuente IA.</strong> Google Open Buildings: huellas de construcción detectadas
+              por aprendizaje automático, cada una con su nivel de confianza.</li>
+          <li><strong>Base catastral.</strong> Predios del GADMR cuyo campo de superficie construida
+              vale cero, es decir, sin declaración de edificación.</li>
+          <li><strong>Cruce.</strong> Punto en polígono: el centroide de cada huella IA contra el
+              polígono del predio.</li>
+          <li><strong>Criterio.</strong> Se retiene la coincidencia si supera el umbral de confianza,
+              que el lector puede mover en el mapa entre 0,65 y 0,95.</li>
+        </ul>
+        <p class="nota"><i class="fas fa-sliders"></i> El umbral es un parámetro visible, no una
+           decisión oculta: cambiarlo cambia el resultado, y el mapa deja que cualquiera lo compruebe.</p>
+      </div>
+
+      <!-- ── 5 · Línea 1: cifras ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--azul)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 1 · Resultados</span>
+        <h3>Veinte mil techos que el catastro no registra</h3>
+        <div class="datos">
+          <div class="dato"><b>20 089</b><span>construcciones no registradas</span></div>
+          <div class="dato"><b>8 964</b><span>predios afectados</span></div>
+          <div class="dato"><b>181 ha</b><span>superficie estimada</span></div>
+          <div class="dato"><b>73 539</b><span>predios analizados</span></div>
+        </div>
+        <ul>
+          <li><strong>Alta confianza</strong> (≥ 0,85): 3 701 detecciones</li>
+          <li><strong>Confianza media</strong> (0,75 – 0,85): 9 299 detecciones</li>
+          <li><strong>Confianza baja</strong> (&lt; 0,75): 7 089 detecciones</li>
+        </ul>
+        <p class="nota"><i class="fas fa-database"></i> Sobre 96 026 huellas detectadas por IA en todo
+           el cantón y 45 469 predios sin construcción declarada. Corte del análisis: abril de 2026.</p>
+      </div>
+
+      <!-- ── 6 · Línea 1: lectura ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--azul)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 1 · Lectura</span>
+        <h3>Qué se puede y qué no se puede concluir</h3>
+        <ul>
+          <li><strong>Sí:</strong> que el catastro subestima la superficie construida del cantón, y
+              que la brecha es de escala urbana, no anecdótica.</li>
+          <li><strong>Sí:</strong> que la brecha se concentra en predios que hoy figuran íntegramente
+              sin edificación, lo que la vuelve fácil de priorizar para una actualización catastral.</li>
+          <li><strong>No:</strong> que cada detección sea una construcción irregular. Puede ser una
+              obra reciente aún no declarada, una cubierta ligera o un error de la IA.</li>
+          <li><strong>No:</strong> que la superficie estimada equivalga a área útil edificada. Es
+              huella en planta, no metros de construcción por piso.</li>
+        </ul>
+        <p class="nota"><i class="fas fa-triangle-exclamation"></i> Verificación en campo obligatoria
+           antes de cualquier uso administrativo o tributario del dato.</p>
+      </div>
+
+      <!-- ── 7 · Línea 1: límites ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--azul)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 1 · Límites</span>
+        <h3>Dónde falla y por qué se dice</h3>
+        <ul>
+          <li><strong>Falsos positivos.</strong> La detección por IA se equivoca sobre todo en
+              vegetación densa y en estructuras no habitacionales: invernaderos, galpones, cubiertas
+              provisionales.</li>
+          <li><strong>Desfase temporal.</strong> La imagen satelital y el extracto catastral no son
+              del mismo día; una obra declarada después del corte aparece como no registrada.</li>
+          <li><strong>Centroide, no solape.</strong> El cruce usa el centro de la huella: una
+              construcción a caballo entre dos predios se asigna a uno solo.</li>
+          <li><strong>No es acto administrativo.</strong> El resultado no notifica, no sanciona y no
+              sustituye la inspección municipal.</li>
+        </ul>
+      </div>
+
+      <!-- ── 8 · Línea 2: la pregunta ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--verde)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 2 · La pregunta</span>
+        <h3>El ser y el deber ser del equipamiento urbano</h3>
+        <p>La norma dice cuántas escuelas, cuántos centros de salud, cuántos mercados y cuántos
+           metros cuadrados de área verde corresponden a una población dada. La ciudad, mientras
+           tanto, tiene los que tiene.</p>
+        <p>El estudio pone las dos cosas en la misma tabla: <strong>el inventario real</strong>,
+           levantado cruzando fuentes independientes, frente a <strong>la dotación exigida</strong>
+           para los 177 213 habitantes que el INEC cuenta en el área urbana de Riobamba.</p>
+        <p class="nota"><i class="fas fa-users"></i> Población de referencia: Censo 2022 del INEC.
+           Polígono urbano de 3 094 ha con 41 737 predios catastrales.</p>
+      </div>
+
+      <!-- ── 9 · Línea 2: método ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--verde)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 2 · Método</span>
+        <h3>Tres fuentes cruzadas para no contar dos veces</h3>
+        <ul>
+          <li><strong>Catastro municipal.</strong> Aporta el predio, su superficie y su titular.
+              Dice de quién es el suelo, no qué función cumple.</li>
+          <li><strong>OpenStreetMap.</strong> Aporta la función real del lugar. Cubre muy bien
+              parques, canchas, escuelas y farmacias; muy mal el bienestar social.</li>
+          <li><strong>Censo INEC 2022.</strong> Aporta la población y su estructura por edades, que
+              es la que convierte un inventario en un déficit.</li>
+        </ul>
+        <p><strong>Regla de cruce:</strong> un punto de OSM a menos de 120 m de un predio catastral
+           del mismo grupo funcional es el <em>mismo</em> equipamiento y se cuenta una sola vez. Cuando
+           ambas fuentes coinciden se adopta el subtipo de OSM —describe la función— y la mayor de
+           las dos superficies.</p>
+        <p class="nota"><i class="fas fa-code-branch"></i> 800 equipamientos consolidados a partir de
+           620 registros públicos de OSM y 280 predios catastrales de equipamiento.</p>
+      </div>
+
+      <!-- ── 10 · Línea 2: cifras ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--verde)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 2 · Resultados</span>
+        <h3>El déficit dominante es de área verde</h3>
+        <div class="datos">
+          <div class="dato"><b>1,37 m²</b><span>área verde por habitante</span></div>
+          <div class="dato"><b>9 m²</b><span>mínimo recomendado OMS</span></div>
+          <div class="dato"><b>3,82 m²</b><span>sumando áreas deportivas</span></div>
+          <div class="dato"><b>91,8 ha</b><span>faltan para cerrar la brecha</span></div>
+        </div>
+        <p>Riobamba dispone de <strong>24,3 ha de parques y jardines</strong> para 177 213 habitantes:
+           el 15 % del mínimo que recomienda la OMS. Sumando canchas y áreas deportivas se llega a
+           67,7 ha, todavía muy por debajo del umbral.</p>
+        <p class="nota"><i class="fas fa-chart-simple"></i> En contraste, la mayoría de los subtipos
+           —educación básica, salud, mercados, culto— superan el estándar en número de unidades. El
+           problema no es la cantidad de equipamientos: es el suelo libre.</p>
+      </div>
+
+      <!-- ── 11 · Línea 2: hallazgos ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--verde)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 2 · Hallazgos</span>
+        <h3>Tres cosas que la tabla deja ver</h3>
+        <ul>
+          <li><strong>El suelo municipal vacante es la palanca más barata.</strong> El GAD figura como
+              titular de 68,4 ha en 341 lotes enteramente vacantes dentro del polígono urbano —en su
+              mayoría áreas verdes y comunales cedidas por urbanizaciones—. Habilitarlas todas acerca
+              la cifra al umbral, pero no la cierra por sí sola.</li>
+          <li><strong>Hay superficie insuficiente aun donde sobran unidades.</strong> El caso más claro
+              es el equipamiento cultural: hay más unidades que las exigidas, pero son casas comunales
+              y locales pequeños, no infraestructura cultural de escala.</li>
+          <li><strong>La concentración pesa tanto como la cantidad.</strong> Yaruquíes, con unos 2 890
+              habitantes estimados, concentra una fracción mínima del equipamiento; Lizarzaburu y
+              Velasco absorben la mayor parte.</li>
+        </ul>
+      </div>
+
+      <!-- ── 12 · Línea 2: límites ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--verde)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 2 · Límites</span>
+        <h3>Lo que estas cifras no pueden decir</h3>
+        <ul>
+          <li><strong>El catastro registra propiedad, no función.</strong> Un predio del Ministerio de
+              Educación se cuenta como educativo aunque hoy albergue una bodega.</li>
+          <li><strong>OpenStreetMap es colaborativo y desigual.</strong> Los déficits de bienestar
+              social y educación inicial están sobreestimados por subregistro de la fuente.</li>
+          <li><strong>La población por parroquia urbana es estimada.</strong> El INEC no desagrega las
+              cinco parroquias urbanas; el reparto se hace con superficie construida residencial.</li>
+          <li><strong>Los estándares normativos deben validarse</strong> contra los textos oficiales
+              antes de usarse en un instrumento de planificación.</li>
+        </ul>
+      </div>
+
+      <!-- ── 13 · Cierre ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--rojo)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Para seguir</span>
+        <h3>Los dos estudios están abiertos</h3>
+        <p>Cada línea tiene su mapa interactivo, sus filtros y sus tablas completas. No hace falta
+           cuenta, registro ni afiliación: son material público del CAE-CH.</p>
+        <div class="datos">
+          <div class="dato" style="--tono:var(--azul)"><b>Línea 1</b><span>Construcciones no registradas · mapa con filtros de confianza</span></div>
+          <div class="dato" style="--tono:var(--verde)"><b>Línea 2</b><span>Equipamiento urbano · balance frente a la norma</span></div>
+        </div>
+        <p class="nota"><i class="fas fa-circle-info"></i> Lo único que exige cuenta de colegiado es
+           descargar los productos del GeoVisor: el DICAT en PDF, el CSV y el DXF del predio.</p>
+      </div>
+
+      <div class="deck-pie">
+        <div class="deck-nav">
+          <button type="button" class="btn-linea" id="anterior"><i class="fas fa-chevron-left"></i> Anterior</button>
+          <button type="button" class="btn-linea" id="siguiente">Siguiente <i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="puntos" id="puntos" role="tablist" aria-label="Ir a una lámina"></div>
+        <div class="deck-ayuda">Navegue con <kbd>←</kbd> <kbd>→</kbd></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Acceso ════════════════════════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="titulo">
+      <span class="eyebrow">Acceso</span>
+      <h2>Qué es libre y qué pide cuenta</h2>
+    </div>
+    <div class="acceso">
+      <div class="caja">
+        <h3><i class="fas fa-lock-open"></i> Libre para todo público</h3>
+        <p>Las dos investigaciones completas, con sus mapas, filtros y tablas. Y el
+           <strong>GeoVisor</strong> entero: catastro, PUGS, vialidad, agua potable, alcantarillado
+           y redes eléctricas, consultables predio por predio.</p>
+        <p>Sin cuenta, sin registro y sin límite de consultas.</p>
+      </div>
+      <div class="caja">
+        <h3><i class="fas fa-id-card"></i> Con cuenta de colegiado</h3>
+        <p>Las tres descargas del GeoVisor: el <strong>DICAT en PDF</strong>, el <strong>CSV</strong>
+           y el <strong>DXF</strong> del predio. El CAE-CH responde por esos documentos y deja
+           constancia de cada descarga.</p>
+        <p>Las cuentas se otorgan únicamente a miembros del CAE, que se identifican con su número
+           de registro y confirman su correo electrónico.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Colegio de Arquitectos del Ecuador — Provincial de Chimborazo · Investigación territorial</span>
+    <span><a href="../index.html">Inicio</a> · <a href="../geovisor.html">GeoVisor</a> · <a href="../legal.html#terminos">Términos</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+    'use strict';
+
+    var laminas = Array.prototype.slice.call(document.querySelectorAll('[data-slide]'));
+    if (!laminas.length) return;
+
+    var puntos    = document.getElementById('puntos');
+    var contador  = document.getElementById('contador');
+    var anterior  = document.getElementById('anterior');
+    var siguiente = document.getElementById('siguiente');
+    var actual = 0;
+
+    // Un punto por lamina. Se generan aqui y no en el HTML para que
+    // anadir o quitar una lamina no obligue a tocar dos sitios.
+    laminas.forEach(function (lamina, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-label', 'Lámina ' + (i + 1) + ' de ' + laminas.length);
+        b.addEventListener('click', function () { ir(i); });
+        puntos.appendChild(b);
+        lamina.setAttribute('aria-hidden', i === 0 ? 'false' : 'true');
+    });
+
+    function ir(i, mover) {
+        actual = Math.max(0, Math.min(laminas.length - 1, i));
+        laminas.forEach(function (lamina, j) {
+            // `hidden` saca la lamina del flujo por completo: es lo que
+            // garantiza que dos laminas no puedan solaparse nunca.
+            lamina.hidden = j !== actual;
+            lamina.setAttribute('aria-hidden', j === actual ? 'false' : 'true');
+        });
+        Array.prototype.forEach.call(puntos.children, function (p, j) {
+            p.setAttribute('aria-current', j === actual ? 'true' : 'false');
+        });
+        contador.textContent = (actual + 1) + ' / ' + laminas.length;
+        anterior.disabled  = actual === 0;
+        siguiente.disabled = actual === laminas.length - 1;
+
+        // Al saltar de lamina se lleva la vista al principio del deck,
+        // que si no en movil se queda mirando los botones.
+        if (mover) {
+            var deck = document.getElementById('deck');
+            var arriba = deck.getBoundingClientRect().top;
+            if (arriba < 0 || arriba > window.innerHeight * 0.6) {
+                deck.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
+    anterior.addEventListener('click',  function () { ir(actual - 1, true); });
+    siguiente.addEventListener('click', function () { ir(actual + 1, true); });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+        if (e.key === 'ArrowRight') { ir(actual + 1, true); }
+        else if (e.key === 'ArrowLeft') { ir(actual - 1, true); }
+        else if (e.key === 'Home') { ir(0, true); }
+        else if (e.key === 'End') { ir(laminas.length - 1, true); }
+    });
+
+    // Deslizar con el dedo. Umbral generoso para no robarle el gesto al
+    // desplazamiento vertical de la pagina.
+    var x0 = null, y0 = null;
+    var deck = document.getElementById('deck');
+    deck.addEventListener('touchstart', function (e) {
+        x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+    }, { passive: true });
+    deck.addEventListener('touchend', function (e) {
+        if (x0 === null) return;
+        var dx = e.changedTouches[0].clientX - x0;
+        var dy = e.changedTouches[0].clientY - y0;
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            ir(actual + (dx < 0 ? 1 : -1), false);
+        }
+        x0 = y0 = null;
+    }, { passive: true });
+
+    ir(0, false);
+})();
+</script>
+</body>
+</html>

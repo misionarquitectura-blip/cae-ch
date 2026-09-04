@@ -12,12 +12,15 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="analytics.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         :root {
@@ -172,6 +175,9 @@
             .bloque { padding: 26px 22px 22px; }
         }
     </style>
+    <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
+         Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
+    <link rel="stylesheet" href="caech-ui.css">
 </head>
 <body>
     <header>
@@ -219,10 +225,10 @@
                 <p>Las calles colindantes identificadas por geocodificación inversa (OpenStreetMap) son referenciales.</p>
 
                 <h3>4. Acceso al servicio</h3>
-                <p>El sitio informativo es de acceso libre. La solicitud del reporte DICAT se atiende de forma presencial en la sede del CAE-CH, y la versión oficial firmada se gestiona por correo electrónico.</p>
-                <p>Cualquier persona puede crear una cuenta para <strong>abrir el visor geoespacial y consultar el mapa</strong>. La cuenta se activa al confirmar el correo electrónico.</p>
-                <p>Las <strong>herramientas de exportación</strong> —el archivo DXF para CAD y la tabla de vértices en CSV— están reservadas a los afiliados del CAE-CH. Esas cuentas no se crean por cuenta propia: las da de alta la administración del CAE-CH y las credenciales se entregan en la sede. Todas las cuentas son personales e intransferibles: no se comparten credenciales, y el CAE-CH puede suspender la que detecte en uso indebido.</p>
-                <p>Por lanzamiento, quien no sea afiliado puede obtener <strong>un (1) reporte DICAT en PDF</strong> verificando una dirección de correo electrónico. Es una cortesía por una sola vez y por cada dirección; el CAE-CH puede terminar la promoción cuando lo estime.</p>
+                <p><strong>Consultar es libre.</strong> El sitio informativo, las investigaciones territoriales publicadas y el <strong>visor geoespacial completo</strong> —con todas sus capas: catastro, PUGS, vialidad, agua potable, alcantarillado y redes eléctricas— son de acceso abierto para cualquier persona, sin cuenta, sin registro y sin límite de consultas.</p>
+                <p><strong>Descargar exige cuenta.</strong> Los tres productos que el visor genera —el reporte DICAT en PDF, la tabla de vértices en CSV y el archivo DXF para CAD— sólo pueden obtenerse desde una cuenta con el correo electrónico confirmado. El CAE-CH responde por esos documentos y deja constancia de cada descarga.</p>
+                <p><strong>Las cuentas se otorgan únicamente a miembros del CAE.</strong> Al crearla se solicita el <strong>número de registro del colegiado</strong>, que la administración del CAE-CH coteja contra el padrón del colegio. Mientras ese cotejo no se complete la cuenta permite ingresar y consultar el mapa, pero no descargar. La administración puede además dar de alta cuentas directamente y entregar las credenciales en la sede. Todas las cuentas son personales e intransferibles: no se comparten credenciales, y el CAE-CH puede suspender la que detecte en uso indebido o cuyo número de registro no corresponda.</p>
+                <p>La solicitud del reporte DICAT también se atiende de forma presencial en la sede del CAE-CH, y la versión oficial firmada se gestiona por correo electrónico.</p>
                 <p>Siendo el CAE-CH una organización sin fines de lucro, el servicio se presta sin cargo mientras no se defina un esquema de aportes o donaciones. El CAE-CH puede modificar, suspender o discontinuar el servicio en cualquier momento.</p>
 
                 <h3>5. Uso permitido</h3>
@@ -251,19 +257,18 @@
                 <h3>1. Responsable del tratamiento</h3>
                 <p>Colegio de Arquitectos del Ecuador — Provincial de Chimborazo (CAE-CH). Av. Daniel León Borja, Pasaje Centro de Arte y Cultura, Riobamba, Chimborazo, Ecuador. Correo de contacto para asuntos de datos personales: <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>.</p>
 
-                <h3>2. Dos tipos de cuenta</h3>
-                <p><strong>Cuenta de usuario.</strong> Cualquier persona puede crearse una cuenta indicando su nombre, su correo electrónico y una contraseña. Esa cuenta permite abrir el visor geoespacial y consultar el mapa, y no puede usarse hasta confirmar el correo mediante el enlace que enviamos. No se solicitan números de cédula, RUC ni ningún documento de identidad.</p>
-                <p><strong>Cuenta de afiliado.</strong> Las herramientas de exportación (DXF y CSV) quedan reservadas a los afiliados del CAE-CH. Esas cuentas <strong>no se pueden crear por cuenta propia</strong>: las da de alta exclusivamente la administración del CAE-CH y las credenciales se entregan de forma presencial en la sede.</p>
-                <p>Quien no es afiliado puede pedir, por lanzamiento, <strong>un (1) reporte DICAT en PDF</strong> verificando un correo electrónico. Eso no crea una cuenta ni una contraseña: sólo comprueba que la dirección existe y que la cortesía se usa una vez.</p>
+                <h3>2. Cuándo hace falta una cuenta</h3>
+                <p><strong>Para consultar, nunca.</strong> El visor geoespacial y las investigaciones territoriales se abren sin cuenta y sin registro. Si usted sólo consulta el mapa, el CAE-CH no recoge ningún dato personal suyo.</p>
+                <p><strong>Para descargar, siempre.</strong> El reporte DICAT en PDF, la tabla en CSV y el archivo DXF exigen una cuenta con el correo confirmado. Al crearla se piden el nombre, el <strong>número de registro del colegiado en el CAE</strong>, el correo electrónico y una contraseña. No se solicitan números de cédula, RUC ni ningún documento de identidad.</p>
+                <p><strong>Validación del número de registro.</strong> Las cuentas se otorgan sólo a miembros del CAE, de modo que la administración coteja el número declarado contra el padrón del colegio. Hasta que ese cotejo se complete, la cuenta existe y permite ingresar, pero las descargas siguen bloqueadas. La administración puede además dar de alta cuentas directamente, entregando las credenciales en la sede.</p>
 
                 <h3>3. Datos que se tratan</h3>
                 <ul>
                     <li><strong>Datos de contacto que usted nos envía:</strong> nombre, correo electrónico y el mensaje que redacta. El formulario del sitio no almacena nada en un servidor: abre su propio cliente de correo con el texto ya redactado, de modo que el mensaje viaja por su proveedor de correo y llega a la cuenta institucional del CAE-CH.</li>
                     <li><strong>Datos de la solicitud del DICAT:</strong> clave catastral, dirección del predio y nombre del solicitante, entregados presencialmente o por correo. Se usan únicamente para elaborar y entregar el reporte.</li>
-                    <li><strong>Datos de la cuenta:</strong> nombre, usuario y correo electrónico. En las cuentas de afiliado se añaden el número de registro profesional, si lo aporta, y la fecha de vigencia de la afiliación. La contraseña <strong>no se guarda</strong>: sólo se conserva un resumen criptográfico irreversible del que no puede recuperarse el original.</li>
+                    <li><strong>Datos de la cuenta:</strong> nombre, usuario, correo electrónico y <strong>número de registro del colegiado en el CAE</strong>, junto con la constancia de si ese número ya fue cotejado contra el padrón, cuándo y por qué administrador. En las cuentas que da de alta la administración se añade además la fecha de vigencia de la afiliación. El número de registro se trata con un solo fin: comprobar que quien descarga es miembro del CAE. La contraseña <strong>no se guarda</strong>: sólo se conserva un resumen criptográfico irreversible del que no puede recuperarse el original.</li>
                     <li><strong>Confirmación del correo:</strong> al registrarse se genera un enlace de un solo uso, válido 24 horas, del que se almacena únicamente un resumen criptográfico. Sirve para comprobar que la dirección le pertenece; sin esa confirmación la cuenta no puede usarse.</li>
-                    <li><strong>Registro de uso de las herramientas:</strong> por cada reporte generado se anota la fecha, el formato (PDF, DXF o CSV), la clave catastral consultada y qué afiliado lo pidió. También quedan registrados los ingresos y los intentos fallidos. Sirve para responder por el uso institucional de la herramienta y detectar accesos indebidos.</li>
-                    <li><strong>Correo del reporte de cortesía:</strong> si usted solicita el reporte gratuito de lanzamiento, se conserva su dirección de correo para verificarla y para impedir que la cortesía se use más de una vez. No se usa para enviarle publicidad ni se incorpora a ninguna lista de difusión.</li>
+                    <li><strong>Registro de uso de las herramientas:</strong> por cada descarga se anota la fecha, el formato (PDF, DXF o CSV), la clave catastral consultada y qué cuenta la pidió. También quedan registrados los ingresos y los intentos fallidos. Sirve para responder por el uso institucional de la herramienta y detectar accesos indebidos. <strong>La consulta del mapa no se registra por persona</strong>: como no exige cuenta, no hay a quién asociarla.</li>
                     <li><strong>Dirección IP:</strong> nunca se almacena en claro. Se guarda únicamente un resumen criptográfico irreversible, con el solo fin de frenar abusos automatizados. De ese resumen no puede reconstruirse la dirección original.</li>
                     <li><strong>Datos de navegación:</strong> si la analítica web está activa, se recogen métricas agregadas de visitas, dispositivo y ubicación aproximada mediante Google Analytics. No se usan para identificar a personas concretas.</li>
                 </ul>
@@ -276,21 +281,21 @@
                 <p>Si usted es titular de un predio y considera que la información catastral que aparece aquí es inexacta o no debería difundirse, puede escribirnos y la retiraremos de nuestra copia. La corrección en la fuente debe gestionarse ante el GADM de Riobamba, que es la entidad responsable de ese registro.</p>
 
                 <h3>5. Finalidad y base legal</h3>
-                <p>Los datos de contacto se tratan para responder su consulta y elaborar el reporte solicitado; la base legal es su consentimiento al enviarnos el mensaje y la ejecución del servicio que nos pide. Los datos de la cuenta de afiliado y el registro de uso se tratan para prestar el servicio al que da derecho la afiliación y para responder por el uso de una herramienta institucional; la base legal es la ejecución de esa relación gremial y el interés legítimo del CAE-CH en la seguridad de la plataforma. El correo del reporte de cortesía se trata con su consentimiento, manifestado al escribirlo y verificarlo. La información catastral se trata por interés legítimo en el ejercicio de la función gremial y técnica del CAE-CH, sobre datos que ya son de acceso público.</p>
+                <p>Los datos de contacto se tratan para responder su consulta y elaborar el reporte solicitado; la base legal es su consentimiento al enviarnos el mensaje y la ejecución del servicio que nos pide. Los datos de la cuenta —incluido el número de registro— y el registro de uso se tratan para comprobar la condición de miembro del CAE y prestar el servicio al que da derecho y para responder por el uso de una herramienta institucional; la base legal es la ejecución de esa relación gremial y el interés legítimo del CAE-CH en la seguridad de la plataforma. La información catastral se trata por interés legítimo en el ejercicio de la función gremial y técnica del CAE-CH, sobre datos que ya son de acceso público.</p>
 
                 <h3>6. Con quién se comparte</h3>
                 <p>El CAE-CH no vende, alquila ni cede datos personales a terceros. Sólo intervienen los proveedores de infraestructura necesarios para que el sitio funcione: el alojamiento estático del sitio, el servicio de Cloudflare que aloja la base de afiliados y atiende la verificación de acceso, el proveedor que entrega los correos de verificación, el proveedor de correo electrónico institucional y, si está activa, la analítica web de Google.</p>
 
                 <h3>7. Conservación</h3>
                 <p>La correspondencia y las solicitudes se conservan mientras dure la gestión y el plazo de archivo institucional del CAE-CH. La copia local del catastro se reemplaza íntegramente en cada actualización de la fuente.</p>
-                <p>Las sesiones abiertas caducan a las 8 horas y se eliminan de forma automática. Los datos de la cuenta de afiliado se conservan mientras dure la afiliación y el plazo de archivo institucional. El registro de uso de las herramientas y la bitácora de accesos se conservan mientras sean necesarios para acreditar el uso del servicio. El correo del reporte de cortesía se conserva mientras dure la promoción de lanzamiento, ya que es lo que permite comprobar que la cortesía no se repita; puede pedir su eliminación en cualquier momento conforme al punto 8.</p>
+                <p>Las sesiones abiertas caducan a las 8 horas y se eliminan de forma automática. Los datos de la cuenta se conservan mientras dure la afiliación y el plazo de archivo institucional. El registro de uso de las herramientas y la bitácora de accesos se conservan mientras sean necesarios para acreditar el uso del servicio. Puede pedir la eliminación de sus datos en cualquier momento conforme al punto 8.</p>
 
                 <h3>8. Sus derechos</h3>
                 <p>Conforme a la LOPDP, usted puede solicitar acceso, rectificación, eliminación, oposición, portabilidad y la suspensión del tratamiento de sus datos personales, escribiendo a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>. Atendemos la solicitud en los plazos que fija la ley. Si considera que su solicitud no fue atendida, puede acudir a la Superintendencia de Protección de Datos Personales.</p>
 
                 <h3>9. Cookies y almacenamiento en su navegador</h3>
                 <p>El sitio no usa cookies propias de seguimiento. Si la analítica web está activa, Google Analytics puede instalar cookies de medición; puede bloquearlas desde la configuración de su navegador sin que ello afecte al funcionamiento del sitio.</p>
-                <p>El visor guarda en el almacenamiento local de su navegador el identificador de su sesión, o el pase del reporte de cortesía. Son técnicamente necesarios para que la herramienta funcione y no rastrean su navegación. La sesión caduca a las 8 horas y usted puede eliminarla en cualquier momento pulsando «Salir», lo que además la revoca en nuestros servidores. En un equipo compartido conviene cerrar sesión al terminar.</p>
+                <p>Si usted inicia sesión, el visor guarda en el almacenamiento local de su navegador el identificador de esa sesión. Quien sólo consulta el mapa no deja nada guardado. Es un dato técnicamente necesario para que la herramienta funcione y no rastrean su navegación. La sesión caduca a las 8 horas y usted puede eliminarla en cualquier momento pulsando «Salir», lo que además la revoca en nuestros servidores. En un equipo compartido conviene cerrar sesión al terminar.</p>
 
                 <h3>10. Cambios</h3>
                 <p>Cualquier modificación se publicará en esta página con su nueva fecha de vigencia.</p>

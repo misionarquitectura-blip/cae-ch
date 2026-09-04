@@ -41,9 +41,9 @@ export function perfilPublico(fila) {
         origen: fila.origen,
         estado: fila.estado,
         correo_verificado: !!fila.correo_verificado,
-        pdf_cortesia_usado: !!fila.pdf_cortesia_en,
         nucleo: fila.nucleo,
         registro_profesional: fila.registro_profesional,
+        registro_validado: !!fila.registro_validado,
         vigencia_hasta: fila.vigencia_hasta,
         requiere_cambio_clave: !!fila.requiere_cambio_clave,
         ultimo_acceso: fila.ultimo_acceso
@@ -52,20 +52,26 @@ export function perfilPublico(fila) {
 
 /**
  * Que puede hacer esta cuenta, aqui y ahora.
- *   visor : abrir el GeoVisor y consultar el mapa
- *   pdf   : generar el DICAT. Los colegiados, sin limite; quien se
- *           registro por su cuenta, una unica vez (reporte de cortesia)
- *   dxf/csv : exportaciones, exclusivas de afiliados y administracion
+ *
+ * El GeoVisor NO figura aqui: desde 2026-09-04 el mapa es publico y se
+ * abre sin cuenta. `visor` se conserva por compatibilidad con clientes
+ * viejos y vale lo mismo que `base`.
+ *
+ * Los tres productos -DICAT en PDF, CSV y DXF- van juntos y exigen lo
+ * mismo: cuenta con el correo confirmado y numero de registro del CAE ya
+ * cotejado contra el padron. Las cuentas que crea la administracion nacen
+ * validadas; las del registro publico esperan a que un admin las apruebe.
  */
 export function permisos(fila) {
     const base = fila.estado === 'activo'
         && !fila.requiere_cambio_clave
         && !!fila.correo_verificado
         && (!fila.vigencia_hasta || !vencido(fila.vigencia_hasta));
-    const colegiado = base && (fila.rol === 'afiliado' || fila.rol === 'admin');
+    const colegiado = base
+        && (fila.rol === 'afiliado' || fila.rol === 'admin' || !!fila.registro_validado);
     return {
         visor: base,
-        pdf: colegiado || (base && !fila.pdf_cortesia_en),
+        pdf: colegiado,
         dxf: colegiado,
         csv: colegiado
     };

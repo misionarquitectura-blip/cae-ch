@@ -11,6 +11,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="analytics.js"></script>
     <script src="caech-acceso.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
     <style>
         /* ── Métricas widget ─────────────────────────── */
         .metricas-btn {
@@ -80,15 +83,19 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        /* Identidad 2025-2027: el visor seguia en el granate viejo
+           mientras el resto del sitio ya usaba el rojo del isologo.
+           caech-ui.css redefine estos nombres al cargar; aqui van con
+           el valor correcto para que el archivo se lea solo. */
         :root {
-            --rojo-oscuro: #8B0000;
-            --rojo-medio: #A52A2A;
-            --gris-oscuro: #2F2F2F;
-            --gris-medio: #5A5A5A;
-            --gris-claro: #F5F5F5;
+            --rojo-oscuro: #E31E24;
+            --rojo-medio: #B2141A;
+            --gris-oscuro: #2E3238;
+            --gris-medio: #565B63;
+            --gris-claro: #F7F7F8;
             --blanco: #FFFFFF;
             --blanco-primario: #FFFFFF;
             --blanco-secundario: #F0F0F0;
@@ -668,7 +675,7 @@
 
         .search-input:focus {
             border-color: var(--rojo-oscuro);
-            box-shadow: 0 0 0 2px rgba(139,0,0,0.1);
+            box-shadow: 0 0 0 2px rgba(227,30,36,.12);
         }
 
         .search-icon {
@@ -785,6 +792,10 @@
             transition: background 0.2s;
         }
 
+        .btn-generar-informe > i {
+            flex: 0 0 auto; width: 1.08em; font-size: 1.02em;
+            line-height: 1; text-align: center;
+        }
         .btn-generar-informe:hover { background: var(--rojo-medio); }
         .btn-generar-informe:disabled { background: #ccc; cursor: not-allowed; }
 
@@ -1171,6 +1182,9 @@
             height: 100%;
         }
     </style>
+    <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
+         Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
+    <link rel="stylesheet" href="caech-ui.css">
 </head>
 
 <body>
@@ -1263,13 +1277,13 @@
                         <button class="btn-generar-informe" id="btn-export-dxf"
                                 onclick="exportarPredioDXF()"
                                 title="Descarga el poligono en UTM WGS84 17S, listo para abrir en CAD"
-                                style="background:#1565C0;margin-top:0;font-size:12px;padding:8px 10px;flex:1">
+                                style="background:var(--linea-1,#2563A8);margin-top:0;font-size:12px;padding:8px 10px;flex:1">
                             <i class="fas fa-drafting-compass"></i> DXF
                         </button>
                         <button class="btn-generar-informe" id="btn-export-csv"
                                 onclick="exportarPredioCSV()"
                                 title="Descarga la tabla de vertices en coordenadas UTM"
-                                style="background:#2E7D32;margin-top:0;font-size:12px;padding:8px 10px;flex:1">
+                                style="background:var(--linea-2,#1E8449);margin-top:0;font-size:12px;padding:8px 10px;flex:1">
                             <i class="fas fa-table"></i> CSV
                         </button>
                     </div>
@@ -2079,7 +2093,7 @@
                         11: COLOR_ALCANTARILLADO_BASE // Alcantarillado - verde petróleo
                     };
 
-                    const layerColor = layerColors[layerId] || '#8B0000';
+                    const layerColor = layerColors[layerId] || '#E31E24';
 
                     const layerNameElement = document.querySelector(`#layer-${layerId} .layer-name`);
                     const layerName = layerNameElement ? layerNameElement.textContent : `Capa ${layerId}`;
@@ -2215,7 +2229,7 @@
                                             <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Sup. construida</td><td style="padding:3px 4px">${supCons}</td></tr>
                                         </table>
                                         <button onclick="seleccionarPredioDesdePopup(this)" data-clave="${clave}"
-                                            style="margin-top:7px;width:100%;padding:5px;background:#8B0000;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-weight:bold">
+                                            style="margin-top:7px;width:100%;padding:5px;background:var(--rojo-oscuro);color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-weight:bold">
                                             <i class="fas fa-check-circle"></i> Seleccionar para informe
                                         </button>
                                     </div>`;
@@ -3199,7 +3213,7 @@
                         showProgressBar(`Optimizando capa: ${layerName}...`);
 
                         const layerGeoJSON = geojsonLayers[i].toGeoJSON();
-                        const layerColor = layerColors[i] || '#8B0000';
+                        const layerColor = layerColors[i] || '#E31E24';
 
                         try {
                             // OPTIMIZAR LA CAPA ANTES DE RENDERIZAR (AWAIT)
@@ -4094,7 +4108,9 @@
             }
 
             async function generarDICAT(props) {
-                // Puerta de acceso: afiliado con sesion, o pase de cortesia.
+                // Puerta de acceso: exige cuenta con el numero de registro del
+                // CAE ya validado. El mapa que se ve detras es publico; lo que
+                // se controla es el documento que sale de el.
                 // Con caech-acceso.js inactivo esto devuelve true y el visor
                 // se comporta como siempre.
                 if (window.caechAcceso) {
@@ -5102,8 +5118,8 @@
                         // Encabezado de propietario con múltiples predios
                         const header = document.createElement('div');
                         header.className = 'search-result-item';
-                        header.style.cssText = 'background:#fff5f5;border-left:3px solid #8B0000;cursor:default';
-                        header.innerHTML = `<strong style="color:#8B0000"><i class="fas fa-user"></i> ${ownerName}</strong> <span style="background:#8B0000;color:white;border-radius:10px;padding:1px 7px;font-size:11px">${predios.length} predios</span>`;
+                        header.style.cssText = 'background:#fff5f5;border-left:3px solid var(--rojo-oscuro);cursor:default';
+                        header.innerHTML = `<strong style="color:var(--rojo-oscuro)"><i class="fas fa-user"></i> ${ownerName}</strong> <span style="background:var(--rojo-oscuro);color:white;border-radius:10px;padding:1px 7px;font-size:11px">${predios.length} predios</span>`;
                         searchResultsEl.appendChild(header);
 
                         predios.slice(0, 8).forEach(function ({ layer, props }, idx) {
@@ -5112,7 +5128,7 @@
                             item.style.cssText = 'padding-left:20px;border-left:3px solid #ddd';
                             const clave = (props.claves || props.claves_aux || 'S/C').trim();
                             const area = props.Shape__Area ? parseFloat(props.Shape__Area).toFixed(1) : '?';
-                            item.innerHTML = `<i class="fas fa-map" style="color:#8B0000;margin-right:4px"></i> Predio ${idx + 1}<br><small style="color:#888">${clave} &nbsp;|&nbsp; ${area} m²</small>`;
+                            item.innerHTML = `<i class="fas fa-map" style="color:var(--rojo-oscuro);margin-right:4px"></i> Predio ${idx + 1}<br><small style="color:#888">${clave} &nbsp;|&nbsp; ${area} m²</small>`;
                             item.addEventListener('click', function () {
                                 selectPredio(layer, props, predios);
                             });
