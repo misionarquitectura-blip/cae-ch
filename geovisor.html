@@ -3419,6 +3419,11 @@
             //
             // Devuelve {dataUrl, ancho, alto} para que quien lo dibuje pueda
             // respetar la proporcion aunque algun dia se cambie el archivo.
+            // Lado maximo al rasterizar. El logo se imprime en un cuadro de
+            // 26 mm, que a 300 ppp son ~307 px: guardar los 1182 px del
+            // archivo solo engorda el PDF sin verse mejor en papel.
+            const LOGO_PX_MAX = 600;
+
             function cargarLogoBase64() {
                 return new Promise((resolve) => {
                     // Timeout de seguridad: si algo falla silenciosamente, continuar sin logo
@@ -3427,14 +3432,19 @@
                     img.onload = function () {
                         clearTimeout(timeout);
                         try {
+                            const escala = Math.min(1, LOGO_PX_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+                            const ancho = Math.round(img.naturalWidth * escala);
+                            const alto = Math.round(img.naturalHeight * escala);
                             const canvas = document.createElement('canvas');
-                            canvas.width = img.naturalWidth;
-                            canvas.height = img.naturalHeight;
-                            canvas.getContext('2d').drawImage(img, 0, 0);
+                            canvas.width = ancho;
+                            canvas.height = alto;
+                            const ctx = canvas.getContext('2d');
+                            ctx.imageSmoothingQuality = 'high';
+                            ctx.drawImage(img, 0, 0, ancho, alto);
                             resolve({
-                                dataUrl: canvas.toDataURL('image/jpeg'),
-                                ancho: img.naturalWidth,
-                                alto: img.naturalHeight
+                                dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+                                ancho: ancho,
+                                alto: alto
                             });
                         } catch (e) {
                             // canvas.toDataURL() lanza SecurityError en file:// (canvas tainted)
@@ -3522,12 +3532,20 @@
                 doc.text(`Nro. ${nroInforme}`, mg, 41.5);
                 doc.text(`Emision: ${fechaStr}`, pw / 2, 41.5, { align: 'center' });
                 doc.text(`Vigencia: ${vigenciaStr}`, pw - mg, 41.5, { align: 'right' });
-                // QR de verificación (esquina superior derecha del encabezado)
+                // QR (esquina superior derecha del encabezado).
+                // El lado sale de la imagen, que ya trae su zona de silencio:
+                // 27 mm para 49 módulos son 0,55 mm por módulo, de sobra para
+                // escanear desde papel. Debajo va un recuadro blanco del mismo
+                // tamaño: el PNG es opaco, pero así el margen queda garantizado
+                // aunque algún lector de PDF lo interprete con transparencia.
                 if (qrDataUrl) {
                     try {
-                        doc.addImage(qrDataUrl, 'PNG', pw - mg - 24, 2, 24, 24);
+                        const QR_LADO = 27, QR_X = pw - mg - QR_LADO, QR_Y = 2;
+                        doc.setFillColor(255, 255, 255);
+                        doc.rect(QR_X, QR_Y, QR_LADO, QR_LADO, 'F');
+                        doc.addImage(qrDataUrl, 'PNG', QR_X, QR_Y, QR_LADO, QR_LADO, undefined, 'SLOW');
                         doc.setFontSize(5); doc.setTextColor(255, 200, 200);
-                        doc.text('Verificar', pw - mg - 12, 27.5, { align: 'center' });
+                        doc.text('Verificar', QR_X + QR_LADO / 2, QR_Y + QR_LADO + 3.2, { align: 'center' });
                     } catch(e) {}
                 }
                 y = 50;
@@ -6808,21 +6826,79 @@
     }
 
     // ── Generación de QR como data URL ───────────────────────────
+    //
+    // Se dibuja a mano desde el modelo de qrcodejs en vez de usar el
+    // lienzo que devuelve la librería. Dos motivos, y los dos hacían que
+    // el QR del DICAT NO se pudiera escanear con el móvil:
+    //
+    //   · ZONA DE SILENCIO. La norma ISO/IEC 18004 exige un margen
+    //     blanco de 4 módulos alrededor del código. qrcodejs no lo
+    //     dibuja: el código llega hasta el borde mismo de la imagen. En
+    //     el informe la imagen se pega sobre la banda roja de la
+    //     cabecera, así que los patrones de posición quedaban tocando
+    //     el rojo y el lector no encontraba el código. Comprobado: sobre
+    //     ese fondo y sin margen, un decodificador no lo lee; con los 4
+    //     módulos de margen, sí.
+    //
+    //   · MÓDULOS ENTEROS. A 128 px un código de versión 6 (41 módulos)
+    //     daba 3,12 px por módulo, de modo que los bordes salían
+    //     interpolados y borrosos — y el PDF los vuelve a remuestrear al
+    //     imprimir. Aquí cada módulo es un cuadrado exacto de píxeles.
+    const QR_ZONA_SILENCIO = 4;    // módulos de margen; mínimo de la norma
+    const QR_PX_POR_MODULO = 12;   // nítido en pantalla y en papel
+
     async function generarQRDataUrl(text) {
-        return new Promise((resolve) => {
-            try {
-                const container = document.getElementById('qr-canvas-container');
-                container.innerHTML = '';
-                new QRCode(container, { text, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.M });
+        try {
+            const contenedor = document.getElementById('qr-canvas-container');
+            contenedor.innerHTML = '';
+            const qr = new QRCode(contenedor, {
+                text: text, width: 256, height: 256,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            const modelo = qr._oQRCode;
+            if (modelo && typeof modelo.getModuleCount === 'function') {
+                const n = modelo.getModuleCount();
+                const q = QR_ZONA_SILENCIO;
+                const e = QR_PX_POR_MODULO;
+                const lado = (n + q * 2) * e;
+
+                const lienzo = document.createElement('canvas');
+                lienzo.width = lienzo.height = lado;
+                const ctx = lienzo.getContext('2d');
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, lado, lado);
+                ctx.fillStyle = '#000000';
+                for (let fila = 0; fila < n; fila++) {
+                    for (let col = 0; col < n; col++) {
+                        if (modelo.isDark(fila, col)) {
+                            ctx.fillRect((col + q) * e, (fila + q) * e, e, e);
+                        }
+                    }
+                }
+                return lienzo.toDataURL('image/png');
+            }
+
+            // Reserva por si una versión distinta de la librería no expone
+            // el modelo: se usa su lienzo y se le añade el margen alrededor.
+            return await new Promise((resolve) => {
                 setTimeout(() => {
-                    const canvas = container.querySelector('canvas');
-                    const img    = container.querySelector('img');
-                    if (canvas)     resolve(canvas.toDataURL('image/png'));
-                    else if (img)   resolve(img.src);
-                    else            resolve(null);
+                    const origen = contenedor.querySelector('canvas');
+                    if (!origen) {
+                        const im = contenedor.querySelector('img');
+                        return resolve(im ? im.src : null);
+                    }
+                    const margen = Math.round(origen.width * QR_ZONA_SILENCIO / 41);
+                    const lienzo = document.createElement('canvas');
+                    lienzo.width = lienzo.height = origen.width + margen * 2;
+                    const ctx = lienzo.getContext('2d');
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+                    ctx.drawImage(origen, margen, margen);
+                    resolve(lienzo.toDataURL('image/png'));
                 }, 250);
-            } catch(e) { resolve(null); }
-        });
+            });
+        } catch (e) { return null; }
     }
 
     // ── Extracción de normativa PUGS para el predio ──────────────
