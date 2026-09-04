@@ -7,18 +7,17 @@
      · PDF        — afiliados, o publico general con un (1) pase de
                     cortesia por correo verificado.
 
-   Interruptor de despliegue: mientras `activo` sea false el visor se
-   comporta exactamente como antes (sin candados). Se pone en true recien
-   cuando el Worker este desplegado y `api` apunte a su URL real, de modo
-   que publicar este archivo no rompa el sitio en produccion.
+   `activo` es el interruptor general. Si alguna vez hay que apagar el
+   control -por una caida del Worker, por ejemplo- basta ponerlo en false
+   y el visor vuelve a comportarse como antes, sin candados.
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
     'use strict';
 
     const CONFIG = {
-        activo: false,
-        api: 'https://caech-afiliados.NOMBRE-DE-SU-CUENTA.workers.dev',
+        activo: true,
+        api: 'https://api.cae-ch.org',
         // Formatos que exigen afiliacion. El PDF no esta aqui: lo cubre
         // el pase de cortesia.
         soloAfiliados: ['dxf', 'csv']
