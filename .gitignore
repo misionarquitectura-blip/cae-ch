@@ -35,6 +35,10 @@ DATA SET/Predios.geojson
 DATA SET/DATOS GEOVISOR */
 DATA SET/__pycache__/
 
+# Cache de Python, la genere quien la genere (RESEARCH/economia usa scripts .py)
+__pycache__/
+*.pyc
+
 # Levantamientos topograficos de referencia (DXF de estacion total).
 # Sirven de patron para test/fixtures pero no se publican: el repositorio
 # es publico y son documentos de trabajo del CAE-CH.
@@ -58,6 +62,15 @@ RESEARCH/build_construcciones_ia.js
 # por esta misma regla. Todo cambio en la pagina hay que hacerlo en las dos.
 RESEARCH/equipamiento/
 !RESEARCH/equipamiento.html
+
+# RESEARCH - economia (Linea 3): aqui se hace lo CONTRARIO que arriba, a
+# proposito. La carpeta entera se versiona —plantilla, scripts y el
+# datos.json de 32 KB— y solo se dejan fuera los dos xlsx crudos del BCE,
+# que pesan 2,3 MB y se vuelven a bajar de contenido.bce.fin.ec cuando
+# haga falta (las URL estan en el pie de la pagina y en extraer_bce.py).
+# Asi la plantilla SI queda en el repositorio y no se repite la trampa de
+# equipamiento, donde cada cambio hay que hacerlo en dos archivos.
+RESEARCH/economia/fuentes/
 
 # Respaldos y configuración local
 *.bak

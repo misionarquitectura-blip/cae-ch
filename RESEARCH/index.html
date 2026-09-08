@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CAE-CH | Investigación territorial — líneas abiertas</title>
-<meta name="description" content="Las dos líneas de investigación territorial del CAE-CH sobre Riobamba: construcciones no registradas detectadas por IA, y equipamiento e infraestructura urbana frente a la norma. Acceso libre, sin cuenta.">
+<meta name="description" content="Las tres líneas de investigación territorial del CAE-CH sobre Riobamba: construcciones no registradas detectadas por IA, equipamiento e infraestructura urbana frente a la norma, y la evolución del VAB por habitante del cantón. Acceso libre, sin cuenta.">
 <meta name="theme-color" content="#E31E24">
 <link rel="canonical" href="https://cae-ch.org/RESEARCH/">
 <meta property="og:title" content="CAE-CH | Investigación territorial">
-<meta property="og:description" content="Dos líneas de investigación sobre Riobamba: construcciones no registradas y equipamiento urbano. Abiertas a todo público.">
+<meta property="og:description" content="Tres líneas de investigación sobre Riobamba: construcciones no registradas, equipamiento urbano y base económica del cantón. Abiertas a todo público.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://cae-ch.org/RESEARCH/">
 <meta property="og:locale" content="es_EC">
@@ -27,11 +27,12 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 /* La paleta, la tipografia, .versalitas y .filete vienen de
-   caech-ui.css, enganchada al final de este <head>. Aqui solo los dos
+   caech-ui.css, enganchada al final de este <head>. Aqui solo los tres
    colores de linea, que son propios de esta pagina. */
 :root {
-  --azul:  var(--linea-1);   /* linea 1 · catastro y suelo */
-  --verde: var(--linea-2);   /* linea 2 · equipamiento */
+  --azul:   var(--linea-1);   /* linea 1 · catastro y suelo */
+  --verde:  var(--linea-2);   /* linea 2 · equipamiento */
+  --morado: var(--linea-3);   /* linea 3 · economia */
 }
 
 body {
@@ -105,7 +106,7 @@ section.claro { background: var(--blanco); border-top: 1px solid var(--borde); b
 .titulo h2 { font-size: clamp(1.45rem, 3vw, 2.05rem); font-weight: 700; }
 .titulo p { color: var(--grafito-med); margin-top: 12px; }
 
-/* ── Las dos lineas ────────────────────────────────────────────── */
+/* ── Las tres lineas ───────────────────────────────────────────── */
 .lineas { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 26px; }
 .linea {
   display: flex; flex-direction: column;
@@ -303,29 +304,33 @@ footer a { color: rgba(255,255,255,.85); }
 <div class="hero">
   <div class="wrap">
     <span class="eyebrow"><span class="punto"></span> Investigación territorial · CAE-CH</span>
-    <h1>Dos preguntas sobre Riobamba,<br><em>medidas con datos abiertos</em></h1>
+    <h1>Tres preguntas sobre Riobamba,<br><em>medidas con datos abiertos</em></h1>
     <hr class="filete">
-    <p>El CAE-CH mantiene dos líneas de investigación permanentes sobre el territorio del cantón.
-       Una mira el <strong>suelo construido</strong>: cuánto se edifica sin que el catastro lo registre.
-       La otra mira el <strong>soporte de la ciudad</strong>: qué equipamiento e infraestructura existe
-       y cuánto falta frente a la norma. Ambas se publican con su método, sus cifras y sus límites a la vista.</p>
+    <p>El CAE-CH mantiene tres líneas de investigación permanentes sobre el territorio del cantón.
+       La primera mira el <strong>suelo construido</strong>: cuánto se edifica sin que el catastro lo
+       registre. La segunda mira el <strong>soporte de la ciudad</strong>: qué equipamiento e
+       infraestructura existe y cuánto falta frente a la norma. La tercera mira la <strong>base
+       económica</strong>: si el cantón produce más o menos por habitante que hace seis años, y cómo
+       le va frente a las demás capitales serranas. Las tres se publican con su método, sus cifras y
+       sus límites a la vista.</p>
     <p class="abierto">
       <i class="fas fa-lock-open"></i>
-      <span><strong>Acceso libre y permanente.</strong> Las dos investigaciones —sus mapas, sus tablas y
+      <span><strong>Acceso libre y permanente.</strong> Las tres investigaciones —sus mapas, sus tablas y
       esta presentación— están abiertas a todo público, sin cuenta y sin registro. La cuenta de colegiado
       solo hace falta para descargar los productos del GeoVisor (DICAT en PDF, CSV y DXF).</span>
     </p>
   </div>
 </div>
 
-<!-- ══ Clasificación: las dos líneas ═════════════════════════════ -->
+<!-- ══ Clasificación: las tres líneas ════════════════════════════ -->
 <section>
   <div class="wrap">
     <div class="titulo">
       <span class="eyebrow">Cómo se clasifica</span>
-      <h2>Dos líneas, dos objetos de estudio</h2>
-      <p>Hasta ahora los dos estudios vivían por separado y sin un lugar común desde donde entrar.
-         Aquí quedan bajo un mismo techo y clasificados por lo que cada uno mide.</p>
+      <h2>Tres líneas, tres objetos de estudio</h2>
+      <p>Las dos primeras miran el territorio construido: lo que hay y lo que debería haber.
+         La tercera mira lo que ese territorio produce. Aquí quedan bajo un mismo techo y
+         clasificadas por lo que cada una mide.</p>
     </div>
 
     <div class="lineas">
@@ -376,6 +381,32 @@ footer a { color: rgba(255,255,255,.85); }
         </div>
       </article>
 
+      <!-- LÍNEA 3 -->
+      <article class="linea" style="--tono:var(--morado)">
+        <span class="linea-clave"><i class="fas fa-chart-line"></i> Línea 3</span>
+        <h3>Economía y base productiva</h3>
+        <div class="campo versalitas">¿Crece o decrece?</div>
+        <p>Serie 2018-2024 del valor agregado bruto por habitante del cantón, según las Cuentas
+           Regionales del Banco Central, deflactada a dólares constantes y comparada con las nueve
+           capitales de provincia de la Sierra y con el promedio del país —del que Riobamba genera
+           hoy el 53 %—. Contrastada con una segunda fuente que no depende de la primera.</p>
+        <ul>
+          <li>Fuente oficial: <strong>Cuentas Nacionales Regionales del BCE</strong>, año base 2018</li>
+          <li>Serie corriente deflactada con el <strong>deflactor del PIB</strong>: nominal y real</li>
+          <li>Estructura de 2024 en las catorce secciones de la CIIU, con la construcción aparte</li>
+          <li>Contraste con los <strong>permisos de construcción del INEC</strong>, calculados sobre
+              el microdato por código de cantón y hasta 2025</li>
+        </ul>
+        <div class="cifras">
+          <div class="cifra"><strong>−14,7 %</strong><span>caída real del VAB 2018-2024</span></div>
+          <div class="cifra"><strong>82.º</strong><span>de 221 cantones, era 57.º</span></div>
+          <div class="cifra"><strong>−55 %</strong><span>viviendas autorizadas 2022-2025</span></div>
+        </div>
+        <div class="pie">
+          <a class="btn" href="economia.html"><i class="fas fa-chart-line"></i> Abrir el estudio</a>
+        </div>
+      </article>
+
     </div>
   </div>
 </section>
@@ -385,7 +416,7 @@ footer a { color: rgba(255,255,255,.85); }
   <div class="wrap">
     <div class="titulo">
       <span class="eyebrow">Presentación</span>
-      <h2>Las dos investigaciones, lámina por lámina</h2>
+      <h2>Las tres investigaciones, lámina por lámina</h2>
       <p>Qué pregunta cada estudio, con qué método responde, qué encontró y qué no puede afirmar.
          Avance con los botones, con los puntos o con las flechas del teclado.</p>
     </div>
@@ -393,7 +424,7 @@ footer a { color: rgba(255,255,255,.85); }
     <div class="deck" id="deck">
       <div class="deck-cab">
         <span class="marca versalitas">CAE-Ch · Investigación territorial</span>
-        <span class="contador" id="contador">1 / 13</span>
+        <span class="contador" id="contador">1 / 18</span>
       </div>
 
       <!-- ── 1 · Carátula ── -->
@@ -401,33 +432,40 @@ footer a { color: rgba(255,255,255,.85); }
         <div class="tono-barra"></div>
         <span class="rotulo">Colegio de Arquitectos del Ecuador · Chimborazo</span>
         <h3>Investigación territorial sobre <em>Riobamba</em></h3>
-        <p>Dos líneas abiertas: el suelo que se construye sin declarar, y el equipamiento
-           que la ciudad tiene frente al que la norma le exige. Todo el material es público.</p>
+        <p>Tres líneas abiertas: el suelo que se construye sin declarar, el equipamiento que la
+           ciudad tiene frente al que la norma le exige, y lo que el cantón produce por habitante.
+           Todo el material es público.</p>
         <div class="datos">
           <div class="dato" style="--tono:var(--azul)"><b>Línea 1</b><span>Construcciones no registradas</span></div>
           <div class="dato" style="--tono:var(--verde)"><b>Línea 2</b><span>Equipamiento e infraestructura</span></div>
+          <div class="dato" style="--tono:var(--morado)"><b>Línea 3</b><span>Economía y base productiva</span></div>
         </div>
         <p class="nota"><i class="fas fa-lock-open"></i> Sin cuenta, sin registro y sin caducidad:
-           las dos investigaciones son de acceso libre para cualquier persona.</p>
+           las tres investigaciones son de acceso libre para cualquier persona.</p>
       </div>
 
       <!-- ── 2 · Clasificación ── -->
       <div class="slide" data-slide hidden style="--tono:var(--rojo)">
         <div class="tono-barra"></div>
         <span class="rotulo">Cómo se clasifican</span>
-        <h3>Dos objetos de estudio distintos</h3>
+        <h3>Tres objetos de estudio distintos</h3>
         <ul>
           <li><strong>Línea 1 — Catastro y suelo construido.</strong> Mide la diferencia entre lo
               edificado y lo declarado. Unidad de análisis: el predio.</li>
           <li><strong>Línea 2 — Equipamiento e infraestructura urbana.</strong> Mide la diferencia
               entre la dotación existente y la exigida por norma. Unidad de análisis: la parroquia
               urbana y el subtipo de equipamiento.</li>
+          <li><strong>Línea 3 — Economía y base productiva.</strong> Mide cuánto valor produce el
+              cantón por habitante y cómo evoluciona frente a sus pares. Unidad de análisis: el
+              cantón y la rama de actividad.</li>
         </ul>
         <p>Comparten método —cruzar fuentes independientes sobre el mismo territorio y publicar
-           el resultado con sus supuestos— y comparten límite: <strong>ninguna de las dos constituye
+           el resultado con sus supuestos— y comparten límite: <strong>ninguna de las tres constituye
            un acto administrativo</strong>. Son insumos técnicos para la discusión pública.</p>
-        <p class="nota"><i class="fas fa-diagram-project"></i> Ambas parten del mismo extracto del
-           catastro del GADMR que alimenta el GeoVisor, de modo que sus cifras son comparables entre sí.</p>
+        <p class="nota"><i class="fas fa-diagram-project"></i> Las dos primeras parten del mismo
+           extracto del catastro del GADMR que alimenta el GeoVisor, de modo que sus cifras son
+           comparables entre sí. La tercera es la única que no usa datos municipales: sale entera
+           de las Cuentas Regionales del Banco Central.</p>
       </div>
 
       <!-- ── 3 · Línea 1: la pregunta ── -->
@@ -612,16 +650,120 @@ footer a { color: rgba(255,255,255,.85); }
         </ul>
       </div>
 
-      <!-- ── 13 · Cierre ── -->
+      <!-- ── 13 · Línea 3: la pregunta ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--morado)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 3 · La pregunta</span>
+        <h3>¿La economía de Riobamba crece o decrece?</h3>
+        <p>Las dos primeras líneas miden el territorio construido. Esta mide lo que ese territorio
+           produce, porque de ahí sale todo lo demás: la obra que se ejecuta, el presupuesto
+           municipal que la financia y el mercado del que vive el gremio.</p>
+        <p>La pregunta parece simple y casi nadie la responde con datos. El Ecuador
+           <strong>no publica PIB cantonal</strong>: lo que existe es el valor agregado bruto por
+           cantón de las Cuentas Regionales del Banco Central, y viene <strong>a precios
+           corrientes</strong>, mezclando crecimiento con inflación.</p>
+        <p class="nota"><i class="fas fa-scale-unbalanced"></i> Sin deflactar, la serie no responde
+           nada. Esta línea empieza justamente por ahí.</p>
+      </div>
+
+      <!-- ── 14 · Línea 3: método ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--morado)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 3 · Método</span>
+        <h3>Tres decisiones que sostienen toda la serie</h3>
+        <ul>
+          <li><strong>Una sola metodología.</strong> Solo el año base 2018, de 2018 a 2024. La serie
+              anterior no se empalma: el cambio de año base rompe la comparación de niveles.</li>
+          <li><strong>Dólares constantes.</strong> La serie corriente del BCE se deflacta con el
+              deflactor implícito del PIB del Ecuador, base 2018 = 100.</li>
+          <li><strong>Un peloton comparable.</strong> Las nueve capitales de provincia de la Sierra:
+              ciudades andinas intermedias con la misma función administrativa y universitaria.</li>
+          <li><strong>Una segunda fuente que no depende de la primera.</strong> Los permisos de
+              construcción del INEC, calculados sobre el microdato filtrando por código de cantón,
+              no sobre las cifras provinciales.</li>
+        </ul>
+        <p>El promedio nacional no se toma de otra fuente: se <strong>recalcula sumando el VAB de los
+           221 cantones</strong> y dividiéndolo por su población, para que las dos cifras midan
+           exactamente lo mismo.</p>
+        <p class="nota"><i class="fas fa-rotate"></i> Todo el proceso es reproducible: dos archivos
+           del BCE, un script que los abre y una página que se regenera sola.</p>
+      </div>
+
+      <!-- ── 15 · Línea 3: resultados ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--morado)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 3 · Resultados</span>
+        <h3>Riobamba decrece, y es la que más cae del grupo</h3>
+        <div class="datos">
+          <div class="dato"><b>−14,7 %</b><span>caída real del VAB por habitante, 2018-2024</span></div>
+          <div class="dato"><b>−2,61 %</b><span>ritmo medio anual, en términos reales</span></div>
+          <div class="dato"><b>82.º de 221</b><span>puesto nacional; en 2018 era el 57.º</span></div>
+          <div class="dato"><b>53 %</b><span>del promedio del país; era el 61 % en 2018</span></div>
+        </div>
+        <p>Es la caída más fuerte de las diez capitales de provincia de la Sierra, por delante de
+           Latacunga (−12,3 %) y Tulcán (−10,9 %). <strong>Loja es la única que creció</strong> (+7,2 %).</p>
+        <p>Y no lo dice una sola fuente. Los permisos de construcción del INEC, que son otro
+           registro y otra institución, muestran para el cantón entre 2022 y 2025:
+           <strong>−43,3 % en permisos, −43,8 % en área a construir y −55,2 % en viviendas
+           proyectadas</strong>.</p>
+        <p class="nota"><i class="fas fa-shield-halved"></i> La conclusión tampoco depende del año
+           provisional: entre 2018 y 2023, con cifras definitivas, el país creció 2,4 % y Riobamba
+           cayó 6,6 %.</p>
+      </div>
+
+      <!-- ── 16 · Línea 3: lectura ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--morado)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 3 · Lectura</span>
+        <h3>Una economía de servicios públicos, con poca obra</h3>
+        <ul>
+          <li><strong>Casi un tercio depende del presupuesto público.</strong> Administración pública,
+              enseñanza y salud suman el 30,2 % del VAB del cantón: ramas que no crecen con el ciclo
+              y que se contraen cuando el presupuesto se ajusta.</li>
+          <li><strong>La manufactura es débil.</strong> 9,9 % del VAB, frente al 17,7 % de Cuenca y el
+              12,4 % de Ambato. No hay un motor privado que compense.</li>
+          <li><strong>La construcción está en la mitad baja.</strong> 256 dólares por habitante en
+              2024, contra una mediana de 268 en las capitales serranas y 522 en Quito.</li>
+        </ul>
+        <p>Ese último dato es el que interpela directamente al gremio: <strong>el mercado que sostiene
+           al arquitecto en Riobamba es, por habitante, de los más pequeños</strong> de la Sierra.</p>
+      </div>
+
+      <!-- ── 17 · Línea 3: límites ── -->
+      <div class="slide" data-slide hidden style="--tono:var(--morado)">
+        <div class="tono-barra"></div>
+        <span class="rotulo">Línea 3 · Límites</span>
+        <h3>Lo que estas cifras no pueden decir</h3>
+        <ul>
+          <li><strong>Es VAB, no PIB.</strong> El PIB añade los impuestos netos sobre los productos,
+              que solo se calculan a escala nacional. No es comparable con un «PIB per cápita» de
+              otra fuente.</li>
+          <li><strong>2024 es provisional</strong> y el Banco Central suele revisarlo.</li>
+          <li><strong>El deflactor es nacional.</strong> No captura que los precios de Riobamba se
+              muevan distinto de los del país.</li>
+          <li><strong>El VAB cantonal tiene ruido.</strong> Se asigna donde está la unidad productiva:
+              en esta misma serie Sevilla de Oro cae de 26 000 a 2 000 dólares por habitante en un año.</li>
+          <li><strong>No mide ingreso ni bienestar</strong>, no dice cómo se reparte y no incluye la
+              economía no registrada.</li>
+          <li><strong>Un permiso no es una obra.</strong> La serie del INEC mide obra autorizada, no
+              ejecutada, y no recoge lo que se construye sin permiso: justamente lo que mide la
+              Línea 1.</li>
+          <li><strong>Falta 2024 en el microdato del INEC</strong>, que solo publicó 2022, 2023 y
+              2025 en datos abiertos. La serie de permisos lleva el hueco declarado.</li>
+        </ul>
+      </div>
+
+      <!-- ── 18 · Cierre ── -->
       <div class="slide" data-slide hidden style="--tono:var(--rojo)">
         <div class="tono-barra"></div>
         <span class="rotulo">Para seguir</span>
-        <h3>Los dos estudios están abiertos</h3>
-        <p>Cada línea tiene su mapa interactivo, sus filtros y sus tablas completas. No hace falta
-           cuenta, registro ni afiliación: son material público del CAE-CH.</p>
+        <h3>Los tres estudios están abiertos</h3>
+        <p>Cada línea tiene sus gráficas, sus filtros y sus tablas completas. No hace falta cuenta,
+           registro ni afiliación: son material público del CAE-CH.</p>
         <div class="datos">
           <div class="dato" style="--tono:var(--azul)"><b>Línea 1</b><span>Construcciones no registradas · mapa con filtros de confianza</span></div>
           <div class="dato" style="--tono:var(--verde)"><b>Línea 2</b><span>Equipamiento urbano · balance frente a la norma</span></div>
+          <div class="dato" style="--tono:var(--morado)"><b>Línea 3</b><span>Economía y base productiva · serie 2018-2024 del BCE</span></div>
         </div>
         <p class="nota"><i class="fas fa-circle-info"></i> Lo único que exige cuenta de colegiado es
            descargar los productos del GeoVisor: el DICAT en PDF, el CSV y el DXF del predio.</p>
@@ -649,7 +791,7 @@ footer a { color: rgba(255,255,255,.85); }
     <div class="acceso">
       <div class="caja">
         <h3><i class="fas fa-lock-open"></i> Libre para todo público</h3>
-        <p>Las dos investigaciones completas, con sus mapas, filtros y tablas. Y el
+        <p>Las tres investigaciones completas, con sus mapas, gráficas, filtros y tablas. Y el
            <strong>GeoVisor</strong> entero: catastro, PUGS, vialidad, agua potable, alcantarillado
            y redes eléctricas, consultables predio por predio.</p>
         <p>Sin cuenta, sin registro y sin límite de consultas.</p>

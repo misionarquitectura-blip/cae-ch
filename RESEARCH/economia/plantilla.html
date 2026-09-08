@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAE-CH | La economía de Riobamba — ¿crece o decrece?</title>
+<meta name="description" content="Serie 2018-2024 del VAB per cápita del cantón Riobamba según las Cuentas Regionales del Banco Central del Ecuador, comparada con las nueve capitales de provincia de la Sierra y con el promedio nacional, en dólares constantes.">
+<meta name="theme-color" content="#E31E24">
+<link rel="canonical" href="https://cae-ch.org/RESEARCH/economia.html">
+<meta property="og:title" content="CAE-CH | La economía de Riobamba: ¿crece o decrece?">
+<meta property="og:description" content="El VAB per cápita de Riobamba cayó 14,7 % real entre 2018 y 2024 y el cantón bajó del puesto 57 al 82 del país. Tercera línea de investigación del CAE-Ch.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://cae-ch.org/RESEARCH/economia.html">
+<meta property="og:locale" content="es_EC">
+<link rel="icon" type="image/png" href="../LOGO/favicon-caech.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="../analytics.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+/* La paleta, Montserrat, .versalitas, .filete y el boton vienen de
+   caech-ui.css, enganchada al final de este <head>. Aqui solo lo propio
+   de esta pagina. Los valores duplicados estan para que el archivo se
+   lea solo si alguna vez se abre suelto. */
+:root{
+  --rojo-caech:#E31E24; --grafito:#2E3238; --grafito-med:#565B63;
+  --grafito-sua:#8B9098; --hueso:#F7F7F8; --blanco:#fff;
+  --borde:rgba(46,50,56,.12); --borde-marcado:rgba(46,50,56,.24);
+  --linea-3:#7A3E9D;
+  --dato-contexto:#C2C6CB; --dato-referencia:#565B63; --dato-rejilla:#E7E8EA;
+  --tono:var(--linea-3);
+  /* Los dos polos del cambio. Naranja y azul, no rojo y verde: es el
+     unico par calido/frio que sobrevive al daltonismo (DeltaE 20,8 en
+     OKLab con protanopia simulada). */
+  --cae:#C05621; --sube:#2563A8;
+}
+body{background:var(--hueso);color:var(--grafito);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{line-height:1.22}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+a{color:var(--rojo-caech)}
+
+header{background:var(--blanco);border-bottom:1px solid var(--borde);position:sticky;top:0;z-index:50}
+.navbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 0}
+.logo-area{display:flex;align-items:center;text-decoration:none}
+.logo-area img{height:46px;width:auto;display:block}
+.barra-nav{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── Portada ─────────────────────────────────────────────────────── */
+.hero{background:linear-gradient(135deg,#2B1B33 0%,var(--grafito) 55%,#23262B 100%);color:#fff;padding:56px 0 50px}
+.hero .miga{font-size:.62rem;font-weight:300;text-transform:uppercase;letter-spacing:.28em;color:rgba(255,255,255,.72);margin-bottom:14px}
+.hero .miga a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3)}
+.hero .filete-tono{width:64px;height:3px;background:var(--tono);margin:0 0 20px}
+.hero h1{font-size:clamp(1.8rem,4.2vw,2.85rem);font-weight:700;color:#fff;max-width:22ch;margin-bottom:16px}
+.hero p{color:rgba(255,255,255,.82);max-width:74ch;font-size:.99rem}
+
+/* ── Cifra titular y mosaico ─────────────────────────────────────── */
+.titular{background:var(--blanco);border-top:3px solid var(--tono);padding:38px 0 34px;border-bottom:1px solid var(--borde)}
+.titular-caja{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:34px;align-items:center}
+.cifra-heroe{font-size:clamp(3rem,8vw,4.6rem);font-weight:700;color:var(--cae);letter-spacing:-.03em;line-height:1}
+.cifra-heroe small{display:block;font-size:.72rem;font-weight:600;color:var(--grafito-med);letter-spacing:.12em;text-transform:uppercase;margin-top:12px;line-height:1.6}
+.titular p{color:var(--grafito-med);font-size:1.02rem;max-width:62ch}
+.titular p + p{margin-top:12px}
+.titular p strong{color:var(--grafito);font-weight:600}
+
+.mosaico{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--borde);border:1px solid var(--borde);margin-top:32px}
+.tarj{background:var(--blanco);padding:18px 20px}
+.tarj .rot{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--grafito-sua);display:block;margin-bottom:9px}
+.tarj b{font-size:1.72rem;font-weight:700;display:block;letter-spacing:-.02em}
+.tarj em{font-style:normal;font-size:.79rem;color:var(--grafito-med);display:block;margin-top:5px}
+
+/* ── Secciones ───────────────────────────────────────────────────── */
+section{padding:52px 0}
+section.claro{background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde)}
+.sec-rotulo{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--tono);display:block;margin-bottom:9px}
+section h2{font-size:clamp(1.35rem,2.8vw,1.85rem);font-weight:700;max-width:26ch;margin-bottom:12px}
+section > .wrap > p{color:var(--grafito-med);max-width:76ch;font-size:.96rem}
+section > .wrap > p + p{margin-top:12px}
+section p strong{color:var(--grafito);font-weight:600}
+
+/* ── Tarjeta de grafica ──────────────────────────────────────────── */
+.figura{background:var(--blanco);border:1px solid var(--borde);margin-top:28px}
+section.claro .figura{background:var(--hueso)}
+.figura-cab{padding:18px 22px 0}
+.figura-cab h3{font-size:1.02rem;font-weight:700}
+.figura-cab .sub{font-size:.82rem;color:var(--grafito-med);margin-top:4px;max-width:80ch}
+.figura-cuerpo{padding:12px 12px 6px;position:relative}
+.figura svg{display:block;width:100%;height:auto}
+.figura-pie{padding:2px 22px 18px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--grafito-med)}
+.leyenda span{display:inline-flex;align-items:center;gap:7px}
+.leyenda i{width:16px;height:3px;border-radius:2px;display:block;flex-shrink:0}
+.leyenda i.pt{width:10px;height:10px;border-radius:50%}
+.ver-tabla{background:none;border:1px solid var(--borde);color:var(--grafito-med);font-size:.74rem;font-weight:600;
+  padding:.5em 1em;cursor:pointer;letter-spacing:.05em;font-family:inherit;border-radius:4px}
+.ver-tabla:hover{border-color:var(--grafito-sua);color:var(--grafito)}
+
+/* Rejilla y ejes: filete solido de un paso sobre el fondo, nunca guiones. */
+.rejilla{stroke:var(--dato-rejilla);stroke-width:1}
+.eje-txt{font-size:11px;fill:var(--grafito-sua);font-variant-numeric:tabular-nums}
+.etiq{font-size:11.5px;font-weight:600;fill:var(--grafito-med)}
+.etiq.destacada{fill:var(--grafito);font-weight:700}
+
+/* Globo de datos: complementa, nunca es la unica via al valor —
+   toda cifra esta ademas en la tabla que abre cada figura.
+   `visibility` ademas de `opacity`, y left/top a cero al ocultarlo: un
+   globo apagado con posicion vieja seguia contando para el ancho de
+   scroll y ensanchaba la pagina entera en pantallas estrechas. */
+.globo{position:absolute;left:0;top:0;pointer-events:none;background:var(--grafito);color:#fff;font-size:.76rem;
+  padding:9px 12px;border-radius:4px;box-shadow:0 6px 18px rgba(46,50,56,.22);
+  opacity:0;visibility:hidden;transition:opacity .12s;
+  z-index:20;max-width:min(260px,calc(100% - 8px));line-height:1.5}
+.globo.on{opacity:1;visibility:visible}
+.globo b{display:block;font-size:.82rem;margin-bottom:6px}
+.globo .fila{display:flex;justify-content:space-between;gap:16px;font-variant-numeric:tabular-nums}
+.globo .fila i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0}
+.globo .fila.mia{font-weight:700}
+
+/* ── Tablas ──────────────────────────────────────────────────────── */
+.tabla-caja{overflow-x:auto;padding:0 22px 20px}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--borde);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--grafito-sua);font-weight:600;
+  border-bottom:1.5px solid var(--borde-marcado)}
+td{font-variant-numeric:tabular-nums;color:var(--grafito-med)}
+tr.mia td{background:rgba(122,62,157,.07);color:var(--grafito);font-weight:600}
+tr.mia td:first-child{box-shadow:inset 3px 0 0 var(--tono)}
+td.neg{color:var(--cae)} td.pos{color:var(--sube)}
+[hidden]{display:none!important}
+
+/* ── Notas y limites ─────────────────────────────────────────────── */
+.notas{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px;margin-top:28px}
+.nota{background:var(--blanco);border:1px solid var(--borde);border-left:3px solid var(--tono);padding:20px 22px}
+section.claro .nota{background:var(--hueso)}
+.nota h4{font-size:.94rem;font-weight:700;margin-bottom:8px}
+.nota p{font-size:.86rem;color:var(--grafito-med)}
+.nota p + p{margin-top:9px}
+.nota strong{color:var(--grafito);font-weight:600}
+
+.fuente-pie{margin-top:30px;font-size:.8rem;color:var(--grafito-sua);border-top:1px solid var(--borde);padding-top:18px;max-width:92ch}
+.fuente-pie a{color:var(--grafito-med)}
+
+footer{background:var(--grafito);color:rgba(255,255,255,.62);padding:32px 0;font-size:.82rem;text-align:center}
+footer a{color:rgba(255,255,255,.85)}
+
+@media (max-width:760px){
+  section{padding:40px 0}
+  .figura-pie{padding:2px 16px 16px}
+  .figura-cab{padding:16px 16px 0}
+  .tabla-caja{padding:0 16px 16px}
+  /* En un movil, encoger un lienzo de 900 unidades deja los rotulos en
+     cuatro pixeles: ilegibles. Se les pone un ancho minimo y se les deja
+     desplazarse DENTRO de su tarjeta, que es lo unico que no debe hacer
+     el cuerpo de la pagina. */
+  .figura-cuerpo{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .figura svg{min-width:660px}
+  #fig-sectores svg{min-width:720px}
+}
+</style>
+<!-- Sistema de interfaz compartido: paleta, tipografia y botones.
+     Va DESPUES del <style> de arriba a proposito; ver caech-ui.css. -->
+<link rel="stylesheet" href="../caech-ui.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap navbar">
+    <a href="../index.html" class="logo-area">
+      <img src="../LOGO/logo-caech.png" width="520" height="188"
+           alt="CAE-Ch · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo">
+    </a>
+    <nav class="barra-nav" aria-label="Navegación de la investigación">
+      <a href="index.html" class="btn btn-sm"><i class="fa-solid fa-arrow-left"></i> Investigación</a>
+      <a href="investigacion.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-layer-group"></i> Línea 1</a>
+      <a href="equipamiento.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-city"></i> Línea 2</a>
+      <a href="../index.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-house"></i> Inicio</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="miga"><a href="index.html">Investigación territorial</a> &nbsp;·&nbsp; Línea 3 &nbsp;·&nbsp; Economía y base productiva</div>
+    <div class="filete-tono"></div>
+    <h1>La economía de Riobamba: ¿crece o decrece?</h1>
+    <p>Serie 2018-2024 del valor agregado bruto por habitante del cantón, según las Cuentas
+       Regionales del Banco Central del Ecuador, medida en dólares constantes y comparada con
+       las nueve capitales de provincia de la Sierra y con el promedio del país. Todo lo que hay
+       aquí sale de la fuente oficial: ninguna cifra es una estimación propia.</p>
+  </div>
+</div>
+
+<!-- ── Cifra titular ───────────────────────────────────────────── -->
+<div class="titular">
+  <div class="wrap">
+    <div class="titular-caja">
+      <div class="cifra-heroe" id="heroe">—<small>Caída real del VAB por habitante<br>2018 → 2024</small></div>
+      <div>
+        <p>Riobamba <strong>decrece</strong>, y no por poco. Descontada la inflación, cada habitante
+           del cantón genera hoy menos valor que hace seis años, mientras el país en conjunto se
+           mantuvo casi plano. Es la caída más fuerte de las diez capitales de provincia de la Sierra.</p>
+        <p>La conclusión no depende del año provisional: entre 2018 y 2023, con cifras ya
+           definitivas, <strong>el Ecuador creció y Riobamba cayó</strong>. Y no depende de una
+           sola fuente: los permisos de construcción del INEC, que son otro registro y otra
+           institución, <strong id="eco-permisos">apuntan al mismo lado</strong>.</p>
+      </div>
+    </div>
+    <div class="mosaico" id="mosaico"></div>
+  </div>
+</div>
+
+<!-- ── 1 · La serie ────────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">01 · La pregunta</span>
+    <h2>Siete años de la serie, en dólares constantes</h2>
+    <p>El Banco Central publica el VAB cantonal <strong>solo a precios corrientes</strong>. Sin
+       deflactar, la serie confunde crecimiento con inflación y no responde nada. Aquí está
+       deflactada con el deflactor implícito del PIB del Ecuador (base 2018 = 100) y luego llevada
+       a índice, para que Quito y Guaranda quepan en el mismo eje: <strong>100 es el nivel de cada
+       cantón en 2018</strong>, y la línea dice cuánto se alejó de sí mismo.</p>
+
+    <div class="figura" id="fig-indice">
+      <div class="figura-cab">
+        <h3>VAB por habitante, índice 2018 = 100</h3>
+        <p class="sub">Dólares constantes de 2018. Las otras nueve capitales serranas van en gris;
+           Riobamba y el promedio del país, destacados.</p>
+      </div>
+      <div class="figura-cuerpo"><div class="globo" id="globo-indice"></div></div>
+      <div class="figura-pie">
+        <div class="leyenda">
+          <span><i style="background:var(--linea-3)"></i> Riobamba</span>
+          <span><i style="background:var(--dato-referencia)"></i> Promedio del Ecuador</span>
+          <span><i style="background:var(--dato-contexto)"></i> Otras capitales de la Sierra</span>
+        </div>
+        <button class="ver-tabla" data-tabla="tabla-indice" aria-expanded="false">Ver tabla</button>
+      </div>
+      <div class="tabla-caja" id="tabla-indice" hidden></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 2 · El nivel ────────────────────────────────────────────── -->
+<section class="claro">
+  <div class="wrap">
+    <span class="sec-rotulo">02 · El nivel</span>
+    <h2>Dónde está Riobamba hoy</h2>
+    <p>El índice dice cómo se movió cada cantón; esto dice desde dónde. En 2024 Riobamba solo
+       supera a Tulcán y Guaranda entre las diez capitales serranas, y produce por habitante
+       <strong>poco más de la mitad del promedio nacional</strong>.</p>
+
+    <div class="figura" id="fig-nivel">
+      <div class="figura-cab">
+        <h3>VAB por habitante en 2024</h3>
+        <p class="sub">Dólares corrientes por habitante. Cifra provisional del Banco Central.</p>
+      </div>
+      <div class="figura-cuerpo"><div class="globo" id="globo-nivel"></div></div>
+      <div class="figura-pie">
+        <div class="leyenda">
+          <span><i style="background:var(--linea-3)"></i> Riobamba</span>
+          <span><i style="background:var(--dato-contexto)"></i> Resto de capitales serranas</span>
+          <span><i class="pt" style="background:var(--dato-referencia)"></i> Promedio del Ecuador</span>
+        </div>
+        <button class="ver-tabla" data-tabla="tabla-nivel" aria-expanded="false">Ver tabla</button>
+      </div>
+      <div class="tabla-caja" id="tabla-nivel" hidden></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 3 · El puesto ───────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">03 · El puesto</span>
+    <h2>El descenso en el ranking del país</h2>
+    <p>Los 221 cantones del Ecuador ordenados por VAB por habitante. No es solo que Riobamba
+       genere menos: es que <strong>otros cantones la pasaron</strong>. El movimiento en la tabla
+       resume seis años en un solo número.</p>
+    <div class="figura" id="fig-rank">
+      <div class="figura-cab">
+        <h3>Puesto nacional entre 221 cantones, 2018 → 2024</h3>
+        <p class="sub">Arriba es mejor. Cada trazo une el puesto de 2018 con el de 2024; el círculo
+           lleno marca dónde terminó.</p>
+      </div>
+      <div class="figura-cuerpo"><div class="globo" id="globo-rank"></div></div>
+      <div class="figura-pie">
+        <div class="leyenda">
+          <span><i style="background:var(--cae)"></i> Perdió puestos</span>
+          <span><i style="background:var(--sube)"></i> Ganó puestos</span>
+        </div>
+        <button class="ver-tabla" data-tabla="tabla-rank" aria-expanded="false">Ver tabla</button>
+      </div>
+      <div class="tabla-caja" id="tabla-rank" hidden></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4 · La estructura ───────────────────────────────────────── -->
+<section class="claro">
+  <div class="wrap">
+    <span class="sec-rotulo">04 · La estructura</span>
+    <h2>De qué vive Riobamba</h2>
+    <p>El mismo VAB de 2024, abierto en las catorce secciones de la CIIU. Interesa doblemente a
+       este Colegio: dice qué sostiene la economía del cantón y dice <strong>cuánto pesa la
+       construcción</strong>, que es de donde vive buena parte del gremio.</p>
+    <div class="figura" id="fig-sectores">
+      <div class="figura-cab">
+        <h3>VAB de Riobamba por sección CIIU, 2024</h3>
+        <p class="sub">Dólares por habitante. El círculo marca la mediana de las diez capitales de
+           provincia de la Sierra en esa misma rama: si la barra no llega al círculo, Riobamba está
+           por debajo de sus pares.</p>
+      </div>
+      <div class="figura-cuerpo"><div class="globo" id="globo-sectores"></div></div>
+      <div class="figura-pie">
+        <div class="leyenda">
+          <span><i style="background:var(--linea-3)"></i> Riobamba, USD por habitante</span>
+          <span><i class="pt" style="background:var(--dato-referencia)"></i> Mediana de las capitales serranas</span>
+        </div>
+        <button class="ver-tabla" data-tabla="tabla-sectores" aria-expanded="false">Ver tabla</button>
+      </div>
+      <div class="tabla-caja" id="tabla-sectores" hidden></div>
+    </div>
+    <div class="notas" id="lectura"></div>
+  </div>
+</section>
+
+<!-- ── 5 · El contraste con los permisos ───────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">05 · El contraste</span>
+    <h2>Una segunda fuente, que no depende de la primera</h2>
+    <p>Todo lo anterior es del Banco Central y mide <strong>valor producido</strong>. El INEC
+       publica algo distinto: los <strong>permisos de construcción</strong> que aprueban los
+       municipios, permiso a permiso, con el cantón en el registro. Es obra autorizada, no obra
+       valorada, y llega hasta 2025. Si las dos fuentes apuntan en la misma dirección sin
+       depender una de la otra, la conclusión deja de ser discutible.</p>
+    <p>Apuntan en la misma dirección, y la segunda es <strong>más severa que la primera</strong>.</p>
+
+    <div class="figura" id="fig-esed">
+      <div class="figura-cab">
+        <h3>Permisos de construcción del cantón Riobamba</h3>
+        <p class="sub">Cuatro magnitudes del mismo registro, cada una en su propia escala.
+           Calculadas sobre el microdato del INEC, filtrando por código de cantón 0601.</p>
+      </div>
+      <div class="figura-cuerpo"><div class="globo" id="globo-esed"></div></div>
+      <div class="figura-pie">
+        <div class="leyenda">
+          <span><i style="background:var(--linea-3)"></i> Riobamba, cantón</span>
+          <span><i style="background:var(--dato-contexto)"></i> Año sin microdato publicado</span>
+        </div>
+        <button class="ver-tabla" data-tabla="tabla-esed" aria-expanded="false">Ver tabla</button>
+      </div>
+      <div class="tabla-caja" id="tabla-esed" hidden></div>
+    </div>
+
+    <div class="notas" id="lectura-esed"></div>
+  </div>
+</section>
+
+<!-- ── 6 · Metodo y limites ────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">06 · Método y límites</span>
+    <h2>Qué mide esto exactamente, y qué no</h2>
+    <p>Toda cifra de esta página se puede rehacer desde la fuente. Estos son los ocho puntos donde
+       una lectura apresurada se equivocaría.</p>
+    <div class="notas">
+      <div class="nota">
+        <h4>Es VAB, no PIB</h4>
+        <p>El Ecuador <strong>no publica PIB cantonal</strong>. El PIB añade al valor agregado los
+           impuestos netos sobre los productos, y esos solo se calculan a escala nacional. Lo que
+           existe por cantón es el valor agregado bruto, y es el indicador que se usa como
+           equivalente del PIB per cápita a nivel local.</p>
+        <p>Por eso el nivel de Riobamba no se puede comparar con un «PIB per cápita del Ecuador»
+           sacado de otra fuente: aquí el promedio nacional se recalculó sumando el VAB de los 221
+           cantones, para que las dos cifras midan exactamente lo mismo.</p>
+      </div>
+      <div class="nota">
+        <h4>2024 es provisional</h4>
+        <p>El Banco Central marca 2024 como cifra <strong>provisional (p)</strong> y suele revisarla.
+           Por eso la conclusión se comprobó también sin ese año: entre 2018 y 2023, con datos
+           definitivos, el promedio del país subió y Riobamba bajó. El año provisional agrava la
+           caída; no la inventa.</p>
+      </div>
+      <div class="nota">
+        <h4>Corriente contra constante</h4>
+        <p>La serie del Banco Central viene a precios corrientes. Para responder «crece o decrece»
+           hay que descontar la inflación, y aquí se usó el <strong>deflactor implícito del PIB del
+           Ecuador, base 2018 = 100</strong>. Es un deflactor nacional aplicado a un dato cantonal:
+           no captura que los precios de Riobamba se muevan distinto de los del país.</p>
+      </div>
+      <div class="nota">
+        <h4>El denominador también se mueve</h4>
+        <p>El VAB por habitante puede caer porque el numerador baja o porque el denominador sube.
+           En Riobamba <strong>la población creció poco</strong> en el período, así que la caída es
+           sobre todo del numerador. La población es la proyección cantonal que usa el propio Banco
+           Central para su cálculo, no el conteo del Censo 2022.</p>
+      </div>
+      <div class="nota">
+        <h4>El VAB cantonal tiene ruido</h4>
+        <p>El valor agregado se asigna al cantón donde está la unidad productiva, y una sola obra
+           grande lo mueve entero. En esta misma serie, Sevilla de Oro pasa de más de 26 000 dólares
+           por habitante a poco más de 2 000 en un año, por el peso de sus centrales hidroeléctricas.
+           En cantones grandes y diversificados como Riobamba el efecto es menor, pero conviene leer
+           la tendencia y no el salto de un año.</p>
+      </div>
+      <div class="nota">
+        <h4>Un permiso no es una obra</h4>
+        <p>La sección 05 mide <strong>obra autorizada, no obra ejecutada</strong>. Un permiso
+           aprobado puede no construirse nunca, construirse a medias o construirse tres años
+           después. Es un indicador adelantado de intención de inversión, no un registro de lo
+           que efectivamente se levantó.</p>
+        <p>Tampoco recoge <strong>lo que se construye sin permiso</strong>, que en Riobamba no es
+           poco: la Línea 1 de esta misma investigación encontró 20 089 construcciones que el
+           catastro no registra. Las dos cosas se leen juntas.</p>
+      </div>
+      <div class="nota">
+        <h4>Falta 2024 en el microdato</h4>
+        <p>El paquete de datos abiertos del INEC trae 2022, 2023 y 2025, pero <strong>no
+           2024</strong>: ese año solo está en el catálogo ANDA, que no expone una ruta pública
+           estable. Por eso la serie de permisos tiene un hueco declarado en vez de un número
+           inventado.</p>
+        <p>Del visualizador del INEC sí se lee que <strong>Chimborazo tuvo 498 permisos en
+           2024</strong>, pero no puede repartirse al cantón: el peso de Riobamba dentro de su
+           provincia se mueve año a año, y estimarlo sería fabricar el dato.</p>
+      </div>
+      <div class="nota">
+        <h4>Qué NO dice esta serie</h4>
+        <p>El VAB por habitante mide producción por persona, <strong>no ingreso ni bienestar</strong>.
+           No dice cómo se reparte, no incluye la economía no registrada —que en Riobamba no es
+           marginal— y no mide pobreza. Para eso hacen falta la ENEMDU y el Censo: otra fuente y
+           otro trabajo.</p>
+      </div>
+    </div>
+    <div class="fuente-pie" id="fuente-pie"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Colegio de Arquitectos del Ecuador — Provincial de Chimborazo · Investigación territorial ·
+    Línea 3 · <span id="pie-fecha"></span><br>
+    <a href="index.html">Volver al eje de investigación</a>
+  </div>
+</footer>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('datos').textContent);
+const M = D.meta, R = D.riobamba, NAC = D.nacional, CAPS = D.capitales;
+const ANIOS = M.anios, N = ANIOS.length, ULT = N - 1;
+
+/* ── Formato ──────────────────────────────────────────────────────
+   es-EC: punto para los miles y coma para los decimales. */
+const fmt  = (n, d = 0) => n == null ? '—'
+  : n.toLocaleString('es-EC', { minimumFractionDigits: d, maximumFractionDigits: d });
+const usd  = n => '$ ' + fmt(n);
+const pct  = (n, d = 1) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n), d) + ' %';
+const vari = (a, b) => (b / a - 1) * 100;
+/* Para la prosa: «cayó 43,3 %», nunca «cayó −43,3 %», que es doble
+   negación. `pl` concuerda el verbo con sujetos en plural. */
+const verbo = (n, pl) => (n < 0 ? (pl ? 'cayeron ' : 'cayó ')
+  : n > 0 ? (pl ? 'subieron ' : 'subió ') : (pl ? 'quedaron igual, ' : 'quedó igual, ')) +
+  fmt(Math.abs(n), 1) + ' %';
+
+const COL = {
+  tono:  getComputedStyle(document.documentElement).getPropertyValue('--linea-3').trim() || '#7A3E9D',
+  ctx:   '#C2C6CB', ref: '#565B63', rejilla: '#E7E8EA',
+  cae:   '#C05621', sube: '#2563A8', sup: '#FFFFFF'
+};
+
+/* ── Cifras que la pagina anuncia ────────────────────────────────
+   Se calculan aqui y no se escriben a mano: si el BCE revisa la serie
+   y se vuelve a correr el build, el texto se corrige solo. */
+const CAIDA_REAL   = vari(R.pcReal[0], R.pcReal[ULT]);
+const CAIDA_DEF    = vari(R.pcReal[0], R.pcReal[ULT - 1]);      // hasta 2023, definitivo
+const NAC_REAL     = vari(NAC.pcReal[0], NAC.pcReal[ULT]);
+const NAC_DEF      = vari(NAC.pcReal[0], NAC.pcReal[ULT - 1]);
+const CAGR         = (Math.pow(R.pcReal[ULT] / R.pcReal[0], 1 / (N - 1)) - 1) * 100;
+const RESPECTO_NAC = R.pc[ULT] / NAC.pc[ULT] * 100;
+
+/* ── 1 · Mosaico de cifras ──────────────────────────────────────── */
+document.getElementById('heroe').firstChild.nodeValue = pct(CAIDA_REAL);
+document.getElementById('mosaico').innerHTML = [
+  ['VAB por habitante ' + ANIOS[ULT], usd(R.pc[ULT]), 'Dólares corrientes. En dólares de 2018 son ' + usd(R.pcReal[ULT]) + '.'],
+  ['Puesto en el país', R.rank[ULT] + '.º<span style="font-size:.9rem;font-weight:500;color:var(--grafito-med)"> de ' + M.cantones + '</span>',
+   'En ' + ANIOS[0] + ' era el ' + R.rank[0] + '.º: ' + (R.rank[ULT] - R.rank[0]) + ' puestos perdidos.'],
+  ['Respecto del promedio nacional', fmt(RESPECTO_NAC, 0) + ' %', 'Era el ' + fmt(R.pc[0] / NAC.pc[0] * 100, 0) + ' % en ' + ANIOS[0] + '.'],
+  ['Ritmo anual', pct(CAGR, 2), 'Variación media anual en términos reales, ' + ANIOS[0] + '-' + ANIOS[ULT] + '.']
+].map(([rot, val, pie]) =>
+  '<div class="tarj"><span class="rot">' + rot + '</span><b>' + val + '</b><em>' + pie + '</em></div>').join('');
+
+/* ── 2 · Utilidades de dibujo ────────────────────────────────────
+   Las graficas son SVG plano generado aqui: la pagina no carga
+   ninguna libreria de graficos, igual que el resto del sitio. */
+const NS = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs, padre) {
+  const el = document.createElementNS(NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  if (padre) padre.appendChild(el);
+  return el;
+}
+function lienzo(caja, w, h) {
+  const s = svg('svg', { viewBox: '0 0 ' + w + ' ' + h, role: 'img' });
+  caja.insertBefore(s, caja.firstChild);
+  return s;
+}
+/* Escalones limpios para el eje: 1, 2, 5 x 10^n. */
+function paso(bruto) {
+  const p = Math.pow(10, Math.floor(Math.log10(bruto))), r = bruto / p;
+  return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 5 ? 5 : 10) * p;
+}
+function globo(caja, el) {
+  const g = el;
+  return {
+    ver(x, y, html) {
+      g.innerHTML = html; g.classList.add('on');
+      const b = g.getBoundingClientRect();
+      /* Se acota contra el ANCHO DEL CONTENIDO, no contra el visible:
+         en movil la tarjeta se desplaza y el lienzo es mas ancho que
+         la ventanilla. */
+      const util = Math.max(caja.clientWidth, caja.scrollWidth);
+      g.style.left = Math.max(4, Math.min(x - b.width / 2, util - b.width - 4)) + 'px';
+      g.style.top = Math.max(4, y - b.height - 14) + 'px';
+    },
+    ocultar() { g.classList.remove('on'); g.style.left = '0'; g.style.top = '0'; }
+  };
+}
+function tabla(id, cabeceras, filas, pie) {
+  const cab = '<tr>' + cabeceras.map(c => '<th>' + c + '</th>').join('') + '</tr>';
+  const cuerpo = filas.map(f =>
+    '<tr' + (f.mia ? ' class="mia"' : '') + '>' +
+    f.celdas.map(c => typeof c === 'string' ? '<td>' + c + '</td>'
+      : '<td class="' + (c.cls || '') + '">' + c.v + '</td>').join('') + '</tr>').join('');
+  document.getElementById(id).innerHTML =
+    '<table><thead>' + cab + '</thead><tbody>' + cuerpo + '</tbody></table>' +
+    (pie ? '<p style="font-size:.76rem;color:var(--grafito-sua);margin-top:10px">' + pie + '</p>' : '');
+}
+document.querySelectorAll('.ver-tabla').forEach(b => {
+  b.addEventListener('click', () => {
+    const t = document.getElementById(b.dataset.tabla), abierta = !t.hidden;
+    t.hidden = abierta;
+    b.setAttribute('aria-expanded', String(!abierta));
+    b.textContent = abierta ? 'Ver tabla' : 'Ocultar tabla';
+  });
+});
+
+/* ── 3 · Grafica de indice (forma «enfasis») ─────────────────────
+   Diez cantones en diez colores esconderian justo el que importa.
+   Riobamba lleva el color de la linea, el promedio del pais un gris
+   legible, y las ocho capitales restantes el gris de contexto. */
+(function graficaIndice() {
+  /* El margen derecho tiene que dar cabida a la etiqueta mas larga del
+     final de linea («Promedio del Ecuador  98,4»), o el SVG la recorta. */
+  const W = 900, H = 420, mx = { iz: 46, de: 158, ar: 22, ab: 40 };
+  const caja = document.querySelector('#fig-indice .figura-cuerpo');
+  const s = lienzo(caja, W, H);
+  const gx = W - mx.iz - mx.de, gy = H - mx.ar - mx.ab;
+
+  const idx = serie => serie.map(v => v / serie[0] * 100);
+  const series = CAPS.filter(c => c.codigo !== R.codigo)
+    .map(c => ({ nom: c.canton, v: idx(c.pcReal), tipo: 'ctx' }));
+  series.push({ nom: 'Promedio del Ecuador', v: idx(NAC.pcReal), tipo: 'ref' });
+  series.push({ nom: 'Riobamba', v: idx(R.pcReal), tipo: 'mia' });
+
+  const todos = series.flatMap(s2 => s2.v);
+  const lo = Math.floor(Math.min(...todos) / 5) * 5 - 2, hi = Math.ceil(Math.max(...todos) / 5) * 5 + 2;
+  const X = i => mx.iz + i / (N - 1) * gx;
+  const Y = v => mx.ar + (hi - v) / (hi - lo) * gy;
+
+  const p = paso((hi - lo) / 5);
+  for (let v = Math.ceil(lo / p) * p; v <= hi; v += p) {
+    svg('line', { x1: mx.iz, x2: mx.iz + gx, y1: Y(v), y2: Y(v), class: 'rejilla' }, s);
+    svg('text', { x: mx.iz - 9, y: Y(v) + 4, class: 'eje-txt', 'text-anchor': 'end' }, s).textContent = fmt(v);
+  }
+  /* La linea del 100 es el origen de la comparacion, no una rejilla mas. */
+  svg('line', { x1: mx.iz, x2: mx.iz + gx, y1: Y(100), y2: Y(100), stroke: '#B9BDC2', 'stroke-width': 1.5 }, s);
+
+  ANIOS.forEach((a, i) => svg('text', {
+    x: X(i), y: H - mx.ab + 22, class: 'eje-txt', 'text-anchor': 'middle'
+  }, s).textContent = a + (M.provisional.includes(a) ? ' p' : ''));
+
+  const trazo = v => v.map((y, i) => (i ? 'L' : 'M') + X(i) + ' ' + Y(y)).join(' ');
+  const estilo = {
+    ctx: { stroke: COL.ctx, 'stroke-width': 2 },
+    ref: { stroke: COL.ref, 'stroke-width': 2 },
+    mia: { stroke: COL.tono, 'stroke-width': 3 }
+  };
+  /* Contexto primero, para que Riobamba quede encima de todo. */
+  ['ctx', 'ref', 'mia'].forEach(t => series.filter(x => x.tipo === t).forEach(x => {
+    svg('path', Object.assign({
+      d: trazo(x.v), fill: 'none', 'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+    }, estilo[t]), s);
+  }));
+
+  /* Etiqueta al final de la linea, solo en las dos que se leen: si se
+     etiquetan las diez, el borde derecho se convierte en un amasijo. */
+  [['mia', COL.tono], ['ref', COL.ref]].forEach(([t, c]) => {
+    const x = series.find(y => y.tipo === t);
+    const yf = Y(x.v[ULT]);
+    svg('circle', { cx: X(ULT), cy: yf, r: 5, fill: c, stroke: COL.sup, 'stroke-width': 2 }, s);
+    const e = svg('text', {
+      x: X(ULT) + 12, y: yf + 4, class: 'etiq' + (t === 'mia' ? ' destacada' : '')
+    }, s);
+    e.textContent = x.nom + '  ' + fmt(x.v[ULT], 1);
+  });
+
+  /* Cruceta y globo: una banda por año, para que el blanco entre
+     puntos no sea zona muerta. */
+  const cruz = svg('line', { y1: mx.ar, y2: mx.ar + gy, stroke: '#B9BDC2', 'stroke-width': 1, opacity: 0 }, s);
+  const G = globo(caja, document.getElementById('globo-indice'));
+  const orden = ['mia', 'ref', 'ctx'];
+  ANIOS.forEach((a, i) => {
+    const izq = i === 0 ? mx.iz : (X(i - 1) + X(i)) / 2;
+    const der = i === ULT ? mx.iz + gx : (X(i) + X(i + 1)) / 2;
+    const z = svg('rect', {
+      x: izq, y: mx.ar, width: der - izq, height: gy, fill: 'transparent'
+    }, s);
+    z.addEventListener('mouseenter', () => {
+      cruz.setAttribute('x1', X(i)); cruz.setAttribute('x2', X(i)); cruz.setAttribute('opacity', 1);
+      const filas = series.slice().sort((p1, p2) =>
+        orden.indexOf(p1.tipo) - orden.indexOf(p2.tipo) || p2.v[i] - p1.v[i]).map(x =>
+        '<div class="fila' + (x.tipo === 'mia' ? ' mia' : '') + '"><span><i style="background:' +
+        (x.tipo === 'mia' ? COL.tono : x.tipo === 'ref' ? COL.ref : COL.ctx) + '"></i>' +
+        x.nom + '</span><span>' + fmt(x.v[i], 1) + '</span></div>').join('');
+      const r = s.getBoundingClientRect(), esc = r.width / W;
+      G.ver(X(i) * esc + 12, mx.ar * esc + 12 + gy * esc * .35,
+        '<b>' + a + (M.provisional.includes(a) ? ' (provisional)' : '') + ' · índice 2018 = 100</b>' + filas);
+    });
+    z.addEventListener('mouseleave', () => { cruz.setAttribute('opacity', 0); G.ocultar(); });
+  });
+
+  tabla('tabla-indice',
+    ['Cantón'].concat(ANIOS.map(a => a + (M.provisional.includes(a) ? ' p' : ''))).concat(['Var. ' + ANIOS[0] + '-' + ANIOS[ULT]]),
+    CAPS.map(c => ({
+      mia: c.codigo === R.codigo,
+      celdas: [c.canton].concat(idx(c.pcReal).map(v => fmt(v, 1)))
+        .concat([{ v: pct(vari(c.pcReal[0], c.pcReal[ULT])), cls: c.pcReal[ULT] < c.pcReal[0] ? 'neg' : 'pos' }])
+    })).concat([{
+      celdas: ['Promedio del Ecuador'].concat(idx(NAC.pcReal).map(v => fmt(v, 1)))
+        .concat([{ v: pct(NAC_REAL), cls: NAC_REAL < 0 ? 'neg' : 'pos' }])
+    }]),
+    'Índice sobre el VAB por habitante en dólares constantes de 2018. «p» = cifra provisional.');
+})();
+
+/* ── 4 · Grafica de nivel 2024 (barras, forma «enfasis») ─────────── */
+(function graficaNivel() {
+  const filas = CAPS.slice().sort((a, b) => b.pc[ULT] - a.pc[ULT]);
+  const W = 900, alto = 34, mx = { iz: 108, de: 24, ar: 30, ab: 34 };
+  const H = mx.ar + filas.length * alto + mx.ab;
+  const caja = document.querySelector('#fig-nivel .figura-cuerpo');
+  const s = lienzo(caja, W, H);
+  const gx = W - mx.iz - mx.de;
+  const max = Math.max(...filas.map(f => f.pc[ULT]), NAC.pc[ULT]) * 1.1;
+  const X = v => v / max * gx;
+
+  const p = paso(max / 5);
+  for (let v = 0; v <= max; v += p) {
+    svg('line', { x1: mx.iz + X(v), x2: mx.iz + X(v), y1: mx.ar - 8, y2: mx.ar + filas.length * alto, class: 'rejilla' }, s);
+    svg('text', { x: mx.iz + X(v), y: H - mx.ab + 20, class: 'eje-txt', 'text-anchor': 'middle' }, s)
+      .textContent = fmt(v);
+  }
+
+  const G = globo(caja, document.getElementById('globo-nivel'));
+  filas.forEach((f, i) => {
+    const mia = f.codigo === R.codigo;
+    const y = mx.ar + i * alto, h = 20;          /* barra fina: 20 px de 34 es aire */
+    svg('text', { x: mx.iz - 12, y: y + h - 5, class: 'etiq' + (mia ? ' destacada' : ''), 'text-anchor': 'end' }, s)
+      .textContent = f.canton;
+    /* Extremo del dato redondeado, cuadrado en la linea base. */
+    const w = Math.max(X(f.pc[ULT]), 3), r = Math.min(4, w);
+    svg('path', {
+      d: 'M' + mx.iz + ' ' + y + ' H' + (mx.iz + w - r) + ' a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r +
+         ' V' + (y + h - r) + ' a' + r + ' ' + r + ' 0 0 1 ' + (-r) + ' ' + r + ' H' + mx.iz + ' Z',
+      fill: mia ? COL.tono : COL.ctx
+    }, s);
+    svg('text', {
+      x: mx.iz + w + 9, y: y + h - 5, class: 'etiq' + (mia ? ' destacada' : '')
+    }, s).textContent = usd(f.pc[ULT]);
+
+    const z = svg('rect', { x: mx.iz, y: y - 7, width: gx, height: alto, fill: 'transparent' }, s);
+    z.addEventListener('mouseenter', () => {
+      const r2 = s.getBoundingClientRect(), esc = r2.width / W;
+      G.ver((mx.iz + w / 2) * esc, (y + h) * esc,
+        '<b>' + f.canton + ' · ' + f.provincia + '</b>' +
+        '<div class="fila"><span>VAB por habitante</span><span>' + usd(f.pc[ULT]) + '</span></div>' +
+        '<div class="fila"><span>Puesto nacional</span><span>' + f.rank[ULT] + '.º de ' + M.cantones + '</span></div>' +
+        '<div class="fila"><span>Variación real desde ' + ANIOS[0] + '</span><span>' + pct(vari(f.pcReal[0], f.pcReal[ULT])) + '</span></div>' +
+        '<div class="fila"><span>Población</span><span>' + fmt(f.pob[ULT]) + '</span></div>');
+    });
+    z.addEventListener('mouseleave', () => G.ocultar());
+  });
+
+  /* El promedio del pais como referencia vertical, con su rotulo arriba. */
+  const xn = mx.iz + X(NAC.pc[ULT]);
+  svg('line', { x1: xn, x2: xn, y1: mx.ar - 14, y2: mx.ar + filas.length * alto, stroke: COL.ref, 'stroke-width': 1.5 }, s);
+  svg('circle', { cx: xn, cy: mx.ar - 14, r: 4.5, fill: COL.ref }, s);
+  svg('text', { x: xn - 9, y: mx.ar - 11, class: 'etiq', 'text-anchor': 'end' }, s)
+    .textContent = 'Promedio del Ecuador  ' + usd(NAC.pc[ULT]);
+
+  tabla('tabla-nivel',
+    ['Cantón', 'Provincia', 'Población ' + ANIOS[ULT], 'VAB total (USD)', 'VAB por habitante', 'Puesto nacional'],
+    filas.map(f => ({
+      mia: f.codigo === R.codigo,
+      celdas: [f.canton, f.provincia, fmt(f.pob[ULT]), fmt(f.vab[ULT]), usd(f.pc[ULT]), f.rank[ULT] + '.º']
+    })).concat([{
+      celdas: ['Promedio del Ecuador', '221 cantones', fmt(NAC.pob[ULT]), fmt(NAC.vab[ULT]), usd(NAC.pc[ULT]), '—']
+    }]),
+    'Dólares corrientes de ' + ANIOS[ULT] + ', cifra provisional. El promedio nacional es el VAB total del país dividido para su población, no el promedio de los 221 cantones.');
+})();
+
+/* ── 5 · Puesto nacional 2018 → 2024 ────────────────────────────── */
+(function graficaRank() {
+  const filas = CAPS.slice().sort((a, b) => a.rank[ULT] - b.rank[ULT]);
+  const W = 900, ancho = W / filas.length, mx = { ar: 34, ab: 46, iz: 42, de: 12 };
+  const H = 400;
+  const caja = document.querySelector('#fig-rank .figura-cuerpo');
+  const s = lienzo(caja, W, H);
+  const gy = H - mx.ar - mx.ab;
+  const peor = Math.max(...filas.flatMap(f => [f.rank[0], f.rank[ULT]]));
+  const hi = Math.ceil(peor / 25) * 25;
+  const Y = r => mx.ar + (r - 1) / (hi - 1) * gy;          /* 1 arriba */
+  const X = i => mx.iz + ancho * i + (W - mx.iz - mx.de - ancho * filas.length) / 2 + ancho / 2;
+
+  const p = paso(hi / 5);
+  for (let v = p; v <= hi; v += p) {
+    svg('line', { x1: mx.iz, x2: W - mx.de, y1: Y(v), y2: Y(v), class: 'rejilla' }, s);
+    svg('text', { x: mx.iz - 10, y: Y(v) + 4, class: 'eje-txt', 'text-anchor': 'end' }, s).textContent = v + '.º';
+  }
+
+  const G = globo(caja, document.getElementById('globo-rank'));
+  filas.forEach((f, i) => {
+    const a = f.rank[0], b = f.rank[ULT], subio = b < a, c = subio ? COL.sube : COL.cae;
+    const x = X(i);
+    if (a !== b) svg('line', { x1: x, x2: x, y1: Y(a), y2: Y(b), stroke: c, 'stroke-width': 3, 'stroke-linecap': 'round' }, s);
+    svg('circle', { cx: x, cy: Y(a), r: 5, fill: COL.sup, stroke: c, 'stroke-width': 2.5 }, s);
+    svg('circle', { cx: x, cy: Y(b), r: 6, fill: c, stroke: COL.sup, 'stroke-width': 2 }, s);
+    const e = svg('text', {
+      x: x, y: H - mx.ab + 20, class: 'etiq' + (f.codigo === R.codigo ? ' destacada' : ''),
+      'text-anchor': 'middle'
+    }, s);
+    e.textContent = f.canton;
+    /* Solo el cantón del que trata la página lleva su cifra al lado. */
+    if (f.codigo === R.codigo) {
+      svg('text', { x: x, y: Y(b) + 24, class: 'etiq destacada', 'text-anchor': 'middle' }, s)
+        .textContent = (b - a) + ' puestos';
+    }
+    const z = svg('rect', { x: x - ancho / 2, y: mx.ar, width: ancho, height: gy, fill: 'transparent' }, s);
+    z.addEventListener('mouseenter', () => {
+      const r2 = s.getBoundingClientRect(), esc = r2.width / W;
+      G.ver(x * esc, Y(Math.min(a, b)) * esc,
+        '<b>' + f.canton + '</b>' +
+        '<div class="fila"><span>Puesto ' + ANIOS[0] + '</span><span>' + a + '.º</span></div>' +
+        '<div class="fila"><span>Puesto ' + ANIOS[ULT] + '</span><span>' + b + '.º</span></div>' +
+        '<div class="fila mia"><span>Movimiento</span><span>' + (b === a ? 'sin cambio' : (b - a > 0 ? '−' : '+') + Math.abs(b - a) + ' puestos') + '</span></div>');
+    });
+    z.addEventListener('mouseleave', () => G.ocultar());
+  });
+
+  tabla('tabla-rank',
+    ['Cantón', 'Puesto ' + ANIOS[0], 'Puesto ' + ANIOS[ULT], 'Movimiento', 'VAB/hab ' + ANIOS[0], 'VAB/hab ' + ANIOS[ULT]],
+    filas.map(f => ({
+      mia: f.codigo === R.codigo,
+      celdas: [f.canton, f.rank[0] + '.º', f.rank[ULT] + '.º',
+        { v: f.rank[ULT] === f.rank[0] ? 'sin cambio' : (f.rank[ULT] > f.rank[0] ? '−' : '+') + Math.abs(f.rank[ULT] - f.rank[0]),
+          cls: f.rank[ULT] > f.rank[0] ? 'neg' : f.rank[ULT] < f.rank[0] ? 'pos' : '' },
+        usd(f.pc[0]), usd(f.pc[ULT])]
+    })),
+    'Puesto entre los ' + M.cantones + ' cantones del país, ordenados por VAB por habitante a precios corrientes de cada año.');
+})();
+
+/* ── 6 · Estructura sectorial 2024 ──────────────────────────────── */
+(function graficaSectores() {
+  const pobR = R.pob[ULT];
+  const mediana = j => {
+    const v = CAPS.map(c => c.sectores[j] / c.pob[ULT]).sort((a, b) => a - b), m = v.length >> 1;
+    return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+  };
+  const filas = M.secciones.map((nom, j) => ({
+    nom, j, v: R.sectores[j] / pobR, med: mediana(j), tot: R.sectores[j]
+  })).sort((a, b) => b.v - a.v);
+  const totR = R.sectores.reduce((a, b) => a + b, 0);
+
+  const W = 900, alto = 32, mx = { iz: 250, de: 30, ar: 26, ab: 34 };
+  const H = mx.ar + filas.length * alto + mx.ab;
+  const caja = document.querySelector('#fig-sectores .figura-cuerpo');
+  const s = lienzo(caja, W, H);
+  const gx = W - mx.iz - mx.de;
+  const max = Math.max(...filas.flatMap(f => [f.v, f.med])) * 1.12;
+  const X = v => v / max * gx;
+
+  const p = paso(max / 5);
+  for (let v = 0; v <= max; v += p) {
+    svg('line', { x1: mx.iz + X(v), x2: mx.iz + X(v), y1: mx.ar - 6, y2: mx.ar + filas.length * alto, class: 'rejilla' }, s);
+    svg('text', { x: mx.iz + X(v), y: H - mx.ab + 20, class: 'eje-txt', 'text-anchor': 'middle' }, s).textContent = fmt(v);
+  }
+
+  const G = globo(caja, document.getElementById('globo-sectores'));
+  filas.forEach((f, i) => {
+    const y = mx.ar + i * alto, h = 18;
+    svg('text', { x: mx.iz - 12, y: y + h - 4, class: 'etiq', 'text-anchor': 'end' }, s)
+      .textContent = f.nom.length > 34 ? f.nom.slice(0, 33) + '…' : f.nom;
+    const w = Math.max(X(f.v), 3), r = Math.min(4, w);
+    svg('path', {
+      d: 'M' + mx.iz + ' ' + y + ' H' + (mx.iz + w - r) + ' a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r +
+         ' V' + (y + h - r) + ' a' + r + ' ' + r + ' 0 0 1 ' + (-r) + ' ' + r + ' H' + mx.iz + ' Z',
+      fill: COL.tono
+    }, s);
+    /* Mediana de las capitales: anillo de 2 px en el color del fondo
+       para que se lea aunque caiga justo encima de la barra. */
+    svg('circle', { cx: mx.iz + X(f.med), cy: y + h / 2, r: 5, fill: COL.ref, stroke: COL.sup, 'stroke-width': 2 }, s);
+    svg('text', { x: mx.iz + Math.max(w, X(f.med)) + 11, y: y + h - 4, class: 'etiq' }, s)
+      .textContent = usd(f.v);
+
+    const z = svg('rect', { x: mx.iz, y: y - 6, width: gx, height: alto, fill: 'transparent' }, s);
+    z.addEventListener('mouseenter', () => {
+      const r2 = s.getBoundingClientRect(), esc = r2.width / W;
+      G.ver((mx.iz + w / 2) * esc, (y + h) * esc,
+        '<b>' + f.nom + '</b>' +
+        '<div class="fila mia"><span>Riobamba</span><span>' + usd(f.v) + ' / hab</span></div>' +
+        '<div class="fila"><span>Mediana capitales serranas</span><span>' + usd(f.med) + ' / hab</span></div>' +
+        '<div class="fila"><span>Peso en el VAB del cantón</span><span>' + fmt(f.tot / totR * 100, 1) + ' %</span></div>' +
+        '<div class="fila"><span>VAB de la rama</span><span>' + usd(f.tot) + '</span></div>');
+    });
+    z.addEventListener('mouseleave', () => G.ocultar());
+  });
+
+  tabla('tabla-sectores',
+    ['Sección CIIU', 'VAB Riobamba (USD)', '% del VAB cantonal', 'USD por habitante', 'Mediana capitales serranas', 'Diferencia'],
+    filas.map(f => ({
+      celdas: [f.nom, fmt(f.tot), fmt(f.tot / totR * 100, 1) + ' %', usd(f.v), usd(f.med),
+        { v: pct(vari(f.med, f.v)), cls: f.v < f.med ? 'neg' : 'pos' }]
+    })).concat([{
+      mia: true,
+      celdas: ['Economía total', fmt(totR), '100,0 %', usd(totR / pobR), '—', '—']
+    }]),
+    'Clasificación Industrial Internacional Uniforme, revisión 4, agregada en las catorce secciones que publica el Banco Central.');
+
+  /* Lectura: se redacta con los datos en la mano, no a mano. */
+  const constr = filas.find(f => /^Construcci/.test(f.nom));
+  const puestoConstr = CAPS.slice()
+    .sort((a, b) => b.sectores[constr.j] / b.pob[ULT] - a.sectores[constr.j] / a.pob[ULT])
+    .findIndex(c => c.codigo === R.codigo) + 1;
+  const iPub = M.secciones.map((n, j) => /Administración pública|Enseñanza|Salud/.test(n) ? j : -1).filter(j => j >= 0);
+  const pesoPub = iPub.reduce((a, j) => a + R.sectores[j], 0) / totR * 100;
+  const pesoPubCap = CAPS.map(c => {
+    const t = c.sectores.reduce((x, y) => x + y, 0);
+    return { nom: c.canton, v: iPub.reduce((a, j) => a + c.sectores[j], 0) / t * 100 };
+  }).sort((a, b) => b.v - a.v);
+  const puestoPub = pesoPubCap.findIndex(c => c.nom === 'Riobamba') + 1;
+
+  /* Redactar con los datos en la mano, no a mano: si el BCE revisa la
+     serie, la frase se recoloca sola en vez de quedarse mintiendo. De
+     ahi el ordinal y la enumeracion calculados. */
+  const ORD = ['', 'el más alto', 'el segundo más alto', 'el tercero más alto', 'el cuarto más alto',
+               'el quinto más alto', 'el sexto más alto', 'el séptimo más alto', 'el octavo más alto',
+               'el noveno más alto', 'el más bajo'];
+  const enumera = ns => ns.length === 1 ? ns[0]
+    : ns.slice(0, -1).join(', ') + ' y ' + ns[ns.length - 1];
+  const arribaConstr = CAPS.slice()
+    .sort((a, b) => b.sectores[constr.j] / b.pob[ULT] - a.sectores[constr.j] / a.pob[ULT]);
+  const topConstr = arribaConstr[0];
+
+  document.getElementById('lectura').innerHTML = [
+    ['La construcción, de cerca',
+     'En ' + ANIOS[ULT] + ' la construcción aportó <strong>' + usd(constr.v) + ' por habitante</strong> en Riobamba, ' +
+     'contra una mediana de ' + usd(constr.med) + ' en las diez capitales serranas. Es <strong>' + ORD[puestoConstr] +
+     '</strong> del grupo, en la mitad baja de la tabla, y sobre el VAB del cantón pesa ' +
+     fmt(constr.tot / totR * 100, 1) + ' %.',
+     'La distancia con la cabeza del grupo es la que importa: en ' + topConstr.canton + ' la construcción mueve ' +
+     usd(topConstr.sectores[constr.j] / topConstr.pob[ULT]) + ' por habitante, ' +
+     fmt(topConstr.sectores[constr.j] / topConstr.pob[ULT] / constr.v, 1) + ' veces lo de Riobamba. Es un dato de ' +
+     'contexto para cualquier discusión sobre volumen de obra, honorarios o migración profesional.'],
+    ['Una economía sostenida por el Estado',
+     'Administración pública, enseñanza y salud suman <strong>' + fmt(pesoPub, 1) + ' %</strong> del VAB del cantón: ' +
+     ORD[puestoPub] + ' de las diez capitales serranas' +
+     (puestoPub === 1 ? '' : ', detrás de ' + enumera(pesoPubCap.slice(0, puestoPub - 1).map(c => c.nom))) + '.',
+     'Cerca de un tercio de lo que produce Riobamba depende de presupuesto público. Eso ayuda a explicar la ' +
+     'caída: son ramas que no crecen con el ciclo, y cuando el presupuesto se ajusta, el cantón entero lo siente.']
+  ].map(([t, ...ps]) => '<div class="nota"><h4>' + t + '</h4>' + ps.map(p2 => '<p>' + p2 + '</p>').join('') + '</div>').join('');
+})();
+
+/* ── 7 · Permisos de construccion (INEC ESED) ────────────────────
+   Pequenos multiplos: cuatro magnitudes, cada una en su escala y todas
+   del mismo color. Ponerlas juntas en un eje comun no diria nada —una
+   son 296 permisos y otra 116 000 m²— y darles cuatro colores gastaria
+   el canal de identidad en algo que los titulos ya dicen. */
+(function graficaPermisos() {
+  const E = D.esed, EA = E.meta.anios, FALTA = E.meta.anioFaltante;
+  /* El anio sin microdato se dibuja como hueco declarado, no se salta:
+     un salto lo volveria invisible. */
+  const cols = EA.concat([FALTA]).sort((a, b) => a - b);
+  const magnitudes = [
+    { k: 'permisos',      t: 'Permisos',      u: '' },
+    { k: 'edificaciones', t: 'Edificaciones', u: '' },
+    { k: 'viviendas',     t: 'Viviendas',     u: '' },
+    { k: 'area',          t: 'Área a construir', u: ' m²' }
+  ];
+
+  const W = 940, H = 292, hueco = 10;
+  const pw = (W - hueco * (magnitudes.length - 1)) / magnitudes.length;
+  const arr = 54, aba = 30;                       /* bandas de titulo y de anios */
+  const caja = document.querySelector('#fig-esed .figura-cuerpo');
+  const s = lienzo(caja, W, H);
+  const G = globo(caja, document.getElementById('globo-esed'));
+
+  magnitudes.forEach((m, p) => {
+    const x0 = p * (pw + hueco);
+    const vals = EA.map((a, i) => E.riobamba[i][m.k]);
+    const max = Math.max(...vals) * 1.28;
+    const gy = H - arr - aba;
+    const bw = Math.min(34, (pw - 24) / cols.length - 12);
+    const paso2 = (pw - 16) / cols.length;
+
+    svg('text', { x: x0 + 8, y: 16, class: 'etiq destacada' }, s).textContent = m.t;
+    svg('line', { x1: x0 + 8, x2: x0 + pw - 8, y1: 26, y2: 26, class: 'rejilla' }, s);
+    /* La variación de punta a punta, que es la lectura de cada panel. */
+    const v = (vals[vals.length - 1] / vals[0] - 1) * 100;
+    svg('text', { x: x0 + 8, y: 43, class: 'etiq', fill: v < 0 ? COL.cae : COL.sube }, s)
+      .textContent = pct(v) + '  ' + EA[0] + '–' + EA[EA.length - 1];
+
+    cols.forEach((a, i) => {
+      const cx = x0 + 8 + paso2 * i + paso2 / 2;
+      const sd = a === FALTA;
+      const val = sd ? null : vals[EA.indexOf(a)];
+      const y0 = H - aba;
+      if (sd) {
+        /* Hueco: recuadro vacio, sin relleno, y un "s/d" que lo nombra. */
+        svg('rect', {
+          x: cx - bw / 2, y: y0 - 26, width: bw, height: 26,
+          fill: 'none', stroke: COL.ctx, 'stroke-width': 1.5
+        }, s);
+        svg('text', { x: cx, y: y0 - 10, class: 'eje-txt', 'text-anchor': 'middle' }, s)
+          .textContent = 's/d';
+      } else {
+        const h = Math.max(val / max * gy, 3), r = Math.min(4, bw / 2);
+        svg('path', {
+          d: 'M' + (cx - bw / 2) + ' ' + y0 + ' V' + (y0 - h + r) +
+             ' a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + (-r) + ' H' + (cx + bw / 2 - r) +
+             ' a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r + ' V' + y0 + ' Z',
+          fill: COL.tono
+        }, s);
+        svg('text', { x: cx, y: y0 - h - 7, class: 'etiq destacada', 'text-anchor': 'middle' }, s)
+          .textContent = fmt(val);
+      }
+      svg('text', { x: cx, y: H - 10, class: 'eje-txt', 'text-anchor': 'middle' }, s).textContent = a;
+
+      const z = svg('rect', { x: cx - paso2 / 2, y: arr - 20, width: paso2, height: gy + 20, fill: 'transparent' }, s);
+      z.addEventListener('mouseenter', () => {
+        const rb = s.getBoundingClientRect(), esc = rb.width / W;
+        if (sd) {
+          G.ver(cx * esc, (H - aba) * esc,
+            '<b>' + a + ' · sin microdato</b>' +
+            '<div class="fila"><span>El INEC no publicó el microdato de este año en el paquete de datos abiertos.</span></div>' +
+            '<div class="fila"><span>Chimborazo, permisos (visualizador)</span><span>' +
+            fmt(E.meta.chimborazo2024Visualizador) + '</span></div>');
+          return;
+        }
+        const j = EA.indexOf(a), r2 = E.riobamba[j], c2 = E.chimborazo[j];
+        G.ver(cx * esc, (H - aba) * esc,
+          '<b>Riobamba · ' + a + '</b>' +
+          '<div class="fila mia"><span>' + m.t + '</span><span>' + fmt(val) + m.u + '</span></div>' +
+          '<div class="fila"><span>Permisos</span><span>' + fmt(r2.permisos) + '</span></div>' +
+          '<div class="fila"><span>Viviendas</span><span>' + fmt(r2.viviendas) + '</span></div>' +
+          '<div class="fila"><span>Área a construir</span><span>' + fmt(r2.area) + ' m²</span></div>' +
+          '<div class="fila"><span>Del total de Chimborazo</span><span>' +
+          fmt(r2.permisos / c2.permisos * 100, 1) + ' %</span></div>');
+      });
+      z.addEventListener('mouseleave', () => G.ocultar());
+    });
+  });
+
+  tabla('tabla-esed',
+    ['Magnitud'].concat(cols.map(a => a === FALTA ? a + ' (s/d)' : String(a)))
+      .concat(['Var. ' + EA[0] + '–' + EA[EA.length - 1]]),
+    magnitudes.concat([
+      { k: 'areaRes', t: 'Área residencial', u: ' m²' },
+      { k: 'areaNoRes', t: 'Área no residencial', u: ' m²' },
+      { k: 'valor', t: 'Valor declarado (USD corrientes)', u: '' }
+    ]).map(m => {
+      const vals = EA.map((a, i) => E.riobamba[i][m.k]);
+      const v = (vals[vals.length - 1] / vals[0] - 1) * 100;
+      return {
+        mia: m.k === 'viviendas',
+        celdas: [m.t].concat(cols.map(a => a === FALTA ? '—' : fmt(vals[EA.indexOf(a)])))
+          .concat([{ v: pct(v), cls: v < 0 ? 'neg' : 'pos' }])
+      };
+    }).concat([{
+      celdas: ['Peso de Riobamba en Chimborazo'].concat(cols.map(a => a === FALTA ? '—'
+        : fmt(E.riobamba[EA.indexOf(a)].permisos / E.chimborazo[EA.indexOf(a)].permisos * 100, 1) + ' %'))
+        .concat(['—'])
+    }]),
+    'Cantón Riobamba (código 0601), calculado sobre el microdato del INEC. Una fila del registro = un permiso aprobado. ' +
+    'El valor va a precios corrientes: el deflactor que usa el resto de la página llega hasta 2024 y no cubre 2025.');
+
+  /* Lectura del contraste, otra vez calculada y no escrita a mano. */
+  const vPermisos = (E.riobamba[2].permisos / E.riobamba[0].permisos - 1) * 100;
+  const vViviendas = (E.riobamba[2].viviendas / E.riobamba[0].viviendas - 1) * 100;
+  const vArea = (E.riobamba[2].area / E.riobamba[0].area - 1) * 100;
+  const peso0 = E.riobamba[0].permisos / E.chimborazo[0].permisos * 100;
+  const peso1 = E.riobamba[2].permisos / E.chimborazo[2].permisos * 100;
+
+  /* La frase de la portada tampoco se escribe a mano. */
+  document.getElementById('eco-permisos').textContent =
+    (vViviendas < 0 ? 'caen ' : 'suben ') + fmt(Math.abs(vViviendas), 1) +
+    ' % en viviendas proyectadas entre ' + EA[0] + ' y ' + EA[EA.length - 1];
+
+  document.getElementById('lectura-esed').innerHTML = [
+    ['Dos fuentes, la misma dirección',
+     'El Banco Central dice que el valor producido por habitante ' + verbo(CAIDA_REAL) +
+     ' entre ' + ANIOS[0] + ' y ' + ANIOS[ULT] + '. El INEC, con un registro que no tiene nada que ver ' +
+     'con el anterior, dice que entre ' + EA[0] + ' y ' + EA[EA.length - 1] + ' los permisos <strong>' +
+     verbo(vPermisos, true) + '</strong>, el área a construir <strong>' + verbo(vArea) + '</strong> y las ' +
+     'viviendas proyectadas <strong>' + verbo(vViviendas, true) + '</strong>.',
+     'Que dos operaciones estadísticas independientes —una de cuentas nacionales, otra de registros ' +
+     'municipales— apunten al mismo lado es lo más sólido que tiene esta línea de investigación. Y la ' +
+     'segunda añade algo que la primera no puede: llega hasta ' + EA[EA.length - 1] + '.'],
+    ['Riobamba pierde peso en su propia provincia',
+     'En ' + EA[0] + ', <strong>' + fmt(peso0, 1) + ' %</strong> de los permisos de Chimborazo se ' +
+     'aprobaban en Riobamba. En ' + EA[EA.length - 1] + ' son el <strong>' + fmt(peso1, 1) + ' %</strong>.',
+     'La cabecera cantonal no solo construye menos: construye una porción cada vez menor de lo poco ' +
+     'que se construye en la provincia. Es el argumento contra leer las cifras provinciales del INEC ' +
+     'como si fueran de Riobamba, y la razón por la que toda esta sección se calculó filtrando el ' +
+     'microdato por código de cantón.']
+  ].map(([t, ...ps]) => '<div class="nota"><h4>' + t + '</h4>' + ps.map(p2 => '<p>' + p2 + '</p>').join('') + '</div>').join('');
+})();
+
+/* ── 8 · Pie de fuente ──────────────────────────────────────────── */
+document.getElementById('fuente-pie').innerHTML =
+  '<strong>Fuente 1 · secciones 01 a 04.</strong> ' + M.fuente + '; archivos <em>' +
+  M.archivos.join('</em> y <em>') + '</em>, descargados el ' +
+  M.descargado.split('-').reverse().join('/') + ' de <a href="' + M.url + '">contenido.bce.fin.ec</a>. ' +
+  M.fuenteDeflactor + '. ' +
+  'Serie ' + ANIOS[0] + '-' + ANIOS[ULT] + ' del año base 2018, sin empalmar con la serie anterior: ' +
+  'el cambio de año base de las cuentas nacionales rompe la comparación de niveles con los años previos. ' +
+  'Los ' + M.cantones + ' cantones del país entran en el cálculo del promedio nacional y del ranking.' +
+  '<br><br><strong>Fuente 2 · sección 05.</strong> ' + D.esed.meta.fuente + '; <em>' +
+  D.esed.meta.archivo + '</em>, descargado el ' + D.esed.meta.descargado.split('-').reverse().join('/') +
+  ' de <a href="' + D.esed.meta.url + '">ecuadorencifras.gob.ec</a> bajo licencia ' +
+  D.esed.meta.licencia + '. ' + D.esed.meta.unidad +
+  ' Las cifras se calcularon filtrando el microdato por código de cantón 0601 (Riobamba); ' +
+  'los totales de Chimborazo y del país reproducen exactamente los del visualizador ESED del INEC, ' +
+  'lo que sirvió de comprobación.';
+document.getElementById('pie-fecha').textContent =
+  new Date().toLocaleDateString('es-EC', { year: 'numeric', month: 'long' });
+</script>
+</body>
+</html>

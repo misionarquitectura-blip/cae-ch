@@ -45,11 +45,25 @@
     --fuente-ui: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --fuente-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
 
-    /* Los dos colores de línea del eje de investigación. Se aclararon
+    /* Los tres colores de línea del eje de investigación. Se aclararon
        respecto de los originales para que convivan con el rojo sin
-       ensuciar: son acentos, no una segunda identidad. */
+       ensuciar: son acentos, no una segunda identidad.
+       El morado de la línea 3 no es una elección de gusto: azul, verde y
+       rojo ya estaban tomados, y es el que mantiene los cuatro separables
+       bajo daltonismo (ΔE mínimo 17,7 en OKLab con protanopía y
+       deuteranopía simuladas). Si algún día se cambia, hay que volver a
+       comprobarlo, no elegirlo a ojo. */
     --linea-1: #2563A8;
     --linea-2: #1E8449;
+    --linea-3: #7A3E9D;
+
+    /* Grises de las gráficas: el contexto que no es el sujeto del dato.
+       El eje de investigación dibuja por «énfasis» —una serie en color y
+       las demás en gris— porque diez cantones en diez colores esconden
+       justo el que importa. */
+    --dato-contexto:  #C2C6CB;   /* las series de fondo */
+    --dato-referencia:#565B63;   /* el promedio nacional, que sí se lee */
+    --dato-rejilla:   #E7E8EA;   /* rejilla y ejes: filete, nunca guiones */
 
     /* ── Alias heredados ──────────────────────────────────────────
        Las páginas viejas escriben estos nombres por todas partes.
