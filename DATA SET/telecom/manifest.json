@@ -1,0 +1,1065 @@
+{
+ "fuente": "CNT EP - Corporacion Nacional de Telecomunicaciones",
+ "fuente_url": "https://gis.cnt.gob.ec/appgeoportal/",
+ "servicio": "WMS https://mapas.cnt.gob.ec/ (capas Cobertura*)",
+ "descargado": "2026-09-10",
+ "ambito": "Provincia de Chimborazo (DPA 06), recortado con buffer de 2.0 km",
+ "condiciones": "Los mapas de cobertura movil de CNT EP se basan en simulaciones de modelos de propagacion y los de GPON en mediciones georreferenciadas; en ambos casos son REFERENCIALES. El nivel real de senal o la disponibilidad efectiva del servicio en un punto concreto pueden diferir por terreno, obstaculos, edificaciones, banda de frecuencia, trafico, sensibilidad del equipo terminal o cambios de la red. La factibilidad definitiva de conexion la certifica CNT EP.",
+ "paleta": [
+  {
+   "clase": "sin",
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "etiqueta": "Sin cobertura"
+  },
+  {
+   "clase": "alto",
+   "rgb": [
+    144,
+    238,
+    144
+   ],
+   "etiqueta": "ALTO"
+  },
+  {
+   "clase": "medio",
+   "rgb": [
+    135,
+    206,
+    250
+   ],
+   "etiqueta": "MEDIO"
+  },
+  {
+   "clase": "bajo",
+   "rgb": [
+    240,
+    128,
+    128
+   ],
+   "etiqueta": "BAJO"
+  },
+  {
+   "clase": "gpon",
+   "rgb": [
+    12,
+    186,
+    252
+   ],
+   "etiqueta": "Cobertura fibra optica GPON"
+  },
+  {
+   "clase": "cdma",
+   "rgb": [
+    0,
+    157,
+    157
+   ],
+   "etiqueta": "Cobertura CDMA 450"
+  }
+ ],
+ "escalas": {
+  "senal": [
+   "alto",
+   "medio",
+   "bajo"
+  ],
+  "gpon": [
+   "gpon"
+  ],
+  "cdma": [
+   "cdma"
+  ]
+ },
+ "resolucion_m_px": {
+  "provincia": 12.4,
+  "riobamba": 7.0
+ },
+ "tiers": {
+  "provincia": {
+   "etiqueta": "Chimborazo",
+   "zoom_min": 0,
+   "zoom_max": 13,
+   "bounds": [
+    [
+     -2.575,
+     -79.26
+    ],
+    [
+     -1.425,
+     -78.35
+    ]
+   ]
+  },
+  "riobamba": {
+   "etiqueta": "Canton Riobamba",
+   "zoom_min": 14,
+   "zoom_max": 22,
+   "bounds": [
+    [
+     -1.957,
+     -78.905
+    ],
+    [
+     -1.459,
+     -78.392
+    ]
+   ]
+  }
+ },
+ "capas": [
+  {
+   "id": "CoberturaRedMvno2G",
+   "slug": "2g",
+   "nombre": "2G (voz y SMS)",
+   "escala": "senal",
+   "orden": 1,
+   "nota": "Voz y SMS. ALTO = nivel mayor o igual a -85 dBm; MEDIO = entre -95 y -85 dBm; BAJO = por debajo de -95 dBm."
+  },
+  {
+   "id": "CoberturaRedHspa",
+   "slug": "hspa",
+   "nombre": "3G HSPA",
+   "escala": "senal",
+   "orden": 2,
+   "nota": "Datos moviles. ALTO = nivel mayor o igual a -85 dBm; MEDIO = entre -95 y -85 dBm; BAJO = por debajo de -95 dBm."
+  },
+  {
+   "id": "CoberturaRedLte",
+   "slug": "lte",
+   "nombre": "4G LTE",
+   "escala": "senal",
+   "orden": 3,
+   "nota": "Datos moviles. ALTO = nivel mayor o igual a -100 dBm; MEDIO = entre -120 y -100 dBm; BAJO = por debajo de -120 dBm."
+  },
+  {
+   "id": "CoberturaRedMvno35G",
+   "slug": "rna35g",
+   "nombre": "3.5G / roaming nacional",
+   "escala": "senal",
+   "orden": 4,
+   "nota": "Capa CoberturaRedMvno35G de CNT. Su leyenda la asocia a cobertura obtenida mediante acuerdos de Roaming Nacional Automatico (RNA)."
+  },
+  {
+   "id": "CoberturaRedGpon",
+   "slug": "gpon",
+   "nombre": "Fibra optica GPON",
+   "escala": "gpon",
+   "orden": 5,
+   "nota": "Cobertura de fibra optica hasta el domicilio. Capa binaria: hay o no hay red GPON desplegada."
+  },
+  {
+   "id": "CoberturaRedCdma450",
+   "slug": "cdma450",
+   "nombre": "CDMA 450",
+   "escala": "cdma",
+   "orden": 6,
+   "nota": "Telefonia fija inalambrica de cobertura rural. Capa binaria."
+  }
+ ],
+ "piezas": [
+  {
+   "capa": "2g",
+   "archivo": "provincia/2g_r0c0.png",
+   "bounds": [
+    [
+     -1.808333,
+     -79.26
+    ],
+    [
+     -1.425,
+     -78.805
+    ]
+   ],
+   "bytes": 20914
+  },
+  {
+   "capa": "2g",
+   "archivo": "provincia/2g_r0c1.png",
+   "bounds": [
+    [
+     -1.808333,
+     -78.805
+    ],
+    [
+     -1.425,
+     -78.35
+    ]
+   ],
+   "bytes": 205853
+  },
+  {
+   "capa": "2g",
+   "archivo": "provincia/2g_r1c0.png",
+   "bounds": [
+    [
+     -2.191667,
+     -79.26
+    ],
+    [
+     -1.808333,
+     -78.805
+    ]
+   ],
+   "bytes": 122031
+  },
+  {
+   "capa": "2g",
+   "archivo": "provincia/2g_r1c1.png",
+   "bounds": [
+    [
+     -2.191667,
+     -78.805
+    ],
+    [
+     -1.808333,
+     -78.35
+    ]
+   ],
+   "bytes": 134092
+  },
+  {
+   "capa": "2g",
+   "archivo": "provincia/2g_r2c0.png",
+   "bounds": [
+    [
+     -2.575,
+     -79.26
+    ],
+    [
+     -2.191667,
+     -78.805
+    ]
+   ],
+   "bytes": 123021
+  },
+  {
+   "capa": "2g",
+   "archivo": "provincia/2g_r2c1.png",
+   "bounds": [
+    [
+     -2.575,
+     -78.805
+    ],
+    [
+     -2.191667,
+     -78.35
+    ]
+   ],
+   "bytes": 38886
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "provincia/cdma450_r0c0.png",
+   "bounds": [
+    [
+     -1.808333,
+     -79.26
+    ],
+    [
+     -1.425,
+     -78.805
+    ]
+   ],
+   "bytes": 42648
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "provincia/cdma450_r0c1.png",
+   "bounds": [
+    [
+     -1.808333,
+     -78.805
+    ],
+    [
+     -1.425,
+     -78.35
+    ]
+   ],
+   "bytes": 78930
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "provincia/cdma450_r1c0.png",
+   "bounds": [
+    [
+     -2.191667,
+     -79.26
+    ],
+    [
+     -1.808333,
+     -78.805
+    ]
+   ],
+   "bytes": 48418
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "provincia/cdma450_r1c1.png",
+   "bounds": [
+    [
+     -2.191667,
+     -78.805
+    ],
+    [
+     -1.808333,
+     -78.35
+    ]
+   ],
+   "bytes": 79358
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "provincia/cdma450_r2c0.png",
+   "bounds": [
+    [
+     -2.575,
+     -79.26
+    ],
+    [
+     -2.191667,
+     -78.805
+    ]
+   ],
+   "bytes": 42292
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "provincia/cdma450_r2c1.png",
+   "bounds": [
+    [
+     -2.575,
+     -78.805
+    ],
+    [
+     -2.191667,
+     -78.35
+    ]
+   ],
+   "bytes": 55173
+  },
+  {
+   "capa": "gpon",
+   "archivo": "provincia/gpon_r0c0.png",
+   "bounds": [
+    [
+     -1.808333,
+     -79.26
+    ],
+    [
+     -1.425,
+     -78.805
+    ]
+   ],
+   "bytes": 14494
+  },
+  {
+   "capa": "gpon",
+   "archivo": "provincia/gpon_r0c1.png",
+   "bounds": [
+    [
+     -1.808333,
+     -78.805
+    ],
+    [
+     -1.425,
+     -78.35
+    ]
+   ],
+   "bytes": 27469
+  },
+  {
+   "capa": "gpon",
+   "archivo": "provincia/gpon_r1c0.png",
+   "bounds": [
+    [
+     -2.191667,
+     -79.26
+    ],
+    [
+     -1.808333,
+     -78.805
+    ]
+   ],
+   "bytes": 14911
+  },
+  {
+   "capa": "gpon",
+   "archivo": "provincia/gpon_r1c1.png",
+   "bounds": [
+    [
+     -2.191667,
+     -78.805
+    ],
+    [
+     -1.808333,
+     -78.35
+    ]
+   ],
+   "bytes": 14797
+  },
+  {
+   "capa": "gpon",
+   "archivo": "provincia/gpon_r2c0.png",
+   "bounds": [
+    [
+     -2.575,
+     -79.26
+    ],
+    [
+     -2.191667,
+     -78.805
+    ]
+   ],
+   "bytes": 16408
+  },
+  {
+   "capa": "gpon",
+   "archivo": "provincia/gpon_r2c1.png",
+   "bounds": [
+    [
+     -2.575,
+     -78.805
+    ],
+    [
+     -2.191667,
+     -78.35
+    ]
+   ],
+   "bytes": 14494
+  },
+  {
+   "capa": "hspa",
+   "archivo": "provincia/hspa_r0c0.png",
+   "bounds": [
+    [
+     -1.808333,
+     -79.26
+    ],
+    [
+     -1.425,
+     -78.805
+    ]
+   ],
+   "bytes": 19758
+  },
+  {
+   "capa": "hspa",
+   "archivo": "provincia/hspa_r0c1.png",
+   "bounds": [
+    [
+     -1.808333,
+     -78.805
+    ],
+    [
+     -1.425,
+     -78.35
+    ]
+   ],
+   "bytes": 205934
+  },
+  {
+   "capa": "hspa",
+   "archivo": "provincia/hspa_r1c0.png",
+   "bounds": [
+    [
+     -2.191667,
+     -79.26
+    ],
+    [
+     -1.808333,
+     -78.805
+    ]
+   ],
+   "bytes": 39058
+  },
+  {
+   "capa": "hspa",
+   "archivo": "provincia/hspa_r1c1.png",
+   "bounds": [
+    [
+     -2.191667,
+     -78.805
+    ],
+    [
+     -1.808333,
+     -78.35
+    ]
+   ],
+   "bytes": 66923
+  },
+  {
+   "capa": "hspa",
+   "archivo": "provincia/hspa_r2c0.png",
+   "bounds": [
+    [
+     -2.575,
+     -79.26
+    ],
+    [
+     -2.191667,
+     -78.805
+    ]
+   ],
+   "bytes": 51043
+  },
+  {
+   "capa": "hspa",
+   "archivo": "provincia/hspa_r2c1.png",
+   "bounds": [
+    [
+     -2.575,
+     -78.805
+    ],
+    [
+     -2.191667,
+     -78.35
+    ]
+   ],
+   "bytes": 15654
+  },
+  {
+   "capa": "lte",
+   "archivo": "provincia/lte_r0c0.png",
+   "bounds": [
+    [
+     -1.808333,
+     -79.26
+    ],
+    [
+     -1.425,
+     -78.805
+    ]
+   ],
+   "bytes": 42513
+  },
+  {
+   "capa": "lte",
+   "archivo": "provincia/lte_r0c1.png",
+   "bounds": [
+    [
+     -1.808333,
+     -78.805
+    ],
+    [
+     -1.425,
+     -78.35
+    ]
+   ],
+   "bytes": 213328
+  },
+  {
+   "capa": "lte",
+   "archivo": "provincia/lte_r1c0.png",
+   "bounds": [
+    [
+     -2.191667,
+     -79.26
+    ],
+    [
+     -1.808333,
+     -78.805
+    ]
+   ],
+   "bytes": 88047
+  },
+  {
+   "capa": "lte",
+   "archivo": "provincia/lte_r1c1.png",
+   "bounds": [
+    [
+     -2.191667,
+     -78.805
+    ],
+    [
+     -1.808333,
+     -78.35
+    ]
+   ],
+   "bytes": 117707
+  },
+  {
+   "capa": "lte",
+   "archivo": "provincia/lte_r2c0.png",
+   "bounds": [
+    [
+     -2.575,
+     -79.26
+    ],
+    [
+     -2.191667,
+     -78.805
+    ]
+   ],
+   "bytes": 73831
+  },
+  {
+   "capa": "lte",
+   "archivo": "provincia/lte_r2c1.png",
+   "bounds": [
+    [
+     -2.575,
+     -78.805
+    ],
+    [
+     -2.191667,
+     -78.35
+    ]
+   ],
+   "bytes": 16827
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "provincia/rna35g_r0c0.png",
+   "bounds": [
+    [
+     -1.808333,
+     -79.26
+    ],
+    [
+     -1.425,
+     -78.805
+    ]
+   ],
+   "bytes": 14581
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "provincia/rna35g_r0c1.png",
+   "bounds": [
+    [
+     -1.808333,
+     -78.805
+    ],
+    [
+     -1.425,
+     -78.35
+    ]
+   ],
+   "bytes": 47191
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "provincia/rna35g_r1c0.png",
+   "bounds": [
+    [
+     -2.191667,
+     -79.26
+    ],
+    [
+     -1.808333,
+     -78.805
+    ]
+   ],
+   "bytes": 16416
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "provincia/rna35g_r1c1.png",
+   "bounds": [
+    [
+     -2.191667,
+     -78.805
+    ],
+    [
+     -1.808333,
+     -78.35
+    ]
+   ],
+   "bytes": 20178
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "provincia/rna35g_r2c0.png",
+   "bounds": [
+    [
+     -2.575,
+     -79.26
+    ],
+    [
+     -2.191667,
+     -78.805
+    ]
+   ],
+   "bytes": 21741
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "provincia/rna35g_r2c1.png",
+   "bounds": [
+    [
+     -2.575,
+     -78.805
+    ],
+    [
+     -2.191667,
+     -78.35
+    ]
+   ],
+   "bytes": 16546
+  },
+  {
+   "capa": "2g",
+   "archivo": "riobamba/2g_r0c0.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.905
+    ],
+    [
+     -1.459,
+     -78.6485
+    ]
+   ],
+   "bytes": 115505
+  },
+  {
+   "capa": "2g",
+   "archivo": "riobamba/2g_r0c1.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.6485
+    ],
+    [
+     -1.459,
+     -78.392
+    ]
+   ],
+   "bytes": 105115
+  },
+  {
+   "capa": "2g",
+   "archivo": "riobamba/2g_r1c0.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.905
+    ],
+    [
+     -1.708,
+     -78.6485
+    ]
+   ],
+   "bytes": 99945
+  },
+  {
+   "capa": "2g",
+   "archivo": "riobamba/2g_r1c1.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.6485
+    ],
+    [
+     -1.708,
+     -78.392
+    ]
+   ],
+   "bytes": 87282
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "riobamba/cdma450_r0c0.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.905
+    ],
+    [
+     -1.459,
+     -78.6485
+    ]
+   ],
+   "bytes": 68709
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "riobamba/cdma450_r0c1.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.6485
+    ],
+    [
+     -1.459,
+     -78.392
+    ]
+   ],
+   "bytes": 63135
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "riobamba/cdma450_r1c0.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.905
+    ],
+    [
+     -1.708,
+     -78.6485
+    ]
+   ],
+   "bytes": 71914
+  },
+  {
+   "capa": "cdma450",
+   "archivo": "riobamba/cdma450_r1c1.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.6485
+    ],
+    [
+     -1.708,
+     -78.392
+    ]
+   ],
+   "bytes": 66493
+  },
+  {
+   "capa": "gpon",
+   "archivo": "riobamba/gpon_r0c0.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.905
+    ],
+    [
+     -1.459,
+     -78.6485
+    ]
+   ],
+   "bytes": 31236
+  },
+  {
+   "capa": "gpon",
+   "archivo": "riobamba/gpon_r0c1.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.6485
+    ],
+    [
+     -1.459,
+     -78.392
+    ]
+   ],
+   "bytes": 26297
+  },
+  {
+   "capa": "gpon",
+   "archivo": "riobamba/gpon_r1c0.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.905
+    ],
+    [
+     -1.708,
+     -78.6485
+    ]
+   ],
+   "bytes": 17223
+  },
+  {
+   "capa": "gpon",
+   "archivo": "riobamba/gpon_r1c1.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.6485
+    ],
+    [
+     -1.708,
+     -78.392
+    ]
+   ],
+   "bytes": 19146
+  },
+  {
+   "capa": "hspa",
+   "archivo": "riobamba/hspa_r0c0.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.905
+    ],
+    [
+     -1.459,
+     -78.6485
+    ]
+   ],
+   "bytes": 105362
+  },
+  {
+   "capa": "hspa",
+   "archivo": "riobamba/hspa_r0c1.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.6485
+    ],
+    [
+     -1.459,
+     -78.392
+    ]
+   ],
+   "bytes": 109942
+  },
+  {
+   "capa": "hspa",
+   "archivo": "riobamba/hspa_r1c0.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.905
+    ],
+    [
+     -1.708,
+     -78.6485
+    ]
+   ],
+   "bytes": 76846
+  },
+  {
+   "capa": "hspa",
+   "archivo": "riobamba/hspa_r1c1.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.6485
+    ],
+    [
+     -1.708,
+     -78.392
+    ]
+   ],
+   "bytes": 71173
+  },
+  {
+   "capa": "lte",
+   "archivo": "riobamba/lte_r0c0.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.905
+    ],
+    [
+     -1.459,
+     -78.6485
+    ]
+   ],
+   "bytes": 128184
+  },
+  {
+   "capa": "lte",
+   "archivo": "riobamba/lte_r0c1.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.6485
+    ],
+    [
+     -1.459,
+     -78.392
+    ]
+   ],
+   "bytes": 124004
+  },
+  {
+   "capa": "lte",
+   "archivo": "riobamba/lte_r1c0.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.905
+    ],
+    [
+     -1.708,
+     -78.6485
+    ]
+   ],
+   "bytes": 138070
+  },
+  {
+   "capa": "lte",
+   "archivo": "riobamba/lte_r1c1.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.6485
+    ],
+    [
+     -1.708,
+     -78.392
+    ]
+   ],
+   "bytes": 92157
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "riobamba/rna35g_r0c0.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.905
+    ],
+    [
+     -1.459,
+     -78.6485
+    ]
+   ],
+   "bytes": 35879
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "riobamba/rna35g_r0c1.png",
+   "bounds": [
+    [
+     -1.708,
+     -78.6485
+    ],
+    [
+     -1.459,
+     -78.392
+    ]
+   ],
+   "bytes": 32468
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "riobamba/rna35g_r1c0.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.905
+    ],
+    [
+     -1.708,
+     -78.6485
+    ]
+   ],
+   "bytes": 26920
+  },
+  {
+   "capa": "rna35g",
+   "archivo": "riobamba/rna35g_r1c1.png",
+   "bounds": [
+    [
+     -1.957,
+     -78.6485
+    ],
+    [
+     -1.708,
+     -78.392
+    ]
+   ],
+   "bytes": 23159
+  }
+ ]
+}

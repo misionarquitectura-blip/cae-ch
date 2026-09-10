@@ -27,6 +27,10 @@ node test/servicios-basicos.js
 node test/linderos-dicat.js
 ```
 
+```bash
+node test/telecom.js
+```
+
 Si tienes el `package.json` local (está en `.gitignore`, no se publica), también vale:
 
 ```bash
@@ -131,6 +135,33 @@ siempre Norte/Sur/Este/Oeste, el perímetro de los lados nunca supera al de
 
 Acepta paso de muestreo: `node test/linderos-dicat.js 25`.
 
+### `telecom.js`
+
+La capa 5 no es un GeoJSON: son PNG paletizados que `DATA SET/build_telecom.py`
+baja del WMS de CNT EP y recorta a Chimborazo. Un error de bbox, de malla o de
+paleta no rompe nada visible —el mapa sigue dibujando algo— pero **desplaza la
+lectura de cobertura que el DICAT imprime** para un predio. Eso es lo que se
+vigila aquí.
+
+Comprueba que el `manifest.json` y los archivos concuerdan (las 60 piezas
+existen, las seis redes traen las mismas celdas, ningún píxel usa un color
+ajeno a la paleta declarada, cada PNG marca su índice 0 como transparente); que
+la malla de cada nivel **embaldosa su bbox sin huecos ni solapes** —se contrasta
+la suma de áreas de las celdas contra el área del bbox, que delata igual un
+hueco que un solape—; y que `piezaFinaTelecom()` de `geovisor.html` elige el
+nivel fino dentro del cantón Riobamba, cae al provincial fuera de él y no
+devuelve pieza fuera de Chimborazo.
+
+Sobre `textoCoberturaTelecom()` fija la redacción que acaba impresa, y en
+particular que **«sin dato» y «sin cobertura» nunca se confundan**: el primero
+dice que el predio queda fuera de lo descargado y el segundo que CNT no da
+servicio ahí. Confundirlos en un DICAT sería afirmar algo que nadie verificó.
+
+Por último lee el ráster en coordenadas contrastadas contra el geoportal de CNT
+(centro de Riobamba, aeropuerto, Lican, páramo del Sangay, Alausí) y verifica
+que los dos niveles coinciden donde se solapan. Trae un lector de PNG de paleta
+propio, en `zlib`, para no añadir una dependencia de imagen por una prueba.
+
 ## Notas sobre los datos
 
 **`sup_pred_c` no es la superficie de la geometría.** Es la superficie declarada
@@ -155,7 +186,9 @@ hasta un 12 %.
 ## Requisitos
 
 Node ≥ 18 y los GeoJSON presentes en `DATA SET/` (`Catastro GADMR.geojson`,
-`LINEAS_FABRICA.geojson`, `agua_potable.geojson` y `alcantarillado.geojson`).
+`LINEAS_FABRICA.geojson`, `agua_potable.geojson` y `alcantarillado.geojson`),
+más `DATA SET/telecom/` para `telecom.js`.
 No hay dependencias externas: `servicios-basicos.js` trae su propia
-implementación mínima de las cuatro funciones de turf que usa el visor, para no
-arrastrar la dependencia al repositorio.
+implementación mínima de las cuatro funciones de turf que usa el visor y
+`telecom.js` su propio lector de PNG, para no arrastrar esas dependencias al
+repositorio.

@@ -504,6 +504,123 @@
             letter-spacing: 0.3px;
         }
 
+        /* ── Panel de la capa 5 (telecomunicaciones) ────────────────
+           Se despliega bajo la capa cuando esta activa: la cobertura
+           de CNT son seis redes distintas y solo tiene sentido mirar
+           una a la vez (superpuestas se tapan entre si). */
+        .telecom-panel {
+            margin: 0 0 10px 26px;
+            padding: 10px 12px;
+            background: var(--gris-claro);
+            border-left: 3px solid #5E35B1;
+            border-radius: 0 4px 4px 0;
+            font-size: 12px;
+        }
+
+        .telecom-panel h4 {
+            margin: 0 0 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: var(--gris-medio);
+        }
+
+        .telecom-redes {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+
+        .telecom-redes label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .telecom-redes label:hover {
+            background: var(--blanco-terciario);
+        }
+
+        .telecom-redes input {
+            margin: 0;
+            flex: none;
+        }
+
+        .telecom-opacidad {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .telecom-opacidad input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .telecom-leyenda {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            margin-bottom: 8px;
+        }
+
+        .telecom-leyenda span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .telecom-muestra {
+            width: 14px;
+            height: 12px;
+            border: 1px solid rgba(0, 0, 0, .25);
+            border-radius: 2px;
+            flex: none;
+        }
+
+        .telecom-nota {
+            font-size: 11px;
+            line-height: 1.45;
+            color: var(--gris-medio);
+        }
+
+        .telecom-nota strong {
+            color: var(--gris-oscuro);
+        }
+
+        .telecom-nota code {
+            font-size: 10px;
+            background: var(--blanco-terciario);
+            border-radius: 2px;
+            padding: 0 3px;
+        }
+
+        .telecom-nota details {
+            margin-top: 6px;
+        }
+
+        .telecom-nota summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gris-oscuro);
+        }
+
+        /* El overlay es un raster de clases, no una fotografia: al ampliarlo
+           interesa ver el borde exacto de cada nivel de senal. Si el navegador
+           lo interpola, inventa colores intermedios que no corresponden a
+           ninguna clase de la leyenda y que el muestreo del DICAT ya no sabria
+           clasificar. */
+        .telecom-overlay {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
         .coordinates-form {
             margin-bottom: 20px;
         }
@@ -1365,11 +1482,11 @@
                                     </button>
                                 </div>
                             </li>
-                            <li class="layer-item layer-proximamente">
-                                <input type="checkbox" class="layer-checkbox" id="layer-5" disabled>
+                            <li class="layer-item">
+                                <input type="checkbox" class="layer-checkbox" id="layer-5">
                                 <div class="layer-info" data-layer="5">
-                                    <div class="layer-name">Cobertura Telecomunicaciones <span class="badge-proximamente">Próximamente</span></div>
-                                    <div class="layer-source" id="layer-5-source">CNT – Corporación Nacional de Telecomunicaciones</div>
+                                    <div class="layer-name">Cobertura Telecomunicaciones</div>
+                                    <div class="layer-source" id="layer-5-source">CNT EP · 6 redes (fibra GPON, 4G, 3G, 2G, RNA, CDMA 450) · Chimborazo</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -1379,6 +1496,18 @@
                                         <i class="fas fa-cog"></i>
                                     </button>
                                 </div>
+                            </li>
+                            <li id="telecom-panel" class="telecom-panel" hidden>
+                                <h4>Red</h4>
+                                <div class="telecom-redes" id="telecom-redes"></div>
+                                <div class="telecom-opacidad">
+                                    <label for="telecom-opacidad">Opacidad</label>
+                                    <input type="range" id="telecom-opacidad" min="20" max="100" step="5" value="75">
+                                    <span id="telecom-opacidad-val">75 %</span>
+                                </div>
+                                <h4>Leyenda</h4>
+                                <div class="telecom-leyenda" id="telecom-leyenda"></div>
+                                <p class="telecom-nota" id="telecom-nota"></p>
                             </li>
                             <li class="layer-item">
                                 <input type="checkbox" class="layer-checkbox" id="layer-6">
@@ -1573,7 +1702,7 @@
                             <li>Municipio de Riobamba (GADMR)</li>
                             <li>EERSA – Empresa Eléctrica Riobamba</li>
                             <li>EMAPAR – Agua Potable y Alcantarillado</li>
-                            <li>CNT / Proveedores de Telecomunicaciones</li>
+                            <li>CNT EP – Cobertura de telecomunicaciones (geoportal)</li>
                             <li>Google Open Buildings 2024 (detección IA)</li>
                         </ul>
 
@@ -2066,6 +2195,367 @@
                 if (d <= 600) return 2.6 * k;
                 if (d <= 900) return 3.2 * k;
                 return 4.0 * k;
+            }
+
+            // ══════════════════════════════════════════════════════════════
+            // CAPA 5 — COBERTURA DE TELECOMUNICACIONES (CNT EP)
+            // ══════════════════════════════════════════════════════════════
+            // Esta capa es un RASTER, no un GeoJSON, y por eso no pasa por
+            // loadGeoJSONData ni por layerFiles como las demás.
+            //
+            // El geoportal de CNT publica la cobertura por WMS, pero el
+            // servicio filtra por cabecera Referer: si la petición no viene de
+            // gis.cnt.gob.ec responde el texto "NO AUTORIZADO URL" en vez del
+            // PNG. El navegador de un visitante no puede falsear su referer,
+            // así que un L.tileLayer.wms apuntando a CNT nunca cargaría. La
+            // salida es traerse el raster una vez —"DATA SET/build_telecom.py"—
+            // y publicarlo recortado a Chimborazo como imageOverlay estático.
+            //
+            // Los PNG vienen normalizados a 6 valores de paleta (sin cobertura,
+            // ALTO, MEDIO, BAJO, GPON, CDMA). Eso permite, además de dibujarlos,
+            // leer el píxel del predio para el DICAT sin que el antialiasing
+            // deje colores intermedios imposibles de clasificar.
+            const TELECOM_BASE = 'DATA SET/telecom/';
+
+            const telecom = {
+                manifest: null,     // manifest.json ya cargado
+                red: null,          // slug de la red que se está mostrando
+                opacidad: 0.75,
+                grupo: null,        // L.layerGroup con los overlays visibles
+                overlays: {},       // archivo -> L.imageOverlay ya creado
+                rgbAClase: null     // "r,g,b" -> slug de clase
+            };
+
+            async function cargarManifestTelecom() {
+                if (telecom.manifest) return telecom.manifest;
+                const res = await fetch(encodeURI(TELECOM_BASE + 'manifest.json'), { cache: 'no-cache' });
+                if (!res.ok) throw new Error(`manifest de telecomunicaciones: HTTP ${res.status}`);
+                telecom.manifest = await res.json();
+                telecom.rgbAClase = {};
+                (telecom.manifest.paleta || []).forEach(function (p) {
+                    telecom.rgbAClase[p.rgb.join(',')] = p.clase;
+                });
+                if (!telecom.red) {
+                    // La fibra GPON es la que más se consulta en un DICAT:
+                    // es la única que decide si el predio puede tener
+                    // internet fijo, no solo señal en el teléfono.
+                    const capas = telecom.manifest.capas || [];
+                    telecom.red = (capas.find(c => c.slug === 'gpon') || capas[0] || {}).slug;
+                }
+                return telecom.manifest;
+            }
+
+            function capaTelecom(slug) {
+                const m = telecom.manifest;
+                if (!m) return null;
+                return (m.capas || []).find(c => c.slug === (slug || telecom.red)) || null;
+            }
+
+            // Piezas de la red activa, de la más fina a la más gruesa. El
+            // manifest declara un zoom por tier: el fino solo cubre el cantón
+            // Riobamba, así que fuera de él siempre se cae al provincial.
+            function piezasTelecom(slug, zoom) {
+                const m = telecom.manifest;
+                if (!m) return [];
+                const orden = Object.keys(m.tiers).sort(function (a, b) {
+                    return m.tiers[b].zoom_min - m.tiers[a].zoom_min;
+                });
+                return (m.piezas || [])
+                    .filter(p => p.capa === (slug || telecom.red))
+                    .filter(function (p) {
+                        const t = m.tiers[p.archivo.split('/')[0]];
+                        return !t || zoom === undefined || zoom >= t.zoom_min;
+                    })
+                    .sort(function (a, b) {
+                        return orden.indexOf(a.archivo.split('/')[0]) -
+                               orden.indexOf(b.archivo.split('/')[0]);
+                    });
+            }
+
+            function limitesPieza(p) {
+                return L.latLngBounds(p.bounds[0], p.bounds[1]);
+            }
+
+            // Pieza de mayor resolución que cubre unos límites dados. La usan
+            // el muestreo del DICAT y el plano del reporte, donde no interesa
+            // el zoom de pantalla sino la mejor lectura disponible del predio.
+            function piezaFinaTelecom(slug, bounds) {
+                const piezas = piezasTelecom(slug, undefined);
+                return piezas.find(p => limitesPieza(p).contains(bounds)) ||
+                       piezas.find(p => limitesPieza(p).contains(bounds.getCenter())) ||
+                       null;
+            }
+
+            // Solo se añaden al mapa las piezas que se ven. Cada pieza pesa
+            // entre 15 y 250 KB, así que cargarlas todas al activar la capa
+            // sería tirar varios MB por una vista que enseña una de ellas.
+            function refrescarTelecom() {
+                if (!telecom.grupo || !window.map) return;
+                const m = telecom.manifest;
+                if (!m) return;
+                const zoom = window.map.getZoom();
+                const vista = window.map.getBounds();
+
+                // Se recorren los tiers habilitados a este zoom, del más fino
+                // al más grueso, y se toman las piezas que entran en la vista.
+                // En cuanto un tier abarca la vista completa se para: bajar al
+                // siguiente solo añadiría peso para quedar tapado. Así el tier
+                // fino manda dentro del cantón Riobamba y fuera de él se cae
+                // solo al provincial, sin tener que enumerar zonas a mano.
+                const tiers = Object.keys(m.tiers)
+                    .filter(k => zoom >= m.tiers[k].zoom_min)
+                    .sort((a, b) => m.tiers[b].zoom_min - m.tiers[a].zoom_min);
+
+                const usar = [];
+                for (const k of tiers) {
+                    const ext = L.latLngBounds(m.tiers[k].bounds[0], m.tiers[k].bounds[1]);
+                    if (!ext.intersects(vista)) continue;
+                    (m.piezas || []).forEach(function (p) {
+                        if (p.capa !== telecom.red) return;
+                        if (p.archivo.split('/')[0] !== k) return;
+                        if (limitesPieza(p).intersects(vista)) usar.push(p);
+                    });
+                    if (ext.contains(vista)) break;
+                }
+
+                const activos = new Set(usar.map(p => p.archivo));
+                Object.keys(telecom.overlays).forEach(function (archivo) {
+                    if (!activos.has(archivo)) {
+                        telecom.grupo.removeLayer(telecom.overlays[archivo]);
+                        delete telecom.overlays[archivo];
+                    }
+                });
+
+                usar.forEach(function (p) {
+                    if (telecom.overlays[p.archivo]) {
+                        telecom.overlays[p.archivo].setOpacity(telecom.opacidad);
+                        return;
+                    }
+                    const ov = L.imageOverlay(encodeURI(TELECOM_BASE + p.archivo), limitesPieza(p), {
+                        opacity: telecom.opacidad,
+                        interactive: false,
+                        // El raster es de clases, no una foto: al ampliarlo
+                        // interesa el borde nítido de cada nivel, no un
+                        // degradado que invente valores intermedios.
+                        className: 'telecom-overlay',
+                        alt: 'Cobertura ' + ((capaTelecom(p.capa) || {}).nombre || p.capa) + ' (CNT EP)'
+                    });
+                    telecom.overlays[p.archivo] = ov;
+                    telecom.grupo.addLayer(ov);
+                });
+            }
+
+            // Cambia la red mostrada tirando todos los overlays: cada red es un
+            // juego de PNG distinto y no se superponen (una sobre otra solo se
+            // taparían).
+            function mostrarRedTelecom(slug) {
+                telecom.red = slug;
+                if (telecom.grupo) {
+                    Object.keys(telecom.overlays).forEach(function (a) {
+                        telecom.grupo.removeLayer(telecom.overlays[a]);
+                        delete telecom.overlays[a];
+                    });
+                }
+                pintarPanelTelecom();
+                refrescarTelecom();
+            }
+
+            function pintarPanelTelecom() {
+                const m = telecom.manifest;
+                const panel = document.getElementById('telecom-panel');
+                if (!m || !panel) return;
+
+                const redes = document.getElementById('telecom-redes');
+                if (redes && !redes.dataset.listo) {
+                    redes.innerHTML = (m.capas || []).map(function (c) {
+                        return `<label title="${c.nota.replace(/"/g, '&quot;')}">` +
+                            `<input type="radio" name="telecom-red" value="${c.slug}"` +
+                            `${c.slug === telecom.red ? ' checked' : ''}>` +
+                            `<span>${c.nombre}</span></label>`;
+                    }).join('');
+                    redes.dataset.listo = '1';
+                    redes.addEventListener('change', function (e) {
+                        if (e.target.name === 'telecom-red') mostrarRedTelecom(e.target.value);
+                    });
+                }
+
+                const capa = capaTelecom();
+                const clases = (m.escalas || {})[capa ? capa.escala : 'senal'] || [];
+                const porClase = {};
+                (m.paleta || []).forEach(p => { porClase[p.clase] = p; });
+
+                const leyenda = document.getElementById('telecom-leyenda');
+                if (leyenda) {
+                    leyenda.innerHTML = clases.map(function (cl) {
+                        const p = porClase[cl];
+                        if (!p) return '';
+                        return `<span><i class="telecom-muestra" style="background:rgb(${p.rgb.join(',')})"></i>` +
+                               `${p.etiqueta}</span>`;
+                    }).join('');
+                }
+
+                const nota = document.getElementById('telecom-nota');
+                if (nota && capa) {
+                    const res = m.resolucion_m_px || {};
+                    const finura = Object.keys(res).length
+                        ? Object.keys(res).map(k => `${m.tiers[k] ? m.tiers[k].etiqueta : k} ~${res[k]} m/px`).join(' · ')
+                        : '';
+                    // Las condiciones de uso van plegadas: son un párrafo largo
+                    // que dejaría el panel más alto que la propia lista de
+                    // capas. En el DICAT sí se imprimen enteras, que es donde
+                    // el descargo tiene que constar.
+                    nota.innerHTML = `${capa.nota}<br>` +
+                        `<strong>Fuente:</strong> ${m.fuente}, descargado el ${m.descargado} ` +
+                        `(capa <code>${capa.id}</code>). ${m.ambito}.` +
+                        `${finura ? ' ' + finura + '.' : ''}` +
+                        `<details><summary>Cobertura referencial: condiciones de uso</summary>` +
+                        `${m.condiciones}</details>`;
+                }
+            }
+
+            // ── Muestreo del raster para el DICAT ───────────────────────────
+            // No se lee un solo píxel: un predio de 300 m2 mide unos 17 m de
+            // lado y el píxel más fino es de 7 m, así que puede caer justo en
+            // el borde entre dos niveles. Se recorta la huella del predio y se
+            // cuentan las clases, que además permite decir en qué proporción.
+            //
+            // Se usa createImageBitmap con rectángulo de origen para no tener
+            // que mantener en memoria los 14 Mpx de la pieza completa: se
+            // decodifica, se recorta y se libera con close().
+            async function muestrearTelecom(bboxPredio, slug) {
+                const bb = L.latLngBounds([bboxPredio[1], bboxPredio[0]], [bboxPredio[3], bboxPredio[2]]);
+                const pieza = piezaFinaTelecom(slug, bb);
+                if (!pieza) return null;
+
+                const res = await fetch(encodeURI(TELECOM_BASE + pieza.archivo));
+                if (!res.ok) throw new Error(`pieza ${pieza.archivo}: HTTP ${res.status}`);
+                const blob = await res.blob();
+                const dim = await createImageBitmap(blob);
+                const W = dim.width, H = dim.height;
+
+                const [[sur, oeste], [norte, este]] = pieza.bounds;
+                const aX = lng => (lng - oeste) / (este - oeste) * W;
+                const aY = lat => (norte - lat) / (norte - sur) * H;
+
+                // Mínimo 3x3 px: un predio pequeño no debe reducirse a un
+                // único píxel, que sería una lectura de suerte.
+                let x0 = Math.floor(aX(bb.getWest()));
+                let y0 = Math.floor(aY(bb.getNorth()));
+                let w = Math.max(3, Math.ceil(aX(bb.getEast()) - x0));
+                let h = Math.max(3, Math.ceil(aY(bb.getSouth()) - y0));
+                x0 = Math.max(0, Math.min(x0, W - w));
+                y0 = Math.max(0, Math.min(y0, H - h));
+                w = Math.min(w, W - x0);
+                h = Math.min(h, H - y0);
+
+                const recorte = await createImageBitmap(blob, x0, y0, w, h);
+                dim.close();
+                const lienzo = document.createElement('canvas');
+                lienzo.width = w;
+                lienzo.height = h;
+                const ctx = lienzo.getContext('2d', { willReadFrequently: true });
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(recorte, 0, 0);
+                recorte.close();
+
+                const px = ctx.getImageData(0, 0, w, h).data;
+                const conteo = {};
+                let total = 0;
+                for (let i = 0; i < px.length; i += 4) {
+                    const clase = px[i + 3] < 128
+                        ? 'sin'
+                        : (telecom.rgbAClase[`${px[i]},${px[i + 1]},${px[i + 2]}`] || 'sin');
+                    conteo[clase] = (conteo[clase] || 0) + 1;
+                    total++;
+                }
+                if (!total) return null;
+
+                const orden = Object.keys(conteo).sort((a, b) => conteo[b] - conteo[a]);
+                return {
+                    tier: pieza.archivo.split('/')[0],
+                    resolucion: (telecom.manifest.resolucion_m_px || {})[pieza.archivo.split('/')[0]] || null,
+                    muestras: total,
+                    dominante: orden[0],
+                    porcentaje: Math.round(conteo[orden[0]] / total * 100),
+                    conteo: conteo
+                };
+            }
+
+            // Redacción de una lectura de cobertura. Está en un solo sitio
+            // porque el DICAT la imprime dos veces —en el detalle de la sección
+            // de servicios y en la tabla de atributos por capa— y si cada una
+            // la redactara por su cuenta acabarían diciendo cosas distintas del
+            // mismo dato.
+            function textoCoberturaTelecom(r) {
+                if (r.sinDato) return 'SIN DATO - el predio queda fuera del ambito descargado';
+                if (r.clase === 'sin') return 'SIN COBERTURA registrada';
+                // Las capas de señal se leen por nivel; GPON y CDMA 450 son
+                // binarias, ahí lo único que hay que decir es si llega.
+                const cabeza = r.escala === 'senal' ? `Nivel ${r.etiqueta}` : 'DISPONIBLE';
+                if (r.porcentaje >= 100) return `${cabeza} en todo el predio`;
+                const matiz = r.escala === 'senal' ? 'predominante en el' : 'sobre el';
+                return `${cabeza}, ${matiz} ${r.porcentaje} % del predio`;
+            }
+
+            // Análisis completo de la capa 5 para el DICAT: una lectura por red.
+            // Se hace secuencial a propósito — cada pieza que se decodifica son
+            // decenas de MB en RGBA, y en paralelo las seis reventarían la
+            // memoria de un móvil.
+            async function analizarTelecom(predioGeoJSON) {
+                const cb = document.getElementById('layer-5');
+                if (!cb || !cb.checked) return { capaDisponible: false, redes: [] };
+
+                try {
+                    await cargarManifestTelecom();
+                } catch (e) {
+                    console.warn('Telecomunicaciones: no se pudo leer el manifest', e);
+                    return { capaDisponible: false, redes: [] };
+                }
+
+                let bbox;
+                try {
+                    bbox = turf.bbox(predioGeoJSON);
+                } catch (e) {
+                    return { capaDisponible: false, redes: [] };
+                }
+
+                const m = telecom.manifest;
+                const etiquetas = {};
+                (m.paleta || []).forEach(p => { etiquetas[p.clase] = p.etiqueta; });
+
+                const redes = [];
+                for (const capa of (m.capas || [])) {
+                    let lectura = null;
+                    try {
+                        lectura = await muestrearTelecom(bbox, capa.slug);
+                    } catch (e) {
+                        console.warn(`Telecomunicaciones: fallo al muestrear ${capa.slug}`, e);
+                    }
+                    redes.push({
+                        slug: capa.slug,
+                        nombre: capa.nombre,
+                        id: capa.id,
+                        escala: capa.escala,
+                        nota: capa.nota,
+                        // fuera del ámbito descargado (predio en otra provincia)
+                        // no hay dato, que no es lo mismo que no haber cobertura
+                        sinDato: !lectura,
+                        clase: lectura ? lectura.dominante : null,
+                        etiqueta: lectura ? (etiquetas[lectura.dominante] || lectura.dominante) : null,
+                        porcentaje: lectura ? lectura.porcentaje : null,
+                        resolucion: lectura ? lectura.resolucion : null,
+                        mezcla: lectura ? lectura.conteo : null
+                    });
+                }
+
+                return {
+                    capaDisponible: true,
+                    fuente: m.fuente,
+                    descargado: m.descargado,
+                    ambito: m.ambito,
+                    condiciones: m.condiciones,
+                    redes: redes
+                };
             }
 
             function loadGeoJSONData(geojsonData, fileName, layerId) {
@@ -3206,6 +3696,37 @@
                 // Agregar todas las capas activas con optimización ASÍNCRONA
                 for (let i = 1; i <= 11; i++) {
                     const checkbox = document.getElementById(`layer-${i}`);
+
+                    // La capa 5 es un raster: no tiene geometrías que optimizar
+                    // ni colorear. Se cuela debajo del resto como imageOverlay
+                    // sobre el mapa del reporte, que html2canvas captura igual
+                    // porque los PNG se sirven del mismo origen que el visor.
+                    if (i === 5) {
+                        if (checkbox && checkbox.checked && telecom.manifest) {
+                            // Aquí no se filtra por zoom: el mapa del reporte
+                            // todavía no ha hecho su fitBounds, así que su zoom
+                            // no dice nada. Se toma directamente la pieza de
+                            // mejor resolución que cubra el predio.
+                            const pieza = allBounds && allBounds.isValid()
+                                ? piezaFinaTelecom(telecom.red, allBounds)
+                                : null;
+                            if (pieza) {
+                                L.imageOverlay(encodeURI(TELECOM_BASE + pieza.archivo), limitesPieza(pieza), {
+                                    opacity: telecom.opacidad,
+                                    interactive: false,
+                                    className: 'telecom-overlay'
+                                }).addTo(visualizationMap);
+                                const red = capaTelecom();
+                                activeLayers.push({
+                                    id: 5,
+                                    name: `${layerNames[5]} · ${red ? red.nombre : telecom.red}`,
+                                    color: layerColors[5]
+                                });
+                            }
+                        }
+                        continue;
+                    }
+
                     if (checkbox && checkbox.checked && geojsonLayers[i]) {
 
                         // Actualizar UI para mostrar qué capa se está procesando
@@ -3471,7 +3992,8 @@
 
                 const {
                     meta = {}, colindantes = {}, factibilidades = [], posteCercano,
-                    hasLayer3, afectacionVial, construccionesIA, servicios = null, intersectionData = [], utmCoords = [],
+                    hasLayer3, afectacionVial, construccionesIA, servicios = null,
+                    telecomunicaciones = null, intersectionData = [], utmCoords = [],
                     normativaPUGS = null, qrDataUrl = null,
                     mapImage, activeLayers = [], planoVectorial = null,
                     nroInforme = '', fechaStr = '', vigenciaStr = ''
@@ -3769,6 +4291,52 @@
                             if (et === 'Distancia al lindero del predio' && val.indexOf('atraviesa') !== -1) {
                                 data.cell.styles.fontStyle = 'bold';
                                 data.cell.styles.textColor = [180, 30, 30];
+                            }
+                        },
+                        margin: { left: mg, right: mg },
+                    });
+                }
+
+                // Detalle de telecomunicaciones. Amplia la fila de factibilidad
+                // de la capa 5 con la lectura red por red, porque "Telecom:
+                // PARCIAL" no le sirve a nadie: lo que se necesita saber es si
+                // hay fibra y con que tecnologia movil se puede contar.
+                const tel = telecomunicaciones;
+                if (tel && tel.capaDisponible && tel.redes && tel.redes.length) {
+                    const filasTel = tel.redes.map(r => [r.nombre, textoCoberturaTelecom(r)]);
+
+                    const finuras = tel.redes.map(r => r.resolucion).filter(Boolean);
+                    if (finuras.length) {
+                        filasTel.push(['Resolucion de la lectura',
+                            `Raster de ${Math.min.apply(null, finuras)} m por pixel bajo la huella del predio`]);
+                    }
+                    filasTel.push(['Fuente', `${tel.fuente}. Cobertura descargada el ${tel.descargado}. ${tel.ambito}.`]);
+                    filasTel.push(['Observacion', tel.condiciones]);
+
+                    y = checkSpace(y, 42);
+                    y = at({
+                        startY: y,
+                        head: [['Telecomunicaciones (CNT EP)', 'Cobertura sobre el predio']],
+                        body: filasTel,
+                        theme: 'grid',
+                        styles: { fontSize: 8.5, cellPadding: 3, overflow: 'linebreak' },
+                        headStyles: { fillColor: [94, 53, 177], textColor: [255, 255, 255], fontStyle: 'bold' },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', fillColor: [243, 240, 250], cellWidth: 62 },
+                            1: { cellWidth: 'auto' },
+                        },
+                        didParseCell(data) {
+                            if (data.section !== 'body' || data.column.index !== 1) return;
+                            const val = String((filasTel[data.row.index] || [])[1] || '');
+                            if (val.indexOf('DISPONIBLE') === 0 || val.indexOf('Nivel ALTO') === 0) {
+                                data.cell.styles.fontStyle = 'bold';
+                                data.cell.styles.textColor = [39, 174, 96];
+                            } else if (val.indexOf('Nivel MEDIO') === 0) {
+                                data.cell.styles.textColor = [200, 140, 30];
+                            } else if (val.indexOf('Nivel BAJO') === 0 || val.indexOf('SIN COBERTURA') === 0) {
+                                data.cell.styles.textColor = [192, 57, 43];
+                            } else if (val.indexOf('SIN DATO') === 0) {
+                                data.cell.styles.textColor = [120, 120, 120];
                             }
                         },
                         margin: { left: mg, right: mg },
@@ -4227,8 +4795,11 @@
                     showProgressBar('Analizando agua potable y alcantarillado...');
                     const servicios = analizarServiciosBasicos(predioGeoJSON);
 
+                    showProgressBar('Leyendo cobertura de telecomunicaciones...');
+                    const telecomunicaciones = await analizarTelecom(predioGeoJSON);
+
                     showProgressBar('Verificando factibilidades...');
-                    const factibilidades = calcularFactibilidades(predioGeoJSON, servicios);
+                    const factibilidades = calcularFactibilidades(predioGeoJSON, servicios, telecomunicaciones);
 
                     showProgressBar('Analizando poste eléctrico más cercano...');
                     const posteCercano = encontrarPosteMasCercano(predioGeoJSON);
@@ -4240,7 +4811,7 @@
                     const construccionesIA = analizarConstruccionesIA(predioGeoJSON);
 
                     showProgressBar('Calculando intersecciones con capas...');
-                    const intersectionData = computeIntersectionData(predioGeoJSON, selectedClave);
+                    const intersectionData = computeIntersectionData(predioGeoJSON, selectedClave, telecomunicaciones);
 
                     showProgressBar('Extrayendo normativa PUGS...');
                     const normativaPUGS = extraerNormativaPUGS(predioGeoJSON);
@@ -4327,6 +4898,7 @@
                         posteCercano,
                         hasLayer3:       !!geojsonLayers[3],
                         servicios,
+                        telecomunicaciones,
                         afectacionVial,
                         construccionesIA,
                         intersectionData,
@@ -4365,7 +4937,7 @@
             // Extrae los datos de intersección sin renderizar PDF (usado para
             // enviar al servidor en modo server-side PDF).
             // ─────────────────────────────────────────────────────────────────
-            function computeIntersectionData(predioGeoJSON, selectedClave) {
+            function computeIntersectionData(predioGeoJSON, selectedClave, telecomunicaciones) {
                 const tableData = [];
                 const layerNames = {
                     1: 'PUGS Urbano', 2: 'PUGS Rural', 3: 'Infraestructura Electrica',
@@ -4374,8 +4946,24 @@
                     11: 'Alcantarillado'
                 };
 
+                // La capa 5 va aparte y antes del bucle: es un raster, no tiene
+                // features con atributos que intersecar. Su "atributo" es la
+                // clase de cobertura que el raster da bajo la huella del predio.
+                const cbTel = document.getElementById('layer-5');
+                if (!cbTel || !cbTel.checked) {
+                    tableData.push([layerNames[5], 'Estado', 'Capa inactiva']);
+                } else if (!telecomunicaciones || !telecomunicaciones.capaDisponible) {
+                    tableData.push([layerNames[5], 'Estado', 'Capa activa sin datos']);
+                } else {
+                    telecomunicaciones.redes.forEach(function (r) {
+                        tableData.push([layerNames[5], r.nombre, textoCoberturaTelecom(r)]);
+                    });
+                    tableData.push([layerNames[5], 'Fuente',
+                        `${telecomunicaciones.fuente} - descargado ${telecomunicaciones.descargado}`]);
+                }
+
                 // Las capas 9 y 10 (construcciones IA) tienen su propia sección.
-                for (const i of [1, 2, 3, 4, 5, 6, 7, 8, 11]) {
+                for (const i of [1, 2, 3, 4, 6, 7, 8, 11]) {
                     const checkbox  = document.getElementById(`layer-${i}`);
                     const isActive  = checkbox && checkbox.checked;
                     const layerName = layerNames[i] || `Capa ${i}`;
@@ -4456,7 +5044,9 @@
                 let totalIntersections = 0;
 
                 // Las capas 9 y 10 (construcciones IA) tienen su propia sección.
-                for (const i of [1, 2, 3, 4, 5, 6, 7, 8, 11]) {
+                // La 5 tampoco entra: es un raster y no tiene features que
+                // intersecar (ver computeIntersectionData, que la trata aparte).
+                for (const i of [1, 2, 3, 4, 6, 7, 8, 11]) {
                     const checkbox = document.getElementById(`layer-${i}`);
                     const isActive = checkbox && checkbox.checked;
                     const layerName = layerNames[i] || `Capa ${i}`;
@@ -4798,6 +5388,38 @@
                     if (!checkbox || checkbox.disabled) continue;
                     checkbox.addEventListener('change', (function (layerId) {
                         return async function () {
+                            // Capa 5 — raster de CNT: no es un GeoJSON, va por
+                            // su propio camino (ver el módulo de telecom).
+                            if (layerId === 5) {
+                                const panel = document.getElementById('telecom-panel');
+                                if (this.checked) {
+                                    showProgressBar('Cargando cobertura de telecomunicaciones...');
+                                    try {
+                                        await cargarManifestTelecom();
+                                        if (!telecom.grupo) {
+                                            telecom.grupo = L.layerGroup();
+                                            geojsonLayers[5] = telecom.grupo;
+                                        }
+                                        window.map.addLayer(telecom.grupo);
+                                        pintarPanelTelecom();
+                                        refrescarTelecom();
+                                        if (panel) panel.hidden = false;
+                                    } catch (err) {
+                                        console.warn('Error al cargar la capa 5:', err);
+                                        alert('No se pudo cargar la cobertura de telecomunicaciones.\n\n' +
+                                              'Falta o está incompleta la carpeta "DATA SET/telecom". ' +
+                                              'Se regenera con: python "DATA SET/build_telecom.py"');
+                                        this.checked = false;
+                                    } finally {
+                                        hideProgressBar();
+                                    }
+                                } else {
+                                    if (telecom.grupo && window.map) window.map.removeLayer(telecom.grupo);
+                                    if (panel) panel.hidden = true;
+                                }
+                                return;
+                            }
+
                             if (this.checked) {
                                 if (geojsonLayers[layerId] && window.map) {
                                     // Ya cargado: solo mostrar
@@ -4828,6 +5450,37 @@
                             }
                         };
                     })(i));
+                }
+
+                // ── Controles del panel de telecomunicaciones ──────────────
+                const telOpacidad = document.getElementById('telecom-opacidad');
+                if (telOpacidad) {
+                    telOpacidad.addEventListener('input', function () {
+                        telecom.opacidad = parseInt(this.value, 10) / 100;
+                        const val = document.getElementById('telecom-opacidad-val');
+                        if (val) val.textContent = `${this.value} %`;
+                        Object.values(telecom.overlays).forEach(ov => ov.setOpacity(telecom.opacidad));
+                    });
+                }
+
+                // El engranaje de la capa 5 muestra u oculta su panel sin
+                // tener que apagar la capa para dejar de ver los controles.
+                const telCog = document.querySelector('.layer-action[data-layer="5"]');
+                if (telCog) {
+                    telCog.addEventListener('click', function () {
+                        const panel = document.getElementById('telecom-panel');
+                        const cb = document.getElementById('layer-5');
+                        if (panel && cb && cb.checked) panel.hidden = !panel.hidden;
+                    });
+                }
+
+                // Al desplazar o hacer zoom se recalcula qué piezas del raster
+                // toca dibujar; solo cuando la capa está encendida.
+                if (window.map) {
+                    window.map.on('moveend zoomend', function () {
+                        const cb = document.getElementById('layer-5');
+                        if (cb && cb.checked) refrescarTelecom();
+                    });
                 }
 
                 // Controles del mapa
@@ -6416,7 +7069,7 @@
                 return res;
             }
 
-            function calcularFactibilidades(predioGeoJSON, servicios) {
+            function calcularFactibilidades(predioGeoJSON, servicios, telecomunicaciones) {
                 const layerDefs = {
                     1: { name: 'Uso de Suelo Urbano (PUGS)', icon: '🏙' },
                     2: { name: 'Uso de Suelo Rural (PUGS)', icon: '🌾' },
@@ -6471,6 +7124,62 @@
                             } else {
                                 results.push({ name: def.name, estado: 'PROXIMO', detalle: `Red ${t.tipo} ${diam} a ${t.distancia} m del lindero`, color: [200, 140, 30] });
                             }
+                        }
+                        continue;
+                    }
+
+                    // Capa 5 — Telecomunicaciones: es un raster, no hay
+                    // geometrías que intersecar. El veredicto sale de leer las
+                    // clases de cobertura bajo la huella del predio, y se
+                    // resume en la red que más pesa en un DICAT: la fibra
+                    // GPON decide el internet fijo; lo móvil es complemento.
+                    if (String(id) === '5') {
+                        const t = telecomunicaciones;
+                        if (!t || !t.capaDisponible || !t.redes.length) {
+                            results.push({ name: def.name, estado: 'SIN DATOS', detalle: 'Capa activa sin datos cargados', color: [200, 160, 50] });
+                            continue;
+                        }
+                        if (t.redes.every(r => r.sinDato)) {
+                            results.push({
+                                name: def.name, estado: 'NO VERIFICADO',
+                                detalle: 'El predio queda fuera del ambito descargado (Chimborazo)',
+                                color: [180, 180, 180]
+                            });
+                            continue;
+                        }
+
+                        const gpon = t.redes.find(r => r.slug === 'gpon');
+                        const moviles = t.redes.filter(r => r.escala === 'senal' && !r.sinDato);
+                        const conSenal = moviles.filter(r => r.clase && r.clase !== 'sin');
+                        const buenas = conSenal.filter(r => r.clase === 'alto');
+                        const resumenMovil = conSenal.length
+                            ? conSenal.map(r => `${r.nombre}: ${r.etiqueta}`).join('; ')
+                            : 'sin cobertura movil registrada';
+
+                        if (gpon && !gpon.sinDato && gpon.clase === 'gpon') {
+                            results.push({
+                                name: def.name, estado: 'DISPONIBLE',
+                                detalle: `Fibra optica GPON sobre el predio (${gpon.porcentaje} % de su huella). ${resumenMovil}`,
+                                color: [39, 174, 96]
+                            });
+                        } else if (buenas.length) {
+                            results.push({
+                                name: def.name, estado: 'PARCIAL',
+                                detalle: `Sin fibra GPON desplegada. Cobertura movil de nivel ALTO en ${buenas.map(r => r.nombre).join(', ')}. ${resumenMovil}`,
+                                color: [200, 140, 30]
+                            });
+                        } else if (conSenal.length) {
+                            results.push({
+                                name: def.name, estado: 'PARCIAL',
+                                detalle: `Sin fibra GPON desplegada. Solo cobertura movil de nivel medio o bajo. ${resumenMovil}`,
+                                color: [200, 140, 30]
+                            });
+                        } else {
+                            results.push({
+                                name: def.name, estado: 'NO DETECTADO',
+                                detalle: 'Sin cobertura registrada de CNT EP en el predio (ni fibra ni red movil)',
+                                color: [192, 57, 43]
+                            });
                         }
                         continue;
                     }
@@ -6988,6 +7697,25 @@
                 Bitácora de mejoras de la plataforma y de las versiones de datos. Los datos del catastro provienen del GADMR; el CAE-CH actualiza la plataforma cuando recibe nuevas versiones oficiales.
             </div>
 
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line" style="height:40px"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Telecomunicaciones — Septiembre 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">NUEVA CAPA</span>
+                    <div style="margin-top:4px">
+                        Se abre la capa <strong>Cobertura de Telecomunicaciones</strong> con las seis redes de CNT EP:
+                        <strong>fibra óptica GPON</strong>, 4G LTE, 3G HSPA, 2G, 3.5G por roaming nacional y CDMA 450.
+                        Cubre toda la provincia de Chimborazo a ~12 m por píxel y el cantón Riobamba a ~7 m.
+                        El DICAT lee la cobertura <strong>bajo la huella del predio</strong> —no en un punto suelto— y
+                        reporta el nivel de cada red con el porcentaje del predio al que corresponde.
+                        La cobertura de CNT es referencial: se basa en simulaciones de propagación y la factibilidad
+                        definitiva de conexión la certifica CNT EP.
+                    </div>
+                    <div class="historial-entry-date">Septiembre 2026 · Fuente: CNT EP · Nueva capa</div>
+                </div>
+            </div>
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>

@@ -75,6 +75,26 @@ function cargarServicios(geojsonLayers, turf) {
     return new Function('geojsonLayers', 'turf', 'console', codigo)(geojsonLayers || {}, turf, console);
 }
 
+// Funciones de la capa 5 (cobertura de telecomunicaciones). Necesitan un L
+// minimo (solo latLngBounds) y el objeto de estado `telecom`, que en el visor
+// es una constante del modulo.
+const FUNCIONES_TELECOM = [
+    'textoCoberturaTelecom', 'capaTelecom', 'limitesPieza',
+    'piezasTelecom', 'piezaFinaTelecom'
+];
+
+/**
+ * Carga las funciones de telecomunicaciones de geovisor.html.
+ * @param {object} L        stub de Leaflet con latLngBounds
+ * @param {object} telecom  estado del modulo ({manifest, red, ...})
+ */
+function cargarTelecom(L, telecom) {
+    const src = fs.readFileSync(path.join(RAIZ, 'geovisor.html'), 'utf8');
+    let codigo = FUNCIONES_TELECOM.map(f => extraerFuncion(src, f)).join('\n') + '\n';
+    codigo += 'return {' + FUNCIONES_TELECOM.join(',') + '};';
+    return new Function('L', 'telecom', 'console', codigo)(L, telecom, console);
+}
+
 // Capa como la ve Leaflet: eachLayer sobre features de un GeoJSON de produccion
 function stubCapa(rel) {
     const fc = leerGeoJSON(rel);
@@ -130,6 +150,7 @@ function resumen(titulo) {
 }
 
 module.exports = {
-    cargarGeovisor, cargarServicios, leerGeoJSON, stubLineasFabrica, stubCapa,
+    cargarGeovisor, cargarServicios, cargarTelecom,
+    leerGeoJSON, stubLineasFabrica, stubCapa,
     buscarPredio, anillo, chequear, casiIgual, resumen, RAIZ
 };
