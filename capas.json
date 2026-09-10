@@ -81,7 +81,6 @@
       "tarjeta": {
         "titulo": "Construcciones IA",
         "icono": "fas fa-robot",
-        "acento": "#9B59B6",
         "texto": "~96 K huellas de edificaciones detectadas por machine learning, con vista de todas las detectadas y de las no registradas en catastro.",
         "badge": {
           "texto": "Google Open Buildings 2024",
