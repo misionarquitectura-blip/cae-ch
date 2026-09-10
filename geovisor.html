@@ -486,24 +486,6 @@
             color: var(--rojo-oscuro);
         }
 
-        .layer-proximamente {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .badge-proximamente {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--blanco);
-            background-color: var(--gris-medio);
-            border-radius: 3px;
-            padding: 1px 5px;
-            vertical-align: middle;
-            margin-left: 4px;
-            letter-spacing: 0.3px;
-        }
-
         /* ── Panel de la capa 5 (telecomunicaciones) ────────────────
            Se despliega bajo la capa cuando esta activa: la cobertura
            de CNT son seis redes distintas y solo tiene sentido mirar
@@ -1513,7 +1495,7 @@
                                 <input type="checkbox" class="layer-checkbox" id="layer-6">
                                 <div class="layer-info" data-layer="6">
                                     <div class="layer-name">Catastro GADMR</div>
-                                    <div class="layer-source" id="layer-6-source">GADMR – Catastro Predial · Actualización: mayo 2026</div>
+                                    <div class="layer-source" id="layer-6-source">GADMR – Catastro Predial · Actualización: septiembre 2026</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -1884,6 +1866,28 @@
                         console.warn('QR: el catastro no terminó de cargar a tiempo');
                     }
                 }, 500);
+            });
+
+            // ── Apertura de capas desde la portada (?capa=6, ?capa=9,10) ──
+            // Las tarjetas de "Integración de Datos Institucionales" de index.html
+            // enlazan aquí con los ids que declara capas.json. Marcar la casilla no
+            // basta: cada capa se carga en su evento "change", así que hay que emitirlo.
+            window.addEventListener('load', function () {
+                const pedidas = new URLSearchParams(window.location.search).get('capa');
+                if (!pedidas) return;
+
+                pedidas.split(',').forEach(function (bruto) {
+                    const id = bruto.trim();
+                    if (!/^[0-9]{1,2}$/.test(id)) return;   // solo capas numeradas
+                    const cb = document.getElementById('layer-' + id);
+                    if (!cb || cb.disabled || cb.checked) return;
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('change'));
+                });
+
+                // Que el usuario vea marcada la capa con la que llegó.
+                const pestana = document.querySelector('.sidebar-tab[data-tab="layers"]');
+                if (pestana && !pestana.classList.contains('active')) pestana.click();
             });
 
             // Event listeners para mostrar el Geovisor
@@ -3591,44 +3595,64 @@
                     zoomControl: false,
                     attributionControl: false,
                     crs: L.CRS.EPSG3857,
-                    preferCanvas: true
+                    preferCanvas: true,
+                    // Sin fundido de entrada. Leaflet dibuja cada tesela con
+                    // opacity:0 y la sube a 1 en un requestAnimationFrame; este
+                    // mapa vive fuera de pantalla mientras carga, asi que ese
+                    // fotograma podia no llegar nunca y html2canvas capturaba
+                    // teselas transparentes: el plano del PDF salia sin fondo.
+                    fadeAnimation: false
                 });
 
                 visualizationDiv.style.backgroundColor = '#ffffff';
 
-                // Añadir capa base según el tipo activo en el geovisor
-                let baseLayer;
+                // ── Capa base del mapa del reporte ─────────────────────────
+                // El plano del PDF salía sin fondo y la causa no era CORS (las
+                // teselas de Google sí traen Access-Control-Allow-Origin): Leaflet
+                // pinta cada tesela con opacity:0 y la sube a 1 en un
+                // requestAnimationFrame, y este mapa se arma fuera de pantalla, así
+                // que html2canvas copiaba teselas transparentes. Eso se arregla con
+                // fadeAnimation:false, unas líneas más abajo, y forzando la opacidad
+                // en el clon de la captura.
+                // Aprovechando el cambio, la base deja de ser el endpoint no
+                // documentado de Google (mt0.google.com/vt) y pasa a dos servicios
+                // publicados que sí se pueden citar al pie de un documento impreso.
+                // crossOrigin:'anonymous' mantiene limpio el lienzo con
+                // allowTaint:false. El visor en pantalla sigue con Google: ahí no
+                // hay captura ni atribución impresa.
+                const ESRI_SAT = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+                const ESRI_REF = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+                const CARTO_CALLE = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+                const CREDITO_ESRI  = 'Base: Esri World Imagery (Maxar, Earthstar Geographics)';
+                const CREDITO_CARTO = 'Base: CARTO Voyager sobre datos de OpenStreetMap (ODbL)';
+                // maxNativeZoom (y no maxZoom) para no tocar el encuadre: el mapa
+                // conserva su zoom maximo de siempre y las teselas se amplian si
+                // el predio es pequeno, en vez de desaparecer.
+
+                let baseTiles = [];
+                let creditoBase = '';
                 switch (baseLayerType) {
                     case 'satellite':
-                        baseLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                            subdomains: ['mt0','mt1','mt2','mt3'],
-                            attribution: '&copy; Google Maps',
-                            opacity: 0.9
-                        });
+                        baseTiles = [L.tileLayer(ESRI_SAT, {
+                            crossOrigin: 'anonymous', maxNativeZoom: 19, opacity: 0.9
+                        })];
+                        creditoBase = CREDITO_ESRI;
                         break;
                     case 'hybrid':
-                        baseLayer = L.layerGroup([
-                            L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                                subdomains: ['mt0','mt1','mt2','mt3'],
-                                attribution: '&copy; Google Maps',
-                                opacity: 1
-                            }),
-                            L.tileLayer('https://{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
-                                subdomains: ['mt0','mt1','mt2','mt3'],
-                                attribution: '&copy; Google Maps',
-                                opacity: 0.7
-                            })
-                        ]);
+                        baseTiles = [
+                            L.tileLayer(ESRI_SAT, { crossOrigin: 'anonymous', maxNativeZoom: 19, opacity: 1 }),
+                            L.tileLayer(ESRI_REF, { crossOrigin: 'anonymous', maxNativeZoom: 19, opacity: 0.9 })
+                        ];
+                        creditoBase = CREDITO_ESRI;
                         break;
                     default: // 'street' por defecto
-                        baseLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-                            subdomains: ['mt0','mt1','mt2','mt3'],
-                            attribution: '&copy; Google Maps',
-                            opacity: 0.9
-                        });
+                        baseTiles = [L.tileLayer(CARTO_CALLE, {
+                            crossOrigin: 'anonymous', subdomains: 'abcd', maxNativeZoom: 20, opacity: 0.95
+                        })];
+                        creditoBase = CREDITO_CARTO;
                 }
 
-                baseLayer.addTo(visualizationMap);
+                baseTiles.forEach(function (t) { t.addTo(visualizationMap); });
 
                 // Agregar escala gráfica al mapa
                 L.control.scale({
@@ -3873,7 +3897,9 @@
                 return {
                     map: visualizationMap,
                     activeLayers: activeLayers,
-                    csvPolygon: csvPolygon
+                    csvPolygon: csvPolygon,
+                    baseTiles: baseTiles,
+                    creditoBase: creditoBase
                 };
             }
 
@@ -3995,7 +4021,7 @@
                     hasLayer3, afectacionVial, construccionesIA, servicios = null,
                     telecomunicaciones = null, intersectionData = [], utmCoords = [],
                     normativaPUGS = null, qrDataUrl = null,
-                    mapImage, activeLayers = [], planoVectorial = null,
+                    mapImage, activeLayers = [], creditoBase = '', planoVectorial = null,
                     nroInforme = '', fechaStr = '', vigenciaStr = ''
                 } = d;
 
@@ -4638,6 +4664,17 @@
                             lx += 75;
                             lrow++;
                         });
+
+                        // Credito de la base cartografica: Esri y CARTO/OSM piden
+                        // atribucion visible y el mapa se imprime sin control de Leaflet.
+                        if (creditoBase) {
+                            y += 6;
+                            doc.setFontSize(6.5);
+                            doc.setTextColor(110, 110, 110);
+                            doc.text(creditoBase, mg, y);
+                            doc.setTextColor(0, 0, 0);
+                            doc.setFontSize(8);
+                        }
                     } catch (imgErr) {
                         doc.setFontSize(9);
                         doc.text('Imagen del mapa no disponible.', mg, y);
@@ -4838,6 +4875,7 @@
                     showProgressBar('Generando visualización del mapa...');
                     let mapImage     = null;
                     let activeLayers = [];
+                    let creditoBase  = '';
                     let vizMap       = null;
                     const vizContainer = document.getElementById('shapes-visualization-container');
                     try {
@@ -4847,13 +4885,31 @@
                             activeLayers = (vizResult.activeLayers || []).map(function (l) {
                                 return { id: l.id, name: l.name, color: l.color };
                             });
+                            creditoBase = vizResult.creditoBase || '';
                             vizContainer.style.cssText = 'position:fixed;top:0;left:0;width:800px;height:600px;opacity:1;z-index:10000;visibility:visible;background:#fff;display:block';
 
                             showProgressBar('Renderizando mapa...');
                             await new Promise(r => setTimeout(r, 500));
                             vizMap.invalidateSize();
                             try { vizMap.fitBounds(csvPolygon.getBounds(), { padding: [30, 30] }); } catch (e) { }
-                            await new Promise(r => setTimeout(r, 2000));
+
+                            // Esperar a que la base termine de dibujar. Antes era una
+                            // espera fija de 2 s; con Esri/CARTO el tiempo depende de la
+                            // red, así que se escucha el evento 'load' de cada tesela y
+                            // solo se cae a la espera fija si algo no llega.
+                            await new Promise(function (listo) {
+                                const capas = vizResult.baseTiles || [];
+                                if (!capas.length) return setTimeout(listo, 2000);
+                                let faltan = capas.length;
+                                const fin = setTimeout(listo, 8000);   // tope duro
+                                capas.forEach(function (capa) {
+                                    if (capa.isLoading && !capa.isLoading()) { if (--faltan === 0) { clearTimeout(fin); listo(); } return; }
+                                    capa.once('load', function () {
+                                        if (--faltan === 0) { clearTimeout(fin); listo(); }
+                                    });
+                                });
+                            });
+                            await new Promise(r => setTimeout(r, 400));   // asentar el pintado
 
                             showProgressBar('Capturando imagen del mapa...');
                             try {
@@ -4865,6 +4921,11 @@
                                     onclone: function (d) {
                                         const c = d.getElementById('shapes-visualization-container');
                                         if (c) { c.style.visibility = 'visible'; c.style.opacity = '1'; }
+                                        // Cinturon y tirantes junto a fadeAnimation:false —
+                                        // una tesela a medio fundir se copia transparente.
+                                        d.querySelectorAll('img.leaflet-tile').forEach(function (t) {
+                                            t.style.opacity = '1';
+                                        });
                                     }
                                 });
                                 mapImage = canvas.toDataURL('image/jpeg', 0.85);
@@ -4906,6 +4967,7 @@
                         qrDataUrl,
                         utmCoords:       csvUTMCoordinates || [],
                         mapImage,
+                        creditoBase,
                         activeLayers,
                         planoVectorial
                     };

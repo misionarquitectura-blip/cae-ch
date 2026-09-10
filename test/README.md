@@ -31,6 +31,10 @@ node test/linderos-dicat.js
 node test/telecom.js
 ```
 
+```bash
+node test/capas.js
+```
+
 Si tienes el `package.json` local (está en `.gitignore`, no se publica), también vale:
 
 ```bash
@@ -162,6 +166,26 @@ Por último lee el ráster en coordenadas contrastadas contra el geoportal de CN
 que los dos niveles coinciden donde se solapan. Trae un lector de PNG de paleta
 propio, en `zlib`, para no añadir una dependencia de imagen por una prueba.
 
+### `capas.js`
+
+La única prueba que no mide geometría: comprueba que **la portada y el visor
+cuentan la misma historia**. Las dos listas de capas se escribían a mano en
+archivos distintos y se separaban solas — la capa 5 (telecomunicaciones) llevó
+días abierta en el visor mientras `index.html` seguía anunciándola como
+«Próximamente», y el catastro decía «mayo 2026» en un sitio y «septiembre 2026»
+en el otro.
+
+Ahora manda `capas.json` y `build_capas.js` escribe los dos HTML:
+
+```bash
+node build_capas.js
+```
+
+La prueba falla si alguien edita a mano el bloque generado, si una tarjeta
+enlaza a una capa que no existe en el visor, si una capa está deshabilitada o
+sin fuente declarada, o si vuelve a aparecer la promesa de «sincronización en
+tiempo real» que la plataforma no cumple.
+
 ## Notas sobre los datos
 
 **`sup_pred_c` no es la superficie de la geometría.** Es la superficie declarada
@@ -187,7 +211,8 @@ hasta un 12 %.
 
 Node ≥ 18 y los GeoJSON presentes en `DATA SET/` (`Catastro GADMR.geojson`,
 `LINEAS_FABRICA.geojson`, `agua_potable.geojson` y `alcantarillado.geojson`),
-más `DATA SET/telecom/` para `telecom.js`.
+más `DATA SET/telecom/` para `telecom.js`. `capas.js` no necesita datos: solo
+lee `capas.json`, `index.html` y `geovisor.html`.
 No hay dependencias externas: `servicios-basicos.js` trae su propia
 implementación mínima de las cuatro funciones de turf que usa el visor y
 `telecom.js` su propio lector de PNG, para no arrastrar esas dependencias al

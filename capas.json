@@ -1,0 +1,176 @@
+{
+  "_lea_esto": [
+    "Registro unico de las fuentes de datos de la plataforma.",
+    "index.html (rejilla 'Integracion de Datos Institucionales') y geovisor.html",
+    "(pie de fuente de cada capa) se generan desde aqui con 'node build_capas.js'.",
+    "No edite esos bloques a mano: test/capas.js falla si se desvian de este archivo."
+  ],
+  "fuentes": [
+    {
+      "clave": "catastro",
+      "tarjeta": {
+        "titulo": "Catastro GADMR",
+        "icono": "fas fa-city",
+        "texto": "Información catastral georreferenciada del Gobierno Autónomo Descentralizado Municipal de Riobamba.",
+        "badge": {
+          "texto": "Última actualización: septiembre 2026",
+          "fondo": "#eee",
+          "color": "#555"
+        }
+      },
+      "visor": [
+        {
+          "id": 6,
+          "nombre": "Catastro GADMR",
+          "fuente": "GADMR – Catastro Predial · Actualización: septiembre 2026"
+        }
+      ]
+    },
+    {
+      "clave": "electrica",
+      "tarjeta": {
+        "titulo": "Infraestructura Eléctrica",
+        "icono": "fas fa-bolt",
+        "texto": "Red eléctrica, cobertura y equipamiento de la Empresa Eléctrica de Riobamba (EERSA)."
+      },
+      "visor": [
+        {
+          "id": 3,
+          "nombre": "Infraestructura Eléctrica",
+          "fuente": "EERSA – Empresa Eléctrica Riobamba S.A."
+        }
+      ]
+    },
+    {
+      "clave": "vialidad",
+      "tarjeta": {
+        "titulo": "Vialidad Urbana y Rural",
+        "icono": "fas fa-road",
+        "texto": "Red vial urbana y rural, jerarquía de vías y accesibilidad territorial del cantón."
+      },
+      "visor": [
+        {
+          "id": 7,
+          "nombre": "Vialidad",
+          "fuente": "GADMR y GADPCH"
+        }
+      ]
+    },
+    {
+      "clave": "pugs",
+      "tarjeta": {
+        "titulo": "PUGS",
+        "icono": "fas fa-layer-group",
+        "texto": "Plan de Uso y Gestión del Suelo: zonificación, usos permitidos y normativas del territorio cantonal."
+      },
+      "visor": [
+        {
+          "id": 1,
+          "nombre": "PUGS Urbano",
+          "fuente": "GADMR – Gobierno Autónomo Descentralizado del cantón Riobamba"
+        },
+        {
+          "id": 2,
+          "nombre": "PUGS Rural",
+          "fuente": "GADMR – Gobierno Autónomo Descentralizado del cantón Riobamba"
+        }
+      ]
+    },
+    {
+      "clave": "construcciones-ia",
+      "tarjeta": {
+        "titulo": "Construcciones IA",
+        "icono": "fas fa-robot",
+        "acento": "#9B59B6",
+        "texto": "~96 K huellas de edificaciones detectadas por machine learning, con vista de todas las detectadas y de las no registradas en catastro.",
+        "badge": {
+          "texto": "Google Open Buildings 2024",
+          "fondo": "#f0e6ff",
+          "color": "#6c2fa0"
+        }
+      },
+      "visor": [
+        {
+          "id": 9,
+          "nombre": "Construcciones IA · No registradas",
+          "fuente": "Detección IA sin declarar en catastro (~20 K)"
+        },
+        {
+          "id": 10,
+          "nombre": "Construcciones IA · Todas",
+          "fuente": "Google Open Buildings 2024 — Todas las detectadas (~96 K)"
+        }
+      ]
+    },
+    {
+      "clave": "agua",
+      "tarjeta": {
+        "titulo": "Agua Potable",
+        "icono": "fas fa-tint",
+        "texto": "Zonas de cobertura de la red de distribución de EMAPAR, usadas para responder la factibilidad de agua del predio.",
+        "badge": {
+          "texto": "EMAPAR",
+          "fondo": "#e3f2fd",
+          "color": "#1565c0"
+        }
+      },
+      "visor": [
+        {
+          "id": 4,
+          "nombre": "Agua Potable EMAPAR",
+          "fuente": "Riobamba EP · 8 zonas de cobertura (4 664 ha)"
+        }
+      ]
+    },
+    {
+      "clave": "alcantarillado",
+      "tarjeta": {
+        "titulo": "Alcantarillado",
+        "icono": "fas fa-water",
+        "texto": "Redes sanitaria, pluvial y combinada de EMAPAR, con tipo, sección y diámetro de cada tramo.",
+        "badge": {
+          "texto": "EMAPAR",
+          "fondo": "#e3f2fd",
+          "color": "#1565c0"
+        }
+      },
+      "visor": [
+        {
+          "id": 11,
+          "nombre": "Alcantarillado",
+          "fuente": "EMAPAR – Sanitario, pluvial y combinado · 566 km"
+        }
+      ]
+    },
+    {
+      "clave": "telecomunicaciones",
+      "tarjeta": {
+        "titulo": "Telecomunicaciones",
+        "icono": "fas fa-wifi",
+        "texto": "Cobertura de las seis redes de CNT EP — fibra GPON, 4G, 3G, 2G, RNA y CDMA 450 — en toda la provincia. El DICAT la lee sobre la huella del predio, no en un punto.",
+        "badge": {
+          "texto": "CNT EP · septiembre 2026",
+          "fondo": "#ede7f6",
+          "color": "#4527a0"
+        }
+      },
+      "visor": [
+        {
+          "id": 5,
+          "nombre": "Cobertura Telecomunicaciones",
+          "fuente": "CNT EP · 6 redes (fibra GPON, 4G, 3G, 2G, RNA, CDMA 450) · Chimborazo"
+        }
+      ]
+    },
+    {
+      "clave": "lineas-fabrica",
+      "visor": [
+        {
+          "id": 8,
+          "nombre": "Líneas de Fábrica",
+          "fuente": "GADMR – Certificación Ejes Viales"
+        }
+      ]
+    }
+  ]
+}
