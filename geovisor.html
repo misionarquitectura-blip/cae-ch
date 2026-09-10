@@ -3606,53 +3606,39 @@
 
                 visualizationDiv.style.backgroundColor = '#ffffff';
 
-                // ── Capa base del mapa del reporte ─────────────────────────
-                // El plano del PDF salía sin fondo y la causa no era CORS (las
-                // teselas de Google sí traen Access-Control-Allow-Origin): Leaflet
-                // pinta cada tesela con opacity:0 y la sube a 1 en un
-                // requestAnimationFrame, y este mapa se arma fuera de pantalla, así
-                // que html2canvas copiaba teselas transparentes. Eso se arregla con
-                // fadeAnimation:false, unas líneas más abajo, y forzando la opacidad
-                // en el clon de la captura.
-                // Aprovechando el cambio, la base deja de ser el endpoint no
-                // documentado de Google (mt0.google.com/vt) y pasa a dos servicios
-                // publicados que sí se pueden citar al pie de un documento impreso.
-                // crossOrigin:'anonymous' mantiene limpio el lienzo con
-                // allowTaint:false. El visor en pantalla sigue con Google: ahí no
-                // hay captura ni atribución impresa.
-                const ESRI_SAT = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-                const ESRI_REF = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
-                const CARTO_CALLE = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
-                const CREDITO_ESRI  = 'Base: Esri World Imagery (Maxar, Earthstar Geographics)';
-                const CREDITO_CARTO = 'Base: CARTO Voyager sobre datos de OpenStreetMap (ODbL)';
-                // maxNativeZoom (y no maxZoom) para no tocar el encuadre: el mapa
-                // conserva su zoom maximo de siempre y las teselas se amplian si
-                // el predio es pequeno, en vez de desaparecer.
-
-                let baseTiles = [];
-                let creditoBase = '';
+                // Añadir capa base según el tipo activo en el geovisor
+                let baseLayer;
                 switch (baseLayerType) {
                     case 'satellite':
-                        baseTiles = [L.tileLayer(ESRI_SAT, {
-                            crossOrigin: 'anonymous', maxNativeZoom: 19, opacity: 0.9
-                        })];
-                        creditoBase = CREDITO_ESRI;
+                        baseLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                            subdomains: ['mt0','mt1','mt2','mt3'],
+                            attribution: '&copy; Google Maps',
+                            opacity: 0.9
+                        });
                         break;
                     case 'hybrid':
-                        baseTiles = [
-                            L.tileLayer(ESRI_SAT, { crossOrigin: 'anonymous', maxNativeZoom: 19, opacity: 1 }),
-                            L.tileLayer(ESRI_REF, { crossOrigin: 'anonymous', maxNativeZoom: 19, opacity: 0.9 })
-                        ];
-                        creditoBase = CREDITO_ESRI;
+                        baseLayer = L.layerGroup([
+                            L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                                subdomains: ['mt0','mt1','mt2','mt3'],
+                                attribution: '&copy; Google Maps',
+                                opacity: 1
+                            }),
+                            L.tileLayer('https://{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
+                                subdomains: ['mt0','mt1','mt2','mt3'],
+                                attribution: '&copy; Google Maps',
+                                opacity: 0.7
+                            })
+                        ]);
                         break;
                     default: // 'street' por defecto
-                        baseTiles = [L.tileLayer(CARTO_CALLE, {
-                            crossOrigin: 'anonymous', subdomains: 'abcd', maxNativeZoom: 20, opacity: 0.95
-                        })];
-                        creditoBase = CREDITO_CARTO;
+                        baseLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                            subdomains: ['mt0','mt1','mt2','mt3'],
+                            attribution: '&copy; Google Maps',
+                            opacity: 0.9
+                        });
                 }
 
-                baseTiles.forEach(function (t) { t.addTo(visualizationMap); });
+                baseLayer.addTo(visualizationMap);
 
                 // Agregar escala gráfica al mapa
                 L.control.scale({
@@ -3897,9 +3883,7 @@
                 return {
                     map: visualizationMap,
                     activeLayers: activeLayers,
-                    csvPolygon: csvPolygon,
-                    baseTiles: baseTiles,
-                    creditoBase: creditoBase
+                    csvPolygon: csvPolygon
                 };
             }
 
@@ -4021,7 +4005,7 @@
                     hasLayer3, afectacionVial, construccionesIA, servicios = null,
                     telecomunicaciones = null, intersectionData = [], utmCoords = [],
                     normativaPUGS = null, qrDataUrl = null,
-                    mapImage, activeLayers = [], creditoBase = '', planoVectorial = null,
+                    mapImage, activeLayers = [], planoVectorial = null,
                     nroInforme = '', fechaStr = '', vigenciaStr = ''
                 } = d;
 
@@ -4664,17 +4648,6 @@
                             lx += 75;
                             lrow++;
                         });
-
-                        // Credito de la base cartografica: Esri y CARTO/OSM piden
-                        // atribucion visible y el mapa se imprime sin control de Leaflet.
-                        if (creditoBase) {
-                            y += 6;
-                            doc.setFontSize(6.5);
-                            doc.setTextColor(110, 110, 110);
-                            doc.text(creditoBase, mg, y);
-                            doc.setTextColor(0, 0, 0);
-                            doc.setFontSize(8);
-                        }
                     } catch (imgErr) {
                         doc.setFontSize(9);
                         doc.text('Imagen del mapa no disponible.', mg, y);
@@ -4875,7 +4848,6 @@
                     showProgressBar('Generando visualización del mapa...');
                     let mapImage     = null;
                     let activeLayers = [];
-                    let creditoBase  = '';
                     let vizMap       = null;
                     const vizContainer = document.getElementById('shapes-visualization-container');
                     try {
@@ -4885,31 +4857,13 @@
                             activeLayers = (vizResult.activeLayers || []).map(function (l) {
                                 return { id: l.id, name: l.name, color: l.color };
                             });
-                            creditoBase = vizResult.creditoBase || '';
                             vizContainer.style.cssText = 'position:fixed;top:0;left:0;width:800px;height:600px;opacity:1;z-index:10000;visibility:visible;background:#fff;display:block';
 
                             showProgressBar('Renderizando mapa...');
                             await new Promise(r => setTimeout(r, 500));
                             vizMap.invalidateSize();
                             try { vizMap.fitBounds(csvPolygon.getBounds(), { padding: [30, 30] }); } catch (e) { }
-
-                            // Esperar a que la base termine de dibujar. Antes era una
-                            // espera fija de 2 s; con Esri/CARTO el tiempo depende de la
-                            // red, así que se escucha el evento 'load' de cada tesela y
-                            // solo se cae a la espera fija si algo no llega.
-                            await new Promise(function (listo) {
-                                const capas = vizResult.baseTiles || [];
-                                if (!capas.length) return setTimeout(listo, 2000);
-                                let faltan = capas.length;
-                                const fin = setTimeout(listo, 8000);   // tope duro
-                                capas.forEach(function (capa) {
-                                    if (capa.isLoading && !capa.isLoading()) { if (--faltan === 0) { clearTimeout(fin); listo(); } return; }
-                                    capa.once('load', function () {
-                                        if (--faltan === 0) { clearTimeout(fin); listo(); }
-                                    });
-                                });
-                            });
-                            await new Promise(r => setTimeout(r, 400));   // asentar el pintado
+                            await new Promise(r => setTimeout(r, 2000));
 
                             showProgressBar('Capturando imagen del mapa...');
                             try {
@@ -4967,7 +4921,6 @@
                         qrDataUrl,
                         utmCoords:       csvUTMCoordinates || [],
                         mapImage,
-                        creditoBase,
                         activeLayers,
                         planoVectorial
                     };
