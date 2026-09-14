@@ -95,6 +95,14 @@ function cargarTelecom(L, telecom) {
     return new Function('L', 'telecom', 'console', codigo)(L, telecom, console);
 }
 
+// Generador de DXF. Es autocontenido: sólo necesita el anillo UTM del predio,
+// asi que se extrae solo y se prueba sin el resto del visor.
+function cargarDXF() {
+    const src = fs.readFileSync(path.join(RAIZ, 'geovisor.html'), 'utf8');
+    const codigo = extraerFuncion(src, 'construirDXF') + '\nreturn { construirDXF };';
+    return new Function(codigo)();
+}
+
 // Capa como la ve Leaflet: eachLayer sobre features de un GeoJSON de produccion
 function stubCapa(rel) {
     const fc = leerGeoJSON(rel);
@@ -150,7 +158,7 @@ function resumen(titulo) {
 }
 
 module.exports = {
-    cargarGeovisor, cargarServicios, cargarTelecom,
+    cargarGeovisor, cargarServicios, cargarTelecom, cargarDXF,
     leerGeoJSON, stubLineasFabrica, stubCapa,
     buscarPredio, anillo, chequear, casiIgual, resumen, RAIZ
 };

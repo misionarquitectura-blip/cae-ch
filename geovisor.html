@@ -7277,58 +7277,126 @@
             }
 
             // ─────────────────────────────────────────────────────────────────
-            // Exportación DXF — coordenadas UTM WGS84 17S sin redondeo, para
-            // abrir directamente en CAD sobre el mismo sistema del levantamiento.
+            // Exportación DXF — coordenadas UTM WGS84 17S, escritas en DXF R12
+            // (AC1009), el único dialecto que abre cualquier CAD con un
+            // esqueleto mínimo. AC1015 y posteriores exigen un handle en cada
+            // entidad y las tablas VPORT, STYLE, APPID, DIMSTYLE y BLOCK_RECORD
+            // más las secciones BLOCKS y OBJECTS completas; si falta una sola,
+            // AutoCAD descarta el dibujo entero ("DXF inválido o incompleto") y
+            // el archivo parece corrupto. Por eso aquí no hay LWPOLYLINE: R12
+            // sólo entiende POLYLINE con sus VERTEX y su SEQEND.
             // ─────────────────────────────────────────────────────────────────
             function construirDXF(utm, franjas, clave) {
                 const L = [];
-                const g = (c, v) => { L.push(String(c)); L.push(String(v)); };
-                const num = v => v.toFixed(4);
+                const g = function (c, v) { L.push(String(c)); L.push(String(v)); };
+                const num = function (v) {
+                    const n = Number(v);
+                    if (!isFinite(n)) throw new Error('Coordenada no numérica en el DXF: ' + v);
+                    return n.toFixed(4);
+                };
+                // Anillo sin el vértice de cierre repetido: la POLYLINE ya cierra
+                // sola con el indicador 70 = 1, y un segmento de longitud cero
+                // deja al CAD calculando un rumbo imposible.
+                const anillo = function (pts) {
+                    const a = (pts || []).filter(function (p) {
+                        return p && isFinite(Number(p[0])) && isFinite(Number(p[1]));
+                    }).map(function (p) { return [Number(p[0]), Number(p[1])]; });
+                    while (a.length > 1) {
+                        const f = a[0], u = a[a.length - 1];
+                        if (Math.abs(f[0] - u[0]) < 1e-6 && Math.abs(f[1] - u[1]) < 1e-6) a.pop();
+                        else break;
+                    }
+                    return a;
+                };
+
+                const predio = anillo((utm || []).map(function (p) { return [p.x, p.y]; }));
+                if (predio.length < 3) throw new Error('El predio no tiene vértices suficientes para el DXF.');
+                const franjasUTM = (franjas || [])
+                    .map(function (f) { return anillo(f && f.utm); })
+                    .filter(function (a) { return a.length >= 3; });
 
                 let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-                utm.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+                const todos = predio.slice();
+                franjasUTM.forEach(function (a) { a.forEach(function (p) { todos.push(p); }); });
+                todos.forEach(function (p) {
+                    x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]);
+                    x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]);
+                });
 
+                const alturaTexto = Math.max(Math.max(x1 - x0, y1 - y0) / 120, 0.35);
+                // R12 no declara página de códigos: la etiqueta va en ASCII puro
+                const etiqueta = String(clave || '').replace(/[^\x20-\x7E]/g, '').trim();
+                const yEtiqueta = y0 - alturaTexto * 3;
+                const extY0 = etiqueta ? yEtiqueta - alturaTexto : y0;
+
+                // ── HEADER ───────────────────────────────────────────────────
                 g(0, 'SECTION'); g(2, 'HEADER');
-                g(9, '$ACADVER'); g(1, 'AC1015');
-                g(9, '$INSUNITS'); g(70, 6);              // 6 = metros
-                g(9, '$EXTMIN'); g(10, num(x0)); g(20, num(y0)); g(30, '0.0');
+                g(9, '$ACADVER'); g(1, 'AC1009');
+                g(9, '$INSBASE'); g(10, '0.0'); g(20, '0.0'); g(30, '0.0');
+                g(9, '$EXTMIN'); g(10, num(x0)); g(20, num(extY0)); g(30, '0.0');
                 g(9, '$EXTMAX'); g(10, num(x1)); g(20, num(y1)); g(30, '0.0');
+                g(9, '$LIMMIN'); g(10, num(x0)); g(20, num(extY0));
+                g(9, '$LIMMAX'); g(10, num(x1)); g(20, num(y1));
                 g(0, 'ENDSEC');
 
+                // ── TABLES: tipo de línea, capas y estilo de texto ───────────
                 g(0, 'SECTION'); g(2, 'TABLES');
+
                 g(0, 'TABLE'); g(2, 'LTYPE'); g(70, 1);
-                g(0, 'LTYPE'); g(2, 'CONTINUOUS'); g(70, 0); g(3, 'Solid line'); g(72, 65); g(73, 0); g(40, '0.0');
+                g(0, 'LTYPE'); g(2, 'CONTINUOUS'); g(70, 0); g(3, 'Solid line');
+                g(72, 65); g(73, 0); g(40, '0.0');
                 g(0, 'ENDTAB');
+
+                // La capa 0 tiene que estar declarada aunque no se dibuje en ella
                 const capas = [
-                    ['PREDIO', 1], ['AFECTACION_VIAL', 5], ['VERTICES', 3], ['TEXTOS', 7]
+                    ['0', 7], ['PREDIO', 1], ['AFECTACION_VIAL', 5],
+                    ['VERTICES', 3], ['TEXTOS', 7]
                 ];
                 g(0, 'TABLE'); g(2, 'LAYER'); g(70, capas.length);
-                capas.forEach(([n, col]) => { g(0, 'LAYER'); g(2, n); g(70, 0); g(62, col); g(6, 'CONTINUOUS'); });
+                capas.forEach(function (c) {
+                    g(0, 'LAYER'); g(2, c[0]); g(70, 0); g(62, c[1]); g(6, 'CONTINUOUS');
+                });
                 g(0, 'ENDTAB');
+
+                // STANDARD es el estilo al que apunta cada TEXT: sin la tabla
+                // STYLE los rótulos de vértice dejan el archivo inservible.
+                g(0, 'TABLE'); g(2, 'STYLE'); g(70, 1);
+                g(0, 'STYLE'); g(2, 'STANDARD'); g(70, 0); g(40, '0.0'); g(41, '1.0');
+                g(50, '0.0'); g(71, 0); g(42, '2.5'); g(3, 'txt'); g(4, '');
+                g(0, 'ENDTAB');
+
                 g(0, 'ENDSEC');
 
+                // Sección de bloques vacía: R12 la espera aunque no haya bloques
+                g(0, 'SECTION'); g(2, 'BLOCKS'); g(0, 'ENDSEC');
+
+                // ── ENTITIES ─────────────────────────────────────────────────
                 g(0, 'SECTION'); g(2, 'ENTITIES');
 
-                // Polígono del predio (cerrado)
-                g(0, 'LWPOLYLINE'); g(8, 'PREDIO'); g(100, 'AcDbEntity'); g(100, 'AcDbPolyline');
-                g(90, utm.length); g(70, 1);
-                utm.forEach(p => { g(10, num(p.x)); g(20, num(p.y)); });
+                const polilinea = function (capa, pts) {
+                    g(0, 'POLYLINE'); g(8, capa); g(66, 1); g(70, 1);
+                    g(10, '0.0'); g(20, '0.0'); g(30, '0.0');
+                    pts.forEach(function (p) {
+                        g(0, 'VERTEX'); g(8, capa);
+                        g(10, num(p[0])); g(20, num(p[1])); g(30, '0.0'); g(70, 0);
+                    });
+                    g(0, 'SEQEND'); g(8, capa);
+                };
+                const texto = function (x, y, h, t) {
+                    g(0, 'TEXT'); g(8, 'TEXTOS');
+                    g(10, num(x)); g(20, num(y)); g(30, '0.0');
+                    g(40, h.toFixed(3)); g(1, t); g(7, 'STANDARD');
+                };
 
-                // Franjas de afectación vial
-                (franjas || []).forEach(f => {
-                    if (!f.utm || f.utm.length < 3) return;
-                    g(0, 'LWPOLYLINE'); g(8, 'AFECTACION_VIAL'); g(100, 'AcDbEntity'); g(100, 'AcDbPolyline');
-                    g(90, f.utm.length); g(70, 1);
-                    f.utm.forEach(p => { g(10, num(p[0])); g(20, num(p[1])); });
-                });
+                polilinea('PREDIO', predio);
+                franjasUTM.forEach(function (a) { polilinea('AFECTACION_VIAL', a); });
 
-                // Vértices y sus etiquetas
-                const alturaTexto = Math.max((Math.max(x1 - x0, y1 - y0)) / 120, 0.35);
-                utm.forEach((p, i) => {
-                    g(0, 'POINT'); g(8, 'VERTICES'); g(10, num(p.x)); g(20, num(p.y)); g(30, '0.0');
-                    g(0, 'TEXT'); g(8, 'TEXTOS'); g(10, num(p.x + alturaTexto * 0.6)); g(20, num(p.y + alturaTexto * 0.6)); g(30, '0.0');
-                    g(40, alturaTexto.toFixed(3)); g(1, 'V' + (i + 1));
+                predio.forEach(function (p, i) {
+                    g(0, 'POINT'); g(8, 'VERTICES');
+                    g(10, num(p[0])); g(20, num(p[1])); g(30, '0.0');
+                    texto(p[0] + alturaTexto * 0.6, p[1] + alturaTexto * 0.6, alturaTexto, 'V' + (i + 1));
                 });
+                if (etiqueta) texto(x0, yEtiqueta, alturaTexto * 1.4, etiqueta);
 
                 g(0, 'ENDSEC'); g(0, 'EOF');
                 return L.join('\r\n') + '\r\n';
