@@ -146,7 +146,7 @@
       "tarjeta": {
         "titulo": "Telecomunicaciones",
         "icono": "fas fa-wifi",
-        "texto": "Cobertura de las seis redes de CNT EP — fibra GPON, 4G, 3G, 2G, RNA y CDMA 450 — en toda la provincia. El DICAT la lee sobre la huella del predio, no en un punto.",
+        "texto": "Cobertura de las seis redes de CNT EP — fibra GPON, 4G, 3G, 2G, RNA y CDMA 450 — en toda la provincia. El DICAT las lee sobre la huella del predio, no en un punto, y enumera todas las que llegan al predio con su nivel.",
         "badge": {
           "texto": "CNT EP · septiembre 2026",
           "fondo": "#ede7f6",

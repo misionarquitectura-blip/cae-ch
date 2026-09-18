@@ -63,11 +63,14 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
         .historial-modal h3 { margin: 0 0 16px; color: var(--rojo-oscuro); font-size: 16px; }
-        .historial-entry { display: flex; gap: 12px; margin-bottom: 16px; }
+        .historial-entry { display: flex; gap: 12px; margin-bottom: 16px; align-items: stretch; }
+        /* La columna del hilo se estira con la entrada: las hay de 100 px y
+           de 600, y un hilo de altura fija deja la ultima colgando. */
+        .historial-entry > div:first-child { display: flex; flex-direction: column; flex-shrink: 0; }
         .historial-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--rojo-oscuro); margin-top: 4px; flex-shrink: 0; }
         .historial-entry-content { font-size: 13px; color: #2F2F2F; }
         .historial-entry-date { font-size: 11px; color: #888; margin-top: 2px; }
-        .historial-line { width: 2px; background: #eee; margin: -8px 0 -8px 5px; }
+        .historial-line { width: 2px; background: #eee; margin: 0 0 -8px 5px; flex: 1 1 auto; min-height: 12px; }
         /* ── Vigencia catastro warning ───────────────── */
         .vigencia-badge {
             display: inline-flex; align-items: center; gap: 5px;
@@ -7957,7 +7960,7 @@
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>
-                    <div class="historial-line" style="height:40px"></div>
+                    <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
                     <strong>Agua potable y telecomunicaciones — Septiembre 2026</strong> — <span style="background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS ACTUALIZADOS</span>
@@ -7985,7 +7988,7 @@
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>
-                    <div class="historial-line" style="height:40px"></div>
+                    <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
                     <strong>Telecomunicaciones — Septiembre 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">NUEVA CAPA</span>
@@ -8004,7 +8007,7 @@
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>
-                    <div class="historial-line" style="height:40px"></div>
+                    <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
                     <strong>Actualización Septiembre 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS VIGENTES</span>
@@ -8023,7 +8026,7 @@
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>
-                    <div class="historial-line" style="height:40px"></div>
+                    <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
                     <strong>Servicios básicos y linderos — Agosto 2026</strong>
@@ -8039,7 +8042,7 @@
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>
-                    <div class="historial-line" style="height:40px"></div>
+                    <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
                     <strong>Mejoras de Plataforma — Junio 2026</strong>
@@ -8054,7 +8057,7 @@
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>
-                    <div class="historial-line" style="height:40px"></div>
+                    <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
                     <strong>Actualización Mayo 2026</strong>
@@ -8065,7 +8068,7 @@
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot" style="background:#bbb"></div>
-                    <div class="historial-line" style="height:40px"></div>
+                    <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
                     <strong>Actualización Febrero 2026</strong>
