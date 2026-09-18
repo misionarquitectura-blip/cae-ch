@@ -82,6 +82,9 @@ const FUNCIONES_TELECOM = [
     'textoCoberturaTelecom', 'capaTelecom', 'limitesPieza',
     'piezasTelecom', 'piezaFinaTelecom'
 ];
+// textoCoberturaTelecom cita el radio del entorno en el texto que acaba en el
+// DICAT, asi que la constante viaja con las funciones.
+const CONSTANTES_TELECOM = ['TELECOM_MARGEN_M', 'TELECOM_RANGO'];
 
 /**
  * Carga las funciones de telecomunicaciones de geovisor.html.
@@ -90,8 +93,9 @@ const FUNCIONES_TELECOM = [
  */
 function cargarTelecom(L, telecom) {
     const src = fs.readFileSync(path.join(RAIZ, 'geovisor.html'), 'utf8');
-    let codigo = FUNCIONES_TELECOM.map(f => extraerFuncion(src, f)).join('\n') + '\n';
-    codigo += 'return {' + FUNCIONES_TELECOM.join(',') + '};';
+    let codigo = CONSTANTES_TELECOM.map(c => extraerConstante(src, c)).join('\n') + '\n';
+    codigo += FUNCIONES_TELECOM.map(f => extraerFuncion(src, f)).join('\n') + '\n';
+    codigo += 'return {' + FUNCIONES_TELECOM.concat(CONSTANTES_TELECOM).join(',') + '};';
     return new Function('L', 'telecom', 'console', codigo)(L, telecom, console);
 }
 

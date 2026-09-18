@@ -1452,8 +1452,8 @@
                             <li class="layer-item">
                                 <input type="checkbox" class="layer-checkbox" id="layer-4">
                                 <div class="layer-info" data-layer="4">
-                                    <div class="layer-name">Agua Potable EMAPAR</div>
-                                    <div class="layer-source" id="layer-4-source">Riobamba EP · 8 zonas de cobertura (4 664 ha)</div>
+                                    <div class="layer-name">Agua Potable EP Riobamba</div>
+                                    <div class="layer-source" id="layer-4-source">EP Riobamba · 9 redes y 158 subredes (4 885 ha, 835 l/s)</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -1683,7 +1683,7 @@
                         <ul>
                             <li>Municipio de Riobamba (GADMR)</li>
                             <li>EERSA – Empresa Eléctrica Riobamba</li>
-                            <li>EMAPAR – Agua Potable y Alcantarillado</li>
+                            <li>EP Riobamba (ex EMAPAR) – Agua Potable y Alcantarillado</li>
                             <li>CNT EP – Cobertura de telecomunicaciones (geoportal)</li>
                             <li>Google Open Buildings 2024 (detección IA)</li>
                         </ul>
@@ -2221,6 +2221,15 @@
             // deje colores intermedios imposibles de clasificar.
             const TELECOM_BASE = 'DATA SET/telecom/';
 
+            // Radio del "entorno inmediato" del predio, en metros. Es del orden
+            // de un frente de manzana: lo que hay a esta distancia es lo que un
+            // instalador de CNT consideraria alcanzable desde el predio.
+            const TELECOM_MARGEN_M = 50;
+
+            // Orden de calidad dentro de una misma red. Se usa para enumerar los
+            // niveles presentes de mejor a peor, no para elegir uno solo.
+            const TELECOM_RANGO = { alto: 3, medio: 2, bajo: 1, gpon: 3, cdma: 3 };
+
             const telecom = {
                 manifest: null,     // manifest.json ya cargado
                 red: null,          // slug de la red que se está mostrando
@@ -2452,36 +2461,60 @@
                 w = Math.min(w, W - x0);
                 h = Math.min(h, H - y0);
 
-                const recorte = await createImageBitmap(blob, x0, y0, w, h);
+                // Ventana del entorno: la huella dilatada TELECOM_MARGEN_M metros.
+                // A 7 m/px el borde entre "hay red" y "no hay red" está dibujado
+                // con un pixel de 7 m, así que un predio puede quedar del lado
+                // malo de esa línea por menos de lo que mide el pixel. Leyendo
+                // tambien el entorno, el informe puede decir "no llega al predio
+                // pero la red esta a menos de 50 m", que es cierto y util, en vez
+                // de un "sin cobertura" seco que el vecino desmiente.
+                const tier = pieza.archivo.split('/')[0];
+                const resolucion = (telecom.manifest.resolucion_m_px || {})[tier] || null;
+                const margenPx = resolucion ? Math.max(1, Math.round(TELECOM_MARGEN_M / resolucion)) : 3;
+                const ex0 = Math.max(0, x0 - margenPx);
+                const ey0 = Math.max(0, y0 - margenPx);
+                const ew = Math.min(W - ex0, w + (x0 - ex0) + margenPx);
+                const eh = Math.min(H - ey0, h + (y0 - ey0) + margenPx);
+
+                const recorte = await createImageBitmap(blob, ex0, ey0, ew, eh);
                 dim.close();
                 const lienzo = document.createElement('canvas');
-                lienzo.width = w;
-                lienzo.height = h;
+                lienzo.width = ew;
+                lienzo.height = eh;
                 const ctx = lienzo.getContext('2d', { willReadFrequently: true });
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(recorte, 0, 0);
                 recorte.close();
 
-                const px = ctx.getImageData(0, 0, w, h).data;
-                const conteo = {};
+                const px = ctx.getImageData(0, 0, ew, eh).data;
+                const conteo = {};          // solo la huella del predio
                 let total = 0;
-                for (let i = 0; i < px.length; i += 4) {
-                    const clase = px[i + 3] < 128
-                        ? 'sin'
-                        : (telecom.rgbAClase[`${px[i]},${px[i + 1]},${px[i + 2]}`] || 'sin');
-                    conteo[clase] = (conteo[clase] || 0) + 1;
-                    total++;
+                let entornoTotal = 0, entornoCubierto = 0;
+                for (let fy = 0; fy < eh; fy++) {
+                    for (let fx = 0; fx < ew; fx++) {
+                        const i = (fy * ew + fx) * 4;
+                        const clase = px[i + 3] < 128
+                            ? 'sin'
+                            : (telecom.rgbAClase[`${px[i]},${px[i + 1]},${px[i + 2]}`] || 'sin');
+                        entornoTotal++;
+                        if (clase !== 'sin') entornoCubierto++;
+                        const gx = ex0 + fx, gy = ey0 + fy;
+                        if (gx >= x0 && gx < x0 + w && gy >= y0 && gy < y0 + h) {
+                            conteo[clase] = (conteo[clase] || 0) + 1;
+                            total++;
+                        }
+                    }
                 }
                 if (!total) return null;
 
-                const orden = Object.keys(conteo).sort((a, b) => conteo[b] - conteo[a]);
                 return {
-                    tier: pieza.archivo.split('/')[0],
-                    resolucion: (telecom.manifest.resolucion_m_px || {})[pieza.archivo.split('/')[0]] || null,
+                    tier: tier,
+                    resolucion: resolucion,
                     muestras: total,
-                    dominante: orden[0],
-                    porcentaje: Math.round(conteo[orden[0]] / total * 100),
-                    conteo: conteo
+                    conteo: conteo,
+                    // Porcentaje de la ventana dilatada con cobertura de cualquier
+                    // clase. Solo se usa cuando la huella sale a cero.
+                    entorno: entornoTotal ? Math.round(entornoCubierto / entornoTotal * 100) : 0
                 };
             }
 
@@ -2492,13 +2525,37 @@
             // mismo dato.
             function textoCoberturaTelecom(r) {
                 if (r.sinDato) return 'SIN DATO - el predio queda fuera del ambito descargado';
-                if (r.clase === 'sin') return 'SIN COBERTURA registrada';
-                // Las capas de señal se leen por nivel; GPON y CDMA 450 son
-                // binarias, ahí lo único que hay que decir es si llega.
-                const cabeza = r.escala === 'senal' ? `Nivel ${r.etiqueta}` : 'DISPONIBLE';
-                if (r.porcentaje >= 100) return `${cabeza} en todo el predio`;
-                const matiz = r.escala === 'senal' ? 'predominante en el' : 'sobre el';
-                return `${cabeza}, ${matiz} ${r.porcentaje} % del predio`;
+
+                // Sin un solo pixel cubierto. Antes esto se decidia por la clase
+                // dominante, y ahi estaba el error: un predio con la mitad de su
+                // huella servida salia "SIN COBERTURA" si la otra mitad pesaba
+                // mas. Ahora basta un pixel cubierto para que el servicio conste.
+                if (!r.cobertura) {
+                    return r.entorno
+                        ? `SIN COBERTURA sobre el predio - la red llega al entorno inmediato (${TELECOM_MARGEN_M} m)`
+                        : 'SIN COBERTURA registrada';
+                }
+
+                // GPON y CDMA 450 son binarias: lo unico que hay que decir es si
+                // llega y sobre cuanto del predio.
+                if (r.escala !== 'senal') {
+                    return r.cobertura >= 100
+                        ? 'DISPONIBLE en todo el predio'
+                        : `DISPONIBLE, sobre el ${r.cobertura} % del predio`;
+                }
+
+                // Redes de señal: se enumeran TODOS los niveles presentes, de
+                // mejor a peor. Un predio partido entre ALTO y MEDIO tiene las
+                // dos cosas, y reducirlo al que mas pixeles ocupa pierde la mitad
+                // de la respuesta.
+                const niveles = r.niveles || [];
+                if (niveles.length === 1 && r.cobertura >= 100) {
+                    return `Nivel ${niveles[0].etiqueta} en todo el predio`;
+                }
+                const desglose = niveles.map(n => `${n.etiqueta} ${n.porcentaje} %`).join(', ');
+                return r.cobertura >= 100
+                    ? `Nivel ${desglose} del predio`
+                    : `Nivel ${desglose} del predio; el ${100 - r.cobertura} % restante sin cobertura`;
             }
 
             // Análisis completo de la capa 5 para el DICAT: una lectura por red.
@@ -2535,6 +2592,28 @@
                     } catch (e) {
                         console.warn(`Telecomunicaciones: fallo al muestrear ${capa.slug}`, e);
                     }
+                    // Todas las clases presentes bajo la huella, de mejor a peor.
+                    // Esta lista es la respuesta a "que servicios hay aqui": la
+                    // clase dominante se sigue publicando como `clase`, pero ya
+                    // no es la que decide si el servicio existe o no.
+                    const niveles = [];
+                    let cubiertos = 0;
+                    if (lectura) {
+                        for (const clase in lectura.conteo) {
+                            if (clase === 'sin') continue;
+                            cubiertos += lectura.conteo[clase];
+                            niveles.push({
+                                clase: clase,
+                                etiqueta: etiquetas[clase] || clase,
+                                pixeles: lectura.conteo[clase],
+                                porcentaje: Math.round(lectura.conteo[clase] / lectura.muestras * 100)
+                            });
+                        }
+                        niveles.sort((a, b) => (TELECOM_RANGO[b.clase] || 0) - (TELECOM_RANGO[a.clase] || 0) ||
+                                               b.pixeles - a.pixeles);
+                    }
+                    const mejor = niveles[0] || null;
+
                     redes.push({
                         slug: capa.slug,
                         nombre: capa.nombre,
@@ -2544,9 +2623,15 @@
                         // fuera del ámbito descargado (predio en otra provincia)
                         // no hay dato, que no es lo mismo que no haber cobertura
                         sinDato: !lectura,
-                        clase: lectura ? lectura.dominante : null,
-                        etiqueta: lectura ? (etiquetas[lectura.dominante] || lectura.dominante) : null,
-                        porcentaje: lectura ? lectura.porcentaje : null,
+                        // el servicio esta disponible si CUALQUIER parte de la
+                        // huella lo tiene, no si es lo que mas pixeles ocupa
+                        disponible: !!(lectura && cubiertos),
+                        cobertura: lectura ? Math.round(cubiertos / lectura.muestras * 100) : null,
+                        niveles: niveles,
+                        clase: mejor ? mejor.clase : (lectura ? 'sin' : null),
+                        etiqueta: mejor ? mejor.etiqueta : null,
+                        porcentaje: mejor ? mejor.porcentaje : null,
+                        entorno: lectura ? lectura.entorno : null,
                         resolucion: lectura ? lectura.resolucion : null,
                         mezcla: lectura ? lectura.conteo : null
                     });
@@ -2603,18 +2688,25 @@
                                 };
                             }
 
-                            // Capa 4 — Cobertura de agua potable: las zonas van con
-                            // relleno tenue (deben dejar ver el predio debajo) y las
-                            // divisorias internas como línea punteada.
+                            // Capa 4 — Agua potable. Trae dos niveles superpuestos:
+                            // el contorno de las 9 redes de distribucion y el
+                            // mosaico de sus 158 subredes. La red va como marco sin
+                            // relleno —si se rellenara, dos capas de relleno sobre
+                            // el mismo sitio taparian el catastro— y la subred con
+                            // relleno muy tenue, que es la que se consulta.
                             if (layerId === 4) {
-                                if (feature.properties && feature.properties.tipo === 'divisoria') {
-                                    return { color: layerColor, weight: 1.5, opacity: 0.7, dashArray: '6,5' };
+                                if (feature.properties && feature.properties.tipo === 'red') {
+                                    return {
+                                        color: '#0D47A1',
+                                        weight: 3,
+                                        opacity: 0.95,
+                                        fill: false
+                                    };
                                 }
-                                // Relleno muy tenue: las zonas son enormes (cientos
-                                // de hectareas) y taparian el catastro debajo.
                                 return {
-                                    color: '#0D47A1',
-                                    weight: 2.5,
+                                    color: '#1565C0',
+                                    weight: 1,
+                                    opacity: 0.65,
                                     fillColor: layerColor,
                                     fillOpacity: 0.10
                                 };
@@ -2729,15 +2821,19 @@
                                     </div>`;
                             } else if (layerId === 4) {
                                 const p = feature.properties;
-                                if (p.tipo === 'divisoria') {
+                                const caudal = p.caudal_l_s
+                                    ? `${p.caudal_l_s.toLocaleString('es-EC')} l/s` : 'N/D';
+                                if (p.tipo === 'red') {
                                     popupContent = `
-                                    <div style="font-family:Segoe UI,sans-serif;min-width:190px">
-                                        <div style="background:#1976D2;color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
-                                            <i class="fas fa-tint"></i> Lindero interno de cobertura
+                                    <div style="font-family:Segoe UI,sans-serif;min-width:210px">
+                                        <div style="background:#0D47A1;color:white;padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">
+                                            <i class="fas fa-tint"></i> Red de distribución ${p.red || ''}
                                         </div>
                                         <table style="font-size:12px;width:100%;border-collapse:collapse">
-                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:50%">Longitud</td><td style="padding:3px 4px">${(p.longitud_m || 0).toLocaleString('es-EC')} m</td></tr>
-                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Fuente</td><td style="padding:3px 4px">${p.fuente || 'EMAPAR'}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Subredes</td><td style="padding:3px 4px">${p.subredes || 0}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Superficie</td><td style="padding:3px 4px">${(p.area_ha || 0).toLocaleString('es-EC')} ha</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Caudal de diseño</td><td style="padding:3px 4px">${caudal}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Fuente</td><td style="padding:3px 4px">${p.fuente || 'EP Riobamba'}${p.actualizacion ? ` · ${p.actualizacion}` : ''}</td></tr>
                                         </table>
                                     </div>`;
                                 } else {
@@ -2747,12 +2843,13 @@
                                             <i class="fas fa-tint"></i> Cobertura de Agua Potable
                                         </div>
                                         <table style="font-size:12px;width:100%;border-collapse:collapse">
-                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Zona</td><td style="padding:3px 4px">${p.zona || 'N/D'}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Red</td><td style="padding:3px 4px">${p.red || 'N/D'}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Subred</td><td style="padding:3px 4px">${p.subred || 'N/D'}${p.sector ? ` · sector ${p.sector}` : ''}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Caudal de diseño</td><td style="padding:3px 4px">${caudal}</td></tr>
                                             <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Superficie</td><td style="padding:3px 4px">${(p.area_ha || 0).toLocaleString('es-EC')} ha</td></tr>
-                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Perímetro</td><td style="padding:3px 4px">${(p.perimetro_m || 0).toLocaleString('es-EC')} m</td></tr>
-                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Fuente</td><td style="padding:3px 4px">${p.fuente || 'EMAPAR'}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Fuente</td><td style="padding:3px 4px">${p.fuente || 'EP Riobamba'}${p.actualizacion ? ` · ${p.actualizacion}` : ''}</td></tr>
                                         </table>
-                                        <p style="margin:7px 0 0;font-size:10.5px;color:#888;line-height:1.3">Área servida por la red de distribución. La factibilidad definitiva la certifica EMAPAR.</p>
+                                        <p style="margin:7px 0 0;font-size:10.5px;color:#888;line-height:1.3">Área servida por la red de distribución. La factibilidad definitiva la certifica EP Riobamba.</p>
                                     </div>`;
                                 }
                             } else if (layerId === 11) {
@@ -3677,7 +3774,7 @@
                     1: 'PUGS Urbano',
                     2: 'PUGS Rural',
                     3: 'Infraestructura Eléctrica',
-                    4: 'Agua Potable EMAPAR',
+                    4: 'Agua Potable EP Riobamba',
                     5: 'Cobertura Telecomunicaciones',
                     6: 'Catastro GADMR',
                     7: 'Vialidad',
@@ -4250,7 +4347,17 @@
                             : servAgua.estado === 'PARCIAL' ? 'PARCIALMENTE DENTRO DEL AREA DE COBERTURA'
                             : 'FUERA DEL AREA DE COBERTURA REGISTRADA';
                         filasServ.push(['Agua potable - cobertura', estadoAgua]);
-                        if (servAgua.zona) {
+                        if (servAgua.red) {
+                            filasServ.push(['Red de distribucion', `Red ${servAgua.red}`]);
+                            const detSub = [];
+                            if (servAgua.subred) detSub.push(servAgua.subred);
+                            if (servAgua.sector) detSub.push(`sector operativo ${servAgua.sector}`);
+                            if (servAgua.areaZonaHa) detSub.push(`${servAgua.areaZonaHa} ha`);
+                            if (detSub.length) filasServ.push(['Subred que abastece al predio', detSub.join(' · ')]);
+                            if (servAgua.caudal) {
+                                filasServ.push(['Caudal de diseno de la subred', `${servAgua.caudal} l/s`]);
+                            }
+                        } else if (servAgua.zona) {
                             filasServ.push(['Zona de cobertura', `${servAgua.zona}` +
                                 (servAgua.areaZonaHa ? ` (${servAgua.areaZonaHa} ha)` : '')]);
                         }
@@ -4274,12 +4381,12 @@
                         filasServ.push(['Alcantarillado - red mas cercana', 'NO ANALIZADO - Capa de alcantarillado no activa']);
                     }
 
-                    filasServ.push(['Observacion', 'Informacion referencial de las redes de EMAPAR (Riobamba EP). La factibilidad definitiva de conexion de agua potable y alcantarillado la certifica la empresa prestadora del servicio.']);
+                    filasServ.push(['Observacion', 'Informacion referencial de las redes de EP Riobamba (ex EMAPAR). La factibilidad definitiva de conexion de agua potable y alcantarillado la certifica la empresa prestadora del servicio.']);
 
                     y = checkSpace(y, 42);
                     y = at({
                         startY: y,
-                        head: [['Servicio basico (EMAPAR - Riobamba EP)', 'Detalle']],
+                        head: [['Servicio basico (EP Riobamba - ex EMAPAR)', 'Detalle']],
                         body: filasServ,
                         theme: 'grid',
                         styles: { fontSize: 8.5, cellPadding: 3, overflow: 'linebreak' },
@@ -4313,7 +4420,22 @@
                 // hay fibra y con que tecnologia movil se puede contar.
                 const tel = telecomunicaciones;
                 if (tel && tel.capaDisponible && tel.redes && tel.redes.length) {
-                    const filasTel = tel.redes.map(r => [r.nombre, textoCoberturaTelecom(r)]);
+                    const filasTel = [];
+
+                    // Primera fila: la respuesta corta. El lector de un DICAT
+                    // quiere saber que puede contratar en ese predio, y eso es
+                    // una lista, no una sola tecnologia.
+                    const conDatoTel = tel.redes.filter(r => !r.sinDato);
+                    const disponiblesTel = conDatoTel.filter(r => r.disponible);
+                    if (conDatoTel.length) {
+                        filasTel.push(['Servicios disponibles en el predio', disponiblesTel.length
+                            ? disponiblesTel.map(r => r.nombre).join(' · ')
+                            : (conDatoTel.some(r => r.entorno)
+                                ? `Ninguno sobre la huella del predio; hay red en el entorno inmediato (${TELECOM_MARGEN_M} m)`
+                                : 'Ninguno registrado por CNT EP')]);
+                    }
+
+                    tel.redes.forEach(r => filasTel.push([r.nombre, textoCoberturaTelecom(r)]));
 
                     const finuras = tel.redes.map(r => r.resolucion).filter(Boolean);
                     if (finuras.length) {
@@ -4337,11 +4459,19 @@
                         },
                         didParseCell(data) {
                             if (data.section !== 'body' || data.column.index !== 1) return;
+                            const etq = String((filasTel[data.row.index] || [])[0] || '');
                             const val = String((filasTel[data.row.index] || [])[1] || '');
-                            if (val.indexOf('DISPONIBLE') === 0 || val.indexOf('Nivel ALTO') === 0) {
+                            if (etq === 'Servicios disponibles en el predio') {
+                                data.cell.styles.fontStyle = 'bold';
+                                data.cell.styles.textColor = val.indexOf('Ninguno') === 0
+                                    ? [192, 57, 43] : [39, 174, 96];
+                            } else if (val.indexOf('DISPONIBLE') === 0 || val.indexOf('Nivel ALTO') === 0) {
                                 data.cell.styles.fontStyle = 'bold';
                                 data.cell.styles.textColor = [39, 174, 96];
                             } else if (val.indexOf('Nivel MEDIO') === 0) {
+                                data.cell.styles.textColor = [200, 140, 30];
+                            } else if (val.indexOf('SIN COBERTURA sobre el predio') === 0) {
+                                // La red esta al lado: ambar, no rojo.
                                 data.cell.styles.textColor = [200, 140, 30];
                             } else if (val.indexOf('Nivel BAJO') === 0 || val.indexOf('SIN COBERTURA') === 0) {
                                 data.cell.styles.textColor = [192, 57, 43];
@@ -4956,7 +5086,7 @@
                 const tableData = [];
                 const layerNames = {
                     1: 'PUGS Urbano', 2: 'PUGS Rural', 3: 'Infraestructura Electrica',
-                    4: 'Agua Potable EMAPAR', 5: 'Cobertura Telecomunicaciones',
+                    4: 'Agua Potable EP Riobamba', 5: 'Cobertura Telecomunicaciones',
                     6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Líneas de Fábrica',
                     11: 'Alcantarillado'
                 };
@@ -5047,7 +5177,7 @@
                     1: 'PUGS Urbano',
                     2: 'PUGS Rural',
                     3: 'Infraestructura Eléctrica',
-                    4: 'Agua Potable EMAPAR',
+                    4: 'Agua Potable EP Riobamba',
                     5: 'Cobertura Telecomunicaciones',
                     6: 'Catastro GADMR',
                     7: 'Vialidad',
@@ -6939,7 +7069,11 @@
 
             function analizarServiciosBasicos(predioGeoJSON) {
                 const res = {
-                    agua: { capaDisponible: !!geojsonLayers[4], estado: 'NO ANALIZADO', zona: null, areaZonaHa: null },
+                    agua: {
+                        capaDisponible: !!geojsonLayers[4], estado: 'NO ANALIZADO',
+                        zona: null, areaZonaHa: null,
+                        red: null, subred: null, sector: null, caudal: null
+                    },
                     alcantarillado: { capaDisponible: !!geojsonLayers[11], tramo: null, atraviesa: false }
                 };
 
@@ -6950,24 +7084,36 @@
                                : null;
                 if (!anilloLL || anilloLL.length < 3) return res;
 
-                // ── Agua potable: pertenencia a una zona de cobertura ─────────
+                // ── Agua potable: pertenencia a una subred de distribución ────
+                // Solo se miran las subredes: son la partición fina del área
+                // servida y llevan el caudal. El contorno de la red general
+                // cubre lo mismo, así que contarlo tambien seria responder dos
+                // veces lo mismo — el nombre de la red viene en la subred.
                 if (geojsonLayers[4]) {
                     let dentro = false, parcial = false;
+                    const anotar = (f) => {
+                        const p = f.properties || {};
+                        res.agua.zona = p.zona || null;
+                        res.agua.areaZonaHa = p.area_ha != null ? p.area_ha : null;
+                        res.agua.red = p.red || null;
+                        res.agua.subred = p.subred || null;
+                        res.agua.sector = p.sector || null;
+                        res.agua.caudal = p.caudal_l_s != null ? p.caudal_l_s : null;
+                    };
                     geojsonLayers[4].eachLayer(function (lyr) {
                         if (dentro || !lyr.feature) return;
                         const f = lyr.feature;
-                        if (!f.geometry || f.geometry.type !== 'Polygon') return;
-                        if (f.properties && f.properties.tipo === 'divisoria') return;
+                        if (!f.geometry) return;
+                        if (f.geometry.type !== 'Polygon' && f.geometry.type !== 'MultiPolygon') return;
+                        if (!f.properties || f.properties.tipo !== 'subred') return;
                         try {
                             const centro = turf.centroid(predioGeoJSON);
                             if (turf.booleanPointInPolygon(centro, f)) {
                                 dentro = true;
-                                res.agua.zona = f.properties ? f.properties.zona : null;
-                                res.agua.areaZonaHa = f.properties ? f.properties.area_ha : null;
+                                anotar(f);
                             } else if (!parcial && turf.booleanIntersects(predioGeoJSON, f)) {
                                 parcial = true;
-                                res.agua.zona = f.properties ? f.properties.zona : null;
-                                res.agua.areaZonaHa = f.properties ? f.properties.area_ha : null;
+                                anotar(f);
                             }
                         } catch (e) { }
                     });
@@ -7089,7 +7235,7 @@
                     1: { name: 'Uso de Suelo Urbano (PUGS)', icon: '🏙' },
                     2: { name: 'Uso de Suelo Rural (PUGS)', icon: '🌾' },
                     3: { name: 'Infraestructura Eléctrica', icon: '⚡' },
-                    4: { name: 'Agua Potable EMAPAR', icon: '💧' },
+                    4: { name: 'Agua Potable EP Riobamba', icon: '💧' },
                     11: { name: 'Alcantarillado', icon: '🚱' },
                     5: { name: 'Telecomunicaciones', icon: '📡' },
                     7: { name: 'Vialidad', icon: '🛣' }
@@ -7115,13 +7261,17 @@
                     // no la simple intersección genérica.
                     if (String(id) === '4' && servicios && servicios.agua) {
                         const a = servicios.agua;
-                        const zona = a.zona ? `${a.zona} (${a.areaZonaHa} ha)` : 'zona de cobertura';
+                        const zona = a.red
+                            ? `la red ${a.red}` + (a.subred ? `, subred ${a.subred}` : '') +
+                              (a.sector ? ` (sector ${a.sector})` : '')
+                            : 'la zona de cobertura';
+                        const caudal = a.caudal ? ` Caudal de diseno de la subred: ${a.caudal} l/s.` : '';
                         if (a.estado === 'DENTRO') {
-                            results.push({ name: def.name, estado: 'DISPONIBLE', detalle: `Predio dentro de ${zona}`, color: [39, 174, 96] });
+                            results.push({ name: def.name, estado: 'DISPONIBLE', detalle: `Predio dentro de ${zona}.${caudal}`, color: [39, 174, 96] });
                         } else if (a.estado === 'PARCIAL') {
-                            results.push({ name: def.name, estado: 'PARCIAL', detalle: `Predio parcialmente dentro de ${zona}`, color: [200, 140, 30] });
+                            results.push({ name: def.name, estado: 'PARCIAL', detalle: `Predio parcialmente dentro de ${zona}.${caudal}`, color: [200, 140, 30] });
                         } else {
-                            results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Fuera de las zonas de cobertura registradas', color: [192, 57, 43] });
+                            results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Fuera de las redes de distribucion registradas', color: [192, 57, 43] });
                         }
                         continue;
                     }
@@ -7145,9 +7295,15 @@
 
                     // Capa 5 — Telecomunicaciones: es un raster, no hay
                     // geometrías que intersecar. El veredicto sale de leer las
-                    // clases de cobertura bajo la huella del predio, y se
-                    // resume en la red que más pesa en un DICAT: la fibra
-                    // GPON decide el internet fijo; lo móvil es complemento.
+                    // clases de cobertura bajo la huella del predio.
+                    //
+                    // Esta fila enumera TODAS las redes que llegan al predio, no
+                    // una sola. Antes resumia el predio en la red de mas peso y
+                    // eso dejaba fuera respuestas ciertas: un predio con 4G, 3G y
+                    // 2G pero sin fibra salia como "sin fibra GPON" y el resto
+                    // quedaba en una frase suelta. El estado sigue distinguiendo
+                    // la fibra —es la unica que decide el internet fijo— pero el
+                    // detalle es la lista completa de lo que hay.
                     if (String(id) === '5') {
                         const t = telecomunicaciones;
                         if (!t || !t.capaDisponible || !t.redes.length) {
@@ -7163,36 +7319,54 @@
                             continue;
                         }
 
+                        const conDato = t.redes.filter(r => !r.sinDato);
+                        const disponibles = conDato.filter(r => r.disponible);
+                        const ausentes = conDato.filter(r => !r.disponible);
                         const gpon = t.redes.find(r => r.slug === 'gpon');
-                        const moviles = t.redes.filter(r => r.escala === 'senal' && !r.sinDato);
-                        const conSenal = moviles.filter(r => r.clase && r.clase !== 'sin');
-                        const buenas = conSenal.filter(r => r.clase === 'alto');
-                        const resumenMovil = conSenal.length
-                            ? conSenal.map(r => `${r.nombre}: ${r.etiqueta}`).join('; ')
-                            : 'sin cobertura movil registrada';
+                        const hayFibra = !!(gpon && gpon.disponible);
 
-                        if (gpon && !gpon.sinDato && gpon.clase === 'gpon') {
+                        // "4G LTE (ALTO)" para las redes de señal; "Fibra optica
+                        // GPON" a secas para las binarias, donde el nivel no
+                        // significa nada. Se añade el % cuando no cubre el predio
+                        // entero, que es el dato que distingue un borde de red.
+                        const etiquetar = (r) => {
+                            const nivel = r.escala === 'senal' && r.etiqueta ? ` (${r.etiqueta})` : '';
+                            const parcial = r.cobertura != null && r.cobertura < 100 ? ` ${r.cobertura} % del predio` : '';
+                            return `${r.nombre}${nivel}${parcial}`;
+                        };
+                        const lista = disponibles.map(etiquetar).join(' · ');
+                        // Sin fibra, la frase "sin fibra GPON desplegada" ya la
+                        // nombra: repetirla en la lista de ausentes sobra.
+                        const restantes = hayFibra ? ausentes : ausentes.filter(r => r.slug !== 'gpon');
+                        const sinLista = restantes.length
+                            ? ` Sin cobertura: ${restantes.map(r => r.nombre).join(', ')}.` : '';
+
+                        if (hayFibra) {
                             results.push({
                                 name: def.name, estado: 'DISPONIBLE',
-                                detalle: `Fibra optica GPON sobre el predio (${gpon.porcentaje} % de su huella). ${resumenMovil}`,
+                                detalle: `Servicios sobre el predio: ${lista}.${sinLista}`,
                                 color: [39, 174, 96]
                             });
-                        } else if (buenas.length) {
+                        } else if (disponibles.length) {
                             results.push({
                                 name: def.name, estado: 'PARCIAL',
-                                detalle: `Sin fibra GPON desplegada. Cobertura movil de nivel ALTO en ${buenas.map(r => r.nombre).join(', ')}. ${resumenMovil}`,
+                                detalle: `Servicios sobre el predio: ${lista}. Sin fibra optica GPON desplegada.${sinLista}`,
                                 color: [200, 140, 30]
                             });
-                        } else if (conSenal.length) {
+                        } else if (conDato.some(r => r.entorno)) {
+                            // Ninguna red alcanza la huella, pero alguna llega al
+                            // entorno inmediato. No es lo mismo que no haber red.
+                            const cerca = conDato.filter(r => r.entorno);
                             results.push({
-                                name: def.name, estado: 'PARCIAL',
-                                detalle: `Sin fibra GPON desplegada. Solo cobertura movil de nivel medio o bajo. ${resumenMovil}`,
+                                name: def.name, estado: 'PROXIMO',
+                                detalle: `Ninguna red de CNT EP cubre la huella del predio, pero llegan al entorno inmediato ` +
+                                    `(${TELECOM_MARGEN_M} m): ${cerca.map(r => r.nombre).join(', ')}.`,
                                 color: [200, 140, 30]
                             });
                         } else {
                             results.push({
                                 name: def.name, estado: 'NO DETECTADO',
-                                detalle: 'Sin cobertura registrada de CNT EP en el predio (ni fibra ni red movil)',
+                                detalle: `Sin cobertura registrada de CNT EP en el predio ni en ${TELECOM_MARGEN_M} m a la redonda (ni fibra ni red movil)`,
                                 color: [192, 57, 43]
                             });
                         }
@@ -7780,6 +7954,34 @@
                 Bitácora de mejoras de la plataforma y de las versiones de datos. Los datos del catastro provienen del GADMR; el CAE-CH actualiza la plataforma cuando recibe nuevas versiones oficiales.
             </div>
 
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line" style="height:40px"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Agua potable y telecomunicaciones — Septiembre 2026</strong> — <span style="background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS ACTUALIZADOS</span>
+                    <div style="margin-top:4px">
+                        <strong>Agua potable:</strong> EP Riobamba (antes EMAPAR) entregó sus redes de distribución
+                        al corte de marzo de 2025. La capa deja de ser un contorno de cobertura y pasa a tener las
+                        <strong>9 redes</strong> nombradas —Saboya, Maldonado, San Martín de Veranillo, El Carmen, Piscín,
+                        Tapi, El Recreo, Yaruquíes y Tratamiento— con sus <strong>158 subredes</strong>, su sector
+                        operativo y el <strong>caudal de diseño</strong> de cada una (835 l/s en total sobre 4 885 ha).
+                        El DICAT ya no dice solo «dentro de la cobertura»: nombra la red, la subred que abastece al
+                        predio y su caudal. La actualización añade además 264 ha servidas que la versión anterior no
+                        recogía.
+                    </div>
+                    <div style="margin-top:6px">
+                        <strong>Telecomunicaciones:</strong> corregida la lectura de cobertura del informe. Antes se
+                        reportaba únicamente la clase predominante bajo la huella del predio, de modo que un predio
+                        servido en parte por una red salía como <em>sin cobertura</em> si la parte no servida ocupaba
+                        más píxeles. Ahora el DICAT <strong>enumera todas las redes que llegan al predio</strong>
+                        —GPON, 4G, 3G, 2G, RNA y CDMA 450— con el nivel y el porcentaje de cada una, y cuando ninguna
+                        alcanza el lote avisa si la red llega a menos de 50 m en lugar de darlo por no cubierto.
+                    </div>
+                    <div class="historial-entry-date">Septiembre 2026 · Fuentes: EP Riobamba y CNT EP · Datos y corrección de informe</div>
+                </div>
+            </div>
             <div class="historial-entry">
                 <div>
                     <div class="historial-dot"></div>

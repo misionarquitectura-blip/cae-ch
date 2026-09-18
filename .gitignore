@@ -19,13 +19,14 @@ DATA SET/*.csv
 DATA SET/*.zip
 DATA SET/*.qmd
 
-# Descargas crudas de EMAPAR en EPSG:32717 (CAD). El visor consume las capas
-# ya reproyectadas que produce DATA SET/build_servicios_basicos.js:
+# Descargas crudas de EMAPAR / EP Riobamba en EPSG:32717. El visor consume las
+# capas ya reproyectadas que produce DATA SET/build_servicios_basicos.js:
 # "DATA SET/agua_potable.geojson" y "DATA SET/alcantarillado.geojson".
 DATA SET/Cobertura Agua Potable.geojson
 DATA SET/Alcantarillado Sanitario.geojson
 DATA SET/Alcantarillado Fluvial.geojson
 DATA SET/Alcantarillado Combinado.geojson
+DATA SET/AGUA POTABLE EP RIOBAMBA/
 ENLACES GEOPORTALES/
 
 # Descargas crudas del geoportal del GADMR que ninguna capa del visor

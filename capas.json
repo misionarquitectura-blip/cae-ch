@@ -106,9 +106,9 @@
       "tarjeta": {
         "titulo": "Agua Potable",
         "icono": "fas fa-tint",
-        "texto": "Zonas de cobertura de la red de distribución de EMAPAR, usadas para responder la factibilidad de agua del predio.",
+        "texto": "Las 9 redes de distribución de EP Riobamba y sus 158 subredes, con el caudal de diseño de cada una. El DICAT responde con ellas la factibilidad de agua del predio.",
         "badge": {
-          "texto": "EMAPAR",
+          "texto": "EP Riobamba · marzo 2025",
           "fondo": "#e3f2fd",
           "color": "#1565c0"
         }
@@ -116,8 +116,8 @@
       "visor": [
         {
           "id": 4,
-          "nombre": "Agua Potable EMAPAR",
-          "fuente": "Riobamba EP · 8 zonas de cobertura (4 664 ha)"
+          "nombre": "Agua Potable EP Riobamba",
+          "fuente": "EP Riobamba · 9 redes y 158 subredes (4 885 ha, 835 l/s)"
         }
       ]
     },

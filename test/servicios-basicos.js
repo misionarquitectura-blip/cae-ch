@@ -88,14 +88,48 @@ const api = H.cargarServicios(capas, turf);
 // ═════════════════════════════════════════════════════════════════════════════
 console.log('1. Capas publicadas');
 
-const zonas = agua.features.filter(f => f.properties.tipo === 'cobertura');
-H.chequear(`cobertura de agua: ${zonas.length} zonas poligonales`, zonas.length >= 8);
+// La capa trae dos niveles: el contorno de cada red de distribucion y el
+// mosaico de sus subredes. El analisis del DICAT solo consulta las subredes,
+// que son la particion fina y las que llevan el caudal.
+const redes = agua.features.filter(f => f.properties.tipo === 'red');
+const zonas = agua.features.filter(f => f.properties.tipo === 'subred');
+H.chequear(`cobertura de agua: ${redes.length} redes de distribucion`, redes.length === 9, `${redes.length}`);
+H.chequear(`cobertura de agua: ${zonas.length} subredes poligonales`, zonas.length >= 150, `${zonas.length}`);
+H.chequear('la capa no trae features de otro tipo',
+    redes.length + zonas.length === agua.features.length,
+    `${agua.features.length - redes.length - zonas.length} sobrantes`);
 
-const abiertos = zonas.filter(f => {
+const abiertos = zonas.concat(redes).filter(f => {
     const r = f.geometry.coordinates[0];
     return r[0][0] !== r[r.length - 1][0] || r[0][1] !== r[r.length - 1][1];
 });
 H.chequear('todos los anillos de cobertura estan cerrados', abiertos.length === 0, `${abiertos.length} abiertos`);
+
+// Atributos que el DICAT imprime: si falta uno, el informe sale con un hueco.
+const sinAtributo = zonas.filter(f => {
+    const p = f.properties;
+    return !p.red || !p.subred || !p.zona || !(p.area_ha > 0) || !(p.caudal_l_s > 0);
+});
+H.chequear('toda subred trae red, codigo, superficie y caudal de diseno',
+    sinAtributo.length === 0,
+    sinAtributo.slice(0, 3).map(f => f.properties.zona).join(', '));
+
+// Cada subred tiene que pertenecer a una de las nueve redes publicadas: si el
+// saneo de nombres del build fallara, aqui aparecerian dos grafias del mismo
+// sector y el DICAT citaria una red que no esta en el mapa.
+const nombresRed = new Set(redes.map(f => f.properties.red));
+const huerfanas = zonas.filter(f => !nombresRed.has(f.properties.red));
+H.chequear(`las ${zonas.length} subredes pertenecen a alguna de las ${nombresRed.size} redes`,
+    huerfanas.length === 0,
+    [...new Set(huerfanas.map(f => f.properties.red))].join(', '));
+
+const codigos = zonas.map(f => `${f.properties.red}/${f.properties.subred}`);
+H.chequear('no hay dos subredes con el mismo codigo dentro de una red',
+    new Set(codigos).size === codigos.length);
+
+const caudalTotal = zonas.reduce((s, f) => s + f.properties.caudal_l_s, 0);
+H.chequear(`caudal de diseno total ${caudalTotal.toFixed(1)} l/s (entre 400 y 1 500)`,
+    caudalTotal > 400 && caudalTotal < 1500);
 
 const fueraRango = agua.features.concat(alc.features).filter(f => {
     const b = bboxDe(f);
@@ -107,31 +141,70 @@ const areaTotalHa = zonas.reduce((s, f) => s + (f.properties.area_ha || 0), 0);
 H.chequear(`superficie total de cobertura ${areaTotalHa.toFixed(1)} ha (entre 3 000 y 8 000)`,
     areaTotalHa > 3000 && areaTotalHa < 8000);
 
-// Las zonas no deben solaparse: son una particion del area servida.
-// Se muestrea el interior en rejilla en vez de mirar vertices: las zonas
-// comparten linderos, y un vertice sobre el lindero cae en el borde, donde el
-// test punto-en-poligono es ambiguo y delataria solapes que no existen.
-let solapes = 0;
+// El mosaico de subredes y el contorno de las redes describen el mismo
+// territorio: se dibujaron por separado, asi que no coinciden al metro, pero
+// una diferencia grande significaria que una de las dos capas llego mal.
+const areaRedesHa = redes.reduce((s, f) => s + (f.properties.area_ha || 0), 0);
+const desvioAreas = Math.abs(areaTotalHa - areaRedesHa) / areaRedesHa * 100;
+H.chequear(`subredes y redes cubren lo mismo: ${areaTotalHa.toFixed(0)} vs ${areaRedesHa.toFixed(0)} ha (${desvioAreas.toFixed(1)} % de diferencia)`,
+    desvioAreas < 3);
+
+// Las subredes son una particion del area servida: un predio pertenece a una
+// sola. Pero comparten lindero, y dos linderos digitalizados por separado en
+// CAD no caen en la misma coordenada al milimetro: quedan astillas de unos
+// pocos metros cuadrados a lo largo del borde. Por eso no se pregunta "¿hay
+// algun punto comun?" —siempre lo hay— sino CUANTA superficie se repite.
+//
+// El area se mide por barrido horizontal: para cada linea y=Y se calculan los
+// tramos interiores de cada anillo y se suma la longitud comun. Es exacta en x
+// y solo discretiza en y, asi que un solape de metros no se le escapa, y es
+// dos ordenes de magnitud mas rapida que muestrear el interior en malla.
+const DY_SOLAPE = 0.25;                       // paso del barrido, en metros
+const TOL_ASTILLA_M2 = 500;                   // un lote pequeño: por encima ya es un solape de verdad
+const TOL_SOLAPE_PCT = 0.01;                  // del area total servida
+
+function tramosEn(anilloUTM, Y) {
+    const xs = [];
+    for (let i = 0, j = anilloUTM.length - 1; i < anilloUTM.length; j = i++) {
+        const [xi, yi] = anilloUTM[i], [xj, yj] = anilloUTM[j];
+        if ((yi > Y) !== (yj > Y)) xs.push((xj - xi) * (Y - yi) / (yj - yi) + xi);
+    }
+    xs.sort((a, b) => a - b);
+    const t = [];
+    for (let k = 0; k + 1 < xs.length; k += 2) t.push([xs[k], xs[k + 1]]);
+    return t;
+}
+
+const anillosUTM = zonas.map(f => f.geometry.coordinates[0].map(c => api.servUTM(c)));
+const cajasUTM = anillosUTM.map(a => a.reduce(
+    (b, c) => [Math.min(b[0], c[0]), Math.min(b[1], c[1]), Math.max(b[2], c[0]), Math.max(b[3], c[1])],
+    [Infinity, Infinity, -Infinity, -Infinity]));
+
+let solapeTotal = 0, peorPar = 0;
 const paresSolapados = [];
 for (let i = 0; i < zonas.length; i++) {
     for (let j = i + 1; j < zonas.length; j++) {
-        const ri = zonas[i].geometry.coordinates[0], rj = zonas[j].geometry.coordinates[0];
-        const bi = bboxDe(zonas[i]), bj = bboxDe(zonas[j]);
-        const x0 = Math.max(bi[0], bj[0]), x1 = Math.min(bi[2], bj[2]);
-        const y0 = Math.max(bi[1], bj[1]), y1 = Math.min(bi[3], bj[3]);
-        if (x0 >= x1 || y0 >= y1) continue; // ni las cajas se tocan
-        let comunes = 0;
-        const N = 120;
-        for (let a = 1; a < N && comunes < 3; a++) {
-            for (let b = 1; b < N && comunes < 3; b++) {
-                const p = [x0 + (x1 - x0) * a / N, y0 + (y1 - y0) * b / N];
-                if (pip(p, ri) && pip(p, rj)) comunes++;
-            }
+        const y0 = Math.max(cajasUTM[i][1], cajasUTM[j][1]);
+        const y1 = Math.min(cajasUTM[i][3], cajasUTM[j][3]);
+        if (Math.max(cajasUTM[i][0], cajasUTM[j][0]) >= Math.min(cajasUTM[i][2], cajasUTM[j][2]) || y0 >= y1) continue;
+        let area = 0;
+        for (let y = y0 + DY_SOLAPE / 2; y < y1; y += DY_SOLAPE) {
+            const ti = tramosEn(anillosUTM[i], y), tj = tramosEn(anillosUTM[j], y);
+            for (const p of ti) for (const q of tj) area += Math.max(0, Math.min(p[1], q[1]) - Math.max(p[0], q[0])) * DY_SOLAPE;
         }
-        if (comunes >= 3) { solapes++; paresSolapados.push(`${zonas[i].properties.zona} ∩ ${zonas[j].properties.zona}`); }
+        if (area <= 0.5) continue;
+        solapeTotal += area;
+        if (area > peorPar) peorPar = area;
+        if (area > TOL_ASTILLA_M2) {
+            paresSolapados.push(`${zonas[i].properties.zona} ∩ ${zonas[j].properties.zona}: ${area.toFixed(0)} m²`);
+        }
     }
 }
-H.chequear('las zonas de cobertura no se solapan', solapes === 0, paresSolapados.join(', '));
+const solapePct = solapeTotal / (areaTotalHa * 10000) * 100;
+H.chequear(`ningun par de subredes se solapa mas de ${TOL_ASTILLA_M2} m² (peor: ${peorPar.toFixed(0)} m²)`,
+    paresSolapados.length === 0, paresSolapados.join(' | '));
+H.chequear(`el solape acumulado es despreciable: ${solapeTotal.toFixed(0)} m² (${solapePct.toFixed(4)} % del area servida)`,
+    solapePct < TOL_SOLAPE_PCT);
 
 const TIPOS = ['Sanitario', 'Pluvial', 'Combinado'];
 const malTipo = alc.features.filter(f => TIPOS.indexOf(f.properties.tipo) < 0);
@@ -229,6 +302,15 @@ for (let i = 0; i < catastro.features.length && n < 12; i += PASO) {
         discrepancias++;
         detalle.push(`agua: ${f.properties.claves} dijo ${r.agua.estado}, esperado ${esperado}`);
     }
+    // Y que cite la subred correcta, no solo el veredicto: el DICAT imprime el
+    // nombre de la red y el caudal, y equivocarlos es peor que no decirlos.
+    if (zonaReal && (r.agua.subred !== zonaReal.properties.subred ||
+                     r.agua.red !== zonaReal.properties.red ||
+                     r.agua.caudal !== zonaReal.properties.caudal_l_s)) {
+        discrepancias++;
+        detalle.push(`agua: ${f.properties.claves} cito ${r.agua.red}/${r.agua.subred}, real ` +
+            `${zonaReal.properties.red}/${zonaReal.properties.subred}`);
+    }
 
     // Contraste del tramo mas cercano contra la busqueda exhaustiva.
     const anilloUTM = ring.concat([ring[0]]).map(c2 => api.servUTM(c2));
@@ -244,8 +326,9 @@ for (let i = 0; i < catastro.features.length && n < 12; i += PASO) {
     }
 
     const t = r.alcantarillado.tramo;
-    console.log(`    ${String(f.properties.claves || '').padEnd(20)} agua=${r.agua.estado.padEnd(8)}` +
-        ` red=${t ? (t.tipo + ' ' + (t.diametro_mm || t.seccion) + ' @ ' + t.distancia + ' m') : 'sin red cercana'}`);
+    const ap = r.agua.red ? `${r.agua.red}/${r.agua.subred} ${r.agua.caudal} l/s` : '—';
+    console.log(`    ${String(f.properties.claves || '').padEnd(28)} agua=${r.agua.estado.padEnd(7)} ${ap.padEnd(34)}` +
+        ` alc=${t ? (t.tipo + ' ' + (t.diametro_mm || t.seccion) + ' @ ' + t.distancia + ' m') : 'sin red cercana'}`);
 }
 
 H.chequear(`analizados ${n} predios sin discrepancias con el calculo independiente`, discrepancias === 0,

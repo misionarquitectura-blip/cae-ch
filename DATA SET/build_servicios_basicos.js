@@ -1,19 +1,20 @@
 // Genera las capas de servicios básicos del GeoVisor a partir de los archivos
-// crudos de EMAPAR (Riobamba EP), exportados desde CAD en EPSG:32717:
+// crudos de EMAPAR / EP Riobamba, exportados en EPSG:32717:
 //
-//   DATA SET/Cobertura Agua Potable.geojson   -> DATA SET/agua_potable.geojson
+//   DATA SET/AGUA POTABLE EP RIOBAMBA/REDES_GENERAL.shp            ─┐
+//   DATA SET/AGUA POTABLE EP RIOBAMBA/REDES_DE_DISTRIBUCION_*.shp  ─┴> agua_potable.geojson
 //   DATA SET/Alcantarillado Sanitario.geojson ─┐
 //   DATA SET/Alcantarillado Fluvial.geojson    ├─> DATA SET/alcantarillado.geojson
 //   DATA SET/Alcantarillado Combinado.geojson ─┘
 //
 // Dos transformaciones, además de la reproyección a WGS84:
 //
-//  1. Agua potable: el archivo trae 17 polilíneas abiertas y sin atributos. No
-//     son tramos sueltos: encadenadas por sus extremos cierran los anillos de
-//     las zonas de cobertura. Aquí se reconstruyen esos anillos y se emiten
-//     como polígonos, que es lo que permite responder "¿el predio está dentro
-//     de la cobertura?" en el DICAT. Las polilíneas que no cierran (divisorias
-//     internas que arrancan en medio de otra línea) se conservan como líneas.
+//  1. Agua potable: la entrega de septiembre de 2026 llega ya como polígonos
+//     con atributos —9 redes de distribución y sus 158 subredes— y sustituye a
+//     la reconstrucción por encadenado de polilíneas que hubo que hacer con la
+//     entrega anterior. Aquí se unen las dos coberturas en una sola capa y se
+//     vuelve a medir cada polígono en el plano UTM, porque el campo AREA del
+//     shapefile viene desactualizado en dos subredes (P-08 y Y-03).
 //
 //  2. Alcantarillado: las tres redes se unifican en una sola capa. El diámetro
 //     vive en el nombre de capa CAD ("z san tuberia 200mm"), así que se extrae
@@ -76,61 +77,149 @@ const escribir = (n, fc) => {
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  1. COBERTURA DE AGUA POTABLE — polilíneas -> anillos -> polígonos
+//  0. LECTOR DE SHAPEFILE (SHP + DBF)
 // ═══════════════════════════════════════════════════════════════════════════
+// EP Riobamba entrega en shapefile, no en GeoJSON. Se lee aquí en lugar de
+// añadir una dependencia al repositorio: son dos archivos de polígonos simples
+// y la parte del formato que hace falta cabe en sesenta líneas.
 
-// Tolerancia de nodo: los extremos que coinciden lo hacen exactamente (0,0 m);
-// 5 m absorbe el redondeo del export CAD sin unir líneas que no se tocan.
-const TOL_NODO = 5;
-// Un anillo al que le falta menos que esto se cierra con una recta. El caso
-// real es un vano de 97 m donde dos zonas se apoyan en un tercer lindero.
-const TOL_CIERRE = 150;
+function leerDBF(buf) {
+    const nRegistros = buf.readUInt32LE(4);
+    const largoCabecera = buf.readUInt16LE(8);
+    const largoRegistro = buf.readUInt16LE(10);
 
-function encadenarAnillos(lineas) {
-    const usada = new Array(lineas.length).fill(false);
-    const cadenas = [];
-
-    for (let i = 0; i < lineas.length; i++) {
-        if (usada[i]) continue;
-        usada[i] = true;
-        let cadena = lineas[i].slice();
-        let crecio = true;
-
-        while (crecio) {
-            crecio = false;
-            for (let j = 0; j < lineas.length; j++) {
-                if (usada[j]) continue;
-                const s = lineas[j];
-                const fin = cadena[cadena.length - 1];
-                const ini = cadena[0];
-                if (dist(fin, s[0]) <= TOL_NODO) {
-                    cadena = cadena.concat(s.slice(1));
-                } else if (dist(fin, s[s.length - 1]) <= TOL_NODO) {
-                    cadena = cadena.concat(s.slice().reverse().slice(1));
-                } else if (dist(ini, s[s.length - 1]) <= TOL_NODO) {
-                    cadena = s.slice(0, -1).concat(cadena);
-                } else if (dist(ini, s[0]) <= TOL_NODO) {
-                    cadena = s.slice().reverse().slice(0, -1).concat(cadena);
-                } else {
-                    continue;
-                }
-                usada[j] = true;
-                crecio = true;
-                break;
-            }
-        }
-        cadenas.push(cadena);
+    const campos = [];
+    for (let p = 32; buf[p] !== 0x0d && p < largoCabecera; p += 32) {
+        campos.push({
+            nombre: buf.toString('latin1', p, p + 11).replace(/\0.*$/, '').trim(),
+            tipo: String.fromCharCode(buf[p + 11]),
+            largo: buf[p + 16]
+        });
     }
-    return cadenas;
+
+    const filas = [];
+    for (let i = 0; i < nRegistros; i++) {
+        let off = largoCabecera + i * largoRegistro;
+        if (buf[off] === 0x2a) { filas.push(null); continue; }   // registro borrado
+        off += 1;
+        const fila = {};
+        for (const c of campos) {
+            // El .cpg de ambos archivos declara UTF-8, que es donde vienen las
+            // tildes de "Yaruquíes" y "San Martín".
+            const crudo = buf.toString('utf8', off, off + c.largo).replace(/\0/g, '').trim();
+            off += c.largo;
+            fila[c.nombre] = (c.tipo === 'N' || c.tipo === 'F')
+                ? (crudo === '' ? null : Number(crudo))
+                : crudo;
+        }
+        filas.push(fila);
+    }
+    return filas;
 }
 
-// Área en el plano UTM (m²) por la fórmula del polígono (shoelace).
-function areaUTM(anillo) {
+// Solo los tipos que traen estos archivos: Polygon (5) y sus variantes Z/M.
+function leerSHP(buf) {
+    const formas = [];
+    let p = 100;                                   // cabecera fija de 100 bytes
+    while (p < buf.length) {
+        const largo = buf.readInt32BE(p + 4) * 2;  // en palabras de 16 bits
+        const tipo = buf.readInt32LE(p + 8);
+        const d = p + 12;
+        if (tipo === 0) {
+            formas.push(null);                     // forma nula
+        } else if (tipo % 10 === 5) {
+            const nPartes = buf.readInt32LE(d + 32);
+            const nPuntos = buf.readInt32LE(d + 36);
+            const inicios = [];
+            for (let i = 0; i < nPartes; i++) inicios.push(buf.readInt32LE(d + 40 + i * 4));
+            const base = d + 40 + nPartes * 4;
+            const puntos = [];
+            for (let i = 0; i < nPuntos; i++) {
+                puntos.push([buf.readDoubleLE(base + i * 16), buf.readDoubleLE(base + i * 16 + 8)]);
+            }
+            const anillos = [];
+            for (let i = 0; i < nPartes; i++) {
+                anillos.push(puntos.slice(inicios[i], i + 1 < nPartes ? inicios[i + 1] : nPuntos));
+            }
+            formas.push(anillos);
+        } else {
+            throw new Error(`shapefile: tipo de geometria ${tipo} no soportado`);
+        }
+        p += 8 + largo;
+    }
+    return formas;
+}
+
+function leerShapefile(rel) {
+    const base = path.join(BASE, rel);
+    const formas = leerSHP(fs.readFileSync(base + '.shp'));
+    const filas = leerDBF(fs.readFileSync(base + '.dbf'));
+    if (formas.length !== filas.length) {
+        throw new Error(`${rel}: ${formas.length} geometrias y ${filas.length} registros`);
+    }
+    return formas.map((anillos, i) => ({ anillos, props: filas[i] }));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  1. COBERTURA DE AGUA POTABLE — redes de distribución y subredes
+// ═══════════════════════════════════════════════════════════════════════════
+
+const AP_DIR = 'AGUA POTABLE EP RIOBAMBA';
+const AP_GENERAL = path.join(AP_DIR, 'REDES_GENERAL');
+const AP_SUBREDES = path.join(AP_DIR, 'REDES_DE_DISTRIBUCION_MARZO_2025');
+const AP_FUENTE = 'EP Riobamba (ex EMAPAR)';
+const AP_ACTUALIZACION = 'marzo 2025';
+
+// Los dos archivos nombran las mismas nueve redes de formas distintas: el
+// general va en mayúsculas y sin tildes ("YARUQUIES", "SAN MARTIN DE
+// VERANILLO") y el de subredes con tilde y abreviado ("Red Yaruquíes", "Red
+// San Martín"). Esta tabla es la única versión buena del nombre; si apareciera
+// una red que no está aquí el script para, en vez de publicar una capa con dos
+// grafías del mismo sector.
+const REDES_AP = [
+    { clave: 'TRATAMIENTO',             nombre: 'Tratamiento' },
+    { clave: 'TAPI',                    nombre: 'Tapi' },
+    { clave: 'EL RECREO',               nombre: 'El Recreo' },
+    { clave: 'EL CARMEN',               nombre: 'El Carmen' },
+    { clave: 'SABOYA',                  nombre: 'Saboya' },
+    { clave: 'MALDONADO',               nombre: 'Maldonado' },
+    { clave: 'PISCIN',                  nombre: 'Piscín' },
+    { clave: 'SAN MARTIN DE VERANILLO', nombre: 'San Martín de Veranillo', alias: ['SAN MARTIN'] },
+    { clave: 'YARUQUIES',               nombre: 'Yaruquíes' }
+];
+
+// "Red San Martín" -> "SAN MARTIN": mayúsculas, sin tildes y sin el prefijo.
+function normalizarRed(s) {
+    return String(s || '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toUpperCase().trim()
+        .replace(/^RED\s+/, '')
+        .replace(/\s+/g, ' ');
+}
+
+const indiceRedes = {};
+REDES_AP.forEach(r => {
+    indiceRedes[r.clave] = r;
+    (r.alias || []).forEach(a => { indiceRedes[a] = r; });
+});
+
+function redDe(valor, origen) {
+    const r = indiceRedes[normalizarRed(valor)];
+    if (!r) throw new Error(`${origen}: red de agua potable desconocida "${valor}"`);
+    return r;
+}
+
+function areaConSigno(anillo) {
     let s = 0;
     for (let k = 0; k < anillo.length - 1; k++) {
         s += anillo[k][0] * anillo[k + 1][1] - anillo[k + 1][0] * anillo[k][1];
     }
-    return Math.abs(s / 2);
+    return s / 2;
+}
+
+// Área en el plano UTM (m²) por la fórmula del polígono (shoelace).
+function areaUTM(anillo) {
+    return Math.abs(areaConSigno(anillo));
 }
 
 function longitudUTM(linea) {
@@ -139,70 +228,154 @@ function longitudUTM(linea) {
     return s;
 }
 
-function construirAguaPotable() {
-    const src = leer('Cobertura Agua Potable.geojson');
-    const lineas = [];
-    src.features.forEach(f => {
-        const g = f.geometry;
-        if (!g) return;
-        if (g.type === 'LineString') lineas.push(g.coordinates);
-        else if (g.type === 'MultiLineString') g.coordinates.forEach(ls => lineas.push(ls));
+// Los anillos de un shapefile vienen orientados: el exterior en sentido horario
+// (shoelace negativo) y los huecos al revés. Ninguno de los dos archivos trae
+// huecos hoy, pero respetar la orientación cuesta una línea y evita publicar un
+// hueco como si fuera una isla si una entrega futura los trae.
+function anillosAPoligono(anillos) {
+    const poligonos = [];
+    anillos.forEach(a => {
+        const cerrado = a.slice();
+        const ini = cerrado[0], fin = cerrado[cerrado.length - 1];
+        if (ini[0] !== fin[0] || ini[1] !== fin[1]) cerrado.push(ini);
+        if (areaConSigno(cerrado) < 0 || !poligonos.length) poligonos.push([cerrado]);
+        else poligonos[poligonos.length - 1].push(cerrado);
     });
-    console.log(`Agua potable: ${lineas.length} polilíneas de origen`);
+    return poligonos;
+}
 
-    const cadenas = encadenarAnillos(lineas);
-    const features = [];
-    let zonas = 0, sueltas = 0, areaTotal = 0;
+// Medidas de un polígono completo: el área neta descuenta los huecos y el
+// perímetro suma solo los contornos exteriores.
+function medirPoligono(poligonos) {
+    let area = 0, perimetro = 0;
+    poligonos.forEach(anillos => {
+        anillos.forEach((a, j) => { area += j === 0 ? areaUTM(a) : -areaUTM(a); });
+        perimetro += longitudUTM(anillos[0]);
+    });
+    return { area, perimetro };
+}
 
-    cadenas.forEach(cadena => {
-        const vano = dist(cadena[0], cadena[cadena.length - 1]);
+function geometriaWgs84(poligonos) {
+    const conv = poligonos.map(anillos => anillos.map(a => a.map(c => utm17sToWgs84(c[0], c[1]))));
+    return conv.length === 1
+        ? { type: 'Polygon', coordinates: conv[0] }
+        : { type: 'MultiPolygon', coordinates: conv };
+}
 
-        if (vano > TOL_CIERRE) {
-            // Divisoria interna: nace en medio de otra línea, no delimita zona.
-            sueltas++;
-            features.push({
+const r2 = v => Math.round(v * 100) / 100;
+
+function construirAguaPotable() {
+    const generales = leerShapefile(AP_GENERAL);
+    const subredes = leerShapefile(AP_SUBREDES);
+    console.log(`Agua potable: ${generales.length} redes generales, ${subredes.length} subredes`);
+
+    // ── Subredes: son la partición fina del área servida ─────────────────
+    // Llevan el caudal de diseño y el sector operativo, que es lo que el DICAT
+    // necesita citar. Se ordenan por red y por código para que la capa salga
+    // estable entre ejecuciones.
+    const porRed = {};
+    const featuresSub = [];
+    let caudalTotal = 0;
+
+    subredes
+        .map(f => ({ f, red: redDe(f.props.RED, 'subredes') }))
+        .sort((a, b) => a.red.nombre.localeCompare(b.red.nombre, 'es') ||
+                        String(a.f.props.SUB_RED).localeCompare(String(b.f.props.SUB_RED), 'es'))
+        .forEach(({ f, red }) => {
+            const poligonos = anillosAPoligono(f.anillos);
+            const { area, perimetro } = medirPoligono(poligonos);
+            const caudal = f.props.CAUDAL_LT_ || 0;
+            const codigo = String(f.props.SUB_RED || '').trim() || 'S/C';
+            caudalTotal += caudal;
+
+            porRed[red.clave] = porRed[red.clave] || { n: 0, area: 0, caudal: 0 };
+            porRed[red.clave].n++;
+            porRed[red.clave].area += area;
+            porRed[red.clave].caudal += caudal;
+
+            featuresSub.push({
                 type: 'Feature',
                 properties: {
-                    tipo: 'divisoria',
-                    zona: 'Lindero interno de cobertura',
-                    longitud_m: Math.round(longitudUTM(cadena) * 100) / 100,
-                    fuente: 'EMAPAR – Riobamba EP'
+                    tipo: 'subred',
+                    red: red.nombre,
+                    subred: codigo,
+                    // `zona` es la etiqueta que el visor y el DICAT imprimen
+                    // como nombre del área de cobertura.
+                    zona: `Red ${red.nombre} · subred ${codigo}`,
+                    sector: String(f.props.SECTOR || '').trim() || null,
+                    // Código interno de EP Riobamba. NO es el código de parroquia
+                    // de la clave catastral: contrastado contra el catastro, su 2
+                    // cae en Veloz y su 4 en Maldonado, al revés que el municipal.
+                    // Se publica el código crudo y no se traduce a un nombre.
+                    parroquia_ep: String(f.props.PARROQUIA || '').trim() || null,
+                    caudal_l_s: caudal ? r2(caudal) : null,
+                    area_m2: r2(area),
+                    area_ha: r2(area / 10000),
+                    perimetro_m: r2(perimetro),
+                    fuente: AP_FUENTE,
+                    actualizacion: AP_ACTUALIZACION
                 },
-                geometry: { type: 'LineString', coordinates: cadena.map(c => utm17sToWgs84(c[0], c[1])) }
+                geometry: geometriaWgs84(poligonos)
             });
-            return;
-        }
-
-        const anillo = cadena.slice();
-        if (vano > 0) anillo.push(anillo[0]); // cerrar el vano residual
-        const area = areaUTM(anillo);
-        zonas++;
-        areaTotal += area;
-        features.push({
-            type: 'Feature',
-            properties: {
-                tipo: 'cobertura',
-                zona: `Zona de cobertura ${zonas}`,
-                area_m2: Math.round(area * 100) / 100,
-                area_ha: Math.round(area / 10000 * 100) / 100,
-                perimetro_m: Math.round(longitudUTM(anillo) * 100) / 100,
-                vano_cierre_m: Math.round(vano * 100) / 100,
-                fuente: 'EMAPAR – Riobamba EP'
-            },
-            geometry: { type: 'Polygon', coordinates: [anillo.map(c => utm17sToWgs84(c[0], c[1]))] }
         });
-    });
 
-    // Las zonas grandes primero, para que las pequeñas queden dibujadas encima.
-    features.sort((a, b) => (b.properties.area_m2 || 0) - (a.properties.area_m2 || 0));
+    // ── Redes generales: el contorno de las nueve redes ──────────────────
+    const featuresRed = [];
+    let areaTotal = 0;
 
+    generales
+        .map(f => ({ f, red: redDe(f.props.RED, 'redes generales') }))
+        .sort((a, b) => a.red.nombre.localeCompare(b.red.nombre, 'es'))
+        .forEach(({ f, red }) => {
+            const poligonos = anillosAPoligono(f.anillos);
+            const { area, perimetro } = medirPoligono(poligonos);
+            areaTotal += area;
+            const s = porRed[red.clave] || { n: 0, caudal: 0, area: 0 };
+
+            featuresRed.push({
+                type: 'Feature',
+                properties: {
+                    tipo: 'red',
+                    red: red.nombre,
+                    zona: `Red ${red.nombre}`,
+                    subredes: s.n,
+                    caudal_l_s: s.caudal ? r2(s.caudal) : null,
+                    area_m2: r2(area),
+                    area_ha: r2(area / 10000),
+                    perimetro_m: r2(perimetro),
+                    fuente: AP_FUENTE,
+                    actualizacion: AP_ACTUALIZACION
+                },
+                geometry: geometriaWgs84(poligonos)
+            });
+        });
+
+    const sinSubredes = featuresRed.filter(f => !f.properties.subredes);
+    if (sinSubredes.length) {
+        throw new Error('redes sin ninguna subred: ' + sinSubredes.map(f => f.properties.red).join(', '));
+    }
+
+    // Las redes van primero para que Leaflet dibuje las subredes encima: el
+    // contorno de la red es el marco y la subred el relleno.
     const mb = escribir('agua_potable.geojson', {
         type: 'FeatureCollection',
         name: 'Cobertura Agua Potable',
         crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:OGC:1.3:CRS84' } },
-        features
+        features: featuresRed.concat(featuresSub)
     });
-    console.log(`  ${zonas} zonas de cobertura (${(areaTotal / 10000).toFixed(1)} ha) + ${sueltas} divisoria(s)`);
+
+    featuresRed.forEach(f => {
+        const p = f.properties;
+        const s = porRed[REDES_AP.find(r => r.nombre === p.red).clave];
+        // La suma de las subredes no tiene por qué dar el área de la red: el
+        // contorno general y el mosaico de subredes se dibujaron por separado.
+        const desvio = Math.abs(s.area - p.area_m2) / p.area_m2;
+        console.log(`  ${p.red.padEnd(24)} ${String(p.subredes).padStart(3)} subredes ` +
+            `${p.area_ha.toFixed(2).padStart(9)} ha ${String(p.caudal_l_s).padStart(7)} l/s` +
+            (desvio > 0.02 ? `   (suma de subredes: ${(s.area / 10000).toFixed(2)} ha)` : ''));
+    });
+    console.log(`  ${'TOTAL'.padEnd(24)} ${String(featuresSub.length).padStart(3)} subredes ` +
+        `${(areaTotal / 10000).toFixed(2).padStart(9)} ha ${caudalTotal.toFixed(2).padStart(7)} l/s`);
     console.log(`  -> agua_potable.geojson (${mb} MB)\n`);
 }
 

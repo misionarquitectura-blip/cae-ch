@@ -246,13 +246,25 @@ H.chequear('fuera de Chimborazo no hay pieza (no es lo mismo que no haber cobert
 // ── textoCoberturaTelecom: la redaccion que acaba impresa en el DICAT ────────
 console.log('\nRedaccion de la lectura (textoCoberturaTelecom)');
 
+// Una lectura tal como la arma analizarTelecom(): `cobertura` es el porcentaje
+// de la huella servido por cualquier clase y `niveles` la lista de las clases
+// presentes, de mejor a peor.
+const senal = (cobertura, ...niveles) => ({
+    escala: 'senal', cobertura,
+    niveles: niveles.map(([etiqueta, porcentaje]) => ({ etiqueta, porcentaje })),
+    etiqueta: niveles.length ? niveles[0][0] : null,
+    porcentaje: niveles.length ? niveles[0][1] : null
+});
+
 const casos = [
     [{ sinDato: true }, /^SIN DATO/, 'sin dato'],
-    [{ clase: 'sin' }, /^SIN COBERTURA/, 'sin cobertura'],
-    [{ clase: 'alto', etiqueta: 'ALTO', escala: 'senal', porcentaje: 100 }, /^Nivel ALTO en todo el predio$/, 'senal completa'],
-    [{ clase: 'medio', etiqueta: 'MEDIO', escala: 'senal', porcentaje: 63 }, /^Nivel MEDIO, predominante en el 63 % del predio$/, 'senal parcial'],
-    [{ clase: 'gpon', etiqueta: 'Cobertura fibra optica GPON', escala: 'gpon', porcentaje: 100 }, /^DISPONIBLE en todo el predio$/, 'binaria completa'],
-    [{ clase: 'gpon', etiqueta: 'Cobertura fibra optica GPON', escala: 'gpon', porcentaje: 56 }, /^DISPONIBLE, sobre el 56 % del predio$/, 'binaria parcial'],
+    [{ cobertura: 0, entorno: 0 }, /^SIN COBERTURA registrada$/, 'sin cobertura'],
+    [{ cobertura: 0, entorno: 34 }, /^SIN COBERTURA sobre el predio - la red llega al entorno inmediato \(50 m\)$/, 'sin cobertura pero con red al lado'],
+    [senal(100, ['ALTO', 100]), /^Nivel ALTO en todo el predio$/, 'senal completa'],
+    [senal(100, ['ALTO', 63], ['MEDIO', 37]), /^Nivel ALTO 63 %, MEDIO 37 % del predio$/, 'senal repartida entre dos niveles'],
+    [senal(63, ['MEDIO', 63]), /^Nivel MEDIO 63 % del predio; el 37 % restante sin cobertura$/, 'senal parcial'],
+    [{ escala: 'gpon', cobertura: 100, niveles: [{ etiqueta: 'Cobertura fibra optica GPON', porcentaje: 100 }] }, /^DISPONIBLE en todo el predio$/, 'binaria completa'],
+    [{ escala: 'gpon', cobertura: 56, niveles: [{ etiqueta: 'Cobertura fibra optica GPON', porcentaje: 56 }] }, /^DISPONIBLE, sobre el 56 % del predio$/, 'binaria parcial'],
 ];
 for (const [r, esperado, nombre] of casos) {
     const txt = T.textoCoberturaTelecom(r);
@@ -263,7 +275,17 @@ for (const [r, esperado, nombre] of casos) {
 // predio esta fuera de lo descargado y el otro que CNT no da servicio ahi.
 H.chequear('"sin dato" y "sin cobertura" se redactan distinto',
     T.textoCoberturaTelecom({ sinDato: true }) !==
-    T.textoCoberturaTelecom({ clase: 'sin' }));
+    T.textoCoberturaTelecom({ cobertura: 0 }));
+
+// La regresion que motivo el cambio: un predio partido entre cobertura y no
+// cobertura salia "SIN COBERTURA" cuando la parte descubierta pesaba mas, por
+// leerse la clase dominante. Un solo pixel servido basta para que el servicio
+// conste en el informe.
+H.chequear('una huella cubierta en minoria NO se redacta como sin cobertura',
+    !/^SIN COBERTURA/.test(T.textoCoberturaTelecom(senal(12, ['ALTO', 12]))),
+    T.textoCoberturaTelecom(senal(12, ['ALTO', 12])));
+H.chequear('el entorno no convierte en "disponible" lo que no llega al predio',
+    /^SIN COBERTURA/.test(T.textoCoberturaTelecom({ cobertura: 0, entorno: 90 })));
 
 // ── 4. El raster dice lo que debe en coordenadas conocidas ───────────────────
 console.log('\nLectura del raster en coordenadas conocidas');
