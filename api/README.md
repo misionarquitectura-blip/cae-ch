@@ -208,7 +208,14 @@ justamente leer el enlace del log. Nunca en producción.
 
 ## Gestión diaria
 
-Todo se hace desde `/api/admin/*` con la sesión de un administrador.
+Lo habitual es hacerlo desde el **panel**: `panel.html` en la raíz del sitio
+(<https://cae-ch.org/panel.html>). Ingrese con su cuenta de administrador y ahí
+están la bandeja de registros por cotejar, el padrón, las descargas y la
+bitácora. El enlace al panel solo aparece en la barra del sitio cuando hay
+sesión iniciada; sin ella la página no muestra ningún dato.
+
+Por debajo, todo eso es `/api/admin/*` con la sesión de un administrador, y
+sigue sirviendo desde `curl` si el panel no está a mano.
 
 | Acción | Petición |
 |---|---|

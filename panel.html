@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de control | CAE-CH</title>
+    <meta name="description" content="Panel de control del CAE-CH Provincial de Chimborazo: padrón de cuentas, auditoría de descargas y herramientas internas.">
+    <!-- Esta página no se indexa. Es pública como archivo —todo en Pages lo es—
+         pero no trae ningún dato sin sesión, y no tiene por qué salir en Google. -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#E31E24">
+    <link rel="icon" type="image/png" href="LOGO/favicon-caech.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="caech-ui.css">
+    <style>
+        /* La forma de los botones, la paleta y la tipografía vienen de
+           caech-ui.css. Aquí solo va lo que es propio del panel. */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--fuente-ui);
+            background: var(--hueso);
+            color: var(--grafito);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        a { color: var(--rojo-caech); }
+
+        .contenedor { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+
+        /* ── Cabecera ───────────────────────────────────────────── */
+        header {
+            background: var(--blanco);
+            border-bottom: 3px solid var(--rojo-caech);
+            box-shadow: var(--sombra-1);
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .barra {
+            display: flex; align-items: center; gap: 18px;
+            padding: 12px 0; flex-wrap: wrap;
+        }
+
+        .logo-img { height: 40px; width: auto; display: block; }
+
+        .titulo-panel {
+            font-size: 12px; font-weight: 700;
+            letter-spacing: var(--tracking-caps); text-transform: uppercase;
+            color: var(--grafito-med);
+            border-left: 1px solid var(--borde-marcado);
+            padding-left: 18px;
+        }
+
+        .sesion {
+            margin-left: auto;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 13px; flex-wrap: wrap;
+        }
+
+        .sesion .quien { display: inline-flex; align-items: center; gap: 7px; }
+        .sesion .quien i { color: var(--rojo-caech); }
+        .sesion .quien b { font-weight: 600; }
+
+        .insignia {
+            display: inline-block; padding: 2px 8px; border-radius: 999px;
+            font-size: 10px; font-weight: 700; letter-spacing: .08em;
+            text-transform: uppercase; white-space: nowrap;
+        }
+        .insignia.admin     { background: var(--rojo-humo); color: var(--rojo-brasa); }
+        .insignia.si        { background: #E9F5EC; color: #14532D; }
+        .insignia.no        { background: #FDECEA; color: #8E1015; }
+        .insignia.espera    { background: #FEF4E5; color: #8A5A00; }
+        .insignia.neutra    { background: var(--hueso); color: var(--grafito-med); border: 1px solid var(--borde); }
+
+        /* ── Pestañas ───────────────────────────────────────────── */
+        .pestanas {
+            display: flex; gap: 4px; flex-wrap: wrap;
+            border-bottom: 1px solid var(--borde);
+            margin: 24px 0 20px;
+        }
+
+        .pestanas button {
+            background: none; border: 0; border-bottom: 3px solid transparent;
+            font-family: inherit; font-size: 12px; font-weight: 600;
+            letter-spacing: .08em; text-transform: uppercase;
+            color: var(--grafito-sua); padding: 10px 16px; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .pestanas button:hover { color: var(--grafito); }
+        .pestanas button.activa { color: var(--rojo-caech); border-bottom-color: var(--rojo-caech); }
+
+        .contador {
+            background: var(--rojo-caech); color: #fff; border-radius: 999px;
+            font-size: 10px; min-width: 18px; height: 18px; padding: 0 5px;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+
+        /* ── Tarjetas ───────────────────────────────────────────── */
+        .tarjeta {
+            background: var(--blanco); border: 1px solid var(--borde);
+            border-radius: var(--radio); box-shadow: var(--sombra-1);
+            padding: 20px; margin-bottom: 20px;
+        }
+
+        .tarjeta > h2 {
+            font-size: 13px; font-weight: 700; letter-spacing: .1em;
+            text-transform: uppercase; color: var(--grafito);
+            margin-bottom: 4px;
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+
+        .tarjeta > h2 i { color: var(--rojo-caech); }
+
+        .tarjeta > .sub {
+            color: var(--grafito-med); font-size: 13px; margin-bottom: 16px;
+            max-width: 78ch;
+        }
+
+        .tarjeta.aviso-pendientes { border-left: 3px solid var(--rojo-caech); }
+
+        /* ── Tablas ─────────────────────────────────────────────── */
+        .tabla-marco { overflow-x: auto; margin: 0 -20px -20px; padding: 0 20px 4px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+        th {
+            text-align: left; font-size: 10px; font-weight: 700;
+            letter-spacing: .09em; text-transform: uppercase;
+            color: var(--grafito-sua); padding: 8px 10px;
+            border-bottom: 1px solid var(--borde-marcado); white-space: nowrap;
+        }
+
+        td { padding: 10px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+        tbody tr:hover { background: var(--hueso); }
+        tbody tr:last-child td { border-bottom: 0; }
+
+        .nombre { font-weight: 600; }
+        .tenue  { color: var(--grafito-sua); font-size: 12px; }
+        .mono   { font-family: var(--fuente-mono); font-size: 12px; }
+
+        .acciones { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .rol-sel {
+            font-family: inherit; font-size: 12px; padding: 4px 6px;
+            border: 1px solid var(--borde-marcado); border-radius: var(--radio);
+            background: var(--blanco); color: var(--grafito);
+        }
+
+        /* Botón menudo para las acciones de cada fila: la forma la hereda de
+           .btn, aquí solo se encoge. */
+        .btn.chico {
+            min-height: 0; padding: .45em .8em; font-size: 10.5px;
+            letter-spacing: .05em;
+        }
+
+        /* ── Formularios ────────────────────────────────────────── */
+        .campos {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px; margin-bottom: 16px;
+        }
+
+        .campo label {
+            display: block; font-size: 10px; font-weight: 700;
+            letter-spacing: .08em; text-transform: uppercase;
+            color: var(--grafito-med); margin-bottom: 5px;
+        }
+
+        .campo input, .campo select {
+            width: 100%; padding: 9px 11px; font-family: inherit; font-size: 14px;
+            border: 1px solid var(--borde-marcado); border-radius: var(--radio);
+            color: var(--grafito); background: var(--blanco);
+        }
+
+        .campo input:focus, .campo select:focus {
+            outline: none; border-color: var(--rojo-caech);
+            box-shadow: 0 0 0 3px rgba(227, 30, 36, .12);
+        }
+
+        .buscador { max-width: 340px; margin-bottom: 14px; }
+
+        /* ── Avisos ─────────────────────────────────────────────── */
+        .aviso {
+            padding: 11px 14px; border-radius: var(--radio); font-size: 13px;
+            line-height: 1.55; margin-bottom: 14px; border-left-width: 3px;
+            border-left-style: solid;
+        }
+        .aviso.error { background: #FDECEA; color: #8E1015; border-color: var(--rojo-caech); }
+        .aviso.exito { background: #E9F5EC; color: #14532D; border-color: #1E8449; }
+        .aviso.info  { background: #EAF1F8; color: #17375E; border-color: #2563A8; }
+
+        .vacio { color: var(--grafito-sua); font-style: italic; padding: 18px 0; }
+
+        /* ── Resumen de descargas ───────────────────────────────── */
+        .cifras { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+
+        .cifra {
+            border: 1px solid var(--borde); border-radius: var(--radio);
+            padding: 12px 18px; min-width: 120px; background: var(--hueso);
+        }
+        .cifra b { display: block; font-size: 24px; font-weight: 700; line-height: 1.1; }
+        .cifra span {
+            font-size: 10px; font-weight: 700; letter-spacing: .09em;
+            text-transform: uppercase; color: var(--grafito-sua);
+        }
+
+        /* ── Herramientas ───────────────────────────────────────── */
+        .herramientas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+
+        .herramienta {
+            border: 1px solid var(--borde); border-radius: var(--radio);
+            padding: 16px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .herramienta h3 {
+            font-size: 13px; font-weight: 700; display: flex; align-items: center;
+            gap: 9px;
+        }
+        .herramienta h3 i { color: var(--rojo-caech); }
+        .herramienta p { font-size: 12.5px; color: var(--grafito-med); flex: 1; }
+
+        /* ── Clave temporal ─────────────────────────────────────── */
+        .clave-temporal {
+            font-family: var(--fuente-mono); font-size: 18px; letter-spacing: 1px;
+            background: var(--hueso); border: 1px solid var(--borde-marcado);
+            padding: 14px; border-radius: var(--radio); text-align: center;
+            user-select: all; margin: 12px 0;
+        }
+
+        /* ── Portada sin sesión ─────────────────────────────────── */
+        .puerta { max-width: 520px; margin: 60px auto; text-align: center; }
+        .puerta i.candado { font-size: 34px; color: var(--rojo-caech); margin-bottom: 14px; }
+        .puerta h1 { font-size: 22px; margin-bottom: 10px; }
+        .puerta p { color: var(--grafito-med); margin-bottom: 18px; }
+
+        main { padding-bottom: 60px; }
+
+        footer {
+            border-top: 1px solid var(--borde); padding: 22px 0;
+            color: var(--grafito-sua); font-size: 12px;
+        }
+
+        [hidden] { display: none !important; }
+
+        @media (max-width: 720px) {
+            .titulo-panel { border-left: 0; padding-left: 0; }
+            .tarjeta { padding: 16px; }
+            .tabla-marco { margin: 0 -16px -16px; padding: 0 16px 4px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="contenedor barra">
+        <a href="index.html" title="Volver al sitio del CAE-Ch">
+            <img src="LOGO/logo-caech.png" alt="CAE-Ch" class="logo-img" width="520" height="188">
+        </a>
+        <span class="titulo-panel">Panel de control</span>
+        <div class="sesion" id="sesion"></div>
+    </div>
+</header>
+
+<main class="contenedor">
+
+    <!-- ── Sin sesión ──────────────────────────────────────────── -->
+    <section class="puerta" id="puerta" hidden>
+        <i class="fas fa-lock candado"></i>
+        <h1>Panel de control del CAE-Ch</h1>
+        <p>Desde aquí se administran las cuentas de la plataforma y se
+           revisa quién descarga qué. Hace falta ingresar.</p>
+        <button class="btn" id="btn-ingresar"><i class="fas fa-user"></i> Ingresar</button>
+        <p class="tenue" style="margin-top:18px">
+            El mapa del GeoVisor es libre y no necesita cuenta:
+            <a href="geovisor.html">ábralo aquí</a>.
+        </p>
+    </section>
+
+    <!-- ── Con sesión ──────────────────────────────────────────── -->
+    <div id="panel" hidden>
+
+        <nav class="pestanas" id="pestanas">
+            <button data-hoja="cuenta" class="activa"><i class="fas fa-id-card"></i> Mi cuenta</button>
+            <button data-hoja="padron"     data-admin hidden><i class="fas fa-users"></i> Padrón
+                <span class="contador" id="contador-pendientes" hidden>0</span></button>
+            <button data-hoja="descargas"  data-admin hidden><i class="fas fa-download"></i> Descargas</button>
+            <button data-hoja="bitacora"   data-admin hidden><i class="fas fa-clipboard-list"></i> Bitácora</button>
+            <button data-hoja="herramientas"><i class="fas fa-toolbox"></i> Herramientas</button>
+        </nav>
+
+        <!-- Mi cuenta ------------------------------------------------ -->
+        <section data-hoja="cuenta">
+            <div class="tarjeta">
+                <h2><i class="fas fa-id-card"></i> Mi cuenta</h2>
+                <div id="mi-cuenta"></div>
+            </div>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-key"></i> Cambiar mi contraseña</h2>
+                <p class="sub">Mínimo 12 caracteres, con mayúsculas, minúsculas y números.
+                   No puede contener su usuario ni su correo.</p>
+                <div id="aviso-clave"></div>
+                <div class="campos">
+                    <div class="campo"><label for="clave-actual">Contraseña actual</label>
+                        <input id="clave-actual" type="password" autocomplete="current-password"></div>
+                    <div class="campo"><label for="clave-nueva">Nueva contraseña</label>
+                        <input id="clave-nueva" type="password" autocomplete="new-password"></div>
+                    <div class="campo"><label for="clave-repetir">Repítala</label>
+                        <input id="clave-repetir" type="password" autocomplete="new-password"></div>
+                </div>
+                <button class="btn" id="btn-clave"><i class="fas fa-save"></i> Guardar contraseña</button>
+            </div>
+        </section>
+
+        <!-- Padrón -------------------------------------------------- -->
+        <section data-hoja="padron" hidden>
+
+            <div class="tarjeta aviso-pendientes" id="caja-pendientes" hidden>
+                <h2><i class="fas fa-user-clock"></i> Registros por cotejar
+                    <span class="insignia espera" id="etiqueta-pendientes"></span></h2>
+                <p class="sub">Cuentas creadas desde el registro público. Pueden entrar y consultar el
+                   mapa, pero <b>no descargan nada</b> hasta que su número se coteje contra el padrón
+                   del colegio. Valide solo lo que haya comprobado.</p>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>Solicitante</th><th>Registro declarado</th><th>Correo</th>
+                               <th>Se registró</th><th></th></tr></thead>
+                    <tbody id="tabla-pendientes"></tbody>
+                </table></div>
+            </div>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-users"></i> Padrón de cuentas
+                    <span class="insignia neutra" id="etiqueta-total"></span></h2>
+                <p class="sub">Todas las cuentas de la plataforma. La columna «descargas» dice si esa
+                   cuenta puede, hoy y ahora, generar el DICAT, el CSV y el DXF.</p>
+                <div class="campo buscador">
+                    <input id="buscar" type="search" placeholder="Buscar por nombre, usuario, correo o registro" autocomplete="off">
+                </div>
+                <div id="aviso-padron"></div>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>Cuenta</th><th>Registro CAE</th><th>Rol</th><th>Estado</th>
+                               <th>Descargas</th><th>Último acceso</th><th>Acciones</th></tr></thead>
+                    <tbody id="tabla-padron"></tbody>
+                </table></div>
+            </div>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-user-plus"></i> Crear una cuenta</h2>
+                <p class="sub">Alta por la administración, con el padrón delante: el número de registro
+                   nace ya validado. La clave temporal se muestra <b>una sola vez</b> y se entrega en
+                   persona; quien la reciba deberá cambiarla en su primer ingreso.</p>
+                <div id="aviso-alta"></div>
+                <div class="campos">
+                    <div class="campo"><label for="alta-nombre">Nombre completo</label>
+                        <input id="alta-nombre" type="text" autocomplete="off"></div>
+                    <div class="campo"><label for="alta-usuario">Usuario</label>
+                        <input id="alta-usuario" type="text" autocapitalize="off" spellcheck="false"
+                               placeholder="minúsculas, 3 a 30" autocomplete="off"></div>
+                    <div class="campo"><label for="alta-correo">Correo</label>
+                        <input id="alta-correo" type="email" autocapitalize="off" spellcheck="false" autocomplete="off"></div>
+                    <div class="campo"><label for="alta-registro">N.º de registro del CAE</label>
+                        <input id="alta-registro" type="text" autocapitalize="characters" spellcheck="false" autocomplete="off"></div>
+                    <div class="campo"><label for="alta-rol">Rol</label>
+                        <select id="alta-rol">
+                            <option value="afiliado" selected>Afiliado</option>
+                            <option value="usuario">Usuario</option>
+                            <option value="admin">Administrador</option>
+                        </select></div>
+                    <div class="campo"><label for="alta-vigencia">Vigencia hasta (opcional)</label>
+                        <input id="alta-vigencia" type="date"></div>
+                </div>
+                <button class="btn" id="btn-alta"><i class="fas fa-user-plus"></i> Crear cuenta</button>
+            </div>
+        </section>
+
+        <!-- Descargas ----------------------------------------------- -->
+        <section data-hoja="descargas" hidden>
+            <div class="tarjeta">
+                <h2><i class="fas fa-download"></i> Descargas</h2>
+                <p class="sub">Cada DICAT, CSV y DXF que sale de la plataforma queda anotado con quién
+                   lo pidió y de qué predio. Se muestran los 200 más recientes.</p>
+                <div class="cifras" id="cifras-descargas"></div>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>Fecha</th><th>Formato</th><th>Quién</th><th>Clave catastral</th></tr></thead>
+                    <tbody id="tabla-descargas"></tbody>
+                </table></div>
+            </div>
+        </section>
+
+        <!-- Bitácora ------------------------------------------------ -->
+        <section data-hoja="bitacora" hidden>
+            <div class="tarjeta">
+                <h2><i class="fas fa-clipboard-list"></i> Bitácora de seguridad</h2>
+                <p class="sub">Ingresos, fallos, altas, bajas y cambios de clave. Sin datos personales
+                   más allá del usuario afectado; las IP se guardan cifradas, nunca en claro.</p>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>Fecha</th><th>Tipo</th><th>Usuario</th><th>Detalle</th></tr></thead>
+                    <tbody id="tabla-eventos"></tbody>
+                </table></div>
+            </div>
+        </section>
+
+        <!-- Herramientas -------------------------------------------- -->
+        <section data-hoja="herramientas" hidden>
+            <div class="tarjeta">
+                <h2><i class="fas fa-toolbox"></i> Herramientas</h2>
+                <p class="sub">Lo que su cuenta puede abrir hoy.</p>
+                <div class="herramientas" id="lista-herramientas"></div>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<footer class="contenedor">
+    CAE-Ch Provincial de Chimborazo · Panel de control ·
+    <a href="legal.html#privacidad">Política de privacidad</a>
+</footer>
+
+<script src="caech-acceso.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    // El panel no habla con el API por su cuenta: reutiliza el cliente de
+    // caech-acceso.js, que ya pone el token, trata el 401 y explica los
+    // fallos de red en castellano.
+    const acceso = window.caechAcceso;
+    const pedir = (metodo, ruta, cuerpo) => acceso.peticion(metodo, ruta, cuerpo);
+
+    const $ = id => document.getElementById(id);
+    let perfil = null;
+    let cuentas = [];
+
+    // ── Utilidades de presentación ──────────────────────────────
+
+    /** Nunca se arma HTML con datos del servidor sin pasar por aquí. */
+    function esc(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function fecha(iso, conHora) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        if (isNaN(d)) return '—';
+        const opciones = conHora
+            ? { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+            : { day: '2-digit', month: 'short', year: 'numeric' };
+        return d.toLocaleString('es-EC', opciones);
+    }
+
+    function avisar(id, clase, mensaje) {
+        const caja = $(id);
+        if (!caja) return;
+        caja.innerHTML = mensaje ? '<div class="aviso ' + clase + '">' + mensaje + '</div>' : '';
+    }
+
+    const insignia = (clase, texto) => '<span class="insignia ' + clase + '">' + esc(texto) + '</span>';
+
+    /**
+     * Ventana de un solo uso para las claves temporales. No se puede volver
+     * a consultar una clave: o se copia ahora, o se restablece otra vez.
+     */
+    function mostrarClave(usuario, clave, aviso) {
+        const fondo = document.createElement('div');
+        fondo.style.cssText = 'position:fixed;inset:0;background:rgba(46,50,56,.62);display:flex;'
+            + 'align-items:center;justify-content:center;z-index:1000;padding:16px';
+        fondo.innerHTML =
+            '<div class="tarjeta" style="max-width:440px;width:100%;margin:0">'
+            + '<h2><i class="fas fa-key"></i> Clave temporal de ' + esc(usuario) + '</h2>'
+            + '<div class="clave-temporal">' + esc(clave) + '</div>'
+            + '<div class="aviso info">' + esc(aviso || '') + '</div>'
+            + '<button class="btn" data-cerrar style="width:100%">Ya la anoté</button></div>';
+        document.body.appendChild(fondo);
+        fondo.querySelector('[data-cerrar]').addEventListener('click', () => fondo.remove());
+    }
+
+    // ── Sesión ──────────────────────────────────────────────────
+
+    async function cargarSesion() {
+        const r = await pedir('GET', '/api/sesion');
+        perfil = r.estado === 200 ? r.datos.afiliado : null;
+        pintar();
+        if (!perfil) return;
+        // El padrón se trae de entrada aunque la pestaña abierta sea otra:
+        // es lo que alimenta el contador de registros por cotejar, y ese
+        // aviso tiene que verse sin tener que ir a buscarlo.
+        if (perfil.rol === 'admin') cargarPadron();
+        cargarHoja(hojaActual());
+    }
+
+    function pintar() {
+        const hay = !!perfil;
+        $('puerta').hidden = hay;
+        $('panel').hidden = !hay;
+
+        // Las pestañas de administración solo existen para quien lo es. El
+        // Worker vuelve a comprobarlo en cada llamada: esto es comodidad,
+        // no seguridad.
+        const admin = hay && perfil.rol === 'admin';
+        document.querySelectorAll('[data-admin]').forEach(b => { b.hidden = !admin; });
+
+        const caja = $('sesion');
+        if (!hay) {
+            caja.innerHTML = '';
+            return;
+        }
+        caja.innerHTML =
+            '<span class="quien"><i class="fas fa-user-check"></i><b>'
+            + esc(perfil.nombre || perfil.usuario) + '</b></span>'
+            + (admin ? insignia('admin', 'Administrador') : insignia('neutra', perfil.rol))
+            + '<button class="btn btn-outline" id="btn-salir"><i class="fas fa-sign-out-alt"></i> Salir</button>';
+        $('btn-salir').addEventListener('click', async () => {
+            await acceso.cerrarSesion();
+            perfil = null;
+            cuentas = [];
+            pintar();
+        });
+
+        pintarMiCuenta();
+        pintarHerramientas();
+    }
+
+    function pintarMiCuenta() {
+        const p = perfil;
+        const validado = p.rol === 'afiliado' || p.rol === 'admin' || p.registro_validado;
+        $('mi-cuenta').innerHTML =
+            '<div class="tabla-marco"><table><tbody>'
+            + fila('Nombre', esc(p.nombre))
+            + fila('Usuario', '<span class="mono">' + esc(p.usuario) + '</span>')
+            + fila('Correo', esc(p.correo) + ' '
+                + (p.correo_verificado ? insignia('si', 'confirmado') : insignia('no', 'sin confirmar')))
+            + fila('N.º de registro', (p.registro_profesional ? '<span class="mono">' + esc(p.registro_profesional) + '</span> ' : '—' )
+                + (p.registro_profesional
+                    ? (validado ? insignia('si', 'validado') : insignia('espera', 'por cotejar'))
+                    : ''))
+            + fila('Rol', esc(p.rol))
+            + fila('Estado', esc(p.estado))
+            + fila('Vigencia', p.vigencia_hasta ? fecha(p.vigencia_hasta) : 'sin caducidad')
+            + fila('Último acceso', fecha(p.ultimo_acceso, true))
+            + '</tbody></table></div>';
+    }
+
+    const fila = (rotulo, valor) =>
+        '<tr><th style="width:180px">' + rotulo + '</th><td>' + valor + '</td></tr>';
+
+    function pintarHerramientas() {
+        const p = perfil;
+        const colegiado = p.estado === 'activo' && p.correo_verificado
+            && (p.rol === 'afiliado' || p.rol === 'admin' || p.registro_validado);
+        const admin = p.rol === 'admin';
+
+        const tarjetas = [
+            {
+                icono: 'fa-map-location-dot', nombre: 'GeoVisor',
+                texto: 'El mapa completo, con todas las capas. Es público: no hace falta cuenta.',
+                estado: insignia('si', 'abierto'),
+                enlace: '<a class="btn btn-outline chico" href="geovisor.html">Abrir</a>'
+            },
+            {
+                icono: 'fa-file-pdf', nombre: 'DICAT, CSV y DXF',
+                texto: 'Las tres descargas del visor. Exigen cuenta de colegiado con el número de '
+                     + 'registro ya cotejado contra el padrón.',
+                estado: colegiado ? insignia('si', 'habilitado') : insignia('espera', 'pendiente'),
+                enlace: '<a class="btn btn-outline chico" href="geovisor.html">Ir al visor</a>'
+            },
+            {
+                icono: 'fa-drafting-compass', nombre: 'Planimetría',
+                texto: 'Planimetrías de predios no catastrados: DXF georreferenciado e informe de '
+                     + 'linderación en PDF. Por ahora corre solo en local, en la máquina del '
+                     + 'administrador.',
+                estado: admin ? insignia('neutra', 'solo en local') : insignia('no', 'sin acceso'),
+                enlace: admin
+                    ? '<span class="tenue">Se arranca con <span class="mono">npm start</span> '
+                      + 'en la carpeta <span class="mono">planimetria/</span>.</span>'
+                    : ''
+            }
+        ];
+
+        $('lista-herramientas').innerHTML = tarjetas.map(t =>
+            '<div class="herramienta"><h3><i class="fas ' + t.icono + '"></i>' + t.nombre
+            + '</h3><p>' + t.texto + '</p><div>' + t.estado + '</div>'
+            + (t.enlace ? '<div>' + t.enlace + '</div>' : '') + '</div>').join('');
+    }
+
+    // ── Pestañas ────────────────────────────────────────────────
+
+    const hojaActual = () => {
+        const b = document.querySelector('.pestanas button.activa');
+        return b ? b.dataset.hoja : 'cuenta';
+    };
+
+    $('pestanas').addEventListener('click', e => {
+        const boton = e.target.closest('button[data-hoja]');
+        if (!boton) return;
+        document.querySelectorAll('.pestanas button').forEach(b => b.classList.toggle('activa', b === boton));
+        document.querySelectorAll('section[data-hoja]').forEach(s => { s.hidden = s.dataset.hoja !== boton.dataset.hoja; });
+        cargarHoja(boton.dataset.hoja);
+    });
+
+    function cargarHoja(hoja) {
+        if (!perfil) return;
+        if (hoja === 'padron'    && perfil.rol === 'admin') cargarPadron();
+        if (hoja === 'descargas' && perfil.rol === 'admin') cargarDescargas();
+        if (hoja === 'bitacora'  && perfil.rol === 'admin') cargarEventos();
+    }
+
+    // ── Padrón ──────────────────────────────────────────────────
+
+    async function cargarPadron() {
+        const r = await pedir('GET', '/api/admin/afiliados');
+        if (r.estado !== 200) {
+            return avisar('aviso-padron', 'error', esc((r.datos && r.datos.error) || 'No se pudo leer el padrón.'));
+        }
+        avisar('aviso-padron', '', '');
+        cuentas = r.datos.afiliados || [];
+        pintarPadron();
+        pintarPendientes();
+    }
+
+    /**
+     * La bandeja sale de la misma lista que el padrón —son las cuentas del
+     * registro público con el número todavía sin cotejar—, así que no hace
+     * falta una segunda llamada con ?pendientes=1.
+     */
+    function pintarPendientes() {
+        const pendientes = cuentas.filter(c =>
+            c.origen === 'registro' && !c.registro_validado && c.estado === 'activo');
+
+        $('caja-pendientes').hidden = pendientes.length === 0;
+        const contador = $('contador-pendientes');
+        contador.hidden = pendientes.length === 0;
+        contador.textContent = pendientes.length;
+        $('etiqueta-pendientes').textContent = pendientes.length === 1
+            ? '1 en espera' : pendientes.length + ' en espera';
+
+        $('tabla-pendientes').innerHTML = pendientes.map(c =>
+            '<tr><td><span class="nombre">' + esc(c.nombre) + '</span><br>'
+            + '<span class="tenue mono">' + esc(c.usuario) + '</span></td>'
+            + '<td><span class="mono">' + esc(c.registro_profesional || '—') + '</span></td>'
+            + '<td>' + esc(c.correo) + ' '
+            + (c.correo_verificado ? insignia('si', 'confirmado') : insignia('no', 'sin confirmar')) + '</td>'
+            + '<td>' + fecha(c.creado_en) + '</td>'
+            + '<td class="acciones">'
+            + '<button class="btn chico" data-validar="' + esc(c.id) + '">'
+            + '<i class="fas fa-check"></i> Validar</button></td></tr>').join('');
+    }
+
+    function pintarPadron() {
+        const filtro = $('buscar').value.trim().toLowerCase();
+        const lista = filtro
+            ? cuentas.filter(c => [c.nombre, c.usuario, c.correo, c.registro_profesional]
+                .some(v => String(v || '').toLowerCase().includes(filtro)))
+            : cuentas;
+
+        $('etiqueta-total').textContent = lista.length === cuentas.length
+            ? cuentas.length + ' cuentas'
+            : lista.length + ' de ' + cuentas.length;
+
+        if (!lista.length) {
+            $('tabla-padron').innerHTML = '<tr><td colspan="7" class="vacio">No hay cuentas que coincidan.</td></tr>';
+            return;
+        }
+
+        $('tabla-padron').innerHTML = lista.map(c => {
+            const puede = c.permisos && c.permisos.pdf;
+            const validado = c.rol === 'afiliado' || c.rol === 'admin' || c.registro_validado;
+            // Sobre la propia cuenta no se ofrece ni suspenderse ni degradarse:
+            // el Worker lo rechaza —para no dejar el sistema sin administrador—
+            // y no tiene sentido ofrecer un botón que siempre va a fallar.
+            const propia = c.id === perfil.id;
+            const vencida = c.vigencia_hasta && new Date(c.vigencia_hasta) < new Date();
+
+            const acciones = [];
+            if (c.registro_profesional && !c.registro_validado) {
+                acciones.push('<button class="btn chico" data-validar="' + esc(c.id) + '"><i class="fas fa-check"></i> Validar</button>');
+            } else if (c.registro_validado && c.origen === 'registro') {
+                acciones.push('<button class="btn btn-outline chico" data-invalidar="' + esc(c.id) + '">Quitar validación</button>');
+            }
+            acciones.push('<button class="btn btn-outline chico" data-clave="' + esc(c.id) + '"><i class="fas fa-key"></i> Clave</button>');
+            if (!propia) {
+                acciones.push(c.estado === 'activo'
+                    ? '<button class="btn btn-outline chico" data-suspender="' + esc(c.id) + '">Suspender</button>'
+                    : '<button class="btn btn-outline chico" data-activar="' + esc(c.id) + '">Reactivar</button>');
+            }
+            if (c.bloqueado) {
+                acciones.push('<button class="btn btn-outline chico" data-desbloquear="' + esc(c.id) + '">Desbloquear</button>');
+            }
+
+            return '<tr>'
+                + '<td><span class="nombre">' + esc(c.nombre) + '</span><br>'
+                + '<span class="tenue mono">' + esc(c.usuario) + '</span><br>'
+                + '<span class="tenue">' + esc(c.correo) + '</span>'
+                + (c.correo_verificado ? '' : ' ' + insignia('no', 'sin confirmar')) + '</td>'
+                + '<td><span class="mono">' + esc(c.registro_profesional || '—') + '</span>'
+                + (c.registro_profesional
+                    ? '<br>' + (validado ? insignia('si', 'validado') : insignia('espera', 'por cotejar'))
+                    : '') + '</td>'
+                + '<td>' + (propia
+                    ? insignia('admin', 'usted')
+                    : '<select class="rol-sel" data-rol="' + esc(c.id) + '">'
+                      + ['usuario', 'afiliado', 'admin'].map(r =>
+                          '<option value="' + r + '"' + (c.rol === r ? ' selected' : '') + '>' + r + '</option>').join('')
+                      + '</select>') + '</td>'
+                + '<td>' + (c.estado === 'activo' ? insignia('si', 'activo') : insignia('no', c.estado))
+                + (c.bloqueado ? '<br>' + insignia('espera', 'bloqueado') : '')
+                + (c.vigencia_hasta
+                    ? '<br><span class="tenue">' + (vencida ? 'venció ' : 'vence ') + fecha(c.vigencia_hasta) + '</span>'
+                    : '') + '</td>'
+                + '<td>' + (puede ? insignia('si', 'sí') : insignia('no', 'no')) + '</td>'
+                + '<td class="tenue">' + fecha(c.ultimo_acceso, true) + '</td>'
+                + '<td><div class="acciones">' + acciones.join('') + '</div></td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    $('buscar').addEventListener('input', pintarPadron);
+
+    // Un solo oyente para toda la hoja del padrón: las filas se repintan
+    // enteras en cada cambio y así no quedan oyentes huérfanos.
+    document.querySelector('section[data-hoja="padron"]').addEventListener('click', async e => {
+        const boton = e.target.closest('button[data-validar], button[data-invalidar], button[data-clave],'
+            + ' button[data-suspender], button[data-activar], button[data-desbloquear]');
+        if (!boton) return;
+
+        const d = boton.dataset;
+        const id = d.validar || d.invalidar || d.clave || d.suspender || d.activar || d.desbloquear;
+        const cuenta = cuentas.find(c => c.id === id) || {};
+        const quien = cuenta.nombre || cuenta.usuario || 'esta cuenta';
+
+        if (d.clave !== undefined) {
+            if (!confirm('¿Restablecer la contraseña de ' + quien + '?\n\n'
+                + 'Se cerrarán todas sus sesiones y tendrá que usar una clave temporal '
+                + 'que deberá entregarle en persona.')) return;
+            boton.disabled = true;
+            const r = await pedir('POST', '/api/admin/afiliados/' + id + '/clave');
+            boton.disabled = false;
+            if (r.estado !== 200) return avisar('aviso-padron', 'error', esc(r.datos.error || 'No se pudo restablecer.'));
+            mostrarClave(r.datos.usuario, r.datos.clave_temporal, r.datos.aviso);
+            return cargarPadron();
+        }
+
+        let cambios = null;
+        if (d.validar    !== undefined) cambios = { registro_validado: true };
+        if (d.invalidar  !== undefined) {
+            if (!confirm('¿Quitar la validación a ' + quien + '?\n\nDejará de poder descargar.')) return;
+            cambios = { registro_validado: false };
+        }
+        if (d.suspender  !== undefined) {
+            if (!confirm('¿Suspender a ' + quien + '?\n\nSe cerrarán sus sesiones abiertas.')) return;
+            cambios = { estado: 'suspendido' };
+        }
+        if (d.activar    !== undefined) cambios = { estado: 'activo' };
+        if (d.desbloquear!== undefined) cambios = { desbloquear: true };
+        if (!cambios) return;
+
+        boton.disabled = true;
+        const r = await pedir('PATCH', '/api/admin/afiliados/' + id, cambios);
+        boton.disabled = false;
+        if (r.estado !== 200) {
+            return avisar('aviso-padron', 'error', esc(r.datos.error || 'No se pudo aplicar el cambio.'));
+        }
+        avisar('aviso-padron', 'exito', esc(quien + ': ' + (r.datos.cambios || []).join(', ') + '.'));
+        cargarPadron();
+    });
+
+    // Cambio de rol. Se pregunta siempre: subir a administrador entrega el
+    // padrón entero, y bajar a un afiliado le quita las descargas.
+    document.querySelector('section[data-hoja="padron"]').addEventListener('change', async e => {
+        const sel = e.target.closest('select[data-rol]');
+        if (!sel) return;
+
+        const id = sel.dataset.rol;
+        const cuenta = cuentas.find(c => c.id === id) || {};
+        const quien = cuenta.nombre || cuenta.usuario || 'esta cuenta';
+
+        if (!confirm('¿Cambiar el rol de ' + quien + ' a «' + sel.value + '»?'
+            + (sel.value === 'admin' ? '\n\nUn administrador ve y modifica todo el padrón.' : ''))) {
+            return cargarPadron();
+        }
+
+        sel.disabled = true;
+        const r = await pedir('PATCH', '/api/admin/afiliados/' + id, { rol: sel.value });
+        sel.disabled = false;
+        avisar('aviso-padron', r.estado === 200 ? 'exito' : 'error',
+            esc(r.estado === 200
+                ? quien + ': ' + (r.datos.cambios || []).join(', ') + '.'
+                : (r.datos.error || 'No se pudo cambiar el rol.')));
+        cargarPadron();
+    });
+
+    // ── Alta ────────────────────────────────────────────────────
+
+    $('btn-alta').addEventListener('click', async () => {
+        const datos = {
+            nombre: $('alta-nombre').value,
+            usuario: $('alta-usuario').value,
+            correo: $('alta-correo').value,
+            registro_profesional: $('alta-registro').value,
+            rol: $('alta-rol').value,
+            vigencia_hasta: $('alta-vigencia').value || null
+        };
+        if (!datos.nombre.trim() || !datos.usuario.trim() || !datos.correo.trim()) {
+            return avisar('aviso-alta', 'error', 'Nombre, usuario y correo son obligatorios.');
+        }
+
+        const boton = $('btn-alta');
+        boton.disabled = true;
+        const r = await pedir('POST', '/api/admin/afiliados', datos);
+        boton.disabled = false;
+
+        if (r.estado !== 201) {
+            return avisar('aviso-alta', 'error', esc((r.datos && r.datos.error) || 'No se pudo crear la cuenta.'));
+        }
+        avisar('aviso-alta', 'exito', 'Cuenta creada: ' + esc(r.datos.afiliado.usuario) + '.');
+        mostrarClave(r.datos.afiliado.usuario, r.datos.clave_temporal, r.datos.aviso);
+        ['alta-nombre', 'alta-usuario', 'alta-correo', 'alta-registro', 'alta-vigencia']
+            .forEach(id => { $(id).value = ''; });
+        cargarPadron();
+    });
+
+    // ── Descargas ───────────────────────────────────────────────
+
+    async function cargarDescargas() {
+        const r = await pedir('GET', '/api/admin/descargas?limite=200');
+        if (r.estado !== 200) return;
+
+        const total = {};
+        (r.datos.resumen || []).forEach(f => { total[f.formato] = (total[f.formato] || 0) + f.n; });
+        const suma = Object.values(total).reduce((a, b) => a + b, 0);
+
+        $('cifras-descargas').innerHTML =
+            '<div class="cifra"><b>' + suma + '</b><span>en total</span></div>'
+            + ['pdf', 'csv', 'dxf'].map(f =>
+                '<div class="cifra"><b>' + (total[f] || 0) + '</b><span>' + f.toUpperCase() + '</span></div>').join('');
+
+        const filas = r.datos.descargas || [];
+        $('tabla-descargas').innerHTML = filas.length
+            ? filas.map(d =>
+                '<tr><td class="tenue">' + fecha(d.creado_en, true) + '</td>'
+                + '<td>' + insignia('neutra', String(d.formato).toUpperCase()) + '</td>'
+                + '<td>' + esc(d.nombre || d.correo_freemium || '—')
+                + (d.usuario ? '<br><span class="tenue mono">' + esc(d.usuario) + '</span>' : '') + '</td>'
+                + '<td class="mono">' + esc(d.clave_catastral || '—') + '</td></tr>').join('')
+            : '<tr><td colspan="4" class="vacio">Todavía no hay descargas registradas.</td></tr>';
+    }
+
+    // ── Bitácora ────────────────────────────────────────────────
+
+    async function cargarEventos() {
+        const r = await pedir('GET', '/api/admin/eventos?limite=200');
+        if (r.estado !== 200) return;
+        const filas = r.datos.eventos || [];
+        $('tabla-eventos').innerHTML = filas.length
+            ? filas.map(e =>
+                '<tr><td class="tenue">' + fecha(e.creado_en, true) + '</td>'
+                + '<td class="mono">' + esc(e.tipo) + '</td>'
+                + '<td>' + esc(e.usuario || '—') + '</td>'
+                + '<td class="tenue">' + esc(e.detalle || '') + '</td></tr>').join('')
+            : '<tr><td colspan="4" class="vacio">Sin eventos registrados.</td></tr>';
+    }
+
+    // ── Cambio de contraseña propia ─────────────────────────────
+
+    $('btn-clave').addEventListener('click', async () => {
+        const actual = $('clave-actual').value;
+        const nueva = $('clave-nueva').value;
+        const repetir = $('clave-repetir').value;
+
+        if (!actual || !nueva) return avisar('aviso-clave', 'error', 'Escriba su contraseña actual y la nueva.');
+        if (nueva !== repetir) return avisar('aviso-clave', 'error', 'Las dos contraseñas nuevas no coinciden.');
+
+        const boton = $('btn-clave');
+        boton.disabled = true;
+        const r = await pedir('POST', '/api/sesion/clave', { clave_actual: actual, clave_nueva: nueva });
+        boton.disabled = false;
+
+        if (r.estado !== 200) {
+            return avisar('aviso-clave', 'error', esc((r.datos && r.datos.error) || 'No se pudo cambiar la contraseña.'));
+        }
+        avisar('aviso-clave', 'exito', 'Contraseña actualizada.');
+        ['clave-actual', 'clave-nueva', 'clave-repetir'].forEach(id => { $(id).value = ''; });
+        perfil = r.datos.afiliado;
+        pintar();
+    });
+
+    // ── Arranque ────────────────────────────────────────────────
+
+    $('btn-ingresar').addEventListener('click', () => acceso.abrirIngreso(cargarSesion));
+
+    cargarSesion();
+})();
+</script>
+</body>
+</html>

@@ -424,8 +424,21 @@
             salir.className = 'btn btn-outline';
             salir.title = 'Cerrar sesion';
             salir.innerHTML = '<i class="fas fa-sign-out-alt"></i> Salir';
-            salir.addEventListener('click', cerrarSesion);
             caja.appendChild(etiqueta);
+
+            // El panel solo se anuncia a quien ya tiene sesion: es donde se
+            // ve la propia cuenta y, si es administrador, el padron. No se
+            // enlaza desde el sitio publico porque sin sesion no muestra nada.
+            if (!/panel\.html$/i.test(location.pathname)) {
+                const panel = document.createElement('a');
+                panel.className = 'btn btn-outline';
+                panel.href = 'panel.html';
+                panel.title = 'Mi cuenta y administracion';
+                panel.innerHTML = '<i class="fas fa-sliders-h"></i> Panel';
+                caja.appendChild(panel);
+            }
+
+            salir.addEventListener('click', cerrarSesion);
             caja.appendChild(salir);
         } else {
             caja.innerHTML = '';
@@ -572,6 +585,13 @@
         refrescar: pintarBarra,
         permisos: () => permisos,
         /** Registra la accion a retomar si hay que ingresar primero. */
-        registrarAccion: (formato, fn) => { acciones[formato] = fn; }
+        registrarAccion: (formato, fn) => { acciones[formato] = fn; },
+        /**
+         * Llamada autenticada al API, con el token de la sesion puesto y el
+         * 401 ya tratado (cierra la sesion y repinta). La usa panel.html para
+         * hablar con /api/admin/* sin duplicar aqui el manejo del token.
+         * @returns {Promise<{estado:number, datos:object}>}
+         */
+        peticion: api
     };
 })();
