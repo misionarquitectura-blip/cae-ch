@@ -4523,42 +4523,72 @@
 
                 // Sección 4C - Afectación vial
                 y = checkSpace(y, 45);
-                y = sectionHeader('4C.  CATASTRO Y MOVILIDAD - AFECTACION POR LINEA DE FABRICA', y);
+                y = sectionHeader('4C.  CATASTRO Y MOVILIDAD - AFECTACION POR LINEA DE FABRICA Y VIALIDAD', y);
                 const tieneAfect = afectacionVial && afectacionVial.tieneAfectacion;
                 const capaDisp = afectacionVial && afectacionVial.capaDisponible;
                 const areaAfect = afectacionVial ? (afectacionVial.areaAfectadaM2 || 0) : 0;
+                // Metodo: 'lf' (zona con linea de fabrica) o 'vialidad' (bordes de la capa de vialidad)
+                const metodoAfect = afectacionVial ? afectacionVial.metodo : null;
+                const corredores = (afectacionVial && afectacionVial.corredores) || [];
+                const ejesSinAncho = (afectacionVial && afectacionVial.ejesSinAncho) || [];
+                const nombreVia = v => v.nombre ? `"${v.nombre}"` : 'sin denominacion';
                 const textoAfect = tieneAfect
-                    ? 'SI – PREDIO CON AFECTACION VIAL DETECTADA'
+                    ? (areaAfect > 0 ? 'SI – PREDIO CON AFECTACION VIAL DETECTADA'
+                                     : 'SI – PREDIO ATRAVESADO POR VIA DE ANCHO DESCONOCIDO')
                     : (capaDisp
-                        ? 'NO – PREDIO SIN AFECTACION DIRECTA (vialidad presente en el sector)'
+                        ? (metodoAfect === 'vialidad' || metodoAfect === 'lf'
+                            ? 'NO – PREDIO SIN AFECTACION DIRECTA (vialidad presente en el sector)'
+                            : 'NO ANALIZADO EN ZONA RURAL – Capa de Vialidad no activa')
                         : 'NO ANALIZADO – Capa de Lineas de Fabrica no activa');
-                const colorAfect = tieneAfect ? [180, 30, 30] : (capaDisp ? [30, 130, 60] : [120, 120, 120]);
+                const colorAfect = tieneAfect ? [180, 30, 30] : (capaDisp && metodoAfect ? [30, 130, 60] : [120, 120, 120]);
                 const anchoVia = afectacionVial ? afectacionVial.anchoVia : null;
                 const anchoAcera = afectacionVial ? afectacionVial.anchoAcera : null;
                 const fuenteAncho = afectacionVial ? afectacionVial.fuenteAncho : null;
-                const filasAfect = [['Afectacion vial por linea de fabrica', textoAfect]];
+                const filasAfect = [['Afectacion vial', textoAfect]];
+                if (metodoAfect) {
+                    filasAfect.push(['Referencia utilizada', metodoAfect === 'lf'
+                        ? 'Lineas de fabrica municipales (GADMR)'
+                        : (corredores.length ? 'Bordes externos de la capa de Vialidad' : 'Ejes de la capa de Vialidad') +
+                          ' (sector sin lineas de fabrica definidas)']);
+                }
                 if (tieneAfect && areaAfect > 0) {
                     filasAfect.push(['Area afectada (reserva vial)', `${areaAfect.toFixed(2)} m²`]);
                     const franjas = afectacionVial && afectacionVial.franjas;
-                    if (franjas && franjas.length > 1) {
+                    if (metodoAfect === 'vialidad') {
+                        corredores.forEach(c => filasAfect.push([`Via ${nombreVia(c)}`,
+                            `${c.area.toFixed(2)} m² dentro del predio, entre bordes externos separados ${c.ancho.toFixed(2)} m` +
+                            (c.jerarquia ? ` (${c.jerarquia})` : '')]));
+                    } else if (franjas && franjas.length > 1) {
                         filasAfect.push(['Desglose por frente', franjas.map(f => `${f.toFixed(2)} m²`).join('  +  ') + `  =  ${areaAfect.toFixed(2)} m²`]);
                     }
                     if (afectacionVial && afectacionVial.areaEdificable != null) {
                         filasAfect.push(['Area util remanente', `${afectacionVial.areaEdificable.toFixed(2)} m²`]);
                     }
-                    filasAfect.push(['Observacion', 'El area indicada corresponde a las franjas del predio comprendidas entre la linea de fabrica y el limite del lote hacia cada via circundante. Estas zonas no son edificables segun normativa municipal.']);
+                    filasAfect.push(['Observacion', metodoAfect === 'vialidad'
+                        ? 'En este sector no hay lineas de fabrica definidas. El area indicada es la parte del predio comprendida entre los bordes externos de la via trazados en la capa de Vialidad (GADMR y GADPCH). Es REFERENCIAL: el ancho oficial de la via y su derecho de via deben confirmarse con el ente competente.'
+                        : 'El area indicada corresponde a las franjas del predio comprendidas entre la linea de fabrica y el limite del lote hacia cada via circundante. Estas zonas no son edificables segun normativa municipal.']);
                     if (afectacionVial && afectacionVial.lfProlongada) {
                         filasAfect.push(['ADVERTENCIA - Trazado incompleto',
                             'El trazado de la linea de fabrica de la capa municipal termina dentro del predio y no lo cruza por completo. ' +
                             'Para cerrar la franja se prolongo el trazado siguiendo la direccion de su tramo final. El area resultante es REFERENCIAL ' +
                             'y debe confirmarse con la linea de fabrica oficial emitida por el GADMR.']);
                     }
-                } else if (tieneAfect) {
-                    filasAfect.push(['Area afectada (reserva vial)', 'Geometria lineal – calculo de area no disponible']);
+                }
+                // Ejes que cruzan el lote sin bordes trazados: hay afectacion, pero no se puede medir
+                ejesSinAncho.forEach(e => filasAfect.push(['ADVERTENCIA - Ancho de via desconocido',
+                    `El predio esta atravesado por el eje vial ${nombreVia(e)}` + (e.jerarquia ? ` (${e.jerarquia})` : '') +
+                    ` en ${e.longitud.toFixed(1)} m de recorrido, pero la capa de Vialidad no define el ancho ni los bordes de la via en este tramo. ` +
+                    'El predio TIENE AFECTACION VIAL, cuya superficie no puede determinarse con la informacion disponible. ' +
+                    'El propietario debe acercarse al ente competente (GAD Municipal de Riobamba o GAD Provincial de Chimborazo, segun la jurisdiccion de la via) ' +
+                    'para conocer el ancho oficial y el alcance de la afectacion.']));
+                if (capaDisp && !metodoAfect) {
+                    filasAfect.push(['Nota', 'El predio no tiene lineas de fabrica en su entorno. Active la capa "Vialidad" en el Geovisor para evaluar la afectacion por los bordes de la via.']);
                 }
                 const fuenteLabel = fuenteAncho === 'calculado' ? ' (calculado perpendicularmente)'
-                    : fuenteAncho === 'atributos' ? ' (dato de tabla de atributos)' : '';
-                filasAfect.push(['Ancho de via', anchoVia != null ? `${anchoVia.toFixed(2)} m${fuenteLabel}` : 'No disponible en la zona del predio']);
+                    : fuenteAncho === 'atributos' ? ' (dato de tabla de atributos)'
+                    : fuenteAncho === 'vialidad' ? ' (entre bordes externos, capa de Vialidad)' : '';
+                filasAfect.push(['Ancho de via', anchoVia != null ? `${anchoVia.toFixed(2)} m${fuenteLabel}`
+                    : (ejesSinAncho.length ? 'Desconocido – consultar al ente competente' : 'No disponible en la zona del predio')]);
                 filasAfect.push(['Ancho de acera', anchoAcera != null ? `${anchoAcera.toFixed(2)} m` : 'No disponible en la zona del predio']);
                 y = at({
                     startY: y,
@@ -4831,7 +4861,7 @@
                         y += 8;
                         doc.setFontSize(7.5); doc.setTextColor(100, 100, 100);
                         const notaPlano = 'Plano a escala con cotas de los lados del predio (en metros), elaborado solo con geometrias vectoriales del catastro y capas activas, sin imagen satelital. Cotas referenciales calculadas sobre la geometria catastral del GADMR.' +
-                            (planoVectorial.conAfectacion ? ' Las franjas rojas rayadas son las areas afectadas por linea de fabrica detalladas en la seccion 4C; su superficie se rotula sobre cada franja.' : '');
+                            (planoVectorial.conAfectacion ? ' Las franjas rojas rayadas son las areas afectadas por linea de fabrica o por el corredor vial detalladas en la seccion 4C; su superficie se rotula sobre cada franja.' : '');
                         doc.text(notaPlano, mg, y, { maxWidth: pw - mg * 2 });
                         doc.setTextColor(0, 0, 0);
                         y += 10;
@@ -6592,6 +6622,339 @@
                     franjas: piezas.map(function (p) { return p.area; }),
                     contornos: contornos,
                     lfProlongada: lfProlongada,
+                    edificable: Math.round((areaPredio - total) * 100) / 100,
+                    resto: resto
+                };
+            }
+
+            // ═════════════════════════════════════════════════════════════════
+            // CORREDORES VIALES — capa 7 (Vialidad, toda la provincia)
+            //
+            // Fuera de la zona urbana no hay líneas de fábrica: la capa de
+            // vialidad trae el eje y, en algunos tramos, líneas paralelas que
+            // marcan la calzada y el borde externo de la vía. Ninguna lleva un
+            // atributo que diga qué es; se reconocen por geometría: trazos
+            // paralelos a desfase constante forman un corredor, y el área
+            // afectada es la parte del predio entre los dos trazos extremos.
+            // Si del corredor sólo existe el eje, la afectación existe pero su
+            // ancho es desconocido y así se declara.
+            // ═════════════════════════════════════════════════════════════════
+            const VIA_VENTANA    = 40;   // m alrededor del predio en que se lee la vialidad
+            const VIA_PARALELA   = 1.5;  // dispersión máxima del desfase entre dos trazos paralelos (m)
+            const VIA_BRECHA     = 15;   // separación máxima entre trazos vecinos de un mismo corredor (m)
+            const VIA_ANCHO_MAX  = 40;   // ancho total por encima del cual el agrupamiento no es fiable (m)
+            const VIA_ESPESOR    = 0.5;  // espesor mínimo de una pieza; menos es ruido de digitalización (m)
+            const VIA_EJE_DENTRO = 1.0;  // cuánto debe internarse un eje para decir que atraviesa el lote (m)
+            const VIA_ZONA_LF    = 15;   // si hay línea de fábrica a esta distancia, manda ella (m)
+
+            // Caja en grados de una feature lineal, calculada una sola vez: las
+            // capas 7 y 8 cubren la provincia y no se proyectan enteras a UTM.
+            function afCajaGrados(f) {
+                if (!f._cajaGr) {
+                    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+                    const g = f.geometry;
+                    const partes = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : [];
+                    for (const pt of partes) for (const c of pt) { x0 = Math.min(x0, c[0]); y0 = Math.min(y0, c[1]); x1 = Math.max(x1, c[0]); y1 = Math.max(y1, c[1]); }
+                    Object.defineProperty(f, '_cajaGr', { value: [x0, y0, x1, y1] });
+                }
+                return f._cajaGr;
+            }
+
+            // Caja en grados del predio, ampliada `m` metros
+            function afCajaPredio(predioGeoJSON, m) {
+                const g = predioGeoJSON.geometry;
+                const anillo = g.type === 'MultiPolygon' ? g.coordinates[0][0] : g.coordinates[0];
+                let a0 = Infinity, b0 = Infinity, a1 = -Infinity, b1 = -Infinity;
+                for (const c of anillo) { a0 = Math.min(a0, c[0]); b0 = Math.min(b0, c[1]); a1 = Math.max(a1, c[0]); b1 = Math.max(b1, c[1]); }
+                const pad = m / 90000;   // holgado: 1° ≈ 110 km
+                return [a0 - pad, b0 - pad, a1 + pad, b1 + pad];
+            }
+
+            // ¿Tiene el predio líneas de fábrica en su entorno? Donde las hay, la
+            // capa de vialidad no aporta: en la ciudad trae además bordillos y
+            // aceras sin atributos que, leídos como bordes de vía, se comerían
+            // lotes enteros.
+            function afHayLF(predioGeoJSON, P) {
+                if (!geojsonLayers[8]) return false;
+                const bbP = afBbox(P), D = VIA_ZONA_LF, caja = afCajaPredio(predioGeoJSON, D);
+                let hay = false;
+                geojsonLayers[8].eachLayer(function (lyr) {
+                    if (hay || !lyr.feature || !lyr.feature.geometry) return;
+                    const g = lyr.feature.geometry;
+                    const partes = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : null;
+                    if (!partes) return;
+                    const cg = afCajaGrados(lyr.feature);
+                    if (cg[2] < caja[0] || cg[0] > caja[2] || cg[3] < caja[1] || cg[1] > caja[3]) return;
+                    for (const parte of partes) {
+                        let u;
+                        try { u = parte.map(afUTM); } catch (e) { continue; }
+                        const bb = afBbox(u);
+                        if (bb[2] < bbP[0] - D || bb[0] > bbP[2] + D || bb[3] < bbP[1] - D || bb[1] > bbP[3] + D) continue;
+                        for (let i = 0; i < u.length - 1 && !hay; i++) {
+                            const a = u[i], b = u[i + 1];
+                            if (afPip(a, P) || afDistToRing(a, P) <= D) { hay = true; break; }
+                            for (const v of P) if (afDist2Seg(v, a, b) <= D) { hay = true; break; }
+                        }
+                        if (hay) return;
+                    }
+                });
+                return hay;
+            }
+
+            // Puntos cada `paso` metros a lo largo de una polilínea
+            function afMuestras(pts, paso) {
+                const out = [pts[0]];
+                for (let i = 1; i < pts.length; i++) {
+                    const a = pts[i - 1], b = pts[i];
+                    const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / paso));
+                    for (let k = 1; k <= n; k++) out.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]);
+                }
+                return out;
+            }
+
+            // Desfase con signo de `p` respecto de la polilínea (izquierda +).
+            // `interior` es falso cuando el pie de la perpendicular cae más allá
+            // de un extremo: ahí el desfase no mide nada.
+            function afDesfase(p, line) {
+                let best = null;
+                for (let i = 0; i < line.length - 1; i++) {
+                    const a = line[i], b = line[i + 1];
+                    const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy;
+                    if (L2 < 1e-12) continue;
+                    const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2;
+                    const tc = Math.max(0, Math.min(1, t));
+                    const d = Math.hypot(p[0] - a[0] - tc * dx, p[1] - a[1] - tc * dy);
+                    if (!best || d < best.abs) {
+                        const lado = dx * (p[1] - a[1]) - dy * (p[0] - a[0]) >= 0 ? 1 : -1;
+                        const fuera = (i === 0 && t < 0) || (i === line.length - 2 && t > 1);
+                        best = { abs: d, d: lado * d, interior: !fuera };
+                    }
+                }
+                return best || { abs: Infinity, d: 0, interior: false };
+            }
+
+            // Tramos de la vialidad que pasan por la ventana del predio, en UTM
+            function afViasLocales(predioGeoJSON, P) {
+                const capa = geojsonLayers[7];
+                if (!capa) return [];
+                const bbP = afBbox(P);
+                const V = [bbP[0] - VIA_VENTANA, bbP[1] - VIA_VENTANA, bbP[2] + VIA_VENTANA, bbP[3] + VIA_VENTANA];
+                // Prefiltro en grados, antes de proyectar nada (la capa cubre la provincia)
+                const caja = afCajaPredio(predioGeoJSON, VIA_VENTANA);
+                const vias = [];
+                capa.eachLayer(function (lyr) {
+                    const f = lyr.feature;
+                    if (!f || !f.geometry) return;
+                    const gg = f.geometry;
+                    const partes = gg.type === 'LineString' ? [gg.coordinates] : gg.type === 'MultiLineString' ? gg.coordinates : null;
+                    if (!partes) return;
+                    const cg = afCajaGrados(f);
+                    if (cg[2] < caja[0] || cg[0] > caja[2] || cg[3] < caja[1] || cg[1] > caja[3]) return;
+                    for (const parte of partes) {
+                        let u;
+                        try { u = afDedupe(parte.map(afUTM)); } catch (e) { continue; }
+                        // Recortar a la ventana: tramos consecutivos que la tocan
+                        let run = null;
+                        const cerrar = function () { if (run && run.length > 1) vias.push({ pts: run, props: f.properties || {} }); run = null; };
+                        for (let i = 0; i < u.length - 1; i++) {
+                            const a = u[i], b = u[i + 1];
+                            const toca = !(Math.max(a[0], b[0]) < V[0] || Math.min(a[0], b[0]) > V[2] ||
+                                           Math.max(a[1], b[1]) < V[1] || Math.min(a[1], b[1]) > V[3]);
+                            if (toca) { if (!run) run = [a]; run.push(b); } else cerrar();
+                        }
+                        cerrar();
+                    }
+                });
+                // La capa trae trazos duplicados (mismo eje dos veces): se quedan una sola vez
+                const unicas = [];
+                for (const v of vias) {
+                    v.muestras = afMuestras(v.pts, 2);
+                    const dup = unicas.some(function (w) {
+                        return v.muestras.every(function (p) { return afDesfase(p, w.pts).abs < 0.3; });
+                    });
+                    if (!dup) unicas.push(v);
+                }
+                return unicas;
+            }
+
+            // Reparte un conjunto de piezas cortándolas con una polilínea
+            function afCortarPiezas(piezas, line) {
+                const out = [], cola = piezas.slice();
+                let guarda = 0;
+                while (cola.length && guarda++ < 400) {
+                    const pz = cola.pop();
+                    let cortada = false;
+                    for (const path of afInnerPaths(line, pz)) {
+                        const par = afSplitByPath(pz, path);
+                        if (par[0].length < 3 || par[1].length < 3) continue;
+                        if (afShoelace(par[0]) < 0.01 || afShoelace(par[1]) < 0.01) continue;
+                        cola.push(par[0], par[1]);
+                        cortada = true;
+                        break;
+                    }
+                    if (!cortada) out.push(pz);
+                }
+                return out.concat(cola);
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Afectación por los corredores de la capa de vialidad sobre el
+            // anillo UTM `R` (el predio, o lo que dejaron las líneas de fábrica).
+            // Devuelve { corredores[], ejesSinAncho[] }.
+            // ─────────────────────────────────────────────────────────────────
+            function calcularCorredoresViales(predioGeoJSON, R) {
+                const res = { corredores: [], ejesSinAncho: [] };
+                if (!R || R.length < 3) return res;
+                const vias = afViasLocales(predioGeoJSON, R);
+                if (!vias.length) return res;
+
+                // 1) Parejas paralelas → corredores (unión por componentes)
+                const n = vias.length, padre = vias.map(function (_, i) { return i; });
+                const raiz = function (i) { while (padre[i] !== i) i = padre[i] = padre[padre[i]]; return i; };
+                for (let i = 0; i < n; i++) {
+                    for (let j = i + 1; j < n; j++) {
+                        const ds = [];
+                        for (const p of vias[j].muestras) {
+                            if (afDistToRing(p, R) > VIA_VENTANA && !afPip(p, R)) continue;
+                            const o = afDesfase(p, vias[i].pts);
+                            if (o.interior) ds.push(o.d);
+                        }
+                        if (ds.length < 5) continue;   // < ~10 m de recorrido común
+                        ds.sort(function (a, b) { return a - b; });
+                        const lo = ds[Math.floor(ds.length * 0.1)], hi = ds[Math.floor(ds.length * 0.9)];
+                        const med = ds[Math.floor(ds.length / 2)];
+                        if (hi - lo <= VIA_PARALELA && Math.abs(med) <= VIA_BRECHA) padre[raiz(j)] = raiz(i);
+                    }
+                }
+                const grupos = new Map();
+                vias.forEach(function (v, i) { const r = raiz(i); if (!grupos.has(r)) grupos.set(r, []); grupos.get(r).push(v); });
+
+                // Un trazo "atraviesa" el lote si se interna en él más que el
+                // ruido de digitalización; devuelve la longitud interior.
+                const dentro = function (pts) {
+                    let L = 0;
+                    for (const p of afInnerPaths(pts, R)) if (afMaxSepBorde(p.pts, R) > VIA_EJE_DENTRO) L += p.len;
+                    return L;
+                };
+                const nombreDe = function (grupo) {
+                    for (const v of grupo) { const s = String(v.props.NOMBRE_EJE || '').trim(); if (s) return s; }
+                    return '';
+                };
+                const jerarquiaDe = function (grupo) {
+                    for (const v of grupo) { const s = String(v.props.JERARQUIZA || v.props.JERARQ_VIA || '').trim(); if (s) return s; }
+                    return '';
+                };
+
+                // Lo que aún no ha sido asignado a ninguna vía: cada corredor se
+                // recorta sobre lo que dejó el anterior, así un cruce de dos
+                // vías sobre el mismo lote no cuenta dos veces la intersección.
+                let libre = [R.slice()];
+                for (const grupo of grupos.values()) {
+                    const nombre = nombreDe(grupo), jerarquia = jerarquiaDe(grupo);
+                    const cruce = Math.max.apply(null, grupo.map(function (v) { return dentro(v.pts); }));
+                    let area = 0, piezasVia = [], ancho = null;
+                    if (grupo.length >= 2) {
+                        // Desfase de cada trazo respecto del más largo del grupo
+                        const ref = grupo.reduce(function (a, b) { return b.muestras.length > a.muestras.length ? b : a; });
+                        const off = grupo.map(function (v) {
+                            if (v === ref) return { v: v, d: 0 };
+                            const ds = v.muestras.map(function (p) { return afDesfase(p, ref.pts); })
+                                .filter(function (o) { return o.interior; }).map(function (o) { return o.d; }).sort(function (a, b) { return a - b; });
+                            return { v: v, d: ds.length ? ds[Math.floor(ds.length / 2)] : 0 };
+                        }).sort(function (a, b) { return a.d - b.d; });
+                        const izq = off[0], der = off[off.length - 1];
+                        ancho = der.d - izq.d;
+                        if (ancho > VIA_ESPESOR && ancho <= VIA_ANCHO_MAX) {
+                            // Cortar por los bordes externos y quedarse con lo que cae entre ellos
+                            let piezas = libre;
+                            for (const borde of [izq.v, der.v]) piezas = afCortarPiezas(piezas, afExtender(borde.pts, R).pts);
+                            const quedan = [];
+                            for (const pz of piezas) {
+                                const nuc = afNucleo(pz);
+                                const o = nuc && afDesfase(nuc, ref.pts);
+                                const enVia = o && o.interior && o.d > izq.d && o.d < der.d;
+                                // Menos de VIA_ESPESOR de grueso es el lindero dibujado
+                                // sobre el borde de la vía, no una afectación.
+                                if (!enVia || 2 * afDistToRing(nuc, pz) < VIA_ESPESOR) { quedan.push(pz); continue; }
+                                const a = afShoelace(pz);
+                                area += a;
+                                piezasVia.push({ area: Math.round(a * 100) / 100, ring: pz });
+                            }
+                            if (area > 0.1) libre = quedan;
+                        } else {
+                            ancho = null;
+                        }
+                    }
+                    if (area > 0.1) {
+                        res.corredores.push({
+                            nombre: nombre, jerarquia: jerarquia,
+                            ancho: Math.round(ancho * 100) / 100,
+                            area: Math.round(area * 100) / 100,
+                            piezas: piezasVia
+                        });
+                    } else if (cruce >= 3) {
+                        // Sólo hay eje (o los bordes no se pudieron cerrar): hay
+                        // afectación, pero no se sabe cuánta.
+                        res.ejesSinAncho.push({ nombre: nombre, jerarquia: jerarquia, longitud: Math.round(cruce * 10) / 10 });
+                    }
+                }
+                res.corredores.sort(function (a, b) { return b.area - a.area; });
+                return res;
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Afectación vial completa del predio, en UTM:
+            //   1) franjas de las líneas de fábrica (capa 8, zona urbana);
+            //   2) corredores de la capa de vialidad (capa 7) sobre lo que
+            //      quedó, para no contar dos veces la misma superficie.
+            // ─────────────────────────────────────────────────────────────────
+            function calcularAfectacionPredio(predioGeoJSON) {
+                const P = afRingUTM(predioGeoJSON);
+                if (!P || P.length < 3) return null;
+                const areaPredio = afShoelace(P);
+                const piezas = [];
+                let lfProlongada = false;
+                // Zona con línea de fábrica: manda ella. Sin ella (zona rural,
+                // vías provinciales) se leen los bordes de la capa de vialidad.
+                // Sin la capa 8 no se puede saber en qué zona está el predio.
+                const zonaLF = afHayLF(predioGeoJSON, P);
+                if (zonaLF) {
+                    const lf = calcularFranjasAfectacion(predioGeoJSON);
+                    if (lf) {
+                        lfProlongada = lf.lfProlongada;
+                        lf.contornos.forEach(function (c) { piezas.push({ area: c.area, ring: c.utm, origen: 'lf' }); });
+                    }
+                }
+                let viales = { corredores: [], ejesSinAncho: [] };
+                const metodo = zonaLF ? 'lf' : (geojsonLayers[8] && geojsonLayers[7] ? 'vialidad' : null);
+                if (metodo === 'vialidad') {
+                    viales = calcularCorredoresViales(predioGeoJSON, P);
+                    viales.corredores.forEach(function (c) {
+                        c.piezas.forEach(function (p) { piezas.push({ area: p.area, ring: p.ring, origen: 'vialidad', via: c.nombre }); });
+                    });
+                }
+                const total = Math.round(piezas.reduce(function (s, p) { return s + p.area; }, 0) * 100) / 100;
+                const areaDe = function (o) {
+                    return Math.round(piezas.filter(function (p) { return p.origen === o; })
+                        .reduce(function (s, p) { return s + p.area; }, 0) * 100) / 100;
+                };
+                return {
+                    metodo: metodo,
+                    total: total,
+                    totalLF: areaDe('lf'),
+                    totalVialidad: areaDe('vialidad'),
+                    franjas: piezas.map(function (p) { return p.area; }),
+                    contornos: piezas.map(function (p) {
+                        return {
+                            area: p.area, origen: p.origen, utm: p.ring,
+                            latlng: p.ring.map(function (q) { const ll = utmToLatLng(q[0], q[1], 17, true); return [ll[1], ll[0]]; })
+                        };
+                    }),
+                    lfProlongada: lfProlongada,
+                    corredores: viales.corredores.map(function (c) {
+                        return { nombre: c.nombre, jerarquia: c.jerarquia, ancho: c.ancho, area: c.area };
+                    }),
+                    ejesSinAncho: viales.ejesSinAncho,
                     edificable: Math.round((areaPredio - total) * 100) / 100
                 };
             }
@@ -6691,25 +7054,38 @@
             }
 
             // ─────────────────────────────────────────────────────────────────
-            // Analiza la capa 8 (Líneas de Fábrica) contra el polígono del
-            // predio y devuelve si hay afectación y el área comprometida en m².
+            // Analiza la capa 8 (Líneas de Fábrica) y, fuera de su cobertura,
+            // la capa 7 (Vialidad) contra el polígono del predio; devuelve si
+            // hay afectación y el área comprometida en m².
             // ─────────────────────────────────────────────────────────────────
             function calcularAfectacionVial(predioGeoJSON) {
-                const resultado = { tieneAfectacion: false, areaAfectadaM2: 0, capaDisponible: false };
+                const resultado = {
+                    tieneAfectacion: false, areaAfectadaM2: 0, capaDisponible: false,
+                    capaVialidad: !!geojsonLayers[7], metodo: null, corredores: [], ejesSinAncho: []
+                };
+                // La capa 8 es la que dice si el predio está en zona con línea
+                // de fábrica; sin ella no se puede elegir el método.
                 if (!geojsonLayers[8]) return resultado;
                 resultado.capaDisponible = true;
 
-                // Franjas comprometidas por el trazado de las líneas de fábrica,
-                // considerando todas las calles circundantes.
-                let franjas = null;
-                try { franjas = calcularFranjasAfectacion(predioGeoJSON); } catch (e) { console.warn('Afectación vial:', e); }
-                if (franjas && franjas.total > 0.1) {
+                // Franjas comprometidas por las líneas de fábrica (todas las
+                // calles circundantes) o, donde no las hay, por los corredores
+                // de la capa de vialidad.
+                let af = null;
+                try { af = calcularAfectacionPredio(predioGeoJSON); } catch (e) { console.warn('Afectación vial:', e); }
+                if (af) {
+                    resultado.metodo = af.metodo;
+                    resultado.corredores = af.corredores;
+                    resultado.ejesSinAncho = af.ejesSinAncho;
+                    if (af.ejesSinAncho.length) resultado.tieneAfectacion = true;
+                }
+                if (af && af.total > 0.1) {
                     resultado.tieneAfectacion = true;
-                    resultado.areaAfectadaM2 = franjas.total;
-                    resultado.franjas = franjas.franjas;
-                    resultado.contornos = franjas.contornos;
-                    resultado.lfProlongada = franjas.lfProlongada;
-                    resultado.areaEdificable = franjas.edificable;
+                    resultado.areaAfectadaM2 = af.total;
+                    resultado.franjas = af.franjas;
+                    resultado.contornos = af.contornos;
+                    resultado.lfProlongada = af.lfProlongada;
+                    resultado.areaEdificable = af.edificable;
                 }
 
                 // Superposición directa con LF poligonales (reservas dibujadas
@@ -6733,7 +7109,9 @@
                 // ── Ancho de vía y acera: atributos → fallback perpendicular ──
                 let anchoVia = null, anchoAcera = null, fuenteAncho = null;
                 let minDistVia = Infinity, minDistAcera = Infinity;
-                try {
+                // Fuera de la zona con línea de fábrica, las LF que haya a 50–80 m
+                // son de otra calle: el ancho sale del corredor (paso 3).
+                if (resultado.metodo !== 'vialidad') try {
                     const predioCentroid = turf.centroid(predioGeoJSON);
                     const predioBuffer = turf.buffer(predioGeoJSON, 0.05, { units: 'kilometers' });
                     // 1) Buscar por atributos específicos (0-ANCHOS VIALES / -ACERA)
@@ -6770,6 +7148,12 @@
                         if (aceraPerp !== null) anchoAcera = aceraPerp;
                     }
                 } catch (e) { }
+                // 3) Zona sin línea de fábrica: el ancho del corredor medido
+                //    entre los bordes externos de la capa de vialidad.
+                if (anchoVia === null && resultado.corredores.length) {
+                    anchoVia = resultado.corredores[0].ancho;
+                    fuenteAncho = 'vialidad';
+                }
                 resultado.anchoVia = anchoVia;
                 resultado.anchoAcera = anchoAcera;
                 resultado.fuenteAncho = fuenteAncho;
@@ -7589,7 +7973,7 @@
                 let franjas = null;
                 if (geojsonLayers[8]) {
                     try {
-                        const r = calcularFranjasAfectacion(d.geoJSON);
+                        const r = calcularAfectacionPredio(d.geoJSON);
                         if (r && r.contornos && r.contornos.length) franjas = r.contornos;
                     } catch (e) { console.warn('Afectación para DXF:', e); }
                 }

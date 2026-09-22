@@ -20,10 +20,14 @@ const FUNCIONES = [
     'afSegInt', 'afDedupe', 'afInnerPaths', 'afSplitByPath', 'afMaxSepBorde',
     'afNucleo', 'afRingUTM', 'afExtender', 'afCadenasLF',
     'calcularFranjasAfectacion',
+    'afMuestras', 'afDesfase', 'afCajaGrados', 'afCajaPredio', 'afHayLF',
+    'afViasLocales', 'afCortarPiezas',
+    'calcularCorredoresViales', 'calcularAfectacionPredio',
     'lindAnilloValido', 'lindAnillosExteriores', 'lindProyeccion', 'lindLongitudIntervalos',
     'lindLadosPredio', 'lindMarcarVecino'
 ];
-const CONSTANTES = ['AF_MAX_RETIRO', 'AF_NODE_SNAP', 'LIND_TOL_M', 'LIND_MIN_M'];
+const CONSTANTES = ['AF_MAX_RETIRO', 'AF_NODE_SNAP', 'LIND_TOL_M', 'LIND_MIN_M',
+    'VIA_VENTANA', 'VIA_PARALELA', 'VIA_BRECHA', 'VIA_ANCHO_MAX', 'VIA_ESPESOR', 'VIA_EJE_DENTRO', 'VIA_ZONA_LF'];
 
 function extraerFuncion(src, nombre) {
     const i = src.indexOf('function ' + nombre + '(');
@@ -117,6 +121,12 @@ function leerGeoJSON(rel) {
     return JSON.parse(fs.readFileSync(path.join(RAIZ, rel), 'utf8'));
 }
 
+// Capa 7 (vialidad de la provincia) simulada sobre el GeoJSON de produccion
+function stubVialidad() {
+    const v = leerGeoJSON('DATA SET/VIALIDAD_TOTAL.geojson');
+    return { eachLayer: cb => { for (const f of v.features) cb({ feature: f }); } };
+}
+
 // Capa 8 (lineas de fabrica) simulada sobre el GeoJSON de produccion
 function stubLineasFabrica() {
     const lf = leerGeoJSON('DATA SET/LINEAS_FABRICA.geojson');
@@ -163,6 +173,6 @@ function resumen(titulo) {
 
 module.exports = {
     cargarGeovisor, cargarServicios, cargarTelecom, cargarDXF,
-    leerGeoJSON, stubLineasFabrica, stubCapa,
+    leerGeoJSON, stubLineasFabrica, stubVialidad, stubCapa,
     buscarPredio, anillo, chequear, casiIgual, resumen, RAIZ
 };
