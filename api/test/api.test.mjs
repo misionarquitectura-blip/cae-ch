@@ -232,6 +232,77 @@ let tokenAfiliado = null;
     comprobar('el afiliado NO puede crear afiliados', intentoAlta.estado === 403);
 }
 
+// ── 7b. Herramientas concedidas cuenta por cuenta ───────────────────
+seccion('Herramientas (planimetria)');
+{
+    const sesionAfi = await llamar('GET', '/api/sesion', { token: tokenAfiliado });
+    comprobar('un afiliado NO tiene la planimetria por el solo hecho de serlo',
+        sesionAfi.datos?.permisos?.planimetria === false, sesionAfi.datos?.permisos);
+    comprobar('pero si conserva sus descargas',
+        sesionAfi.datos?.permisos?.pdf === true && sesionAfi.datos?.permisos?.dxf === true);
+
+    const sinPermiso = await llamar('POST', '/api/herramientas', {
+        token: tokenAfiliado, cuerpo: { herramienta: 'planimetria' }
+    });
+    comprobar('sin concesion, la puerta responde 403', sinPermiso.estado === 403, sinPermiso.datos);
+
+    const sesionAdmin = await llamar('GET', '/api/sesion', { token: tokenAdmin });
+    comprobar('el administrador la tiene por su rol, sin figurar en la lista',
+        sesionAdmin.datos?.permisos?.planimetria === true
+        && (sesionAdmin.datos?.afiliado?.herramientas || []).length === 0,
+        sesionAdmin.datos?.afiliado?.herramientas);
+
+    const abreAdmin = await llamar('POST', '/api/herramientas', {
+        token: tokenAdmin, cuerpo: { herramienta: 'planimetria' }
+    });
+    comprobar('y la puede abrir', abreAdmin.estado === 200 && abreAdmin.datos?.autorizado === true);
+
+    const inventada = await llamar('POST', '/api/herramientas', {
+        token: tokenAdmin, cuerpo: { herramienta: 'teletransporte' }
+    });
+    comprobar('una herramienta inventada no existe', inventada.estado === 400, inventada.datos);
+
+    const seLaDaSolo = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
+        token: tokenAfiliado, cuerpo: { herramientas: ['planimetria'] }
+    });
+    comprobar('el afiliado NO se la puede conceder a si mismo', seLaDaSolo.estado === 403);
+
+    const conceder = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
+        token: tokenAdmin, cuerpo: { herramientas: ['planimetria'] }
+    });
+    comprobar('el admin se la concede', conceder.estado === 200, conceder.datos);
+    comprobar('y queda anotada en el perfil',
+        (conceder.datos?.afiliado?.herramientas || []).join() === 'planimetria',
+        conceder.datos?.afiliado?.herramientas);
+
+    const malaLista = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
+        token: tokenAdmin, cuerpo: { herramientas: ['planimetria', 'teletransporte'] }
+    });
+    comprobar('una lista con una herramienta desconocida se rechaza entera', malaLista.estado === 400);
+
+    const yaLaTiene = await llamar('GET', '/api/sesion', { token: tokenAfiliado });
+    comprobar('ahora el afiliado la ve concedida', yaLaTiene.datos?.permisos?.planimetria === true);
+
+    const abre = await llamar('POST', '/api/herramientas', {
+        token: tokenAfiliado, cuerpo: { herramienta: 'planimetria' }
+    });
+    comprobar('y la puerta lo deja pasar', abre.estado === 200, abre.datos);
+
+    const quitar = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
+        token: tokenAdmin, cuerpo: { herramientas: [] }
+    });
+    comprobar('quitarla es mandar la lista vacia', quitar.estado === 200
+        && (quitar.datos?.afiliado?.herramientas || []).length === 0, quitar.datos);
+
+    const yaNo = await llamar('POST', '/api/herramientas', {
+        token: tokenAfiliado, cuerpo: { herramienta: 'planimetria' }
+    });
+    comprobar('y la puerta vuelve a cerrarse', yaNo.estado === 403);
+
+    const sinSesion = await llamar('POST', '/api/herramientas', { cuerpo: { herramienta: 'planimetria' } });
+    comprobar('sin sesion no se abre ninguna herramienta', sinSesion.estado === 401);
+}
+
 // ── 8. Suspension y vigencia ────────────────────────────────────────
 seccion('Suspension, vigencia y bajas');
 {

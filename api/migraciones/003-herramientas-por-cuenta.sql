@@ -1,0 +1,28 @@
+-- ════════════════════════════════════════════════════════════════════
+--  003 · Herramientas habilitadas por cuenta
+--
+--  Hasta ahora una cuenta solo podia hacer dos cosas: abrir el visor y
+--  -si su registro estaba cotejado- descargar los tres productos. La
+--  plataforma empieza a tener herramientas que no son descargas, y que
+--  no se abren a todo colegiado por el mero hecho de serlo: la primera
+--  es la PLANIMETRIA de predios no catastrados.
+--
+--  `herramientas` guarda la lista concedida, separada por comas
+--  ("planimetria", "planimetria,otra"). Es una lista dentro de una
+--  columna, que normalmente seria un olor a mal diseno; aqui se acepta a
+--  proposito porque siempre se lee entera junto al afiliado -ya viene en
+--  el SELECT * de la sesion, sin una sola consulta mas-, nunca se cruza
+--  con otra tabla y el padron entero son una decena de filas.
+--
+--  El administrador NO necesita figurar aqui: `permisos()` le da todas
+--  las herramientas por su rol. Esta columna es para abrir la mano a los
+--  colegiados, una cuenta a la vez.
+--
+--    npx wrangler d1 execute caech-afiliados --remote \
+--        --file=migraciones/003-herramientas-por-cuenta.sql
+--
+--  `schema.sql` ya trae la columna; esto es solo para bases que existian
+--  antes del 2026-09-22.
+-- ════════════════════════════════════════════════════════════════════
+
+ALTER TABLE afiliados ADD COLUMN herramientas TEXT;

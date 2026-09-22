@@ -7,6 +7,9 @@
      · PDF, CSV, DXF — los tres exigen cuenta con el correo confirmado y
                       el numero de registro del CAE ya cotejado por la
                       administracion contra el padron del colegio.
+     · Herramientas  — lo que no es descarga (la planimetria, de momento)
+                      exige ademas una concesion expresa, cuenta por
+                      cuenta, desde el panel. El admin las tiene todas.
 
    Ya no hay pase de cortesia: se retiro al abrir el visor al publico.
 
@@ -34,7 +37,7 @@
     const LLAVE_TOKEN = 'caech_sesion_token';
 
     let perfil = null;
-    let permisos = { pdf: false, dxf: false, csv: false };
+    let permisos = { pdf: false, dxf: false, csv: false, planimetria: false };
 
     // ── Utilidades ──────────────────────────────────────────────────
 
@@ -434,7 +437,7 @@
                 panel.className = 'btn btn-outline';
                 panel.href = 'panel.html';
                 panel.title = 'Mi cuenta y administracion';
-                panel.innerHTML = '<i class="fas fa-sliders-h"></i> Panel';
+                panel.innerHTML = '<i class="fas fa-cog"></i> Panel';
                 caja.appendChild(panel);
             }
 
@@ -455,7 +458,7 @@
         await api('DELETE', '/api/sesion');
         guardarToken(null);
         perfil = null;
-        permisos = { pdf: false, dxf: false, csv: false };
+        permisos = { pdf: false, dxf: false, csv: false, planimetria: false };
         pintarBarra();
     }
 
@@ -507,6 +510,42 @@
             return false;
         }
         return true;
+    }
+
+    /**
+     * Puerta de las herramientas que no son descargas -la planimetria, de
+     * momento-. A diferencia de los tres formatos, estas no se abren por ser
+     * colegiado: las concede la administracion cuenta por cuenta, asi que el
+     * "no" mas probable no es un fallo sino un permiso que nadie ha dado.
+     * @returns {Promise<boolean>} true si se puede continuar.
+     */
+    async function autorizarHerramienta(herramienta, alEntrar) {
+        if (!CONFIG.activo) return true;
+
+        if (!perfil) {
+            abrirIngreso(alEntrar || function () { location.reload(); });
+            return false;
+        }
+
+        const r = await api('POST', '/api/herramientas', { herramienta: herramienta });
+        if (r.estado === 200) return true;
+
+        if (r.datos && r.datos.requiere_cambio_clave) {
+            abrirCambioClave(null, alEntrar || function () { location.reload(); });
+            return false;
+        }
+        if (r.datos && r.datos.registro_pendiente) {
+            avisarPendiente(r.datos.error);
+            return false;
+        }
+        modal('caech-modal-herramienta', 'Herramienta no habilitada',
+            '<div class="caech-acc-aviso info">' +
+            ((r.datos && r.datos.error) || 'Su cuenta no tiene habilitada esta herramienta.') +
+            '</div>' +
+            '<p>Estas herramientas se conceden <b>cuenta por cuenta</b>. Si la necesita para su ' +
+            'trabajo, escriba a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a> ' +
+            'indicando su n&uacute;mero de registro.</p>');
+        return false;
     }
 
     /** Aviso de "su registro sigue en revision", con el tono correcto. */
@@ -578,6 +617,7 @@
     window.caechAcceso = {
         config: CONFIG,
         autorizar: autorizar,
+        autorizarHerramienta: autorizarHerramienta,
         abrirIngreso: abrirIngreso,
         abrirRegistro: abrirRegistro,
         cerrarSesion: cerrarSesion,

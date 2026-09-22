@@ -8,7 +8,7 @@
 
 import { generarId, generarClaveTemporal, hashearClave, hashIP } from './cripto.js';
 import { ahora, texto, correoValido } from './http.js';
-import { iteraciones, registrarEvento, perfilPublico, permisos } from './sesiones.js';
+import { iteraciones, registrarEvento, perfilPublico, permisos, HERRAMIENTAS } from './sesiones.js';
 
 const ESTADOS = ['activo', 'suspendido', 'baja'];
 const ROLES   = ['usuario', 'afiliado', 'admin'];
@@ -160,6 +160,17 @@ export async function actualizarAfiliado(env, request, sesion, id, datos) {
         campos.push('registro_validado = ?', 'registro_validado_en = ?', 'registro_validado_por = ?');
         valores.push(validado ? 1 : 0, validado ? ahora() : null, validado ? sesion.afiliado.usuario : null);
         cambios.push(validado ? 'registro validado' : 'registro invalidado');
+    }
+    // Herramientas concedidas. Llega la lista COMPLETA, no un anadido: es
+    // idempotente y evita tener que distinguir entre dar y quitar.
+    if (datos.herramientas !== undefined) {
+        if (!Array.isArray(datos.herramientas)) return malo('Las herramientas deben venir en una lista.');
+        const desconocida = datos.herramientas.find(h => !HERRAMIENTAS.includes(h));
+        if (desconocida) return malo('Herramienta no reconocida: ' + texto(String(desconocida), 40) + '.');
+        const lista = HERRAMIENTAS.filter(h => datos.herramientas.includes(h));
+        campos.push('herramientas = ?');
+        valores.push(lista.length ? lista.join(',') : null);
+        cambios.push(lista.length ? 'herramientas=' + lista.join('+') : 'sin herramientas');
     }
     if (datos.vigencia_hasta !== undefined) {
         const v = datos.vigencia_hasta;

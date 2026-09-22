@@ -24,12 +24,18 @@ Hay tres roles:
 
 Y esto puede cada uno:
 
-| | `usuario` sin validar | `usuario` validado | `afiliado` / `admin` |
-|---|---|---|---|
-| Abrir el GeoVisor | sí (no hace falta cuenta) | sí | sí |
-| **PDF** (DICAT) | no | sí | sí |
-| **DXF** | no | sí | sí |
-| **CSV** | no | sí | sí |
+| | `usuario` sin validar | `usuario` validado | `afiliado` | `admin` |
+|---|---|---|---|---|
+| Abrir el GeoVisor | sí (no hace falta cuenta) | sí | sí | sí |
+| **PDF** (DICAT) | no | sí | sí | sí |
+| **DXF** | no | sí | sí | sí |
+| **CSV** | no | sí | sí | sí |
+| **Planimetría** | no | solo si se le concede | solo si se le concede | sí |
+
+Las **herramientas** son la excepción a la regla: no se abren por ser colegiado.
+La planimetría —y lo que venga después— se concede **cuenta por cuenta** desde el
+panel, sobre una cuenta que ya tenga su registro cotejado. El administrador las
+tiene todas por su rol, sin figurar en ninguna lista: es quien las reparte.
 
 Un `usuario` nace con `registro_validado = 0`: puede entrar y consultar, pero no
 descarga nada hasta que un administrador coteje su número contra el padrón con
@@ -83,13 +89,17 @@ npx wrangler d1 execute caech-afiliados --remote --file=schema.sql
 ```
 
 **Si la base ya existía**, `schema.sql` no la altera: hay que aplicar las
-migraciones de `migraciones/` en orden. La última, `002-numero-de-registro.sql`,
-añade el número de registro del CAE y su estado de validación, y da por validadas
-las cuentas que creó la administración:
+migraciones de `migraciones/` en orden. La `002` añade el número de registro del
+CAE y su estado de validación; la `003`, la columna de herramientas concedidas:
 
 ```bash
 npx wrangler d1 execute caech-afiliados --remote --file=migraciones/002-numero-de-registro.sql
+npx wrangler d1 execute caech-afiliados --remote --file=migraciones/003-herramientas-por-cuenta.sql
 ```
+
+`ALTER TABLE ADD COLUMN` **no es idempotente**: si la migración ya se aplicó,
+vuelve a fallar con «duplicate column». Compruebe antes con
+`SELECT name FROM pragma_table_info('afiliados')`.
 
 ### 3. Cargar el secreto obligatorio
 
@@ -226,10 +236,16 @@ sigue sirviendo desde `curl` si el panel no está a mano.
 | Suspender / reactivar | `PATCH /api/admin/afiliados/:id` `{estado: "suspendido"\|"activo"}` |
 | Renovar afiliación | `PATCH /api/admin/afiliados/:id` `{vigencia_hasta: "2027-12-31"}` |
 | Desbloquear tras intentos fallidos | `PATCH /api/admin/afiliados/:id` `{desbloquear: true}` |
+| **Conceder o quitar una herramienta** | `PATCH /api/admin/afiliados/:id` `{herramientas: ["planimetria"]}` (lista completa; `[]` la quita) |
 | Restablecer contraseña | `POST /api/admin/afiliados/:id/clave` |
 | Ver descargas | `GET /api/admin/descargas` |
 | Ver bitácora | `GET /api/admin/eventos` |
 | Ver pases de cortesía (histórico) | `GET /api/admin/pases` |
+
+La herramienta comprueba su propio permiso con **`POST /api/herramientas`**
+`{herramienta: "planimetria"}`: responde 200 si puede pasar y 403 con el motivo si no,
+y deja el uso anotado en la bitácora como `herramienta_abierta`. No pasa por la
+tabla `descargas` porque esa lleva un CHECK sobre los tres formatos.
 
 El alta y el restablecimiento devuelven la clave temporal **una sola vez** —
 anótela y entréguela en persona. No queda en claro en ninguna parte; si se
@@ -280,7 +296,7 @@ curl -X POST https://caech-afiliados.SU-CUENTA.workers.dev/api/admin/afiliados \
 
 ## Pruebas
 
-`test/api.test.mjs` levanta 98 comprobaciones contra el Worker real corriendo en
+`test/api.test.mjs` levanta 113 comprobaciones contra el Worker real corriendo en
 local: registro público con número de registro y confirmación de correo, el ciclo
 completo de validación del número por la administración, permisos por rol,
 ingreso, cambio de clave obligatorio, separación admin/afiliado/usuario,

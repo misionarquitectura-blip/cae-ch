@@ -19,7 +19,7 @@ import { json, ok, error, preflight, cuerpoJSON, texto, ahora } from './http.js'
 import { hashIP } from './cripto.js';
 import {
     iniciarSesion, cerrarSesion, sesionActual, cambiarClave,
-    perfilPublico, permisos, registrarEvento
+    perfilPublico, permisos, registrarEvento, HERRAMIENTAS
 } from './sesiones.js';
 import {
     listarAfiliados, crearAfiliado, actualizarAfiliado, restablecerClave,
@@ -136,6 +136,38 @@ async function enrutar(request, env, url, ruta, metodo) {
         ).run();
 
         return ok({ formato: formato, autorizado: true }, request, env);
+    }
+
+    // ── Puerta de las herramientas ──────────────────────────────────
+    // Una sola puerta para lo que no es descarga: la planimetria hoy, lo
+    // que venga manana. No pasa por `descargas` porque esa tabla lleva un
+    // CHECK sobre los tres formatos; el uso queda en la bitacora.
+    if (ruta === '/api/herramientas' && metodo === 'POST') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Inicie sesion para usar esta herramienta.', 401, request, env);
+
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+
+        const herramienta = texto(datos.herramienta, 40).toLowerCase();
+        if (!HERRAMIENTAS.includes(herramienta)) return error('Herramienta no reconocida.', 400, request, env);
+
+        const a = sesion.afiliado;
+        if (!permisos(a)[herramienta]) {
+            return error('Su cuenta no tiene habilitada esta herramienta. '
+                + 'La concede la administracion del CAE-CH, cuenta por cuenta.', 403, request, env, {
+                herramienta: herramienta,
+                requiere_cambio_clave: !!a.requiere_cambio_clave,
+                registro_pendiente: a.rol === 'usuario' && !a.registro_validado
+            });
+        }
+
+        await registrarEvento(env, {
+            tipo: 'herramienta_abierta', afiliado_id: a.id, usuario: a.usuario,
+            detalle: herramienta,
+            ip_hash: await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
+        });
+        return ok({ herramienta: herramienta, autorizado: true }, request, env);
     }
 
     // ── Registro publico ────────────────────────────────────────────

@@ -30,6 +30,12 @@ CREATE TABLE IF NOT EXISTS afiliados (
     registro_validado_en  TEXT,
     registro_validado_por TEXT,                             -- usuario del admin que valido
 
+    -- Herramientas concedidas a esta cuenta, separadas por comas. Las
+    -- descargas NO estan aqui: van con el registro cotejado. Aqui van las
+    -- herramientas que se abren una cuenta a la vez -"planimetria"-. El
+    -- administrador las tiene todas por su rol, sin figurar en la columna.
+    herramientas          TEXT,
+
     nucleo                TEXT    NOT NULL DEFAULT 'Chimborazo',
     -- usuario  : se registro por su cuenta. Abre el GeoVisor y, una vez
     --            validado su numero de registro, descarga como afiliado.

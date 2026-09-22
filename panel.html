@@ -144,6 +144,14 @@
 
         .acciones { display: flex; gap: 6px; flex-wrap: wrap; }
 
+        .permiso {
+            display: flex; align-items: center; gap: 6px; margin-top: 6px;
+            font-size: 12px; color: var(--grafito-med); cursor: pointer;
+        }
+        .permiso input { accent-color: var(--rojo-caech); cursor: pointer; }
+        .permiso input:disabled { cursor: default; }
+        .permiso:has(input:disabled) { color: var(--grafito-sua); cursor: default; }
+
         .rol-sel {
             font-family: inherit; font-size: 12px; padding: 4px 6px;
             border: 1px solid var(--borde-marcado); border-radius: var(--radio);
@@ -333,15 +341,17 @@
             <div class="tarjeta">
                 <h2><i class="fas fa-users"></i> Padrón de cuentas
                     <span class="insignia neutra" id="etiqueta-total"></span></h2>
-                <p class="sub">Todas las cuentas de la plataforma. La columna «descargas» dice si esa
-                   cuenta puede, hoy y ahora, generar el DICAT, el CSV y el DXF.</p>
+                <p class="sub">Todas las cuentas de la plataforma. «Descargas» dice si esa cuenta puede,
+                   hoy y ahora, generar el DICAT, el CSV y el DXF; eso va con el registro cotejado.
+                   Debajo, las herramientas que <b>no</b> se abren por ser colegiado: se conceden una
+                   cuenta a la vez. El administrador las tiene todas por su rol.</p>
                 <div class="campo buscador">
                     <input id="buscar" type="search" placeholder="Buscar por nombre, usuario, correo o registro" autocomplete="off">
                 </div>
                 <div id="aviso-padron"></div>
                 <div class="tabla-marco"><table>
                     <thead><tr><th>Cuenta</th><th>Registro CAE</th><th>Rol</th><th>Estado</th>
-                               <th>Descargas</th><th>Último acceso</th><th>Acciones</th></tr></thead>
+                               <th>Permisos</th><th>Último acceso</th><th>Acciones</th></tr></thead>
                     <tbody id="tabla-padron"></tbody>
                 </table></div>
             </div>
@@ -432,7 +442,14 @@
 
     const $ = id => document.getElementById(id);
     let perfil = null;
+    let misPermisos = {};
     let cuentas = [];
+
+    // Herramientas que se conceden cuenta por cuenta. El identificador tiene
+    // que coincidir con HERRAMIENTAS en api/src/sesiones.js.
+    const HERRAMIENTAS = [
+        { id: 'planimetria', nombre: 'Planimetría' }
+    ];
 
     // ── Utilidades de presentación ──────────────────────────────
 
@@ -484,6 +501,7 @@
     async function cargarSesion() {
         const r = await pedir('GET', '/api/sesion');
         perfil = r.estado === 200 ? r.datos.afiliado : null;
+        misPermisos = (r.estado === 200 && r.datos.permisos) || {};
         pintar();
         if (!perfil) return;
         // El padrón se trae de entrada aunque la pestaña abierta sea otra:
@@ -549,10 +567,10 @@
         '<tr><th style="width:180px">' + rotulo + '</th><td>' + valor + '</td></tr>';
 
     function pintarHerramientas() {
-        const p = perfil;
-        const colegiado = p.estado === 'activo' && p.correo_verificado
-            && (p.rol === 'afiliado' || p.rol === 'admin' || p.registro_validado);
-        const admin = p.rol === 'admin';
+        // Lo que se muestra aquí no se deduce del perfil: es el veredicto que
+        // dio el Worker en `permisos`, el mismo que aplica al pedir de verdad.
+        const colegiado = !!misPermisos.pdf;
+        const planimetria = !!misPermisos.planimetria;
 
         const tarjetas = [
             {
@@ -571,13 +589,15 @@
             {
                 icono: 'fa-drafting-compass', nombre: 'Planimetría',
                 texto: 'Planimetrías de predios no catastrados: DXF georreferenciado e informe de '
-                     + 'linderación en PDF. Por ahora corre solo en local, en la máquina del '
-                     + 'administrador.',
-                estado: admin ? insignia('neutra', 'solo en local') : insignia('no', 'sin acceso'),
-                enlace: admin
+                     + 'linderación en PDF. No se abre por ser colegiado: la concede la '
+                     + 'administración cuenta por cuenta. Todavía corre solo en local.',
+                estado: planimetria
+                    ? insignia('si', 'concedida') + ' ' + insignia('neutra', 'solo en local')
+                    : insignia('no', 'sin acceso'),
+                enlace: planimetria
                     ? '<span class="tenue">Se arranca con <span class="mono">npm start</span> '
                       + 'en la carpeta <span class="mono">planimetria/</span>.</span>'
-                    : ''
+                    : '<span class="tenue">Pídala a la administración del CAE-Ch.</span>'
             }
         ];
 
@@ -711,7 +731,18 @@
                 + (c.vigencia_hasta
                     ? '<br><span class="tenue">' + (vencida ? 'venció ' : 'vence ') + fecha(c.vigencia_hasta) + '</span>'
                     : '') + '</td>'
-                + '<td>' + (puede ? insignia('si', 'sí') : insignia('no', 'no')) + '</td>'
+                + '<td><div class="tenue">Descargas ' + (puede ? insignia('si', 'sí') : insignia('no', 'no'))
+                + '</div>' + HERRAMIENTAS.map(h => {
+                    // El administrador las tiene por su rol: la casilla se
+                    // muestra marcada y bloqueada, para que se vea el porque.
+                    const suya = c.rol === 'admin' || (c.herramientas || []).indexOf(h.id) !== -1;
+                    return '<label class="permiso" title="'
+                        + (c.rol === 'admin' ? 'El administrador tiene todas las herramientas por su rol'
+                                             : 'Conceder o quitar ' + h.nombre) + '">'
+                        + '<input type="checkbox" data-herr="' + h.id + '" data-cuenta="' + esc(c.id) + '"'
+                        + (suya ? ' checked' : '') + (c.rol === 'admin' ? ' disabled' : '') + '> '
+                        + esc(h.nombre) + '</label>';
+                }).join('') + '</td>'
                 + '<td class="tenue">' + fecha(c.ultimo_acceso, true) + '</td>'
                 + '<td><div class="acciones">' + acciones.join('') + '</div></td>'
                 + '</tr>';
@@ -765,6 +796,28 @@
             return avisar('aviso-padron', 'error', esc(r.datos.error || 'No se pudo aplicar el cambio.'));
         }
         avisar('aviso-padron', 'exito', esc(quien + ': ' + (r.datos.cambios || []).join(', ') + '.'));
+        cargarPadron();
+    });
+
+    // Herramientas: la casilla manda la lista COMPLETA de esa cuenta, no el
+    // cambio suelto. Así dar y quitar son la misma petición.
+    document.querySelector('section[data-hoja="padron"]').addEventListener('change', async e => {
+        const casilla = e.target.closest('input[data-herr]');
+        if (!casilla) return;
+
+        const id = casilla.dataset.cuenta;
+        const cuenta = cuentas.find(c => c.id === id) || {};
+        const quien = cuenta.nombre || cuenta.usuario || 'esta cuenta';
+        const fila = casilla.closest('tr');
+        const lista = [...fila.querySelectorAll('input[data-herr]:checked')].map(i => i.dataset.herr);
+
+        casilla.disabled = true;
+        const r = await pedir('PATCH', '/api/admin/afiliados/' + id, { herramientas: lista });
+        casilla.disabled = false;
+        avisar('aviso-padron', r.estado === 200 ? 'exito' : 'error',
+            esc(r.estado === 200
+                ? quien + ': ' + (r.datos.cambios || []).join(', ') + '.'
+                : (r.datos.error || 'No se pudo cambiar las herramientas.')));
         cargarPadron();
     });
 
@@ -884,7 +937,10 @@
         }
         avisar('aviso-clave', 'exito', 'Contraseña actualizada.');
         ['clave-actual', 'clave-nueva', 'clave-repetir'].forEach(id => { $(id).value = ''; });
+        // Cambiar la clave temporal desbloquea los permisos, así que el
+        // veredicto que acompaña a la respuesta ya no es el de antes.
         perfil = r.datos.afiliado;
+        misPermisos = r.datos.permisos || misPermisos;
         pintar();
     });
 

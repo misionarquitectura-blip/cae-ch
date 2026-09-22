@@ -16,6 +16,19 @@ const BLOQUEO_MIN     = 15;
 const HORAS_SESION    = 8;
 const CLAVE_MIN_LARGO = 12;
 
+/**
+ * Herramientas que se conceden cuenta por cuenta, aparte de las descargas.
+ * Anadir una aqui es lo unico que hace falta: el panel dibuja una casilla
+ * por cada una y `permisos()` la resuelve sola.
+ */
+export const HERRAMIENTAS = ['planimetria'];
+
+/** Lista de herramientas concedidas a una cuenta (la columna es CSV). */
+export function herramientasDe(fila) {
+    return String((fila && fila.herramientas) || '')
+        .split(',').map(s => s.trim()).filter(h => HERRAMIENTAS.includes(h));
+}
+
 export function iteraciones(env) {
     return parseInt(env.HASH_ITERACIONES, 10) || 210000;
 }
@@ -44,6 +57,7 @@ export function perfilPublico(fila) {
         nucleo: fila.nucleo,
         registro_profesional: fila.registro_profesional,
         registro_validado: !!fila.registro_validado,
+        herramientas: herramientasDe(fila),
         vigencia_hasta: fila.vigencia_hasta,
         requiere_cambio_clave: !!fila.requiere_cambio_clave,
         ultimo_acceso: fila.ultimo_acceso
@@ -69,12 +83,22 @@ export function permisos(fila) {
         && (!fila.vigencia_hasta || !vencido(fila.vigencia_hasta));
     const colegiado = base
         && (fila.rol === 'afiliado' || fila.rol === 'admin' || !!fila.registro_validado);
-    return {
+
+    const p = {
         visor: base,
         pdf: colegiado,
         dxf: colegiado,
         csv: colegiado
     };
+
+    // Las herramientas exigen lo mismo que una descarga -ser colegiado con
+    // el registro cotejado- y ademas una concesion expresa. El administrador
+    // las tiene todas por su rol: es quien las reparte.
+    const concedidas = herramientasDe(fila);
+    for (const h of HERRAMIENTAS) {
+        p[h] = colegiado && (fila.rol === 'admin' || concedidas.includes(h));
+    }
+    return p;
 }
 
 /** Politica de contrasena. Devuelve null si es aceptable, o el motivo. */
