@@ -768,12 +768,6 @@
             .step {
                 margin-bottom: 30px;
             }
-            
-            
-            .nav-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
         }
         
         @media (max-width: 480px) {
@@ -2016,6 +2010,143 @@
             gap: 14px;
             margin-top: 40px;
         }
+
+        /* ══════════════════════════════════════════════════════════
+           SISTEMA UNIFORME DE LA PORTADA (2026-09-23)
+           Una tarjeta, una losa de icono, un numero de paso y dos
+           tamanos de titulo para toda la pagina. Va al final del
+           <style> para ganar por orden a las reglas antiguas de arriba.
+        ══════════════════════════════════════════════════════════ */
+
+        /* ── 1 · Una sola tarjeta ─────────────────────────────── */
+        .herramienta, .linea-tarjeta, .about-card, .integration-item,
+        .contact-form, .plani-entrega, .dicat-via {
+            border-radius: var(--radio);
+        }
+        .herramienta, .linea-tarjeta, .about-card, .integration-item, .contact-form {
+            background: var(--blanco, #FFFFFF);
+            border: 1px solid var(--borde);
+            box-shadow: var(--sombra-1);
+            padding: 30px 28px;
+        }
+        .herramienta, .linea-tarjeta { padding: 30px 28px 28px; }
+        .herramienta { border-top: 3px solid var(--grafito); }
+        .herramienta-nueva { border-top-color: var(--rojo-caech); }
+        .linea-tarjeta { border-top: 3px solid var(--tono); }
+        .about-card:hover, .integration-item:hover, .herramienta:hover, .linea-tarjeta:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--sombra-2);
+        }
+        /* Sobre grafito la tarjeta clara no necesita borde: la sombra
+           la despega del fondo. */
+        .section-dark .linea-tarjeta, .section-dark .plani-entrega { border-left: 0; border-right: 0; border-bottom: 0; }
+        .section-dark .linea-tarjeta { box-shadow: 0 18px 40px rgba(0, 0, 0, .25); }
+        .contact-form:hover { transform: none; }
+        .transparencia-card { padding: 30px 28px; border-radius: var(--radio); }
+
+        /* ── 2 · Una sola losa de icono ───────────────────────── */
+        .feature-icon, .about-icon, .integration-icon, .dicat-via-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            margin: 0 0 20px;
+            font-size: 26px;
+            color: var(--rojo-caech);
+            background: var(--rojo-humo);
+            border-radius: var(--radio);
+        }
+        .feature-icon > i, .about-icon > i, .integration-icon > i, .dicat-via-icon > i { line-height: 1; }
+        .about-card, .integration-item, .transparencia-card { text-align: left; }
+        /* Un solo cuerpo de texto para toda tarjeta. */
+        .herramienta > p, .linea-tarjeta p, .about-card p, .integration-item p,
+        .transparencia-card p, .dicat-via p, .step p { font-size: 15px; line-height: 1.6; }
+        /* En grafito la losa es la misma, con el rojo aclarado. */
+        .transparencia-card > i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+            font-size: 26px;
+            color: #FF6B6F;
+            background: rgba(227, 30, 36, .16);
+            border-radius: var(--radio);
+        }
+
+        /* Un solo numero de paso: cuadro con contorno rojo. */
+        .step-number, .plani-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--grafito);
+            background: transparent;
+            border: 1.5px solid var(--rojo-caech);
+            border-radius: var(--radio);
+            box-shadow: none;
+        }
+        .step-number { margin: 0 auto 18px; }
+        .section-dark .step-number, .plani-num { color: #FFFFFF; }
+
+        /* ── 3 · Dos tamanos de titulo de tarjeta ─────────────── */
+        .herramienta h3, .linea-tarjeta h3, .about-card h3, .dicat-via h3,
+        .contact-info h3, .contact-form h3, .section-title h3 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -.015em;
+        }
+        .integration-item h3, .step h3, .transparencia-card h3, .plani-pasos h3 {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -.01em;
+        }
+        .linea-tarjeta h3 { margin: 20px 0 8px; }
+
+        /* ── 5 · Etiqueta de fecha de las capas ───────────────── */
+        .capa-fecha {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .02em;
+            color: var(--grafito-med);
+            background: var(--hueso);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+        }
+        .section-title-cierre { margin-top: 60px; margin-bottom: 0; }
+
+        /* ── 6 · Ritmo de fondos: hueso, blanco y grafito ─────── */
+        .section-blanca {
+            background-color: var(--blanco, #FFFFFF);
+            border-top: 1px solid var(--borde);
+            border-bottom: 1px solid var(--borde);
+        }
+        #investigacion .linea-tarjeta { background: var(--blanco, #FFFFFF); }
+
+        /* ── 7 · Cabecera en movil: los botones quedan en icono ── */
+        @media (max-width: 900px) {
+            .nav-buttons .btn {
+                width: 42px;
+                min-width: 42px;
+                padding: 0;
+                gap: 0;
+                font-size: 0;
+                letter-spacing: 0;
+            }
+            .nav-buttons .btn > i { font-size: 15px; margin: 0; }
+            .nav-buttons .btn .btn-texto { display: none; }
+            .nav-buttons, #caech-acc-barra { flex-wrap: nowrap; gap: 8px; }
+            .caech-acc-quien b { display: none; }
+        }
     </style>
     <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
          Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
@@ -2045,7 +2176,7 @@
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
                 <div class="nav-buttons">
-                    <a href="geovisor.html" class="btn btn-outline btn-sm"><i class="fas fa-map-location-dot"></i> GeoVisor</a>
+                    <a href="geovisor.html" class="btn btn-outline" title="Abrir el GeoVisor"><i class="fas fa-map-location-dot"></i> <span class="btn-texto">GeoVisor</span></a>
                 </div>
             </nav>
         </div>
@@ -2240,7 +2371,7 @@
             <div class="section-title">
                 <span class="eyebrow">El reporte, por dentro</span>
                 <h2>Qué contiene el DICAT</h2>
-                <p>Ocho secciones, de la ficha catastral al plano acotado. Toca cualquier bloque de la hoja para ver qué responde.</p>
+                <p>Ocho secciones, de la ficha catastral al plano acotado. Toque cualquier bloque de la hoja para ver qué responde.</p>
             </div>
 
             <div class="dicat-explorador">
@@ -2396,7 +2527,7 @@
 
                         <rect x="24" y="414" width="258" height="2" rx="1" fill="#E4E4E8"/>
                     </svg>
-                    <p class="dicat-hoja-pie"><i class="fas fa-hand-pointer"></i> Esquema ilustrativo &mdash; toca un bloque para leer qué responde</p>
+                    <p class="dicat-hoja-pie"><i class="fas fa-hand-pointer"></i> Esquema ilustrativo &mdash; toque un bloque para leer qué responde</p>
                 </div>
 
                 <!-- ── Panel de explicación ─────────────────────── -->
@@ -2425,14 +2556,14 @@
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">El DICAT, paso a paso</span>
-                <h2>¿Cómo Funciona?</h2>
+                <h2>¿Cómo funciona?</h2>
                 <p>Del dato institucional al informe del predio, en cuatro pasos</p>
             </div>
             <div class="process-steps">
                 <div class="step">
                     <div class="step-number">1</div>
                     <h3>Solicitud</h3>
-                    <p>Acércate a la sede del CAE-CH con la clave catastral o la dirección del predio. El equipo te atiende en el momento, sin trámites previos.</p>
+                    <p>Acérquese a la sede del CAE-CH con la clave catastral o la dirección del predio. El equipo lo atiende en el momento, sin trámites previos.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
@@ -2447,7 +2578,7 @@
                 <div class="step">
                     <div class="step-number">4</div>
                     <h3>Entrega</h3>
-                    <p>Recibes el DICAT en PDF, con la opción de versión impresa o digital firmada por el CAE-CH.</p>
+                    <p>Recibe el DICAT en PDF, con la opción de versión impresa o digital firmada por el CAE-CH.</p>
                 </div>
             </div>
         </div>
@@ -2471,7 +2602,7 @@
                         <div class="dicat-via-icon"><i class="fas fa-building-columns"></i></div>
                         <h3>En la sede del CAE-CH</h3>
                         <p class="dicat-via-destacado">Vía principal</p>
-                        <p>Acércate a nuestras oficinas con la clave catastral o la dirección del predio. El equipo genera el DICAT contigo y resuelve en el momento las dudas del informe.</p>
+                        <p>Acérquese a nuestras oficinas con la clave catastral o la dirección del predio. El equipo genera el DICAT con usted y resuelve en el momento las dudas del informe.</p>
                         <a href="#contacto" class="btn dicat-via-btn">
                             <i class="fas fa-map-marker-alt"></i> Dirección y horarios
                         </a>
@@ -2534,7 +2665,7 @@
     <!-- ══════════════════════════════════════════════════════
          INVESTIGACIÓN TERRITORIAL · las tres líneas
     ══════════════════════════════════════════════════════ -->
-    <section class="section section-blanca" id="investigacion">
+    <section class="section section-dark" id="investigacion">
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">Investigación territorial</span>
@@ -2568,8 +2699,8 @@
                 </a>
             </div>
             <div class="lineas-pie">
-                <a href="RESEARCH/index.html" class="btn btn-outline"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
-                <a href="RESEARCH/index.html#presentacion" class="btn btn-linea"><i class="fas fa-person-chalkboard"></i> Presentación en diapositivas</a>
+                <a href="RESEARCH/index.html" class="btn"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
+                <a href="RESEARCH/index.html#presentacion" class="btn btn-secondary"><i class="fas fa-person-chalkboard"></i> Presentación en diapositivas</a>
             </div>
         </div>
     </section>
@@ -2579,7 +2710,7 @@
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">Fuentes de datos</span>
-                <h2>Integración de Datos Institucionales</h2>
+                <h2>Integración de datos institucionales</h2>
                 <p>Unificamos información georreferenciada de múltiples instituciones para proporcionar una visión completa del contexto de cada proyecto arquitectónico.</p>
             </div>
             <div class="integration-grid">
@@ -2587,18 +2718,18 @@
                 <a class="integration-item" href="geovisor.html?capa=6">
                     <div class="integration-icon"><i class="fas fa-city"></i></div>
                     <h3>Catastro GADMR</h3>
-                    <p>Información catastral georreferenciada del Gobierno Autónomo Descentralizado Municipal de Riobamba. <span style="display:inline-block;background:#eee;color:#555;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">Última actualización: septiembre 2026</span></p>
+                    <p>Información catastral georreferenciada del Gobierno Autónomo Descentralizado Municipal de Riobamba. <span class="capa-fecha">Última actualización: septiembre 2026</span></p>
                     <span class="integration-link">Ver en el mapa <i class="fas fa-arrow-right"></i></span>
                 </a>
                 <a class="integration-item" href="geovisor.html?capa=3">
                     <div class="integration-icon"><i class="fas fa-bolt"></i></div>
-                    <h3>Infraestructura Eléctrica</h3>
+                    <h3>Infraestructura eléctrica</h3>
                     <p>Red eléctrica, cobertura y equipamiento de la Empresa Eléctrica de Riobamba (EERSA).</p>
                     <span class="integration-link">Ver en el mapa <i class="fas fa-arrow-right"></i></span>
                 </a>
                 <a class="integration-item" href="geovisor.html?capa=7">
                     <div class="integration-icon"><i class="fas fa-road"></i></div>
-                    <h3>Vialidad Urbana y Rural</h3>
+                    <h3>Vialidad urbana y rural</h3>
                     <p>Red vial urbana y rural, jerarquía de vías y accesibilidad territorial del cantón.</p>
                     <span class="integration-link">Ver en el mapa <i class="fas fa-arrow-right"></i></span>
                 </a>
@@ -2611,31 +2742,31 @@
                 <a class="integration-item" href="geovisor.html?capa=9,10">
                     <div class="integration-icon"><i class="fas fa-robot"></i></div>
                     <h3>Construcciones IA</h3>
-                    <p>~96 K huellas de edificaciones detectadas por machine learning, con vista de todas las detectadas y de las no registradas en catastro. <span style="display:inline-block;background:#f0e6ff;color:#6c2fa0;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">Google Open Buildings 2024</span></p>
+                    <p>~96 K huellas de edificaciones detectadas por machine learning, con vista de todas las detectadas y de las no registradas en catastro. <span class="capa-fecha">Google Open Buildings 2024</span></p>
                     <span class="integration-link">Ver en el mapa <i class="fas fa-arrow-right"></i></span>
                 </a>
                 <a class="integration-item" href="geovisor.html?capa=4">
                     <div class="integration-icon"><i class="fas fa-tint"></i></div>
-                    <h3>Agua Potable</h3>
-                    <p>Las 9 redes de distribución de EP Riobamba y sus 158 subredes, con el caudal de diseño de cada una. El DICAT responde con ellas la factibilidad de agua del predio. <span style="display:inline-block;background:#e3f2fd;color:#1565c0;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">EP Riobamba · marzo 2025</span></p>
+                    <h3>Agua potable</h3>
+                    <p>Las 9 redes de distribución de EP Riobamba y sus 158 subredes, con el caudal de diseño de cada una. El DICAT responde con ellas la factibilidad de agua del predio. <span class="capa-fecha">EP Riobamba · marzo 2025</span></p>
                     <span class="integration-link">Ver en el mapa <i class="fas fa-arrow-right"></i></span>
                 </a>
                 <a class="integration-item" href="geovisor.html?capa=11">
                     <div class="integration-icon"><i class="fas fa-water"></i></div>
                     <h3>Alcantarillado</h3>
-                    <p>Redes sanitaria, pluvial y combinada de EMAPAR, con tipo, sección y diámetro de cada tramo. <span style="display:inline-block;background:#e3f2fd;color:#1565c0;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">EMAPAR</span></p>
+                    <p>Redes sanitaria, pluvial y combinada de EMAPAR, con tipo, sección y diámetro de cada tramo. <span class="capa-fecha">EMAPAR</span></p>
                     <span class="integration-link">Ver en el mapa <i class="fas fa-arrow-right"></i></span>
                 </a>
                 <a class="integration-item" href="geovisor.html?capa=5">
                     <div class="integration-icon"><i class="fas fa-wifi"></i></div>
                     <h3>Telecomunicaciones</h3>
-                    <p>Cobertura de las seis redes de CNT EP — fibra GPON, 4G, 3G, 2G, RNA y CDMA 450 — en toda la provincia. El DICAT las lee sobre la huella del predio, no en un punto, y enumera todas las que llegan al predio con su nivel. <span style="display:inline-block;background:#ede7f6;color:#4527a0;font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">CNT EP · septiembre 2026</span></p>
+                    <p>Cobertura de las seis redes de CNT EP — fibra GPON, 4G, 3G, 2G, RNA y CDMA 450 — en toda la provincia. El DICAT las lee sobre la huella del predio, no en un punto, y enumera todas las que llegan al predio con su nivel. <span class="capa-fecha">CNT EP · septiembre 2026</span></p>
                     <span class="integration-link">Ver en el mapa <i class="fas fa-arrow-right"></i></span>
                 </a>
                 <!-- capas:fin -->
             </div>
-            <div class="section-title" style="margin-top: 60px;">
-                <h3>Base de Datos Unificada</h3>
+            <div class="section-title section-title-cierre">
+                <h3>Base de datos unificada</h3>
                 <p>Toda la información institucional se integra en una sola plataforma, permitiendo a arquitectos y desarrolladores acceder a datos críticos para la planificación y ejecución de proyectos de manera eficiente y confiable.</p>
             </div>
         </div>
@@ -2646,23 +2777,23 @@
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">De dónde sale cada cifra</span>
-                <h2>Transparencia y Trazabilidad</h2>
+                <h2>Transparencia y trazabilidad</h2>
                 <p>Cada cifra del reporte se puede rastrear hasta la institución que la publica y hasta el método con el que se midió.</p>
             </div>
             <div class="transparencia-grid">
                 <div class="transparencia-card">
                     <i class="fas fa-building-columns"></i>
-                    <h3>Fuente Declarada</h3>
+                    <h3>Fuente declarada</h3>
                     <p>Cada capa lleva la institución que la publica y la fecha de corte de los datos. El DICAT es un documento técnico-informativo del CAE-CH y no reemplaza los documentos oficiales del GADMR.</p>
                 </div>
                 <div class="transparencia-card">
                     <i class="fas fa-ruler-combined"></i>
-                    <h3>Medición Verificable</h3>
+                    <h3>Medición verificable</h3>
                     <p>Superficies, linderos y coordenadas se calculan en UTM 17S, la misma proyección en la que el GADMR produce el catastro, y se contrastan contra levantamientos de estación total.</p>
                 </div>
                 <div class="transparencia-card">
                     <i class="fas fa-shield-halved"></i>
-                    <h3>Respaldo Institucional</h3>
+                    <h3>Respaldo institucional</h3>
                     <p>La plataforma se desarrolla y se mantiene bajo el respaldo del CAE-CH Provincial de Chimborazo, organización profesional sin fines de lucro.</p>
                 </div>
             </div>
@@ -2674,23 +2805,23 @@
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">Quiénes somos</span>
-                <h2>Sobre CAE-CH</h2>
+                <h2>Sobre el CAE-CH</h2>
                 <p>El Colegio de Arquitectos del Ecuador - Provincial de Chimborazo se consolida como referente en innovación territorial, impulsando tecnologías que optimizan la gestión integral del territorio y fortalecen la cohesión entre la planificación técnica y su realidad espacial.</p>
             </div>
             <div class="about-grid">
                 <div class="about-card">
                     <div class="about-icon"><i class="fas fa-bullseye"></i></div>
-                    <h3>Nuestra Misión</h3>
+                    <h3>Nuestra misión</h3>
                     <p>Centralizar la información de instituciones públicas en una plataforma de interoperabilidad que automatice la generación de reportes técnicos y diagnósticos de factibilidad, agilizando la labor profesional con alta precisión geoespacial.</p>
                 </div>
                 <div class="about-card">
                     <div class="about-icon"><i class="fas fa-eye"></i></div>
-                    <h3>Nuestra Visión</h3>
+                    <h3>Nuestra visión</h3>
                     <p>Consolidarnos como referente regional en innovación territorial, liderando una gestión de datos abierta fundamentada en SIG, con proyección hacia la integración de modelos de información constructiva BIM.</p>
                 </div>
                 <div class="about-card">
                     <div class="about-icon"><i class="fas fa-gem"></i></div>
-                    <h3>Nuestros Valores</h3>
+                    <h3>Nuestros valores</h3>
                     <p>Transparencia en cada flujo de trabajo, innovación continua en tecnologías aplicadas al territorio y democratización del acceso a la información geoespacial para todos los profesionales.</p>
                 </div>
             </div>
@@ -2702,12 +2833,12 @@
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">Hablemos</span>
-                <h2>Contáctanos</h2>
-                <p>¿Tienes preguntas sobre la plataforma? Estamos aquí para ayudarte</p>
+                <h2>Contáctenos</h2>
+                <p>¿Tiene preguntas sobre la plataforma? Estamos aquí para ayudarle.</p>
             </div>
             <div class="contact-container">
                 <div class="contact-info">
-                    <h3>Información de Contacto</h3>
+                    <h3>Información de contacto</h3>
                     <div class="contact-details">
                         <div class="contact-item">
                             <i class="fas fa-map-marker-alt"></i>
@@ -2735,7 +2866,7 @@
                         <div class="contact-item">
                             <i class="fas fa-clock"></i>
                             <div>
-                                <strong>Horario de Atención</strong><br>
+                                <strong>Horario de atención</strong><br>
                                 Lunes a Viernes<br>
                                 9:00 AM – 1:00 PM &nbsp;·&nbsp; 3:00 PM – 6:00 PM
                             </div>
@@ -2743,21 +2874,21 @@
                     </div>
                 </div>
                 <div class="contact-form">
-                    <h3>Envíanos un Mensaje</h3>
+                    <h3>Envíenos un mensaje</h3>
                     <form id="contact-form">
                         <div class="form-group">
-                            <label for="contact-name">Nombre Completo</label>
-                            <input type="text" id="contact-name" class="form-control" placeholder="Tu nombre">
+                            <label for="contact-name">Nombre completo</label>
+                            <input type="text" id="contact-name" class="form-control" placeholder="Su nombre">
                         </div>
                         <div class="form-group">
-                            <label for="contact-email">Correo Electrónico</label>
-                            <input type="email" id="contact-email" class="form-control" placeholder="tu@email.com">
+                            <label for="contact-email">Correo electrónico</label>
+                            <input type="email" id="contact-email" class="form-control" placeholder="correo@ejemplo.com">
                         </div>
                         <div class="form-group">
                             <label for="contact-message">Mensaje</label>
-                            <textarea id="contact-message" class="form-control" placeholder="¿En qué podemos ayudarte?"></textarea>
+                            <textarea id="contact-message" class="form-control" placeholder="¿En qué podemos ayudarle?"></textarea>
                         </div>
-                        <button type="submit" class="btn">Enviar Mensaje</button>
+                        <button type="submit" class="btn">Enviar mensaje</button>
                     </form>
                 </div>
             </div>
@@ -2769,7 +2900,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>CAE-CH Provincial Chimborazo</h3>
+                    <h3>CAE-CH Provincial de Chimborazo</h3>
                     <p>Colegio de Arquitectos del Ecuador - Provincial de Chimborazo. Comprometidos con la excelencia arquitectónica en nuestra región.</p>
                     <div class="social-footer">
                         <a href="https://www.instagram.com/cae_chimborazo/" target="_blank" rel="noopener noreferrer" aria-label="Instagram CAE Chimborazo"><i class="fab fa-instagram"></i></a>
@@ -2779,7 +2910,7 @@
                     <h3>Herramientas</h3>
                     <ul class="footer-links">
                         <li><a href="geovisor.html">GeoVisor</a></li>
-                        <li><a href="#solicitar">Solicitar Reporte DICAT</a></li>
+                        <li><a href="#solicitar">Solicitar el reporte DICAT</a></li>
                         <li><a href="planimetria.html">Planimetría automatizada</a></li>
                         <li><a href="RESEARCH/index.html">Investigación territorial</a></li>
                         <li><a href="#integracion">Fuentes de datos</a></li>
@@ -2789,9 +2920,9 @@
                 <div class="footer-column">
                     <h3>Legal</h3>
                     <ul class="footer-links">
-                        <li><a href="legal.html#terminos">Términos y Condiciones</a></li>
-                        <li><a href="legal.html#privacidad">Política de Privacidad</a></li>
-                        <li><a href="legal.html#etica">Código de Ética</a></li>
+                        <li><a href="legal.html#terminos">Términos y condiciones</a></li>
+                        <li><a href="legal.html#privacidad">Política de privacidad</a></li>
+                        <li><a href="legal.html#etica">Código de ética</a></li>
                     </ul>
                 </div>
             </div>
@@ -2846,13 +2977,13 @@
                     const email   = document.getElementById('contact-email').value.trim();
                     const message = document.getElementById('contact-message').value.trim();
                     if (!name || !email || !message) {
-                        showToast('Por favor completa todos los campos.', 'error');
+                        showToast('Por favor complete todos los campos.', 'error');
                         return;
                     }
                     const subject = encodeURIComponent('Consulta desde la plataforma CAE-CH');
                     const body    = encodeURIComponent(`Nombre: ${name}\nCorreo: ${email}\n\nMensaje:\n${message}`);
                     window.open(`mailto:caechoficial@gmail.com?subject=${subject}&body=${body}`);
-                    showToast('Abriendo tu cliente de correo...', 'info');
+                    showToast('Abriendo su cliente de correo...', 'info');
                     this.reset();
                 });
             }

@@ -29,7 +29,7 @@
     {
       "clave": "electrica",
       "tarjeta": {
-        "titulo": "Infraestructura Eléctrica",
+        "titulo": "Infraestructura eléctrica",
         "icono": "fas fa-bolt",
         "texto": "Red eléctrica, cobertura y equipamiento de la Empresa Eléctrica de Riobamba (EERSA)."
       },
@@ -44,7 +44,7 @@
     {
       "clave": "vialidad",
       "tarjeta": {
-        "titulo": "Vialidad Urbana y Rural",
+        "titulo": "Vialidad urbana y rural",
         "icono": "fas fa-road",
         "texto": "Red vial urbana y rural, jerarquía de vías y accesibilidad territorial del cantón."
       },
@@ -104,7 +104,7 @@
     {
       "clave": "agua",
       "tarjeta": {
-        "titulo": "Agua Potable",
+        "titulo": "Agua potable",
         "icono": "fas fa-tint",
         "texto": "Las 9 redes de distribución de EP Riobamba y sus 158 subredes, con el caudal de diseño de cada una. El DICAT responde con ellas la factibilidad de agua del predio.",
         "badge": {

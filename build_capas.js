@@ -52,13 +52,12 @@ function escapar(s) {
 }
 
 // El texto de las tarjetas lleva rayas y comillas, pero nunca marcado: se
-// escapa. Los colores del badge no: son literales de estilo del registro.
+// escapa. El badge es la etiqueta neutra `.capa-fecha` de la portada: los
+// `fondo`/`color` del registro ya no se pintan, para que las cinco fechas
+// se lean como una sola familia (2026-09-23).
 function badgeHTML(badge) {
     if (!badge) return '';
-    return ' <span style="display:inline-block;background:' + badge.fondo +
-           ';color:' + badge.color +
-           ';font-size:11px;padding:1px 7px;border-radius:10px;margin-top:4px">' +
-           escapar(badge.texto) + '</span>';
+    return ' <span class="capa-fecha">' + escapar(badge.texto) + '</span>';
 }
 
 // ── 1. La rejilla de la portada ──────────────────────────────────────────────
