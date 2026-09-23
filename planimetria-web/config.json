@@ -1,0 +1,142 @@
+{
+  "_lea_esto": [
+    "Parametros del aplicativo de planimetrias. Todo lo que aqui dice 'verificado: false'",
+    "es un valor de partida que el profesional debe contrastar con la ordenanza vigente",
+    "(PUGS del GADMR, LOSNIVTT, LORHUyA) antes de firmar un informe. El PDF imprime",
+    "el margen aplicado y su base legal tal como quedan en este archivo o en pantalla."
+  ],
+
+  "servidor": { "host": "127.0.0.1", "puerto": 3100 },
+
+  "tolerancias": {
+    "lindero_m": 1.0,
+    "_lindero_m": "Separacion maxima entre el lado levantado y el contorno catastral del vecino para darlo por lindero comun. El levantamiento de campo y el catastro difieren mas que el catastro consigo mismo (0,20 m en el DICAT).",
+    "vertice_catastral_m": 2.0,
+    "_vertice_catastral_m": "Radio para reportar el vertice catastral mas cercano a cada vertice levantado (control de calidad).",
+    "busqueda_via_m": 15,
+    "radio_ubicacion_m": 250,
+    "_radio_ubicacion_m": "Radio del entorno que se dibuja en el recuadro de ubicacion de la lamina.",
+    "lado_minimo_m": 0.30,
+    "vertice_duplicado_m": 0.005
+  },
+
+  "capas": {
+    "catastro": "../DATA SET/Catastro GADMR.geojson",
+    "lineas_fabrica": "../DATA SET/LINEAS_FABRICA.geojson",
+    "pugs_urbano": "../DATA SET/PUGS Urbano.geojson",
+    "pugs_rural": "../DATA SET/PUGS Rural.geojson",
+    "parroquias": "../DATA SET/DATOS GEOVISOR 01 09 2026/capas/Parroquias.geojson",
+    "limite_urbano": "../DATA SET/DATOS GEOVISOR 01 09 2026/capas/Limite_Urbano.geojson"
+  },
+
+  "gdb_certificada": "../DATA SET/CERTIFICACION_EJES_VIALES.gdb",
+  "ogr2ogr": "C:/Program Files/QGIS 4.0.0/bin/ogr2ogr.exe",
+
+  "elementos": [
+    {
+      "id": "rio",
+      "nombre": "Río / curso de agua permanente",
+      "grupo": "hidrografia",
+      "capas_gdb": ["rio_l"],
+      "filtro": { "hyp": 1 },
+      "geometria": "linea",
+      "margen_m": 30,
+      "verificado": false,
+      "base_legal": "POR VERIFICAR - margen de protección de ríos según PUGS GADMR / LORHUyA",
+      "color_dxf": 5,
+      "capa_dxf": "HIDRO_RIO"
+    },
+    {
+      "id": "quebrada",
+      "nombre": "Quebrada / curso de agua intermitente",
+      "grupo": "hidrografia",
+      "capas_gdb": ["rio_l"],
+      "filtro": { "hyp": 2 },
+      "geometria": "linea",
+      "margen_m": 15,
+      "verificado": false,
+      "base_legal": "POR VERIFICAR - margen de protección de quebradas según PUGS GADMR",
+      "color_dxf": 4,
+      "capa_dxf": "HIDRO_QUEBRADA"
+    },
+    {
+      "id": "rio_area",
+      "nombre": "Cauce de río (área)",
+      "grupo": "hidrografia",
+      "capas_gdb": ["rio_a", "lago_laguna_a"],
+      "geometria": "poligono",
+      "margen_m": 30,
+      "verificado": false,
+      "base_legal": "POR VERIFICAR - margen de protección desde el borde del cauce",
+      "color_dxf": 5,
+      "capa_dxf": "HIDRO_CAUCE"
+    },
+    {
+      "id": "via_estatal",
+      "nombre": "Red vial estatal (MTOP)",
+      "grupo": "vialidad",
+      "capas_gdb": ["Red_Vial_Estatal_MTOP_ACT2024"],
+      "geometria": "linea",
+      "nombre_campo": "NOMBRE",
+      "margen_m": 25,
+      "verificado": false,
+      "base_legal": "POR VERIFICAR - derecho de vía medido desde el eje (LOSNIVTT y su reglamento)",
+      "color_dxf": 1,
+      "capa_dxf": "VIA_ESTATAL"
+    },
+    {
+      "id": "via_provincial",
+      "nombre": "Red vial provincial (GADPCH)",
+      "grupo": "vialidad",
+      "capas_gdb": ["SISTEMA_VIAL_PROVINCIAL_MOD", "RED_TIPO_III_IV_MOD_JERARQUIZADO", "Red_provincial_2019", "VIAS_ESTRATEGICAS_CH"],
+      "geometria": "linea",
+      "nombre_campo": ["NOMBRE_EJE", "TRAMO", "D_PROPUEST"],
+      "margen_m": null,
+      "verificado": false,
+      "base_legal": "Ingrese el ancho de derecho de vía (desde el eje) de la resolución del GADPCH",
+      "color_dxf": 1,
+      "capa_dxf": "VIA_PROVINCIAL"
+    },
+    {
+      "id": "eje_certificado",
+      "nombre": "Eje vial certificado por resolución (sector)",
+      "grupo": "vialidad",
+      "capas_gdb": ["EJES_VIALES_BATAN_ATRIB", "EJES_VIALES_SHUYO_ATRIB", "EJES_VIALES_LIBERTAD_ATRIB", "EJES_VIALES_TROJE_ATRIB", "EJES_VIALES_AWISACTE_ATRIB", "EJES_VIALES_SAN_MARTIN_ATRIB", "EJES_VIALES_SAN_ANTONIO_PADUA_ATRIB", "EJES_VIALES_B_PERIFERICOS"],
+      "geometria": "linea",
+      "nombre_campo": ["NOMBRE_EJE", "Layer"],
+      "margen_m": null,
+      "verificado": false,
+      "base_legal": "Ingrese la semisección vial (eje a línea de fábrica) de la resolución administrativa",
+      "color_dxf": 6,
+      "capa_dxf": "EJE_CERTIFICADO"
+    },
+    {
+      "id": "ferrocarril",
+      "nombre": "Línea férrea",
+      "grupo": "vialidad",
+      "capas_gdb": ["ferrocarril_l"],
+      "geometria": "linea",
+      "margen_m": null,
+      "verificado": false,
+      "base_legal": "Ingrese el derecho de vía férreo desde el eje de la línea",
+      "color_dxf": 8,
+      "capa_dxf": "FERROCARRIL"
+    }
+  ],
+
+  "conciliacion": {
+    "_lea_esto": "ETAM: error tecnico aceptable de medicion para comparar la superficie del titulo con la medida. Los porcentajes son de partida y deben ajustarse a la ordenanza de excedentes y diferencias de areas del GADMR (COOTAD art. 481.1).",
+    "etam_urbano_pct": 5,
+    "etam_rural_pct": 10,
+    "etam_verificado": false,
+    "tolerancia_longitud_m": 0.10,
+    "tolerancia_longitud_pct": 1,
+    "cuadra_m2": 7056
+  },
+
+  "informe": {
+    "institucion": "Colegio de Arquitectos del Ecuador - Núcleo de Chimborazo",
+    "titulo": "INFORME DE LINDERACIÓN Y PLANIMETRÍA",
+    "sistema_referencia": "UTM WGS84 Zona 17 Sur (EPSG:32717)"
+  }
+}

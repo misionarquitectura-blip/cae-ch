@@ -1,0 +1,105 @@
+{
+  "generado": "2026-09-22T23:55:24.349Z",
+  "capas": {
+    "catastro": {
+      "url": "DATA SET/Catastro GADMR.geojson",
+      "publicada": true,
+      "bytes": 41524091
+    },
+    "lineas_fabrica": {
+      "url": "DATA SET/LINEAS_FABRICA.geojson",
+      "publicada": true,
+      "bytes": 13077768
+    },
+    "pugs": {
+      "url": "DATA SET/planimetria/pugs.geojson",
+      "elementos": 2087,
+      "bytes": 5383978,
+      "origen_bytes": 97305108,
+      "vertices": 197297,
+      "tolerancia": 0.00002,
+      "decimales": 6
+    },
+    "parroquias": {
+      "url": "DATA SET/planimetria/parroquias.geojson",
+      "elementos": 12,
+      "bytes": 298483,
+      "origen_bytes": 2930462,
+      "vertices": 13038,
+      "tolerancia": 0.00002,
+      "decimales": 6
+    },
+    "limite_urbano": {
+      "url": "DATA SET/planimetria/limite_urbano.geojson",
+      "elementos": 1,
+      "bytes": 7196,
+      "origen_bytes": 12022,
+      "vertices": 310,
+      "tolerancia": 0.00002,
+      "decimales": 6
+    },
+    "el_rio": {
+      "url": "DATA SET/planimetria/el_rio.geojson",
+      "elementos": 2112,
+      "bytes": 3354469,
+      "origen_bytes": 71073694,
+      "vertices": 137073,
+      "tolerancia": 1,
+      "decimales": 2
+    },
+    "el_quebrada": {
+      "url": "DATA SET/planimetria/el_quebrada.geojson",
+      "elementos": 13456,
+      "bytes": 9613016,
+      "origen_bytes": 71073694,
+      "vertices": 358197,
+      "tolerancia": 1,
+      "decimales": 2
+    },
+    "el_rio_area": {
+      "url": "DATA SET/planimetria/el_rio_area.geojson",
+      "elementos": 1360,
+      "bytes": 2998283,
+      "origen_bytes": 17758604,
+      "vertices": 125362,
+      "tolerancia": 1,
+      "decimales": 2
+    },
+    "el_via_estatal": {
+      "url": "DATA SET/planimetria/el_via_estatal.geojson",
+      "elementos": 21,
+      "bytes": 341535,
+      "origen_bytes": 610125,
+      "vertices": 14907,
+      "tolerancia": 0.05,
+      "decimales": 2
+    },
+    "el_via_provincial": {
+      "url": "DATA SET/planimetria/el_via_provincial.geojson",
+      "elementos": 3744,
+      "bytes": 10940038,
+      "origen_bytes": 19455436,
+      "vertices": 459544,
+      "tolerancia": 0.05,
+      "decimales": 2
+    },
+    "el_eje_certificado": {
+      "url": "DATA SET/planimetria/el_eje_certificado.geojson",
+      "elementos": 809,
+      "bytes": 460907,
+      "origen_bytes": 1266878,
+      "vertices": 15871,
+      "tolerancia": 0.05,
+      "decimales": 2
+    },
+    "el_ferrocarril": {
+      "url": "DATA SET/planimetria/el_ferrocarril.geojson",
+      "elementos": 61,
+      "bytes": 105692,
+      "origen_bytes": 178468,
+      "vertices": 4373,
+      "tolerancia": 0.05,
+      "decimales": 2
+    }
+  }
+}

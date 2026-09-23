@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Planimetría | CAE-CH</title>
+    <meta name="description" content="Planimetrías automatizadas de predios no catastrados: DXF georreferenciado en UTM WGS84 17S e informe de linderación en PDF.">
+    <!-- Herramienta interna: no se indexa. Sin sesión con el permiso concedido
+         no muestra nada, pero tampoco tiene por qué salir en Google. -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#E31E24">
+    <link rel="icon" type="image/png" href="LOGO/favicon-caech.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <link rel="stylesheet" href="caech-ui.css">
+    <link rel="stylesheet" href="planimetria-web/estilos.css">
+    <style>
+        /* La puerta: lo único que se ve sin el permiso concedido. */
+        .puerta {
+            max-width: 560px; margin: 70px auto; padding: 0 20px; text-align: center;
+            font-family: var(--fuente-ui, 'Montserrat', sans-serif); color: var(--grafito, #2E3238);
+        }
+        .puerta i { font-size: 34px; color: var(--rojo-caech, #E31E24); margin-bottom: 16px; display: block; }
+        .puerta h1 { font-size: 22px; margin: 0 0 12px; }
+        .puerta p { color: var(--grafito-med, #565B63); line-height: 1.65; margin: 0 0 16px; }
+        .puerta .btn { margin-top: 6px; }
+
+        /* Descarga de capas: la primera vez son unos 85 MB y conviene decirlo
+           en vez de dejar la pantalla quieta. */
+        .cargando-capas {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, .94);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 14px; z-index: 900; text-align: center; padding: 20px;
+            font-family: var(--fuente-ui, 'Montserrat', sans-serif);
+        }
+        .cargando-capas strong { font-size: 15px; }
+        .cargando-capas small { color: var(--grafito-med, #565B63); max-width: 42ch; line-height: 1.6; }
+        .barra-avance {
+            width: min(420px, 80vw); height: 6px; border-radius: 3px;
+            background: rgba(46, 50, 56, .12); overflow: hidden;
+        }
+        .barra-avance span {
+            display: block; height: 100%; width: 0; background: var(--rojo-caech, #E31E24);
+            transition: width .25s ease;
+        }
+        /* El envoltorio existe solo para poder ocultar la herramienta entera
+           mientras se comprueba el permiso. `display: contents` lo saca de la
+           cadena de alturas: sin esto, el body flex deja de mandar y el mapa
+           —que es `position: absolute; inset: 0`— se estira miles de píxeles. */
+        #aplicativo { display: contents; }
+        #aplicativo[hidden] { display: none !important; }
+
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- ── Sin permiso ───────────────────────────────────────────────────────── -->
+<section class="puerta" id="puerta" hidden>
+    <i class="fas fa-drafting-compass">✎</i>
+    <h1 id="puerta-titulo">Planimetría automatizada</h1>
+    <p id="puerta-texto">
+        Levantamientos de campo convertidos en un DXF georreferenciado y un informe
+        de linderación. Es una herramienta interna del CAE-Ch y se concede cuenta
+        por cuenta.
+    </p>
+    <button class="btn" id="puerta-boton">Ingresar</button>
+    <p style="margin-top:22px;font-size:13px">
+        <a href="panel.html">Panel de control</a> · <a href="geovisor.html">GeoVisor</a>
+    </p>
+</section>
+
+<!-- ── La herramienta ────────────────────────────────────────────────────── -->
+<div id="aplicativo" hidden>
+<header class="barra">
+    <img src="LOGO/logo-caech.png" alt="CAE-Ch" class="barra-logo">
+    <div class="barra-titulo">
+        <span class="versalitas">CAE-Ch Chimborazo</span>
+        <strong>Planimetría automatizada de predios no catastrados</strong>
+    </div>
+    <div class="barra-acciones">
+        <label class="btn btn-linea btn-sm" title="Abrir un proyecto guardado (.json)">
+            Abrir proyecto<input type="file" id="abrir-proyecto" accept=".json" hidden>
+        </label>
+        <button class="btn btn-linea btn-sm" id="guardar-proyecto" disabled>Guardar proyecto</button>
+        <a class="btn btn-linea btn-sm" href="panel.html">Panel</a>
+    </div>
+</header>
+
+<main class="app">
+    <aside class="panel" id="panel">
+
+        <!-- 1 · Levantamiento -->
+        <section class="paso" id="paso-1">
+            <h2><span class="paso-num">1</span> Levantamiento</h2>
+            <p class="ayuda">CSV/TXT de la estación total o GNSS (UTM 17S o geográficas), o DXF con el polígono trazado en UTM WGS84 17S.</p>
+            <label class="zona-carga" id="zona-carga">
+                <input type="file" id="archivo" accept=".csv,.txt,.dxf" hidden>
+                <strong>Arrastre aquí el archivo</strong>
+                <span>o haga clic para buscarlo</span>
+            </label>
+            <details class="pegar">
+                <summary>Pegar coordenadas</summary>
+                <textarea id="texto-coord" rows="6" placeholder="PTO;ESTE;NORTE&#10;1;757442.634;9817801.171&#10;2;757439.902;9817813.748&#10;..."></textarea>
+                <button class="btn btn-outline btn-sm" id="leer-texto">Leer coordenadas</button>
+            </details>
+            <div id="lectura" class="resultado-lectura" hidden></div>
+        </section>
+
+        <!-- 2 · Análisis -->
+        <section class="paso" id="paso-2" hidden>
+            <h2><span class="paso-num">2</span> Análisis automático</h2>
+            <div class="rejilla-2">
+                <label class="campo">Tolerancia de lindero (m)
+                    <input type="number" id="tol-lindero" min="0.1" max="5" step="0.1" value="1.0">
+                    <small>Separación máxima con el contorno catastral del vecino.</small>
+                </label>
+                <label class="campo casilla">
+                    <input type="checkbox" id="osm"> Nombres de calle desde OpenStreetMap
+                    <small>Referencial; sale a internet (1 consulta/s).</small>
+                </label>
+            </div>
+            <details class="margenes" id="margenes">
+                <summary>Márgenes y anchos de elementos certificados</summary>
+                <p class="ayuda">Distancia desde el eje o borde del elemento. Los valores marcados <em>por verificar</em> deben contrastarse con la ordenanza vigente.</p>
+                <div id="lista-margenes"></div>
+            </details>
+            <input type="hidden" id="excluir">
+            <button class="btn btn-bloque" id="analizar">Analizar predio</button>
+        </section>
+
+        <!-- 3 · Resultados -->
+        <section class="paso" id="paso-3" hidden>
+            <h2><span class="paso-num">3</span> Resultados</h2>
+            <div id="diagnostico" class="aviso"></div>
+            <div class="metricas" id="metricas"></div>
+            <h3>Linderos <small id="pendientes"></small></h3>
+            <p class="ayuda">Complete o corrija el colindante y diga de dónde sale. Si en un mismo lado hay varios dueños (herederos, compradores nuevos), <b>corte</b> el lindero en un vértice o <b>divídalo</b> a una distancia: cada tramo lleva su propio colindante.</p>
+            <div id="lista-linderos" class="linderos"></div>
+            <div id="cortes-activos" class="ayuda"></div>
+            <h3>Afectaciones</h3>
+            <div id="afectaciones"></div>
+            <div id="normativa"></div>
+            <details>
+                <summary>Cuadro de coordenadas y control de vértices</summary>
+                <div class="tabla-scroll"><table class="tabla compacta" id="tabla-vertices"></table></div>
+            </details>
+            <ul class="avisos" id="avisos"></ul>
+        </section>
+
+        <!-- 4 · Título registral: antes y hoy -->
+        <section class="paso" id="paso-registral" hidden>
+            <h2><span class="paso-num">4</span> Título registral · antes y hoy</h2>
+            <p class="ayuda">Cargue el certificado de gravámenes del Registro de la Propiedad (PDF) o ingrese a mano lo que dice la escritura. Se compara lado a lado con el levantamiento.</p>
+            <label class="zona-carga compacta" id="zona-certificado">
+                <input type="file" id="archivo-certificado" accept=".pdf" hidden>
+                <strong>Certificado de gravámenes (PDF)</strong>
+                <span>arrastre o haga clic · <button type="button" class="enlace" id="registral-manual">ingresar a mano</button></span>
+            </label>
+            <div id="registral" hidden>
+                <div id="registral-avisos"></div>
+                <div class="rejilla-2">
+                    <label class="campo">Ficha registral<input data-reg="ficha"></label>
+                    <label class="campo">Certificado / fecha<input data-reg="certificado"></label>
+                    <label class="campo ancho">Propietario(s) inscrito(s) <small>uno por línea</small><textarea data-reg="propietarios" rows="2"></textarea></label>
+                    <label class="campo ancho">Ubicación según título<input data-reg="ubicacion"></label>
+                    <label class="campo">Superficie del título<input data-reg="area" inputmode="decimal"></label>
+                    <label class="campo">Unidad
+                        <select data-reg="unidad"><option value="m2">m²</option><option value="ha">hectáreas</option><option value="cuadra">cuadras</option></select>
+                    </label>
+                    <label class="campo ancho">Gravámenes<textarea data-reg="gravamenes" rows="2"></textarea></label>
+                </div>
+                <h3>Linderos del título</h3>
+                <div class="tabla-scroll"><table class="tabla" id="tabla-registral"></table></div>
+                <div class="fila-botones">
+                    <button type="button" class="btn btn-linea btn-sm" id="agregar-lindero-reg">+ Lindero</button>
+                    <label class="campo en-linea">Frente del predio
+                        <select id="frente"><option value="">Automático</option><option>Norte</option><option>Sur</option><option>Este</option><option>Oeste</option></select>
+                    </label>
+                </div>
+                <div id="historia-registral"></div>
+                <h3>Conciliación</h3>
+                <div id="conciliacion"></div>
+            </div>
+        </section>
+
+        <!-- 5 · Datos del informe -->
+        <section class="paso" id="paso-4" hidden>
+            <h2><span class="paso-num">5</span> Datos del informe</h2>
+            <form id="datos" class="rejilla-2" autocomplete="off">
+                <div class="campo ancho">Propietarios / posesionarios
+                    <small>Cónyuges, herederos, donatarios, socios… Cada uno con su calidad y, si aplica, su cuota.</small>
+                    <div id="propietarios"></div>
+                    <div class="fila-botones">
+                        <button type="button" class="btn btn-linea btn-sm" id="agregar-propietario">+ Propietario</button>
+                        <button type="button" class="btn btn-linea btn-sm" id="propietarios-certificado" hidden>Tomar del certificado</button>
+                    </div>
+                    <div class="chips" id="personas-certificado"></div>
+                </div>
+                <label class="campo ancho">Clave catastral (si existe)<input name="claveCatastral" placeholder="Predio no catastrado"></label>
+                <label class="campo ancho">Dirección<input name="direccion"></label>
+                <label class="campo">Sector / barrio / comunidad<input name="sector"></label>
+                <label class="campo">Superficie según escritura (m²)<input name="areaEscritura" inputmode="decimal"></label>
+                <label class="campo">Profesional responsable<input name="profesional" data-recordar></label>
+                <label class="campo">Registro profesional<input name="registro" data-recordar></label>
+                <label class="campo">Fecha de levantamiento<input name="fechaLevantamiento" type="date"></label>
+                <label class="campo">Equipo / método<input name="equipo" data-recordar placeholder="Estación total, GNSS RTK..."></label>
+                <label class="campo">Precisión declarada<input name="precision" data-recordar placeholder="± 2 cm"></label>
+                <label class="campo ancho">Observaciones<textarea name="observaciones" rows="3"></textarea></label>
+            </form>
+        </section>
+
+        <!-- 6 · Exportar -->
+        <section class="paso" id="paso-5" hidden>
+            <h2><span class="paso-num">6</span> Exportar</h2>
+            <div class="rejilla-2">
+                <label class="campo">Formato
+                    <select id="formato"><option value="A4">A4</option><option value="A3">A3</option></select>
+                </label>
+                <label class="campo">Escala de la lámina
+                    <select id="escala"><option value="">Automática</option></select>
+                </label>
+                <label class="campo casilla ancho">
+                    <input type="checkbox" id="mapa-ubicacion" checked> Incluir el mapa de ubicación en la lámina
+                    <small>Recuadro con el entorno del predio: predios, vías y quebradas.</small>
+                </label>
+                <label class="campo casilla ancho">
+                    <input type="checkbox" id="foto-satelital" checked> Con foto satelital (solo en el PDF)
+                    <small>Se arma con las teselas de Esri/Maxar al exportar, así que necesita internet. El DXF lleva el mismo recuadro dibujado en vectores, porque un DXF R12 no admite imágenes.</small>
+                </label>
+            </div>
+            <div class="botones-exportar">
+                <button class="btn" id="exportar-pdf">PDF · lámina + informe</button>
+                <button class="btn btn-outline" id="exportar-dxf">DXF georreferenciado</button>
+            </div>
+            <p class="ayuda">El DXF es R12 en UTM WGS84 17S: predio, vértices, cotas, linderos, afectaciones y márgenes en capas separadas, más el marco y los cuadros a escala.</p>
+        </section>
+    </aside>
+
+    <section class="mapa-caja">
+        <div id="mapa"></div>
+        <div class="mapa-estado" id="estado"></div>
+    </section>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<!-- Descarga inicial de las capas -->
+<div class="cargando-capas" id="cargando" hidden>
+    <strong id="cargando-texto">Preparando las capas…</strong>
+    <div class="barra-avance"><span id="cargando-barra"></span></div>
+    <small>La primera vez se bajan el catastro, las líneas de fábrica y las capas
+           certificadas —unos 85 MB—. Quedan en la caché del navegador, así que
+           esto pasa una sola vez.</small>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="caech-acceso.js"></script>
+<script src="planimetria-web/nucleo.js"></script>
+<script src="planimetria-web/puente.js"></script>
+<script type="module">
+    // pdf.js ya solo se publica como módulo ES. Se carga aparte porque llega
+    // después que el resto, y solo hace falta al leer un certificado.
+    import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
+    window.pdfjsLib = pdfjsLib;
+    if (window.PlanimetriaPuente) window.PlanimetriaPuente.conectarPDFJS(pdfjsLib);
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+//  Puerta y arranque
+//
+//  La herramienta no se carga hasta que el Worker confirma el permiso. No es
+//  seguridad por ocultamiento: `POST /api/herramientas` vuelve a comprobarlo en
+//  el servidor y queda anotado en la bitácora. Aquí solo se evita mostrar una
+//  aplicación que no se va a poder usar.
+// ─────────────────────────────────────────────────────────────────────────────
+(function () {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    let arrancada = false;
+
+    function mostrarPuerta(titulo, texto, etiquetaBoton, alPulsar) {
+        $('aplicativo').hidden = true;
+        $('puerta').hidden = false;
+        $('puerta-titulo').textContent = titulo;
+        $('puerta-texto').textContent = texto;
+        const b = $('puerta-boton');
+        b.hidden = !etiquetaBoton;
+        b.textContent = etiquetaBoton || '';
+        b.onclick = alPulsar || null;
+    }
+
+    async function arrancar() {
+        if (arrancada) return;
+        arrancada = true;
+        $('puerta').hidden = true;
+        $('aplicativo').hidden = false;
+
+        await window.PlanimetriaPuente.inicializar();
+
+        // El aviso de descarga solo aparece si de verdad hay que esperar.
+        let visible = false;
+        const caja = $('cargando');
+        window.PlanimetriaPuente.alAvanzar((texto, hecho, total) => {
+            if (!visible) { caja.hidden = false; visible = true; }
+            $('cargando-texto').textContent = texto;
+            $('cargando-barra').style.width = (total ? Math.round(hecho / total * 100) : 0) + '%';
+            if (hecho >= total) setTimeout(() => { caja.hidden = true; }, 400);
+        });
+
+        // app.js es el mismo archivo que usa la versión de escritorio; se carga
+        // al final, cuando el puente ya responde a /api/.
+        const s = document.createElement('script');
+        s.src = 'planimetria-web/app.js';
+        document.body.appendChild(s);
+    }
+
+    async function comprobar() {
+        const acceso = window.caechAcceso;
+        if (!acceso) {
+            return mostrarPuerta('No se pudo comprobar el acceso',
+                'Falta el control de acceso del sitio. Recargue la página.', 'Recargar',
+                () => location.reload());
+        }
+
+        const r = await acceso.peticion('GET', '/api/sesion');
+        if (r.estado !== 200) {
+            return mostrarPuerta('Planimetría automatizada',
+                'Levantamientos de campo convertidos en un DXF georreferenciado y un informe '
+                + 'de linderación. Es una herramienta interna del CAE-Ch: ingrese para continuar.',
+                'Ingresar', () => acceso.abrirIngreso(comprobar));
+        }
+
+        // La puerta de verdad: el Worker decide y deja constancia del uso.
+        if (await acceso.autorizarHerramienta('planimetria', comprobar)) arrancar();
+        else mostrarPuerta('Herramienta no habilitada',
+            'Su cuenta no tiene habilitada la planimetría. La concede la administración '
+            + 'del CAE-Ch, cuenta por cuenta.', 'Reintentar', comprobar);
+    }
+
+    comprobar();
+}());
+</script>
+</body>
+</html>
