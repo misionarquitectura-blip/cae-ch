@@ -1,22 +1,36 @@
 {
-  "generado": "2026-04-17T23:23:34.210Z",
+  "generado": "2026-09-24T21:58:45.982Z",
+  "catastro": {
+    "archivo": "Catastro GADMR.geojson",
+    "corte": "2026-09-01"
+  },
   "predios": {
-    "total": 73539,
-    "con_construccion_declarada": 28070,
-    "sin_construccion_declarada": 45469
+    "total": 74365,
+    "con_construccion_declarada": 28154,
+    "sin_construccion_declarada": 46211
   },
   "ia": {
     "total_detectadas": 96026,
     "fuente": "Google Open Buildings / ML"
   },
   "resultados": {
-    "no_registradas": 20089,
-    "predios_afectados": 8964,
-    "area_total_estimada_m2": 1810045,
+    "no_registradas": 20390,
+    "predios_afectados": 9027,
+    "area_total_estimada_m2": 1837327,
     "por_nivel": {
-      "ALTO": 3701,
-      "MEDIO": 9299,
-      "BAJO": 7089
+      "ALTO": 3776,
+      "MEDIO": 9442,
+      "BAJO": 7172
     }
+  },
+  "evolucion": {
+    "corte_anterior": "2026-04-17T23:23:34.210Z",
+    "no_registradas_antes": 20089,
+    "siguen_sin_declarar": 19967,
+    "ya_declaradas": 111,
+    "area_ya_declarada_m2": 10194,
+    "predios_que_declararon": 53,
+    "fuera_del_catastro": 11,
+    "nuevas_en_este_corte": 423
   }
 }

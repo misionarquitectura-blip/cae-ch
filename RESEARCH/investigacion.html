@@ -74,7 +74,8 @@
         /* ── KPI cards ── */
         .kpi-row {
             max-width: 1400px; margin: 0 auto;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            /* 6, 3 o 2 por fila: con auto-fit quedaba una tarjeta huerfana. */
+            display: grid; grid-template-columns: repeat(6, 1fr);
             gap: 14px; padding: 20px 20px 10px;
         }
         .kpi-card {
@@ -88,6 +89,9 @@
         }
         .kpi-card .lbl { font-size: .78rem; color: var(--gris-medio); margin-top: 5px; }
         .kpi-card .sub { font-size: .72rem; color: #aaa; margin-top: 2px; }
+
+        @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px)  { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
 
         /* ── Main layout ── */
         .main-layout {
@@ -146,9 +150,72 @@
         .nivel-ALTO   { background: var(--alto); }
         .nivel-MEDIO  { background: var(--medio); }
         .nivel-BAJO   { background: var(--bajo); color: #333; }
+        /* El badge va dentro del ultimo span de la fila y "span:first-child"
+           le pintaba el texto de gris sobre el rojo: se repite con mas peso. */
+        #feature-panel .nivel-badge { color: #fff; }
+        #feature-panel .nivel-badge.nivel-BAJO { color: #333; }
 
         /* ── Mapa ── */
+        .mapa-wrap { position: relative; }
         #map { height: 620px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+        /* En escritorio el mapa se queda a la vista mientras se lee la
+           columna izquierda; en movil ocupa casi toda la pantalla. */
+        @media (min-width: 901px) {
+            .mapa-wrap { position: sticky; top: 86px; align-self: start; }
+            #map { height: calc(100vh - 110px); min-height: 480px; max-height: 760px; }
+        }
+        /* En una columna el mapa va primero: antes quedaba a ~2 800 px,
+           debajo de filtros, leyenda y metodologia. */
+        @media (max-width: 900px) {
+            .mapa-wrap { order: -1; }
+            #map { height: 70vh; min-height: 380px; }
+        }
+
+        /* ── Detalle flotante ── */
+        .detalle-flotante {
+            position: absolute; top: 10px; left: 54px; z-index: 1000;
+            width: 310px; max-height: calc(100% - 20px);
+            display: flex; flex-direction: column;
+            background: #fff; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 6px 24px rgba(0,0,0,.25);
+        }
+        .detalle-flotante[hidden] { display: none; }
+        .df-cab {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            background: var(--rojo); color: #fff; padding: 9px 10px 9px 14px;
+            font-size: .85rem; font-weight: 700;
+        }
+        .df-cerrar {
+            background: transparent; border: 0; color: #fff; cursor: pointer;
+            width: 28px; height: 28px; border-radius: 6px; font-size: 1rem;
+        }
+        .df-cerrar:hover, .df-cerrar:focus-visible { background: rgba(255,255,255,.2); outline: none; }
+        .df-cuerpo { padding: 12px 14px; overflow-y: auto; overscroll-behavior: contain; }
+        .df-lista { list-style: none; margin: 6px 0 0; }
+        .df-lista li {
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            font-size: .78rem; padding: 5px 6px; border-radius: 6px; cursor: pointer;
+        }
+        .df-lista li:hover { background: var(--gris-claro); }
+        @media (max-width: 600px) {
+            .detalle-flotante {
+                top: auto; bottom: 10px; left: 10px; right: 10px;
+                width: auto; max-height: 55%;
+            }
+        }
+
+        /* ── Evolucion entre cortes ── */
+        .evolucion { max-width: 1400px; margin: 0 auto; padding: 6px 20px 0; }
+        .evolucion .ev-caja {
+            background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            padding: 16px 18px; border-left: 4px solid #2980B9;
+        }
+        .evolucion h2 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+        .evolucion .ev-lead { font-size: .83rem; color: var(--gris-medio); margin-bottom: 12px; max-width: 900px; line-height: 1.5; }
+        .ev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .ev-item { background: var(--gris-claro); border-radius: 8px; padding: 10px 12px; }
+        .ev-item b { display: block; font-size: 1.35rem; font-weight: 800; color: var(--c, var(--gris-oscuro)); }
+        .ev-item span { font-size: .76rem; color: var(--gris-medio); line-height: 1.4; display: block; margin-top: 2px; }
 
         /* ── Basemap switcher ── */
         .basemap-ctrl {
@@ -250,6 +317,7 @@
         <p>Detección de construcciones no declaradas en el catastro municipal de Riobamba mediante análisis de inteligencia artificial y contraste con datos catastrales oficiales.</p>
         <div class="badge-fila">
             <span class="badge-ia"><i class="fas fa-robot"></i> Fuente IA: Google Open Buildings · ML</span>
+            <span class="badge-ia"><i class="fas fa-calendar-check"></i> Catastro GADMR · corte 1 de septiembre de 2026</span>
             <span class="badge-ia"><i class="fas fa-lock-open"></i> Acceso libre, sin cuenta</span>
         </div>
     </div>
@@ -285,9 +353,25 @@
     <div class="kpi-card" style="--color:#6c757d">
         <div class="val" id="kpi-total-pred">—</div>
         <div class="lbl">Total predios analizados</div>
-        <div class="sub">base catastral GADMR</div>
+        <div class="sub" id="kpi-corte">base catastral GADMR</div>
     </div>
 </div>
+
+<!-- ── EVOLUCION ENTRE CORTES ── -->
+<!-- Las cifras salen de stats.evolucion, que calcula preprocess.js siguiendo
+     cada huella IA por su fid entre el corte de abril y el actual. -->
+<section class="evolucion" id="evolucion" hidden>
+    <div class="ev-caja">
+        <h2><i class="fas fa-clock-rotate-left"></i> Qué cambió desde abril de 2026</h2>
+        <p class="ev-lead" id="ev-lead"></p>
+        <div class="ev-grid">
+            <div class="ev-item" style="--c:#27AE60"><b id="ev-declaradas">—</b><span id="ev-declaradas-t">ya figuran con construcción declarada</span></div>
+            <div class="ev-item" style="--c:#E31E24"><b id="ev-siguen">—</b><span id="ev-siguen-t">siguen sin declarar</span></div>
+            <div class="ev-item" style="--c:#2980B9"><b id="ev-nuevas">—</b><span>se suman por predios nuevos o redibujados en el catastro de septiembre</span></div>
+            <div class="ev-item" style="--c:#6c757d"><b id="ev-fuera">—</b><span>quedaron fuera de todo predio (cambios de lindero)</span></div>
+        </div>
+    </div>
+</section>
 
 <!-- ── MAIN ── -->
 <div class="main-layout">
@@ -352,12 +436,6 @@
             </div>
         </div>
 
-        <!-- Detalle de selección -->
-        <div class="panel-card" id="detail-card" style="display:none">
-            <div class="pc-header"><i class="fas fa-info-circle"></i> Detalle de construcción</div>
-            <div class="pc-body" id="feature-panel"></div>
-        </div>
-
         <!-- Metodología -->
         <div class="panel-card">
             <div class="pc-header"><i class="fas fa-flask"></i> Metodología</div>
@@ -367,7 +445,7 @@
                         <strong>Fuente IA</strong>Google Open Buildings — detección ML de huellas de construcción.
                     </div>
                     <div class="metodo-item">
-                        <strong>Base catastral</strong>Predios GADMR con campo <code>sup_cons_c</code> = 0 (sin declaración).
+                        <strong>Base catastral</strong>Predios GADMR (corte 1 sep 2026) con campo <code>sup_cons_c</code> = 0 (sin declaración).
                     </div>
                     <div class="metodo-item">
                         <strong>Análisis</strong>Point-in-polygon: centroide IA vs polígono predio.
@@ -382,8 +460,18 @@
     </div>
 
     <!-- Mapa -->
-    <div style="position:relative">
+    <div class="mapa-wrap">
         <div id="map"></div>
+        <!-- Detalle de la seleccion: flota sobre el mapa. Antes era una
+             tarjeta en la columna izquierda y scrollIntoView arrastraba la
+             pagina hacia abajo en cada clic, sacando el mapa de la vista. -->
+        <aside class="detalle-flotante" id="detail-card" hidden aria-live="polite">
+            <div class="df-cab">
+                <span id="df-titulo"><i class="fas fa-info-circle"></i> Detalle</span>
+                <button type="button" class="df-cerrar" onclick="cerrarDetalle()" aria-label="Cerrar detalle" title="Cerrar (Esc)"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="df-cuerpo" id="feature-panel"></div>
+        </aside>
         <div class="basemap-ctrl">
             <button class="bm-btn active" onclick="setBasemap('carto')" id="bm-carto"><i class="fas fa-map"></i> Mapa</button>
             <button class="bm-btn" onclick="setBasemap('satelite')" id="bm-satelite"><i class="fas fa-satellite"></i> Satélite</button>
@@ -407,28 +495,32 @@ let prediosData = null;
 let layerNR = null;
 let layerPredios = null;
 const CANVAS = L.canvas({ padding: 0.5 });
-const map = L.map('map', { center: [-1.6716, -78.6480], zoom: 13, zoomControl: true, preferCanvas: true });
+const map = L.map('map', { center: [-1.6716, -78.6480], zoom: 13, maxZoom: 21, zoomControl: true, preferCanvas: true });
 
 // ── Basemaps ─────────────────────────────────────────────────────────────────
+// Satelite e hibrido son las teselas de Google, las mismas del GeoVisor: las
+// de Esri (World_Imagery) no tienen los niveles 19-20 sobre Riobamba y
+// devolvian la tesela gris "Map data not yet available" al acercarse.
+// maxNativeZoom es la otra mitad del arreglo: pasado ese nivel Leaflet no
+// pide teselas que no existen, amplia la ultima que si hay. Se pierde nitidez,
+// no se ve un error.
+const Z_MAX = 21;
+const google = (lyrs, nativo) => L.tileLayer(`https://{s}.google.com/vt/lyrs=${lyrs}&x={x}&y={y}&z={z}`, {
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], maxNativeZoom: nativo, maxZoom: Z_MAX,
+    attribution: 'Imágenes © Google'
+});
 const BASEMAPS = {
     // Lienzo gris de Esri, no CARTO: sus teselas pasaron a exigir clave de
-    // API y devolvian "API KEY REQUIRED" sobre todo el mapa.
+    // API y devolvian "API KEY REQUIRED" sobre todo el mapa. Solo llega al
+    // nivel 16; de ahi en adelante se amplia.
     carto: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors', maxZoom: 16
+        attribution: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors',
+        maxNativeZoom: 16, maxZoom: Z_MAX
     }),
-    satelite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles © Esri — Source: Esri, USGS, NOAA', maxZoom: 20
-    }),
-    hibrido: L.layerGroup([
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles © Esri', maxZoom: 20
-        }),
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '© Esri', maxZoom: 20, opacity: 0.8
-        })
-    ]),
+    satelite: google('s', 20),
+    hibrido: google('y', 20),
     osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors', maxZoom: 19
+        attribution: '© OpenStreetMap contributors', maxNativeZoom: 19, maxZoom: Z_MAX
     })
 };
 
@@ -460,25 +552,89 @@ function colorNivel(nivel) {
 
 function fmt(n) { return Number(n).toLocaleString('es-EC'); }
 
-function mostrarDetalle(p) {
-    const card = document.getElementById('detail-card');
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ── Seleccion ────────────────────────────────────────────────────────────────
+// El detalle se abre sobre el mapa y NO mueve la pagina: nada de
+// scrollIntoView. La seleccion se resalta en el propio mapa (predio y huella)
+// para que se vea que se eligio sin tener que buscar la tarjeta.
+const seleccion = L.featureGroup().addTo(map);
+let nrPorPredio = new Map();    // id de predio -> construcciones no registradas
+let predioPorId = new Map();    // id de predio -> feature (no por clave: 201 predios no la tienen)
+
+function abrirDetalle(titulo, html) {
+    document.getElementById('df-titulo').innerHTML = titulo;
     const panel = document.getElementById('feature-panel');
-    card.style.display = 'block';
-    panel.innerHTML = `
+    panel.innerHTML = html;
+    panel.scrollTop = 0;
+    document.getElementById('detail-card').hidden = false;
+}
+
+function cerrarDetalle() {
+    document.getElementById('detail-card').hidden = true;
+    seleccion.clearLayers();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarDetalle(); });
+
+function resaltar(featPredio, featNR) {
+    seleccion.clearLayers();
+    if (featPredio) L.geoJSON(featPredio, {
+        renderer: CANVAS, interactive: false,
+        style: { color: '#FFEB3B', weight: 3.5, fill: false }
+    }).addTo(seleccion);
+    if (featNR) L.geoJSON(featNR, {
+        renderer: CANVAS, interactive: false,
+        style: { color: '#111', weight: 2.5, fill: false }
+    }).addTo(seleccion);
+}
+
+function seleccionarNR(feature) {
+    const predio = predioPorId.get(feature.properties.predio_id);
+    resaltar(predio, feature);
+    mostrarDetalle(feature.properties);
+}
+
+function seleccionarPredio(feature) {
+    const p = feature.properties;
+    const lista = nrPorPredio.get(p.id) || [];
+    resaltar(feature, null);
+    const area = lista.reduce((s, f) => s + (f.properties.area_m2 || 0), 0);
+    const filas = lista
+        .slice().sort((a, b) => b.properties.confidence - a.properties.confidence)
+        .map((f, i) => `<li data-i="${lista.indexOf(f)}"><span><span class="nivel-badge nivel-${f.properties.nivel}">${f.properties.nivel}</span> #${f.properties.fid}</span><span>${fmt(f.properties.area_m2)} m² · ${(f.properties.confidence*100).toFixed(0)}%</span></li>`)
+        .join('');
+    abrirDetalle('<i class="fas fa-vector-square"></i> Predio sin construcción declarada', `
+        <div class="fp-row"><span>Clave catastral</span><span>${esc(p.clave) || '—'}</span></div>
+        <div class="fp-row"><span>Titular</span><span>${esc(p.nombre || p.gis_predio) || '—'}</span></div>
+        <div class="fp-row"><span>Sup. predio</span><span>${fmt(p.sup_pred_m2)} m²</span></div>
+        <div class="fp-row"><span>Sup. cons. declarada</span><span>${fmt(p.sup_cons_catastro)} m²</span></div>
+        <div class="fp-row"><span>Avalúo catastral</span><span>$ ${fmt(p.avaluo)}</span></div>
+        <div class="fp-row"><span>Construcciones IA</span><span>${fmt(lista.length)} · ${fmt(Math.round(area))} m²</span></div>
+        ${lista.length ? `<ul class="df-lista" id="df-lista">${filas}</ul>` : ''}`);
+    const ul = document.getElementById('df-lista');
+    if (ul) ul.addEventListener('click', e => {
+        const li = e.target.closest('li');
+        if (li) seleccionarNR(lista[+li.dataset.i]);
+    });
+}
+
+function mostrarDetalle(p) {
+    abrirDetalle('<i class="fas fa-building"></i> Construcción no registrada', `
         <div class="fp-title"><i class="fas fa-building"></i> Construcción #${p.fid}</div>
         <div class="fp-row"><span>Confianza IA</span><span>${(p.confidence*100).toFixed(1)}%</span></div>
         <div class="fp-row"><span>Nivel de alerta</span><span><span class="nivel-badge nivel-${p.nivel}">${p.nivel}</span></span></div>
         <div class="fp-row"><span>Área estimada</span><span>${fmt(p.area_m2)} m²</span></div>
         <hr style="border:none;border-top:1px solid #eee;margin:6px 0">
         <div class="fp-title" style="font-size:.82rem;margin-top:4px"><i class="fas fa-map-marker-alt"></i> Predio catastral</div>
-        <div class="fp-row"><span>Clave catastral</span><span>${p.clave_catastral || '—'}</span></div>
-        <div class="fp-row"><span>GIS Predio</span><span>${p.gis_predio || '—'}</span></div>
-        <div class="fp-row"><span>Propietario</span><span>${p.propietario || '—'}</span></div>
+        <div class="fp-row"><span>Clave catastral</span><span>${esc(p.clave_catastral) || '—'}</span></div>
+        <div class="fp-row"><span>GIS Predio</span><span>${esc(p.gis_predio) || '—'}</span></div>
+        <div class="fp-row"><span>Propietario</span><span>${esc(p.propietario) || '—'}</span></div>
         <div class="fp-row"><span>Sup. predio</span><span>${fmt(p.sup_predio_m2)} m²</span></div>
         <div class="fp-row"><span>Sup. cons. declarada</span><span>${fmt(p.sup_cons_catastro)} m²</span></div>
         <div class="fp-row"><span>Avalúo catastral</span><span>$ ${fmt(p.avaluo)}</span></div>
-        <div class="fp-row"><span>Plus Code</span><span style="font-size:.7rem">${p.plus_code || '—'}</span></div>`;
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        <div class="fp-row"><span>Plus Code</span><span style="font-size:.7rem">${esc(p.plus_code) || '—'}</span></div>`);
 }
 
 // ── Renderizado con filtros ──────────────────────────────────────────────────
@@ -499,9 +655,13 @@ function aplicarFiltros() {
 
     document.getElementById('count-visible').textContent = fmt(filtradas.length);
 
-    if (layerNR) map.removeLayer(layerNR);
+    // layerNR es un grupo fijo que se vacia y se rellena: el control de capas
+    // guarda la referencia, y si se creaba una capa nueva en cada filtro el
+    // interruptor "Construcciones no registradas" dejaba de hacer nada.
+    if (!layerNR) layerNR = L.featureGroup().addTo(map);
+    layerNR.clearLayers();
 
-    layerNR = L.geoJSON({ type: 'FeatureCollection', features: filtradas }, {
+    L.geoJSON({ type: 'FeatureCollection', features: filtradas }, {
         renderer: CANVAS,
         style: f => ({
             fillColor: colorNivel(f.properties.nivel),
@@ -510,13 +670,30 @@ function aplicarFiltros() {
             weight: 0.5
         }),
         onEachFeature: (feature, layer) => {
-            layer.on('click', () => mostrarDetalle(feature.properties));
+            layer.on('click', () => seleccionarNR(feature));
             layer.bindTooltip(
                 `<b>${feature.properties.nivel}</b> — ${(feature.properties.confidence*100).toFixed(0)}% confianza<br>${feature.properties.area_m2} m² | ${feature.properties.clave_catastral}`,
                 { sticky: true, className: 'leaflet-tooltip-nr' }
             );
         }
-    }).addTo(map);
+    }).addTo(layerNR);
+}
+
+function mostrarEvolucion(ev) {
+    if (!ev) return;
+    const pct = n => (n / ev.no_registradas_antes * 100).toLocaleString('es-EC', { maximumFractionDigits: 1 }) + ' %';
+    document.getElementById('ev-lead').textContent =
+        `El análisis se repitió con el catastro del 1 de septiembre de 2026 sobre las mismas huellas IA. ` +
+        `De las ${fmt(ev.no_registradas_antes)} construcciones no registradas en abril, solo ${fmt(ev.ya_declaradas)} ` +
+        `(${pct(ev.ya_declaradas)}) aparecen ahora con construcción declarada: el rezago del catastro frente a lo edificado casi no se movió.`;
+    document.getElementById('ev-declaradas').textContent = fmt(ev.ya_declaradas);
+    document.getElementById('ev-declaradas-t').textContent =
+        `ya figuran con construcción declarada · ${fmt(ev.predios_que_declararon)} predios, ${fmt(ev.area_ya_declarada_m2)} m²`;
+    document.getElementById('ev-siguen').textContent = fmt(ev.siguen_sin_declarar);
+    document.getElementById('ev-siguen-t').textContent = `siguen sin declarar (${pct(ev.siguen_sin_declarar)} de las de abril)`;
+    document.getElementById('ev-nuevas').textContent = fmt(ev.nuevas_en_este_corte);
+    document.getElementById('ev-fuera').textContent = fmt(ev.fuera_del_catastro);
+    document.getElementById('evolucion').hidden = false;
 }
 
 // ── Carga de datos ───────────────────────────────────────────────────────────
@@ -532,8 +709,14 @@ async function cargarDatos() {
         document.getElementById('kpi-alto').textContent = fmt(stats.resultados.por_nivel.ALTO);
         document.getElementById('kpi-medio').textContent = fmt(stats.resultados.por_nivel.MEDIO);
         document.getElementById('kpi-predios').textContent = fmt(stats.resultados.predios_afectados);
-        document.getElementById('kpi-area').textContent = fmt(Math.round(stats.resultados.area_total_estimada_m2 / 1000)) + ' K m²';
+        document.getElementById('kpi-area').textContent = fmt(Math.round(stats.resultados.area_total_estimada_m2 / 10000)) + ' ha';
         document.getElementById('kpi-total-pred').textContent = fmt(stats.predios.total);
+        if (stats.catastro) {
+            const [a, m, d] = stats.catastro.corte.split('-').map(Number);
+            document.getElementById('kpi-corte').textContent = 'catastro GADMR al ' +
+                new Date(a, m - 1, d).toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        mostrarEvolucion(stats.evolucion);
 
         // Predios afectados
         setLoading('Cargando predios afectados...', 35);
@@ -549,6 +732,8 @@ async function cargarDatos() {
                 weight: 1.2
             },
             onEachFeature: (feature, layer) => {
+                predioPorId.set(feature.properties.id, feature);
+                layer.on('click', () => seleccionarPredio(feature));
                 layer.bindTooltip(
                     `<b>Predio:</b> ${feature.properties.clave || '—'}<br>Sup: ${feature.properties.sup_pred_m2} m²`,
                     { sticky: true }
@@ -560,6 +745,11 @@ async function cargarDatos() {
         setLoading('Cargando construcciones detectadas...', 65);
         const nrR = await fetch('no_registradas.geojson');
         noRegistradasData = await nrR.json();
+        for (const f of noRegistradasData.features) {
+            const id = f.properties.predio_id;
+            if (!nrPorPredio.has(id)) nrPorPredio.set(id, []);
+            nrPorPredio.get(id).push(f);
+        }
 
         setLoading('Renderizando mapa...', 90);
         aplicarFiltros();
