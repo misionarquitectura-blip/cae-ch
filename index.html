@@ -196,22 +196,6 @@
             line-height: 1.3;
         }
         
-        .hero p {
-            font-size: 18px;
-            max-width: 700px;
-            margin: 0 auto 35px;
-            color: var(--blanco-secundario);
-            line-height: 1.5;
-        }
-        
-        .hero-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 50px;
-            flex-wrap: wrap;
-        }
-        
         .stats {
             display: flex;
             justify-content: center;
@@ -742,16 +726,6 @@
                 font-size: 22px;
             }
             
-            .hero p {
-                font-size: 16px;
-            }
-            
-            .hero-buttons {
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-            }
-            
             .stats {
                 flex-direction: column;
                 gap: 20px;
@@ -777,10 +751,6 @@
 
             .hero h2 {
                 font-size: 20px;
-            }
-
-            .hero p {
-                font-size: 15px;
             }
 
             .btn {
@@ -1448,39 +1418,6 @@
         }
         .hero h2 strong { font-weight: 700; color: #fff; }
 
-        .hero p {
-            font-size: 16.5px;
-            color: rgba(255, 255, 255, .74);
-            max-width: 640px;
-            margin-bottom: 38px;
-        }
-        .hero p strong { color: #fff; font-weight: 600; }
-
-        /* Linea que aclara que el mapa es libre y solo se cobra el
-           tramite de la cuenta para descargar. Sube pegada al parrafo
-           anterior, de ahi el margen superior negativo. */
-        .hero-acceso {
-            display: block;
-            max-width: 640px;
-            margin: -24px auto 34px;
-            padding: 11px 16px;
-            border-left: 3px solid var(--rojo-caech, #E31E24);
-            background: rgba(255, 255, 255, .06);
-            border-radius: 0 6px 6px 0;
-            font-size: 15px;
-            line-height: 1.6;
-            text-align: left;
-            color: rgba(255, 255, 255, .82);
-        }
-        .hero-acceso i { color: var(--rojo-caech, #E31E24); margin-right: 6px; }
-
-        .hero .btn-secondary {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, .3);
-            color: #fff;
-        }
-        .hero .btn-secondary:hover { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .55); }
-
         .stats {
             margin-top: 54px;
             padding-top: 34px;
@@ -1829,40 +1766,15 @@
            SERVICIOS EN DIAPOSITIVAS Y BOTONES DEL HERO (2026-09-24)
         ══════════════════════════════════════════════════════════ */
 
-        /* En el teléfono los tres botones del hero se apilan con el mismo
-           ancho y el mismo alto. Antes cada uno medía lo que su rótulo
-           (242, 277 y 179 px), y el `flex: 1 1 220px` de caech-ui.css,
-           pensado para una fila, en columna se volvía 220 px de ALTO. */
         @media (max-width: 768px) {
-            .hero-buttons { align-items: stretch; max-width: 340px; margin-left: auto; margin-right: auto; }
-            /* `.hero` delante: caech-ui.css se carga después de este bloque
-               y con la misma especificidad ganaba él. */
-            .hero .hero-buttons .btn {
-                flex: 0 0 auto;
-                width: 100%;
-                min-height: 50px;
-                padding: .9em 1.2em;
-                font-size: 13px;
-                white-space: normal;
-            }
-            /* Lo mismo les pasaba a las cifras: `flex: 1 1 140px` en columna
-               son 140 px de alto por cifra. */
+            /* `flex: 1 1 140px` en columna son 140 px de ALTO por cifra: en
+               el teléfono van en rejilla de 2 x 2. */
             .hero .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 12px; }
             .hero .stat-item { flex: 0 0 auto; }
         }
 
         /* Las diapositivas ocupan el hero, sobre el fondo oscuro y encima
            del perfil urbano. */
-        .solo-lectores {
-            position: absolute !important;
-            width: 1px; height: 1px;
-            margin: -1px; padding: 0;
-            overflow: hidden;
-            clip: rect(0 0 0 0);
-            white-space: nowrap;
-            border: 0;
-        }
-        .hero { padding-top: 64px; }
         .hero .servicios-carrusel { text-align: left; max-width: 1120px; margin: 0 auto; }
         .hero .servicio { box-shadow: 0 24px 60px rgba(0, 0, 0, .35); border-color: rgba(255, 255, 255, .08); }
         .hero .servicios-flecha, .hero .servicios-pausa {
@@ -1874,18 +1786,78 @@
         .hero .servicios-puntos button[aria-current="true"] { color: #fff; }
         .hero .servicios-puntos button span { background: rgba(255, 255, 255, .2); }
         .hero .stats { margin-top: 44px; }
-        /* `.hero p` centra y aclara el texto para el fondo oscuro; dentro de
-           la tarjeta blanca eso sobra. */
-        .hero .servicio-texto > p {
-            max-width: none;
-            margin: 0 0 18px;
-            font-size: 16px;
-            color: var(--grafito-med);
+        /* Índice grande y tenue, como marca de agua en la esquina de la
+           columna de texto: en el dibujo tapaba el marcador del mapa. */
+        .servicio-texto { position: relative; }
+        .servicio-texto > * { position: relative; }
+        .servicio-texto > .servicio-indice {
+            position: absolute;
+            top: 22px; right: 26px;
+            font-size: 64px;
+            font-weight: 700;
+            letter-spacing: -.04em;
+            line-height: 1;
+            color: rgba(46, 50, 56, .07);
+            font-variant-numeric: tabular-nums;
+            pointer-events: none;
         }
+        .servicio-indice small { font-size: 18px; letter-spacing: 0; color: rgba(46, 50, 56, .16); }
         @media (max-width: 900px) {
-            .hero { padding-top: 34px; }
+            .servicio-texto > .servicio-indice { top: 16px; right: 18px; font-size: 44px; }
+            .servicio-indice small { font-size: 14px; }
+        }
+        .hero-bienvenida .destacado { white-space: nowrap; }
+
+        .stat-icono {
+            display: block;
+            font-size: 18px;
+            color: var(--rojo-caech);
+            margin-bottom: 12px;
+        }
+
+        /* Capas del paralaje: se mueven con transform, sin repintar. */
+        .hero-ciudad .capa-lejana,
+        .hero-ciudad .capa-media { will-change: transform; }
+
+        /* Cabecera sobre el hero: transparente arriba del todo, con el logo
+           en blanco, y de vuelta al blanco en cuanto se desplaza la página
+           o se abre el menú. La cabecera pasa a fija y el hero sube detrás
+           de ella, de ahí el relleno superior. */
+        body > header { position: fixed; left: 0; right: 0; top: 0; }
+        .logo-blanco { display: none; }
+        header:not(.compacta):not(:has(.nav-links.open)) {
+            background-color: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom-color: rgba(255, 255, 255, .08);
+        }
+        header:not(.compacta):not(:has(.nav-links.open)) .logo-color { display: none; }
+        header:not(.compacta):not(:has(.nav-links.open)) .logo-blanco { display: block; }
+        header:not(.compacta):not(:has(.nav-links.open)) .nav-links a { color: rgba(255, 255, 255, .78); }
+        header:not(.compacta):not(:has(.nav-links.open)) .nav-links a:hover,
+        header:not(.compacta):not(:has(.nav-links.open)) .nav-links a.active { color: #fff; }
+        header:not(.compacta):not(:has(.nav-links.open)) .hamburger span { background-color: #fff; }
+        header:not(.compacta):not(:has(.nav-links.open)) .nav-buttons { border-left-color: rgba(255, 255, 255, .16); }
+        header:not(.compacta):not(:has(.nav-links.open)) .nav-buttons .btn-outline {
+            border-color: rgba(255, 255, 255, .45);
+            color: #fff;
+        }
+        header:not(.compacta):not(:has(.nav-links.open)) .nav-buttons .btn-outline:hover {
+            background: var(--rojo-caech);
+            border-color: var(--rojo-caech);
+        }
+        header:not(.compacta):not(:has(.nav-links.open)) .caech-acc-quien { color: #fff; }
+        .hero { padding-top: 150px; }
+        @media (max-width: 900px) {
+            .hero { padding-top: 110px; }
             .hero .container { padding-left: 16px; padding-right: 16px; }
         }
+
+        .hero-bienvenida { text-align: center; max-width: 860px; margin: 0 auto 36px; }
+        .hero-bienvenida .hero-eyebrow { margin-bottom: 22px; }
+        .hero .hero-bienvenida h1 { font-size: clamp(2rem, 4.6vw, 3.4rem); }
+        .hero-bienvenida .hero-filete { margin: 20px auto 14px; }
+        .hero .hero-bienvenida h2 { margin-bottom: 0; }
         .servicios-carrusel { position: relative; }
         /* Las tres diapositivas ocupan la misma celda: el carrusel mide lo
            que la más alta y no salta de altura al cambiar. */
@@ -1916,6 +1888,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            justify-content: center;
             border-top: 3px solid var(--rojo-caech);
         }
         .servicio-num {
@@ -1934,7 +1907,7 @@
             margin-bottom: 14px;
             color: var(--grafito);
         }
-        .servicio-texto > p { color: var(--grafito-med); line-height: 1.65; margin-bottom: 18px; }
+        .servicio-texto > p { color: var(--grafito-med); font-size: 16px; line-height: 1.65; margin: 0 0 18px; }
         .servicio-claves { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px; padding: 0; }
         .servicio-claves li {
             font-size: 11.5px;
@@ -1945,7 +1918,7 @@
             color: var(--grafito);
             background: var(--hueso, #F7F7F8);
         }
-        .servicio-acciones { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+        .servicio-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
         .servicio-acciones .herramienta-enlace { align-self: center; }
         .servicio-figura {
             position: relative;
@@ -2394,7 +2367,9 @@
             <nav class="navbar">
                 <a class="logo" href="#inicio" aria-label="Ir al inicio">
                     <img src="LOGO/logo-caech.png" alt="CAE-Ch · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo"
-                         class="logo-img" width="520" height="188">
+                         class="logo-img logo-color" width="520" height="188">
+                    <img src="LOGO/logo-caech-blanco.png" alt="" aria-hidden="true"
+                         class="logo-img logo-blanco" width="520" height="188">
                 </a>
                 <button class="hamburger" id="hamburger-btn" aria-label="Abrir menú">
                     <span></span><span></span><span></span>
@@ -2418,14 +2393,20 @@
     <!-- Hero Section -->
     <section class="hero" id="inicio">
         <div class="container">
-            <!-- El titulo sigue ahi para buscadores y lectores de pantalla;
-                 a la vista, el hero lo ocupan las diapositivas de servicios. -->
-            <h1 class="solo-lectores">El predio de Riobamba, leído por completo · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo</h1>
+            <!-- Bienvenida: breve, para que las diapositivas queden a la vista
+                 sin desplazarse. -->
+            <div class="hero-bienvenida">
+                <span class="hero-eyebrow"><span class="punto"></span> Catastro actualizado a septiembre 2026</span>
+                <h1>Le damos la bienvenida a la plataforma territorial <span class="destacado">del CAE-Ch</span></h1>
+                <hr class="filete-rojo hero-filete">
+                <h2>Colegio de Arquitectos del Ecuador<br>Provincial de <strong>Chimborazo</strong></h2>
+            </div>
             <div class="servicios-carrusel" id="servicios-carrusel" role="region" aria-roledescription="carrusel" aria-label="Servicios de la plataforma">
                 <div class="servicios-pista" aria-live="off">
 
                     <article class="servicio activa" role="group" aria-roledescription="diapositiva" aria-label="1 de 3: GeoVisor y reporte DICAT">
                         <div class="servicio-texto">
+                            <span class="servicio-indice" aria-hidden="true">01<small> / 03</small></span>
                             <span class="servicio-num">Servicio 1 · Mapa libre</span>
                             <h3>Todo lo que se sabe de un predio, en un solo reporte</h3>
                             <p>Elija un predio en el GeoVisor y obtenga el DICAT: su diagnóstico catastral y territorial, con el plano georreferenciado y las cifras medidas en UTM 17S.</p>
@@ -2475,6 +2456,7 @@
 
                     <article class="servicio" role="group" aria-roledescription="diapositiva" aria-label="2 de 3: Planimetría automatizada" aria-hidden="true">
                         <div class="servicio-texto">
+                            <span class="servicio-indice" aria-hidden="true">02<small> / 03</small></span>
                             <span class="servicio-num">Servicio 2 · Nuevo</span>
                             <h3>Del levantamiento de campo al plano, sin redibujar</h3>
                             <p>Cargue los puntos de la estación total o del GNSS y reciba la lámina del predio y el informe de linderación, con los colindantes leídos del catastro vigente. Se habilita cuenta por cuenta.</p>
@@ -2526,6 +2508,7 @@
 
                     <article class="servicio" role="group" aria-roledescription="diapositiva" aria-label="3 de 3: Investigación territorial" aria-hidden="true">
                         <div class="servicio-texto">
+                            <span class="servicio-indice" aria-hidden="true">03<small> / 03</small></span>
                             <span class="servicio-num">Servicio 3 · Libre, sin cuenta</span>
                             <h3>Riobamba en cifras que se pueden comprobar</h3>
                             <p>Tres líneas de investigación permanentes, con el método, las fuentes y los límites publicados. Por ejemplo: la ciudad tiene 1,37 m² de área verde por habitante, frente a los 9 m² recomendados.</p>
@@ -2574,18 +2557,22 @@
             <div class="hero-content">
                 <div class="stats">
                     <div class="stat-item">
+                        <i class="fas fa-layer-group stat-icono" aria-hidden="true"></i>
                         <div class="stat-number" data-contador="7" data-sufijo="">0</div>
                         <div class="stat-label">Capas de datos activas</div>
                     </div>
                     <div class="stat-item">
+                        <i class="fas fa-vector-square stat-icono" aria-hidden="true"></i>
+                        <div class="stat-number" data-contador="72198" data-sufijo="">0</div>
+                        <div class="stat-label">Predios con clave catastral</div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-file-lines stat-icono" aria-hidden="true"></i>
                         <div class="stat-number" data-contador="8" data-sufijo="">0</div>
                         <div class="stat-label">Secciones del reporte</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">UTM 17S</div>
-                        <div class="stat-label">Todo medido en plano</div>
-                    </div>
-                    <div class="stat-item">
+                        <i class="fas fa-microscope stat-icono" aria-hidden="true"></i>
                         <div class="stat-number" data-contador="3" data-sufijo="">0</div>
                         <div class="stat-label">Líneas de investigación</div>
                     </div>
@@ -2603,6 +2590,7 @@
             <!-- Resplandor de la tarde sobre la ciudad -->
             <rect x="0" y="120" width="1440" height="180" fill="url(#ciudad-bruma)"/>
 
+            <g class="capa-lejana">
             <!-- Cordillera: Chimborazo, Carihuairazo, Tungurahua y El Altar -->
             <path d="M0 300V214l120-16 100 8 110-34 90 14 70-30 60-40 70-54 70 50 60 26 40-20 30-6 40 22 120 10 60-28 40-26 18-6 28 6 40 32 70 24 30-18 18-16 14 10 16-18 14 16 20-12 36 38 60 12V300z"
                   fill="#FFFFFF" fill-opacity=".055"/>
@@ -2611,10 +2599,13 @@
             <path d="M1291 136l18-16 14 10 16-18 14 16-9-3-7 6-9-6-8 5-9-3z" fill="#FFFFFF" fill-opacity=".26"/>
             <path d="M540 132 620 62 690 112" fill="none" stroke="#E31E24" stroke-opacity=".85" stroke-width="2"/>
 
+            </g>
+            <g class="capa-media">
             <!-- Ciudad al fondo, con ventanas encendidas -->
             <path d="M0 284 V214 H18 V232 H57 V214 H101 V247 H136 V224 H165 V251 H200 V257 H226 V247 H261 V214 H279 V245 H316 V216 H335 V216 H373 V235 H417 V214 H461 V250 H496 V258 H523 V221 H567 V224 H610 V247 H644 V225 H663 V252 H686 V242 H708 V229 H747 V220 H789 V223 H830 V227 H854 V237 H890 V221 H931 V248 H972 V224 H997 V231 H1033 V243 H1059 V234 H1099 V221 H1132 V248 H1166 V222 H1193 V243 H1213 V234 H1249 V251 H1275 V218 H1293 V233 H1319 V226 H1359 V210 H1386 V218 H1423 V241 H1440 V284 Z" fill="#FFFFFF" fill-opacity=".06"/>
             <g class="ventanas" fill="#FFFFFF" fill-opacity=".22"><rect x="47" y="249" width="3" height="4"/><rect x="47" y="258" width="3" height="4"/><rect x="78" y="240" width="3" height="4"/><rect x="86" y="249" width="3" height="4"/><rect x="149" y="250" width="3" height="4"/><rect x="157" y="250" width="3" height="4"/><rect x="149" y="259" width="3" height="4"/><rect x="213" y="265" width="3" height="4" class="v-roja"/><rect x="247" y="273" width="3" height="4"/><rect x="266" y="240" width="3" height="4"/><rect x="308" y="253" width="3" height="4"/><rect x="308" y="262" width="3" height="4" class="v-roja"/><rect x="378" y="261" width="3" height="4"/><rect x="402" y="270" width="3" height="4"/><rect x="438" y="222" width="3" height="4"/><rect x="430" y="231" width="3" height="4" class="v-roja"/><rect x="438" y="231" width="3" height="4" class="v-roja"/><rect x="446" y="231" width="3" height="4" class="v-roja"/><rect x="446" y="258" width="3" height="4"/><rect x="454" y="267" width="3" height="4"/><rect x="466" y="258" width="3" height="4"/><rect x="482" y="267" width="3" height="4"/><rect x="501" y="266" width="3" height="4"/><rect x="509" y="266" width="3" height="4"/><rect x="560" y="265" width="3" height="4"/><rect x="588" y="241" width="3" height="4"/><rect x="631" y="264" width="3" height="4"/><rect x="623" y="273" width="3" height="4" class="v-roja"/><rect x="676" y="260" width="3" height="4"/><rect x="713" y="237" width="3" height="4" class="v-roja"/><rect x="737" y="255" width="3" height="4"/><rect x="713" y="273" width="3" height="4"/><rect x="768" y="237" width="3" height="4"/><rect x="752" y="246" width="3" height="4" class="v-roja"/><rect x="776" y="255" width="3" height="4"/><rect x="760" y="273" width="3" height="4" class="v-roja"/><rect x="768" y="273" width="3" height="4"/><rect x="818" y="249" width="3" height="4"/><rect x="802" y="267" width="3" height="4" class="v-roja"/><rect x="810" y="267" width="3" height="4"/><rect x="835" y="235" width="3" height="4" class="v-roja"/><rect x="843" y="235" width="3" height="4"/><rect x="843" y="244" width="3" height="4"/><rect x="835" y="271" width="3" height="4"/><rect x="859" y="245" width="3" height="4" class="v-roja"/><rect x="903" y="256" width="3" height="4"/><rect x="919" y="256" width="3" height="4"/><rect x="1018" y="239" width="3" height="4"/><rect x="1010" y="257" width="3" height="4" class="v-roja"/><rect x="1018" y="257" width="3" height="4"/><rect x="1002" y="266" width="3" height="4"/><rect x="1026" y="266" width="3" height="4"/><rect x="1038" y="251" width="3" height="4"/><rect x="1080" y="242" width="3" height="4"/><rect x="1072" y="260" width="3" height="4" class="v-roja"/><rect x="1104" y="247" width="3" height="4"/><rect x="1120" y="256" width="3" height="4"/><rect x="1137" y="265" width="3" height="4"/><rect x="1179" y="257" width="3" height="4"/><rect x="1198" y="269" width="3" height="4"/><rect x="1242" y="260" width="3" height="4"/><rect x="1218" y="269" width="3" height="4"/><rect x="1226" y="269" width="3" height="4"/><rect x="1280" y="253" width="3" height="4"/><rect x="1280" y="262" width="3" height="4"/><rect x="1306" y="250" width="3" height="4" class="v-roja"/><rect x="1298" y="268" width="3" height="4"/><rect x="1332" y="270" width="3" height="4" class="v-roja"/><rect x="1372" y="218" width="3" height="4"/><rect x="1372" y="227" width="3" height="4"/><rect x="1372" y="245" width="3" height="4"/><rect x="1372" y="254" width="3" height="4"/><rect x="1364" y="263" width="3" height="4"/><rect x="1415" y="226" width="3" height="4" class="v-roja"/><rect x="1391" y="235" width="3" height="4" class="v-roja"/><rect x="1407" y="235" width="3" height="4"/></g>
 
+            </g>
             <!-- Frente: los hitos de Riobamba y el caserío entre ellos -->
             <g fill="#FFFFFF" fill-opacity=".13" fill-rule="evenodd">
                 <!-- Estación del ferrocarril y el tren -->
@@ -3622,13 +3613,16 @@
                     o.unobserve(e.target);
                     const destino = parseInt(e.target.dataset.contador, 10);
                     const sufijo = e.target.dataset.sufijo || '';
-                    if (reducido) { e.target.textContent = destino + sufijo; return; }
+                    // 72 198 y no 72198: separador de miles a la ecuatoriana.
+                    const cifra = n => n.toLocaleString('es-EC') + sufijo;
+                    if (reducido) { e.target.textContent = cifra(destino); return; }
+                    const duracion = destino > 999 ? 1800 : 900;
                     const inicio = performance.now();
                     (function paso(ahora) {
-                        const t = Math.min((ahora - inicio) / 900, 1);
+                        const t = Math.min((ahora - inicio) / duracion, 1);
                         // Suavizado de salida: arranca rápido y frena al final.
                         const v = Math.round(destino * (1 - Math.pow(1 - t, 3)));
-                        e.target.textContent = v + sufijo;
+                        e.target.textContent = cifra(v);
                         if (t < 1) requestAnimationFrame(paso);
                     })(inicio);
                 });
@@ -3739,6 +3733,21 @@
         // ── Barra de progreso y cabecera compacta ────────────
         const barra = document.querySelector('.progreso-lectura');
         const cabecera = document.querySelector('header');
+        if (cabecera) cabecera.classList.toggle('compacta', window.scrollY > 8);
+
+        // Paralaje del perfil urbano: la cordillera baja más despacio que la
+        // página y la ciudad del fondo un poco menos, así se lee la
+        // profundidad. Solo mientras el hero está a la vista.
+        const hero = document.querySelector('.hero');
+        const lejana = document.querySelector('.hero-ciudad .capa-lejana');
+        const media = document.querySelector('.hero-ciudad .capa-media');
+        function moverCiudad() {
+            if (reducido || !hero || !lejana) return;
+            const y = window.scrollY;
+            if (y > hero.offsetHeight) return;
+            lejana.style.transform = 'translateY(' + (y * 0.16).toFixed(1) + 'px)';
+            media.style.transform = 'translateY(' + (y * 0.07).toFixed(1) + 'px)';
+        }
         let pendiente = false;
         window.addEventListener('scroll', function () {
             if (pendiente) return;
@@ -3747,6 +3756,7 @@
                 const alto = document.documentElement.scrollHeight - window.innerHeight;
                 if (barra) barra.style.transform = 'scaleX(' + (alto > 0 ? window.scrollY / alto : 0) + ')';
                 if (cabecera) cabecera.classList.toggle('compacta', window.scrollY > 8);
+                moverCiudad();
                 pendiente = false;
             });
         }, { passive: true });
