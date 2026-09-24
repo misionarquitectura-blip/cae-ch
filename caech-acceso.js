@@ -112,6 +112,14 @@
         .caech-acc-campo input{width:100%;padding:10px 12px;
             border:1px solid var(--borde-marcado,rgba(46,50,56,.24));border-radius:var(--radio,4px);
             font-size:14px;box-sizing:border-box;font-family:inherit;color:var(--grafito,#2E3238)}
+        /* Campo de contrasena con el boton del ojo dentro, a la derecha. */
+        .caech-acc-clave-caja{position:relative;display:block}
+        .caech-acc-clave-caja input{padding-right:44px !important;width:100%;box-sizing:border-box}
+        .caech-acc-ojo{position:absolute;top:0;right:0;bottom:0;width:42px;display:flex;
+            align-items:center;justify-content:center;background:none;border:0;padding:0;
+            cursor:pointer;color:var(--grafito-sua,#8B9098);border-radius:0 var(--radio,4px) var(--radio,4px) 0}
+        .caech-acc-ojo:hover,.caech-acc-ojo[aria-pressed="true"]{color:var(--rojo-caech,#E31E24)}
+        .caech-acc-ojo:focus-visible{outline:2px solid var(--rojo-caech,#E31E24);outline-offset:-4px}
         .caech-acc-campo input:focus{outline:none;border-color:var(--rojo-caech,#E31E24);
             box-shadow:0 0 0 3px rgba(227,30,36,.12)}
         /* La forma del boton la pone caech-ui.css; aqui solo el matiz
@@ -176,8 +184,61 @@
             if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', esc); }
         });
 
+        mostrarClaves(overlay);
         if (alAbrir) alAbrir(overlay, cerrar);
         return { overlay, cerrar };
+    }
+
+    // ── Ver la contrasena ───────────────────────────────────────────
+
+    // SVG en linea y no Font Awesome: la planimetria y el panel no cargan
+    // la fuente de iconos.
+    const OJO = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/>' +
+        '<circle cx="12" cy="12" r="3.2"/></svg>';
+    const OJO_TACHADO = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M10.6 5.1A10 10 0 0 1 12 4.5c6.5 0 10.5 7.5 10.5 7.5a17 17 0 0 1-3.1 3.9"/>' +
+        '<path d="M6.3 6.8C3.3 8.8 1.5 12 1.5 12s4 7.5 10.5 7.5a9.6 9.6 0 0 0 5.2-1.5"/>' +
+        '<path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg>';
+
+    /**
+     * Pone junto a cada campo de contrasena un boton para verla y volver a
+     * ocultarla. Sirve para los modales de este archivo y para los campos
+     * fijos de las paginas (panel.html). No toca un campo dos veces.
+     */
+    function mostrarClaves(raiz) {
+        (raiz || document).querySelectorAll('input[type="password"]').forEach(function (campo) {
+            if (campo.dataset.caechOjo) return;
+            campo.dataset.caechOjo = '1';
+
+            const envoltura = document.createElement('span');
+            envoltura.className = 'caech-acc-clave-caja';
+            campo.parentNode.insertBefore(envoltura, campo);
+            envoltura.appendChild(campo);
+
+            const boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'caech-acc-ojo';
+            envoltura.appendChild(boton);
+
+            function pintar() {
+                const visible = campo.type === 'text';
+                boton.innerHTML = visible ? OJO_TACHADO : OJO;
+                boton.setAttribute('aria-label', visible ? 'Ocultar la contraseña' : 'Mostrar la contraseña');
+                boton.title = boton.getAttribute('aria-label');
+                boton.setAttribute('aria-pressed', visible ? 'true' : 'false');
+            }
+            boton.addEventListener('click', function () {
+                const inicio = campo.selectionStart, fin = campo.selectionEnd;
+                campo.type = campo.type === 'password' ? 'text' : 'password';
+                pintar();
+                campo.focus();
+                try { campo.setSelectionRange(inicio, fin); } catch (e) {}
+            });
+            pintar();
+        });
     }
 
     function avisar(overlay, clase, mensaje) {
@@ -472,6 +533,17 @@
         pintarBarra();
     }
 
+    // La sesion guardada se recupera en segundo plano al cargar la pagina.
+    // Quien necesite saber si hay sesion -las puertas de abajo- espera a
+    // esa misma consulta en vez de mirar `perfil` antes de que llegue: la
+    // planimetria pregunta nada mas cargar y, sin esta espera, pedia
+    // ingresar de nuevo a quien ya tenia la sesion abierta.
+    let recuperando = null;
+    function asegurarSesion() {
+        if (!recuperando) recuperando = recuperarSesion();
+        return recuperando;
+    }
+
     // ── Puerta de autorizacion ──────────────────────────────────────
 
     /**
@@ -481,6 +553,8 @@
      */
     async function autorizar(formato, claveCatastral) {
         if (!CONFIG.activo) return true;   // interruptor de despliegue
+
+        if (!perfil && token()) await asegurarSesion();
 
         // Con sesion viva: se pide autorizacion y la descarga queda auditada.
         if (perfil) {
@@ -522,6 +596,7 @@
     async function autorizarHerramienta(herramienta, alEntrar) {
         if (!CONFIG.activo) return true;
 
+        if (!perfil && token()) await asegurarSesion();
         if (!perfil) {
             abrirIngreso(alEntrar || function () { location.reload(); });
             return false;
@@ -604,7 +679,8 @@
         if (!CONFIG.activo) return;
         pintarBarra();
         procesarRetornoCuenta();
-        recuperarSesion();
+        asegurarSesion();
+        mostrarClaves(document);
     }
 
     if (document.readyState === 'loading') {
@@ -626,6 +702,10 @@
         permisos: () => permisos,
         /** Registra la accion a retomar si hay que ingresar primero. */
         registrarAccion: (formato, fn) => { acciones[formato] = fn; },
+        /** Espera a que la sesion guardada se haya recuperado. */
+        sesion: asegurarSesion,
+        /** Anade el boton de ver la contrasena a los campos de `raiz`. */
+        mostrarClaves: mostrarClaves,
         /**
          * Llamada autenticada al API, con el token de la sesion puesto y el
          * 401 ya tratado (cierra la sesion y repinta). La usa panel.html para

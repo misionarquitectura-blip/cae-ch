@@ -1393,7 +1393,7 @@
         }
         /* El relleno inferior reserva la banda que ocupa la cordillera,
            para que las cifras no queden montadas sobre la silueta. */
-        .hero .container { position: relative; z-index: 2; padding-bottom: 172px; }
+        .hero .container { position: relative; z-index: 2; }
 
         .hero-eyebrow {
             display: inline-flex;
@@ -1504,19 +1504,30 @@
             margin-top: 8px;
         }
 
-        /* Silueta del Chimborazo y la catedral, como en el isologo. */
-        .hero-cordillera {
+        /* Perfil urbano de Riobamba al pie del hero: la cordillera con el
+           Chimborazo, y delante la estación, la catedral, la basílica, el
+           colegio Maldonado y la Loma de Quito. `slice` y no `none`: en el
+           teléfono se recortan los extremos en vez de aplastar los edificios,
+           y los hitos están agrupados en el centro para que sigan a la vista. */
+        .hero-ciudad {
             position: absolute;
             left: 0; right: 0; bottom: -1px;
             width: 100%;
-            height: 150px;
+            height: 250px;
             display: block;
             z-index: 1;
             pointer-events: none;
         }
+        .hero-ciudad .v-roja { fill: #E31E24; fill-opacity: .7; }
+        /* Unas pocas ventanas se encienden y se apagan, sin prisa. */
+        .hero-ciudad .ventanas rect:nth-child(5n) { animation: ventana 7s ease-in-out infinite; }
+        .hero-ciudad .ventanas rect:nth-child(10n) { animation-delay: -3.5s; }
+        .hero-ciudad .ventanas rect:nth-child(15n) { animation-duration: 11s; }
+        @keyframes ventana { 0%, 100% { opacity: 1; } 50% { opacity: .15; } }
+        .hero .container { padding-bottom: 262px; }
         @media (max-width: 900px) {
-            .hero-cordillera { height: 104px; }
-            .hero .container { padding-bottom: 124px; }
+            .hero-ciudad { height: 170px; }
+            .hero .container { padding-bottom: 180px; }
         }
 
         /* ── Títulos de sección ───────────────────────────────── */
@@ -1814,8 +1825,197 @@
             .hero { padding-top: 90px; }
         }
 
+        /* ══════════════════════════════════════════════════════════
+           SERVICIOS EN DIAPOSITIVAS Y BOTONES DEL HERO (2026-09-24)
+        ══════════════════════════════════════════════════════════ */
+
+        /* En el teléfono los tres botones del hero se apilan con el mismo
+           ancho y el mismo alto. Antes cada uno medía lo que su rótulo
+           (242, 277 y 179 px), y el `flex: 1 1 220px` de caech-ui.css,
+           pensado para una fila, en columna se volvía 220 px de ALTO. */
+        @media (max-width: 768px) {
+            .hero-buttons { align-items: stretch; max-width: 340px; margin-left: auto; margin-right: auto; }
+            /* `.hero` delante: caech-ui.css se carga después de este bloque
+               y con la misma especificidad ganaba él. */
+            .hero .hero-buttons .btn {
+                flex: 0 0 auto;
+                width: 100%;
+                min-height: 50px;
+                padding: .9em 1.2em;
+                font-size: 13px;
+                white-space: normal;
+            }
+            /* Lo mismo les pasaba a las cifras: `flex: 1 1 140px` en columna
+               son 140 px de alto por cifra. */
+            .hero .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 12px; }
+            .hero .stat-item { flex: 0 0 auto; }
+        }
+
+        .servicios { padding: 70px 0; background: var(--hueso, #F7F7F8); overflow: hidden; }
+        .servicios .section-title { margin-bottom: 36px; }
+        .servicios-carrusel { position: relative; }
+        /* Las tres diapositivas ocupan la misma celda: el carrusel mide lo
+           que la más alta y no salta de altura al cambiar. */
+        .servicios-pista { display: grid; }
+        .servicio {
+            grid-area: 1 / 1;
+            display: grid;
+            grid-template-columns: 1.08fr 1fr;
+            background: var(--blanco, #FFFFFF);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            box-shadow: var(--sombra-2);
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(24px);
+            transition: opacity .6s ease, transform .6s cubic-bezier(.4, 0, .2, 1), visibility 0s linear .6s;
+        }
+        .servicio.activa {
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+            transition: opacity .6s ease, transform .6s cubic-bezier(.4, 0, .2, 1), visibility 0s;
+        }
+        .servicio.saliendo { transform: translateX(-24px); }
+        .servicio-texto {
+            padding: 46px 48px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border-top: 3px solid var(--rojo-caech);
+        }
+        .servicio-num {
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: var(--tracking-caps);
+            text-transform: uppercase;
+            color: var(--rojo-caech);
+            margin-bottom: 14px;
+        }
+        .servicio h3 {
+            font-size: clamp(1.45rem, 2.6vw, 2rem);
+            font-weight: 700;
+            letter-spacing: -.02em;
+            line-height: 1.15;
+            margin-bottom: 14px;
+            color: var(--grafito);
+        }
+        .servicio-texto > p { color: var(--grafito-med); line-height: 1.65; margin-bottom: 18px; }
+        .servicio-claves { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px; padding: 0; }
+        .servicio-claves li {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 6px 11px;
+            border: 1px solid var(--borde-marcado);
+            border-radius: var(--radio);
+            color: var(--grafito);
+            background: var(--hueso, #F7F7F8);
+        }
+        .servicio-acciones { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+        .servicio-acciones .herramienta-enlace { align-self: center; }
+        .servicio-figura {
+            position: relative;
+            background: linear-gradient(160deg, #24272C 0%, #2E3238 70%, #3A2A2D 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            min-height: 300px;
+        }
+        .servicio-figura::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .servicio-figura svg { position: relative; width: 100%; max-width: 420px; height: auto; display: block; }
+        .servicio-figura .etiqueta {
+            position: absolute;
+            left: 18px; bottom: 14px;
+            font-size: 10px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .55);
+        }
+
+        /* Controles: flechas, puntos con barra de avance y pausa. */
+        .servicios-controles {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 24px;
+        }
+        .servicios-flecha, .servicios-pausa {
+            width: 40px; height: 40px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border: 1px solid var(--borde-marcado);
+            border-radius: 50%;
+            background: var(--blanco, #FFFFFF);
+            color: var(--grafito);
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color .2s, color .2s, border-color .2s;
+        }
+        .servicios-flecha:hover, .servicios-pausa:hover { background: var(--rojo-caech); border-color: var(--rojo-caech); color: #fff; }
+        .servicios-flecha:focus-visible, .servicios-pausa:focus-visible,
+        .servicios-puntos button:focus-visible { outline: 2px solid var(--rojo-caech); outline-offset: 3px; }
+        .servicios-puntos { display: flex; gap: 8px; }
+        .servicios-puntos button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 4px;
+            background: none;
+            border: 0;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--grafito-sua);
+        }
+        .servicios-puntos button[aria-current="true"] { color: var(--grafito); }
+        /* La barra se llena mientras la diapositiva está a la vista. */
+        .servicios-puntos button span {
+            position: relative;
+            display: block;
+            width: 44px; height: 3px;
+            border-radius: 2px;
+            background: var(--borde-marcado);
+            overflow: hidden;
+        }
+        .servicios-puntos button span::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--rojo-caech);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .1s linear;
+        }
+        .servicios-puntos button[aria-current="true"] span::after { transform: scaleX(var(--avance, 0)); }
+
+        @media (max-width: 900px) {
+            .servicio { grid-template-columns: 1fr; }
+            .servicio-figura { order: -1; min-height: 0; padding: 22px 22px 34px; }
+            .servicio-figura svg { max-width: 300px; }
+            .servicio-texto { padding: 28px 24px 26px; }
+            .servicio-acciones { width: 100%; flex-direction: column; align-items: stretch; gap: 12px; }
+            .servicio-acciones .btn { width: 100%; white-space: normal; }
+            .servicios-puntos button { font-size: 0; gap: 0; }
+            .servicios-puntos button span { width: 34px; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             .hero-eyebrow .punto { animation: none; }
+            .hero-ciudad .ventanas rect { animation: none !important; }
+            .servicio { transition: none !important; }
             .about-card, .feature-card, .integration-item,
             .dicat-panel-cuerpo, .btn, .feature-icon,
             .about-icon, .integration-icon { transition: none; }
@@ -2220,24 +2420,248 @@
             </div>
         </div>
 
-        <svg class="hero-cordillera" viewBox="0 0 1440 170" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-            <!-- Cordillera lejana -->
-            <path d="M0 170V132l186-30 150 26 176-44 132 22 150-46 128 34 148-26 190 40 180-22v86z"
-                  fill="#FFFFFF" fill-opacity=".05"/>
-            <!-- Chimborazo: cumbre dominante y su filete rojo -->
-            <path d="M0 170v-22l210-26 168 20 158-52 120 28 168-88 136 96 152-34 158 42 170-18v54z"
-                  fill="#FFFFFF" fill-opacity=".08"/>
-            <path d="M656 118 824 30 960 126" fill="none" stroke="#E31E24" stroke-opacity=".9" stroke-width="2.2"/>
-            <path d="M763 62 824 30 869 62 851 55 836 66 818 53 800 65 782 56z" fill="#FFFFFF" fill-opacity=".5"/>
-            <!-- Catedral de Riobamba al pie -->
-            <g fill="#FFFFFF" fill-opacity=".22" transform="translate(600 92)">
-                <rect x="0" y="14" width="7" height="26"/><path d="M0 14 3.5 4 7 14z"/>
-                <rect x="41" y="14" width="7" height="26"/><path d="M41 14 44.5 4 48 14z"/>
-                <path d="M12 40V26a12 12 0 0 1 24 0v14z"/>
-                <rect x="23" y="6" width="2" height="9"/><rect x="20" y="9" width="8" height="2"/>
-                <rect x="-6" y="38" width="60" height="4"/>
+        <svg class="hero-ciudad" viewBox="0 0 1440 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+            <defs>
+                <linearGradient id="ciudad-bruma" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#E31E24" stop-opacity="0"/>
+                    <stop offset="1" stop-color="#E31E24" stop-opacity=".13"/>
+                </linearGradient>
+            </defs>
+            <!-- Resplandor de la tarde sobre la ciudad -->
+            <rect x="0" y="120" width="1440" height="180" fill="url(#ciudad-bruma)"/>
+
+            <!-- Cordillera: Chimborazo, Carihuairazo, Tungurahua y El Altar -->
+            <path d="M0 300V214l120-16 100 8 110-34 90 14 70-30 60-40 70-54 70 50 60 26 40-20 30-6 40 22 120 10 60-28 40-26 18-6 28 6 40 32 70 24 30-18 18-16 14 10 16-18 14 16 20-12 36 38 60 12V300z"
+                  fill="#FFFFFF" fill-opacity=".055"/>
+            <path d="M590 92 620 62l33 32-12-5-11 10-12-11-11 9-9-7z" fill="#FFFFFF" fill-opacity=".42"/>
+            <path d="M1084 104 1108 92l18 6 10 8-10-2-10 7-11-5-9 4z" fill="#FFFFFF" fill-opacity=".3"/>
+            <path d="M1291 136l18-16 14 10 16-18 14 16-9-3-7 6-9-6-8 5-9-3z" fill="#FFFFFF" fill-opacity=".26"/>
+            <path d="M540 132 620 62 690 112" fill="none" stroke="#E31E24" stroke-opacity=".85" stroke-width="2"/>
+
+            <!-- Ciudad al fondo, con ventanas encendidas -->
+            <path d="M0 284 V214 H18 V232 H57 V214 H101 V247 H136 V224 H165 V251 H200 V257 H226 V247 H261 V214 H279 V245 H316 V216 H335 V216 H373 V235 H417 V214 H461 V250 H496 V258 H523 V221 H567 V224 H610 V247 H644 V225 H663 V252 H686 V242 H708 V229 H747 V220 H789 V223 H830 V227 H854 V237 H890 V221 H931 V248 H972 V224 H997 V231 H1033 V243 H1059 V234 H1099 V221 H1132 V248 H1166 V222 H1193 V243 H1213 V234 H1249 V251 H1275 V218 H1293 V233 H1319 V226 H1359 V210 H1386 V218 H1423 V241 H1440 V284 Z" fill="#FFFFFF" fill-opacity=".06"/>
+            <g class="ventanas" fill="#FFFFFF" fill-opacity=".22"><rect x="47" y="249" width="3" height="4"/><rect x="47" y="258" width="3" height="4"/><rect x="78" y="240" width="3" height="4"/><rect x="86" y="249" width="3" height="4"/><rect x="149" y="250" width="3" height="4"/><rect x="157" y="250" width="3" height="4"/><rect x="149" y="259" width="3" height="4"/><rect x="213" y="265" width="3" height="4" class="v-roja"/><rect x="247" y="273" width="3" height="4"/><rect x="266" y="240" width="3" height="4"/><rect x="308" y="253" width="3" height="4"/><rect x="308" y="262" width="3" height="4" class="v-roja"/><rect x="378" y="261" width="3" height="4"/><rect x="402" y="270" width="3" height="4"/><rect x="438" y="222" width="3" height="4"/><rect x="430" y="231" width="3" height="4" class="v-roja"/><rect x="438" y="231" width="3" height="4" class="v-roja"/><rect x="446" y="231" width="3" height="4" class="v-roja"/><rect x="446" y="258" width="3" height="4"/><rect x="454" y="267" width="3" height="4"/><rect x="466" y="258" width="3" height="4"/><rect x="482" y="267" width="3" height="4"/><rect x="501" y="266" width="3" height="4"/><rect x="509" y="266" width="3" height="4"/><rect x="560" y="265" width="3" height="4"/><rect x="588" y="241" width="3" height="4"/><rect x="631" y="264" width="3" height="4"/><rect x="623" y="273" width="3" height="4" class="v-roja"/><rect x="676" y="260" width="3" height="4"/><rect x="713" y="237" width="3" height="4" class="v-roja"/><rect x="737" y="255" width="3" height="4"/><rect x="713" y="273" width="3" height="4"/><rect x="768" y="237" width="3" height="4"/><rect x="752" y="246" width="3" height="4" class="v-roja"/><rect x="776" y="255" width="3" height="4"/><rect x="760" y="273" width="3" height="4" class="v-roja"/><rect x="768" y="273" width="3" height="4"/><rect x="818" y="249" width="3" height="4"/><rect x="802" y="267" width="3" height="4" class="v-roja"/><rect x="810" y="267" width="3" height="4"/><rect x="835" y="235" width="3" height="4" class="v-roja"/><rect x="843" y="235" width="3" height="4"/><rect x="843" y="244" width="3" height="4"/><rect x="835" y="271" width="3" height="4"/><rect x="859" y="245" width="3" height="4" class="v-roja"/><rect x="903" y="256" width="3" height="4"/><rect x="919" y="256" width="3" height="4"/><rect x="1018" y="239" width="3" height="4"/><rect x="1010" y="257" width="3" height="4" class="v-roja"/><rect x="1018" y="257" width="3" height="4"/><rect x="1002" y="266" width="3" height="4"/><rect x="1026" y="266" width="3" height="4"/><rect x="1038" y="251" width="3" height="4"/><rect x="1080" y="242" width="3" height="4"/><rect x="1072" y="260" width="3" height="4" class="v-roja"/><rect x="1104" y="247" width="3" height="4"/><rect x="1120" y="256" width="3" height="4"/><rect x="1137" y="265" width="3" height="4"/><rect x="1179" y="257" width="3" height="4"/><rect x="1198" y="269" width="3" height="4"/><rect x="1242" y="260" width="3" height="4"/><rect x="1218" y="269" width="3" height="4"/><rect x="1226" y="269" width="3" height="4"/><rect x="1280" y="253" width="3" height="4"/><rect x="1280" y="262" width="3" height="4"/><rect x="1306" y="250" width="3" height="4" class="v-roja"/><rect x="1298" y="268" width="3" height="4"/><rect x="1332" y="270" width="3" height="4" class="v-roja"/><rect x="1372" y="218" width="3" height="4"/><rect x="1372" y="227" width="3" height="4"/><rect x="1372" y="245" width="3" height="4"/><rect x="1372" y="254" width="3" height="4"/><rect x="1364" y="263" width="3" height="4"/><rect x="1415" y="226" width="3" height="4" class="v-roja"/><rect x="1391" y="235" width="3" height="4" class="v-roja"/><rect x="1407" y="235" width="3" height="4"/></g>
+
+            <!-- Frente: los hitos de Riobamba y el caserío entre ellos -->
+            <g fill="#FFFFFF" fill-opacity=".13" fill-rule="evenodd">
+                <!-- Estación del ferrocarril y el tren -->
+                <path d="M222 250 305 226l83 24zM230 250h150v34H230zM296 214h18v12h-18zM305 202l11 12h-22z
+                         M244 262h10v14h-10zM264 262h10v14h-10zM336 262h10v14h-10zM356 262h10v14h-10zM294 256a11 11 0 0 1 22 0v28h-22z"/>
+                <path d="M60 264h52v16H60zM120 262h50v18h-50zM168 248h26v32h-26zM130 248h9v14h-9zM164 244h34v5h-34z
+                         M176 254h10v8h-10z"/>
+                <circle cx="72" cy="281" r="4"/><circle cx="100" cy="281" r="4"/>
+                <circle cx="132" cy="280" r="5"/><circle cx="150" cy="280" r="5"/><circle cx="182" cy="280" r="5"/>
+
+                <!-- Torre moderna -->
+                <path d="M470 168h40v116h-40zM476 176h6v8h-6zM488 176h6v8h-6zM500 176h6v8h-6zM476 192h6v8h-6zM488 192h6v8h-6zM500 192h6v8h-6zM476 208h6v8h-6zM488 208h6v8h-6zM500 208h6v8h-6zM476 224h6v8h-6zM488 224h6v8h-6zM500 224h6v8h-6zM476 240h6v8h-6zM488 240h6v8h-6zM500 240h6v8h-6z"/>
+                <path d="M520 202h30v82h-30zM526 210h5v7h-5zM539 210h5v7h-5zM526 224h5v7h-5zM539 224h5v7h-5zM526 238h5v7h-5zM539 238h5v7h-5z"/>
+                <path d="M556 226h28v58h-28z"/>
+
+                <!-- Catedral de Riobamba: torre, fachada de piedra y rosetón -->
+                <path d="M646 166h26v118h-26zM654 180a5 5 0 0 1 10 0v12h-10zM654 206a5 5 0 0 1 10 0v12h-10z
+                         M642 166l17-24 17 24zM658 124h2v18h-2zM653 130h12v2h-12z"/>
+                <path d="M672 214h104v70H672zM668 214l56-28 56 28zM710 284v-26a14 14 0 0 1 28 0v26zM724 234m-8 0a8 8 0 1 0 16 0a8 8 0 1 0-16 0
+                         M684 244a5 5 0 0 1 10 0v14h-10zM754 244a5 5 0 0 1 10 0v14h-10zM723 172h2v14h-2zM719 176h10v2h-10z"/>
+                <path d="M776 200h20v84h-20zM776 200a10 10 0 0 1 20 0z"/>
+
+                <!-- Parque Maldonado: palmeras -->
+                <path d="M612 284v-40h3v40zM613 244c-8-6-18-4-22 2 8-3 15-2 22 0-6-7-6-15-2-19 1 7 3 13 3 19 3-7 10-11 17-10-7 3-12 7-15 11 9-2 16 2 19 8-8-5-15-6-22-11z"/>
+                <path d="M806 284v-34h3v34zM807 250c-7-5-15-3-19 2 7-3 13-2 19 0-5-6-5-13-2-16 1 6 3 11 3 16 3-6 9-9 15-8-6 2-10 6-13 9 8-2 14 2 16 7-7-4-13-5-19-10z"/>
+
+                <!-- Basílica del Sagrado Corazón: planta circular y cúpula -->
+                <path d="M892 216h76v68h-76zM904 236a5 5 0 0 1 10 0v18h-10zM925 236a5 5 0 0 1 10 0v18h-10zM946 236a5 5 0 0 1 10 0v18h-10zM918 284v-16a12 12 0 0 1 24 0v16z
+                         M886 216a44 44 0 0 1 88 0zM924 172h12v10h-12zM924 172a6 6 0 0 1 12 0zM929 152h2v14h-2zM925 157h10v2h-10z"/>
+                <path d="M860 246h32v38h-32zM856 246l20-14 20 14zM968 246h32v38h-32zM964 246l20-14 20 14z"/>
+
+                <!-- Torre moderna al otro lado -->
+                <path d="M1016 180h38v104h-38zM1022 188h6v8h-6zM1034 188h6v8h-6zM1046 188h4v8h-4zM1022 204h6v8h-6zM1034 204h6v8h-6zM1022 220h6v8h-6zM1034 220h6v8h-6zM1022 236h6v8h-6zM1034 236h6v8h-6z"/>
+
+                <!-- Colegio Maldonado: cuerpo neoclásico y torre del reloj -->
+                <path d="M1080 242h140v42h-140zM1076 242l74-14 74 14zM1138 196h24v46h-24zM1134 196l16-20 16 20zM1149 162h2v14h-2zM1150 214m-6 0a6 6 0 1 0 12 0a6 6 0 1 0-12 0
+                         M1090 252h8v10h-8zM1106 252h8v10h-8zM1122 252h8v10h-8zM1170 252h8v10h-8zM1186 252h8v10h-8zM1202 252h8v10h-8zM1142 284v-20a8 8 0 0 1 16 0v20z"/>
+
+                <!-- Loma de Quito: la iglesia sobre la colina -->
+                <path d="M1262 284q76-50 170 0zM1318 250h44v14h-44zM1312 226h14v28h-14zM1354 226h14v28h-14zM1312 226l7-12 7 12zM1354 226l7-12 7 12zM1318 250l22-14 22 14z"/>
+                <path d="M1236 204h26v80h-26z"/>
+
+                <!-- Caserío de uno y dos pisos -->
+                <path d="M0 284V269L19 261L38 269V284ZM124 284V272H163V284ZM403 284V270L414.5 264L426 270V284ZM806 284V263H829V284ZM1035 284V255H1062V284Z"/>
+
+                <!-- Árboles -->
+                <circle cx="430" cy="268" r="11"/><path d="M429 276h2v8h-2z"/>
+                <circle cx="446" cy="272" r="8"/><path d="M445 278h2v6h-2z"/>
+                <circle cx="820" cy="270" r="9"/><circle cx="1004" cy="270" r="10"/><path d="M1003 278h2v6h-2z"/>
+                <circle cx="1238" cy="274" r="8"/><circle cx="598" cy="272" r="8"/>
             </g>
+
+            <!-- Calle y el filete rojo del isologo -->
+            <rect x="0" y="284" width="1440" height="16" fill="#FFFFFF" fill-opacity=".07"/>
+            <path d="M0 284.5H1440" stroke="#E31E24" stroke-opacity=".5" stroke-width="1"/>
+            <path d="M0 292H1440" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="1" stroke-dasharray="14 12"/>
         </svg>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         SERVICIOS · tres diapositivas que pasan solas
+    ══════════════════════════════════════════════════════ -->
+    <section class="section servicios" id="servicios" aria-labelledby="servicios-titulo">
+        <div class="container">
+            <div class="section-title">
+                <span class="eyebrow">Servicios del CAE-Ch</span>
+                <h2 id="servicios-titulo">Lo que puede hacer hoy en la plataforma</h2>
+            </div>
+
+            <div class="servicios-carrusel" id="servicios-carrusel" role="region" aria-roledescription="carrusel" aria-label="Servicios de la plataforma">
+                <div class="servicios-pista" aria-live="off">
+
+                    <article class="servicio activa" role="group" aria-roledescription="diapositiva" aria-label="1 de 3: GeoVisor y reporte DICAT">
+                        <div class="servicio-texto">
+                            <span class="servicio-num">Servicio 1 · Mapa libre</span>
+                            <h3>Todo lo que se sabe de un predio, en un solo reporte</h3>
+                            <p>Elija un predio en el GeoVisor y obtenga el DICAT: su diagnóstico catastral y territorial, con el plano georreferenciado y las cifras medidas en UTM 17S.</p>
+                            <ul class="servicio-claves">
+                                <li>Colindantes</li><li>Afectación vial</li><li>Servicios básicos</li><li>Norma del PUGS</li>
+                            </ul>
+                            <div class="servicio-acciones">
+                                <a href="geovisor.html" class="btn"><i class="fas fa-map-location-dot"></i> Abrir el GeoVisor</a>
+                                <a href="#dicat-interactivo" class="herramienta-enlace">Qué contiene el DICAT <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                        <div class="servicio-figura" aria-hidden="true">
+                            <svg viewBox="0 0 400 260" fill="none">
+                                <!-- Manzanas y predios -->
+                                <g stroke="#FFFFFF" stroke-opacity=".28" stroke-width="1.2">
+                                    <path d="M30 30h140v90H30zM30 75h140M77 30v90M123 30v90"/>
+                                    <path d="M210 30h160v90H210zM210 75h160M263 30v90M317 30v45M290 75v45"/>
+                                    <path d="M30 150h140v80H30zM100 150v80M30 190h70"/>
+                                    <path d="M210 150h160v80H210zM250 150v80M300 150v80M340 150v80"/>
+                                </g>
+                                <!-- Vías -->
+                                <path d="M0 135h400M190 0v260" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="18"/>
+                                <path d="M0 135h400M190 0v260" stroke="#FFFFFF" stroke-opacity=".35" stroke-dasharray="8 8"/>
+                                <!-- Predio elegido y su afectación -->
+                                <path d="M263 75h54v45h-27v-45" fill="#E31E24" fill-opacity=".22"/>
+                                <path d="M263 75h54v45h-54z" fill="#E31E24" fill-opacity=".35" stroke="#E31E24" stroke-width="2.4"/>
+                                <path d="M263 113h54v7h-54z" fill="#FFFFFF" fill-opacity=".35"/>
+                                <!-- Marcador -->
+                                <path d="M290 34c-11 0-19 8-19 18 0 14 19 30 19 30s19-16 19-30c0-10-8-18-19-18z" fill="#E31E24"/>
+                                <circle cx="290" cy="52" r="6" fill="#FFFFFF"/>
+                                <!-- Hoja del DICAT -->
+                                <g transform="translate(40 158)">
+                                    <rect width="104" height="136" rx="3" fill="#FFFFFF" transform="rotate(-6)"/>
+                                    <g transform="rotate(-6)">
+                                        <rect x="10" y="10" width="44" height="6" fill="#E31E24"/>
+                                        <rect x="10" y="24" width="84" height="34" fill="#2E3238" fill-opacity=".14"/>
+                                        <path d="M30 50l14-16 12 10 16-14" stroke="#E31E24" stroke-width="2"/>
+                                        <rect x="10" y="66" width="70" height="4" fill="#2E3238" fill-opacity=".35"/>
+                                        <rect x="10" y="76" width="80" height="4" fill="#2E3238" fill-opacity=".2"/>
+                                        <rect x="10" y="86" width="60" height="4" fill="#2E3238" fill-opacity=".2"/>
+                                    </g>
+                                </g>
+                            </svg>
+                            <span class="etiqueta">GeoVisor · DICAT en PDF, CSV y DXF</span>
+                        </div>
+                    </article>
+
+                    <article class="servicio" role="group" aria-roledescription="diapositiva" aria-label="2 de 3: Planimetría automatizada" aria-hidden="true">
+                        <div class="servicio-texto">
+                            <span class="servicio-num">Servicio 2 · Nuevo</span>
+                            <h3>Del levantamiento de campo al plano, sin redibujar</h3>
+                            <p>Cargue los puntos de la estación total o del GNSS y reciba la lámina del predio y el informe de linderación, con los colindantes leídos del catastro vigente.</p>
+                            <ul class="servicio-claves">
+                                <li>CSV, TXT o DXF</li><li>Certificado de gravámenes</li><li>DXF R12 en UTM 17S</li><li>PDF A4 o A3</li>
+                            </ul>
+                            <div class="servicio-acciones">
+                                <a href="planimetria.html" class="btn"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
+                                <a href="#planimetria" class="herramienta-enlace">Cómo funciona <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                        <div class="servicio-figura" aria-hidden="true">
+                            <svg viewBox="0 0 400 260" fill="none">
+                                <!-- Colindantes -->
+                                <g stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1.2">
+                                    <path d="M20 40 110 58 92 150 14 160z"/>
+                                    <path d="M110 58 250 36 262 68"/>
+                                    <path d="M300 200 360 210 380 120 318 96"/>
+                                    <path d="M120 222 92 150M120 222 300 200"/>
+                                </g>
+                                <!-- Predio levantado -->
+                                <path d="M110 58 262 68 318 96 300 200 120 222 92 150z" fill="#E31E24" fill-opacity=".18" stroke="#E31E24" stroke-width="2.4"/>
+                                <!-- Cotas -->
+                                <g fill="#FFFFFF" fill-opacity=".8" font-family="Montserrat, sans-serif" font-size="11" font-weight="600">
+                                    <text x="168" y="54">24,31 m</text>
+                                    <text x="318" y="152">16,87 m</text>
+                                    <text x="186" y="232">28,05 m</text>
+                                    <text x="58" y="112">15,40 m</text>
+                                </g>
+                                <!-- Vértices -->
+                                <g fill="#2E3238" stroke="#FFFFFF" stroke-width="2">
+                                    <circle cx="110" cy="58" r="5"/><circle cx="262" cy="68" r="5"/><circle cx="318" cy="96" r="5"/>
+                                    <circle cx="300" cy="200" r="5"/><circle cx="120" cy="222" r="5"/><circle cx="92" cy="150" r="5"/>
+                                </g>
+                                <g fill="#FFFFFF" fill-opacity=".6" font-family="Montserrat, sans-serif" font-size="10">
+                                    <text x="96" y="46">P1</text><text x="262" y="58">P2</text><text x="326" y="92">P3</text>
+                                    <text x="306" y="216">P4</text><text x="104" y="240">P5</text><text x="72" y="152">P6</text>
+                                </g>
+                                <!-- Área y norte -->
+                                <text x="206" y="146" text-anchor="middle" fill="#FFFFFF" font-family="Montserrat, sans-serif" font-size="15" font-weight="700">512,64 m²</text>
+                                <g transform="translate(362 36)" stroke="#FFFFFF" stroke-opacity=".7">
+                                    <circle r="16" stroke-opacity=".3"/>
+                                    <path d="M0 -12 6 8 0 4 -6 8z" fill="#E31E24" stroke="none"/>
+                                </g>
+                            </svg>
+                            <span class="etiqueta">Planimetría · lámina e informe de linderación</span>
+                        </div>
+                    </article>
+
+                    <article class="servicio" role="group" aria-roledescription="diapositiva" aria-label="3 de 3: Investigación territorial" aria-hidden="true">
+                        <div class="servicio-texto">
+                            <span class="servicio-num">Servicio 3 · Libre, sin cuenta</span>
+                            <h3>Riobamba en cifras que se pueden comprobar</h3>
+                            <p>Tres líneas de investigación permanentes, con el método, las fuentes y los límites publicados. Por ejemplo: la ciudad tiene 1,37 m² de área verde por habitante, frente a los 9 m² recomendados.</p>
+                            <ul class="servicio-claves">
+                                <li>Catastro y suelo</li><li>Equipamiento urbano</li><li>Economía del cantón</li>
+                            </ul>
+                            <div class="servicio-acciones">
+                                <a href="RESEARCH/index.html" class="btn"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
+                                <a href="#investigacion" class="herramienta-enlace">Las tres líneas <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                        <div class="servicio-figura" aria-hidden="true">
+                            <svg viewBox="0 0 400 260" fill="none">
+                                <g stroke="#FFFFFF" stroke-opacity=".14">
+                                    <path d="M40 40h330M40 90h330M40 140h330M40 190h330"/>
+                                </g>
+                                <path d="M40 220h330" stroke="#FFFFFF" stroke-opacity=".5"/>
+                                <!-- Área verde por habitante: la de Riobamba frente a la recomendada -->
+                                <rect x="80" y="197" width="70" height="23" fill="#E31E24"/>
+                                <rect x="230" y="70" width="70" height="150" fill="#FFFFFF" fill-opacity=".22"/>
+                                <path d="M230 70h70" stroke="#FFFFFF" stroke-opacity=".7" stroke-dasharray="4 4"/>
+                                <g font-family="Montserrat, sans-serif" text-anchor="middle">
+                                    <text x="115" y="186" fill="#FFFFFF" font-size="20" font-weight="700">1,37</text>
+                                    <text x="265" y="60" fill="#FFFFFF" font-size="20" font-weight="700">9</text>
+                                    <text x="115" y="240" fill="#FFFFFF" fill-opacity=".6" font-size="10">Riobamba</text>
+                                    <text x="265" y="240" fill="#FFFFFF" fill-opacity=".6" font-size="10">Recomendado</text>
+                                </g>
+                                <text x="40" y="26" fill="#FFFFFF" fill-opacity=".6" font-family="Montserrat, sans-serif" font-size="10" letter-spacing="1.5">ÁREA VERDE · m² POR HABITANTE</text>
+                            </svg>
+                            <span class="etiqueta">Investigación · línea 2, equipamiento urbano</span>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="servicios-controles">
+                    <button type="button" class="servicios-flecha" id="servicios-anterior" aria-label="Servicio anterior"><i class="fas fa-chevron-left"></i></button>
+                    <div class="servicios-puntos" id="servicios-puntos">
+                        <button type="button" aria-current="true" aria-label="Ver servicio 1: GeoVisor">GeoVisor <span></span></button>
+                        <button type="button" aria-label="Ver servicio 2: Planimetría">Planimetría <span></span></button>
+                        <button type="button" aria-label="Ver servicio 3: Investigación">Investigación <span></span></button>
+                    </div>
+                    <button type="button" class="servicios-flecha" id="servicios-siguiente" aria-label="Servicio siguiente"><i class="fas fa-chevron-right"></i></button>
+                    <button type="button" class="servicios-pausa" id="servicios-pausa" aria-label="Detener el paso automático"><i class="fas fa-pause"></i></button>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════
@@ -2298,7 +2722,7 @@
                         <li>Economía y base productiva del cantón</li>
                     </ul>
                     <div class="herramienta-pie">
-                        <a href="RESEARCH/index.html" class="btn btn-outline"><i class="fas fa-chart-bar"></i> Ver las investigaciones</a>
+                        <a href="RESEARCH/index.html" class="btn btn-outline"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
                         <a href="#investigacion" class="herramienta-enlace">Las tres líneas <i class="fas fa-arrow-right"></i></a>
                     </div>
                 </article>
@@ -3201,6 +3625,106 @@
             }, { threshold: 0.5 });
             contadores.forEach(function (c) { obs.observe(c); });
         }
+
+        // ── Diapositivas de servicios ────────────────────────
+        // Un solo reloj de 100 ms mueve la barra de avance y decide el paso:
+        // pausar (cursor encima, foco dentro, carrusel fuera de pantalla,
+        // pestaña oculta o el botón de pausa) congela las dos cosas a la vez.
+        (function () {
+            const carrusel = document.getElementById('servicios-carrusel');
+            if (!carrusel) return;
+            const diapositivas = carrusel.querySelectorAll('.servicio');
+            const puntos = carrusel.querySelectorAll('#servicios-puntos button');
+            const botonPausa = document.getElementById('servicios-pausa');
+            const DURACION = 7000;
+
+            let actual = 0;
+            let transcurrido = 0;
+            let ultimo = performance.now();
+            let detenido = false;          // lo decide el usuario con el botón
+            const motivos = new Set();     // pausas pasajeras: cursor, foco, fuera de vista
+
+            const enPausa = () => detenido || motivos.size > 0 || document.hidden;
+
+            function pintarAvance() {
+                puntos[actual].style.setProperty('--avance', detenido ? 0 : Math.min(transcurrido / DURACION, 1));
+            }
+
+            function pintarPausa() {
+                carrusel.classList.toggle('en-pausa', enPausa());
+                botonPausa.innerHTML = detenido ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+                botonPausa.setAttribute('aria-label', detenido ? 'Reanudar el paso automático' : 'Detener el paso automático');
+                pintarAvance();
+            }
+
+            function ir(i) {
+                i = (i + diapositivas.length) % diapositivas.length;
+                transcurrido = 0;
+                if (i === actual) return pintarAvance();
+                const antes = diapositivas[actual];
+                antes.classList.remove('activa');
+                antes.classList.add('saliendo');
+                antes.setAttribute('aria-hidden', 'true');
+                setTimeout(function () { antes.classList.remove('saliendo'); }, 650);
+                diapositivas[i].classList.add('activa');
+                diapositivas[i].removeAttribute('aria-hidden');
+                puntos.forEach(function (p, j) {
+                    p.style.setProperty('--avance', 0);
+                    if (j === i) p.setAttribute('aria-current', 'true'); else p.removeAttribute('aria-current');
+                });
+                actual = i;
+                pintarAvance();
+            }
+
+            function reloj() {
+                const ahora = performance.now();
+                if (!enPausa()) {
+                    // Tope por vuelta: si el navegador espació el reloj, no se
+                    // salta de golpe todo el tiempo que estuvo quieto.
+                    transcurrido += Math.min(ahora - ultimo, 250);
+                    if (transcurrido >= DURACION) ir(actual + 1);
+                    else pintarAvance();
+                }
+                ultimo = ahora;
+            }
+
+            puntos.forEach(function (p, j) { p.addEventListener('click', function () { ir(j); }); });
+            document.getElementById('servicios-anterior').addEventListener('click', function () { ir(actual - 1); });
+            document.getElementById('servicios-siguiente').addEventListener('click', function () { ir(actual + 1); });
+            botonPausa.addEventListener('click', function () { detenido = !detenido; transcurrido = 0; pintarPausa(); });
+
+            function pausa(motivo, si) { si ? motivos.add(motivo) : motivos.delete(motivo); pintarPausa(); }
+            carrusel.addEventListener('mouseenter', function () { pausa('cursor', true); });
+            carrusel.addEventListener('mouseleave', function () { pausa('cursor', false); });
+            carrusel.addEventListener('focusin', function () { pausa('foco', true); });
+            carrusel.addEventListener('focusout', function (e) {
+                if (!carrusel.contains(e.relatedTarget)) pausa('foco', false);
+            });
+            carrusel.addEventListener('keydown', function (e) {
+                if (e.target.closest('a')) return;
+                if (e.key === 'ArrowRight') { e.preventDefault(); ir(actual + 1); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); ir(actual - 1); }
+            });
+            new IntersectionObserver(function (entradas) {
+                pausa('fuera', !entradas[0].isIntersecting);
+            }, { threshold: 0.35 }).observe(carrusel);
+
+            // Deslizar con el dedo en el teléfono.
+            let x0 = null, y0 = null;
+            carrusel.addEventListener('touchstart', function (e) {
+                x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+            }, { passive: true });
+            carrusel.addEventListener('touchend', function (e) {
+                if (x0 === null) return;
+                const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+                if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) ir(actual + (dx < 0 ? 1 : -1));
+                x0 = null;
+            }, { passive: true });
+
+            document.addEventListener('visibilitychange', pintarPausa);
+            pintarPausa();
+            setInterval(reloj, 100);
+        })();
 
         // ── Barra de progreso y cabecera compacta ────────────
         const barra = document.querySelector('.progreso-lectura');
