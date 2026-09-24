@@ -2118,7 +2118,7 @@
             display: flex;
             gap: 18px;
             padding: 18px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, .1);
+            border-bottom: 1px solid var(--borde);
         }
         .plani-pasos li:first-child { padding-top: 0; }
         .plani-pasos li:last-child { border-bottom: 0; }
@@ -2130,19 +2130,23 @@
             justify-content: center;
             border: 1.5px solid var(--rojo-caech);
             border-radius: var(--radio);
-            color: #FFFFFF;
+            color: var(--grafito);
             font-weight: 700;
         }
-        .plani-pasos h3 { color: #FFFFFF; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-        .plani-pasos p { color: rgba(255, 255, 255, .7); font-size: 14.5px; }
+        .plani-pasos h3 { color: var(--grafito); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+        .plani-pasos p { color: var(--grafito-med); font-size: 14.5px; }
+        .section-dark .plani-pasos li { border-bottom-color: rgba(255, 255, 255, .1); }
+        .section-dark .plani-pasos h3 { color: #FFFFFF; }
+        .section-dark .plani-pasos p { color: rgba(255, 255, 255, .7); }
         .plani-entrega {
             background: #FFFFFF;
             color: var(--grafito);
             border-top: 3px solid var(--rojo-caech);
             border-radius: var(--radio);
             padding: 30px 28px;
-            box-shadow: 0 18px 40px rgba(0, 0, 0, .25);
+            box-shadow: var(--sombra-2);
         }
+        .section-dark .plani-entrega { box-shadow: 0 18px 40px rgba(0, 0, 0, .25); }
         .plani-entrega .versalitas { font-size: 11px; color: var(--rojo-caech); font-weight: 500; }
         .plani-lista { list-style: none; margin: 18px 0 20px; }
         .plani-lista li { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--borde); }
@@ -2299,7 +2303,7 @@
             box-shadow: none;
         }
         .step-number { margin: 0 auto 18px; }
-        .section-dark .step-number, .plani-num { color: #FFFFFF; }
+        .section-dark .step-number, .section-dark .plani-num { color: #FFFFFF; }
 
         /* ── 3 · Dos tamanos de titulo de tarjeta ─────────────── */
         .herramienta h3, .linea-tarjeta h3, .about-card h3, .dicat-via h3,
@@ -2591,9 +2595,12 @@
             <rect x="0" y="120" width="1440" height="180" fill="url(#ciudad-bruma)"/>
 
             <g class="capa-lejana">
-            <!-- Cordillera: Chimborazo, Carihuairazo, Tungurahua y El Altar -->
+            <!-- Cordillera: Chimborazo, Carihuairazo, Tungurahua y El Altar.
+                 Las tres capas van en colores macizos, más claros cuanto más
+                 cerca: así los edificios tapan de verdad a las montañas en vez
+                 de dejarlas transparentar. -->
             <path d="M0 300V214l120-16 100 8 110-34 90 14 70-30 60-40 70-54 70 50 60 26 40-20 30-6 40 22 120 10 60-28 40-26 18-6 28 6 40 32 70 24 30-18 18-16 14 10 16-18 14 16 20-12 36 38 60 12V300z"
-                  fill="#FFFFFF" fill-opacity=".055"/>
+                  fill="#3D4148"/>
             <path d="M590 92 620 62l33 32-12-5-11 10-12-11-11 9-9-7z" fill="#FFFFFF" fill-opacity=".42"/>
             <path d="M1084 104 1108 92l18 6 10 8-10-2-10 7-11-5-9 4z" fill="#FFFFFF" fill-opacity=".3"/>
             <path d="M1291 136l18-16 14 10 16-18 14 16-9-3-7 6-9-6-8 5-9-3z" fill="#FFFFFF" fill-opacity=".26"/>
@@ -2602,12 +2609,12 @@
             </g>
             <g class="capa-media">
             <!-- Ciudad al fondo, con ventanas encendidas -->
-            <path d="M0 284 V214 H18 V232 H57 V214 H101 V247 H136 V224 H165 V251 H200 V257 H226 V247 H261 V214 H279 V245 H316 V216 H335 V216 H373 V235 H417 V214 H461 V250 H496 V258 H523 V221 H567 V224 H610 V247 H644 V225 H663 V252 H686 V242 H708 V229 H747 V220 H789 V223 H830 V227 H854 V237 H890 V221 H931 V248 H972 V224 H997 V231 H1033 V243 H1059 V234 H1099 V221 H1132 V248 H1166 V222 H1193 V243 H1213 V234 H1249 V251 H1275 V218 H1293 V233 H1319 V226 H1359 V210 H1386 V218 H1423 V241 H1440 V284 Z" fill="#FFFFFF" fill-opacity=".06"/>
+            <path d="M0 284 V214 H18 V232 H57 V214 H101 V247 H136 V224 H165 V251 H200 V257 H226 V247 H261 V214 H279 V245 H316 V216 H335 V216 H373 V235 H417 V214 H461 V250 H496 V258 H523 V221 H567 V224 H610 V247 H644 V225 H663 V252 H686 V242 H708 V229 H747 V220 H789 V223 H830 V227 H854 V237 H890 V221 H931 V248 H972 V224 H997 V231 H1033 V243 H1059 V234 H1099 V221 H1132 V248 H1166 V222 H1193 V243 H1213 V234 H1249 V251 H1275 V218 H1293 V233 H1319 V226 H1359 V210 H1386 V218 H1423 V241 H1440 V284 Z" fill="#454950"/>
             <g class="ventanas" fill="#FFFFFF" fill-opacity=".22"><rect x="47" y="249" width="3" height="4"/><rect x="47" y="258" width="3" height="4"/><rect x="78" y="240" width="3" height="4"/><rect x="86" y="249" width="3" height="4"/><rect x="149" y="250" width="3" height="4"/><rect x="157" y="250" width="3" height="4"/><rect x="149" y="259" width="3" height="4"/><rect x="213" y="265" width="3" height="4" class="v-roja"/><rect x="247" y="273" width="3" height="4"/><rect x="266" y="240" width="3" height="4"/><rect x="308" y="253" width="3" height="4"/><rect x="308" y="262" width="3" height="4" class="v-roja"/><rect x="378" y="261" width="3" height="4"/><rect x="402" y="270" width="3" height="4"/><rect x="438" y="222" width="3" height="4"/><rect x="430" y="231" width="3" height="4" class="v-roja"/><rect x="438" y="231" width="3" height="4" class="v-roja"/><rect x="446" y="231" width="3" height="4" class="v-roja"/><rect x="446" y="258" width="3" height="4"/><rect x="454" y="267" width="3" height="4"/><rect x="466" y="258" width="3" height="4"/><rect x="482" y="267" width="3" height="4"/><rect x="501" y="266" width="3" height="4"/><rect x="509" y="266" width="3" height="4"/><rect x="560" y="265" width="3" height="4"/><rect x="588" y="241" width="3" height="4"/><rect x="631" y="264" width="3" height="4"/><rect x="623" y="273" width="3" height="4" class="v-roja"/><rect x="676" y="260" width="3" height="4"/><rect x="713" y="237" width="3" height="4" class="v-roja"/><rect x="737" y="255" width="3" height="4"/><rect x="713" y="273" width="3" height="4"/><rect x="768" y="237" width="3" height="4"/><rect x="752" y="246" width="3" height="4" class="v-roja"/><rect x="776" y="255" width="3" height="4"/><rect x="760" y="273" width="3" height="4" class="v-roja"/><rect x="768" y="273" width="3" height="4"/><rect x="818" y="249" width="3" height="4"/><rect x="802" y="267" width="3" height="4" class="v-roja"/><rect x="810" y="267" width="3" height="4"/><rect x="835" y="235" width="3" height="4" class="v-roja"/><rect x="843" y="235" width="3" height="4"/><rect x="843" y="244" width="3" height="4"/><rect x="835" y="271" width="3" height="4"/><rect x="859" y="245" width="3" height="4" class="v-roja"/><rect x="903" y="256" width="3" height="4"/><rect x="919" y="256" width="3" height="4"/><rect x="1018" y="239" width="3" height="4"/><rect x="1010" y="257" width="3" height="4" class="v-roja"/><rect x="1018" y="257" width="3" height="4"/><rect x="1002" y="266" width="3" height="4"/><rect x="1026" y="266" width="3" height="4"/><rect x="1038" y="251" width="3" height="4"/><rect x="1080" y="242" width="3" height="4"/><rect x="1072" y="260" width="3" height="4" class="v-roja"/><rect x="1104" y="247" width="3" height="4"/><rect x="1120" y="256" width="3" height="4"/><rect x="1137" y="265" width="3" height="4"/><rect x="1179" y="257" width="3" height="4"/><rect x="1198" y="269" width="3" height="4"/><rect x="1242" y="260" width="3" height="4"/><rect x="1218" y="269" width="3" height="4"/><rect x="1226" y="269" width="3" height="4"/><rect x="1280" y="253" width="3" height="4"/><rect x="1280" y="262" width="3" height="4"/><rect x="1306" y="250" width="3" height="4" class="v-roja"/><rect x="1298" y="268" width="3" height="4"/><rect x="1332" y="270" width="3" height="4" class="v-roja"/><rect x="1372" y="218" width="3" height="4"/><rect x="1372" y="227" width="3" height="4"/><rect x="1372" y="245" width="3" height="4"/><rect x="1372" y="254" width="3" height="4"/><rect x="1364" y="263" width="3" height="4"/><rect x="1415" y="226" width="3" height="4" class="v-roja"/><rect x="1391" y="235" width="3" height="4" class="v-roja"/><rect x="1407" y="235" width="3" height="4"/></g>
 
             </g>
             <!-- Frente: los hitos de Riobamba y el caserío entre ellos -->
-            <g fill="#FFFFFF" fill-opacity=".13" fill-rule="evenodd">
+            <g fill="#565A61" fill-rule="evenodd">
                 <!-- Estación del ferrocarril y el tren -->
                 <path d="M222 250 305 226l83 24zM230 250h150v34H230zM296 214h18v12h-18zM305 202l11 12h-22z
                          M244 262h10v14h-10zM264 262h10v14h-10zM336 262h10v14h-10zM356 262h10v14h-10zM294 256a11 11 0 0 1 22 0v28h-22z"/>
@@ -2659,7 +2666,7 @@
             </g>
 
             <!-- Calle y el filete rojo del isologo -->
-            <rect x="0" y="284" width="1440" height="16" fill="#FFFFFF" fill-opacity=".07"/>
+            <rect x="0" y="284" width="1440" height="16" fill="#4B4F56"/>
             <path d="M0 284.5H1440" stroke="#E31E24" stroke-opacity=".5" stroke-width="1"/>
             <path d="M0 292H1440" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="1" stroke-dasharray="14 12"/>
         </svg>
@@ -2668,7 +2675,7 @@
     <!-- ══════════════════════════════════════════════════════
          HERRAMIENTAS · lo que ofrece la plataforma
     ══════════════════════════════════════════════════════ -->
-    <section class="section" id="herramientas">
+    <section class="section section-blanca" id="herramientas">
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">Lo que ofrece la plataforma</span>
@@ -2731,59 +2738,6 @@
             <div class="hoja-ruta">
                 <span class="badge-prox">En hoja de ruta</span>
                 <p><strong>Integración BIM.</strong> Modelos de información constructiva enlazados al GeoVisor, para seguir el edificio a lo largo de su ciclo de vida.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         PLANIMETRÍA AUTOMATIZADA
-    ══════════════════════════════════════════════════════ -->
-    <section class="section section-dark" id="planimetria">
-        <div class="container">
-            <div class="section-title">
-                <span class="eyebrow">Nuevo · Planimetría automatizada</span>
-                <h2>Del levantamiento de campo al plano del predio</h2>
-                <p>Cargue los puntos de la estación total o del GNSS. La plataforma dibuja el predio, reconoce a sus colindantes en el catastro, mide las afectaciones y arma el DXF y el informe de linderación.</p>
-            </div>
-            <div class="plani-grid">
-                <ol class="plani-pasos">
-                    <li>
-                        <span class="plani-num">1</span>
-                        <div><h3>Levantamiento</h3>
-                        <p>CSV o TXT de la estación total o del GNSS, en UTM 17S o en geográficas, o un DXF con el polígono trazado.</p></div>
-                    </li>
-                    <li>
-                        <span class="plani-num">2</span>
-                        <div><h3>Análisis automático</h3>
-                        <p>Superficie y linderos en plano; afectación vial y márgenes de ríos y quebradas sobre las capas certificadas.</p></div>
-                    </li>
-                    <li>
-                        <span class="plani-num">3</span>
-                        <div><h3>Colindantes</h3>
-                        <p>Cada lindero se cruza con el catastro vigente. Si un lado tiene varios dueños, se corta en tramos, cada uno con su colindante.</p></div>
-                    </li>
-                    <li>
-                        <span class="plani-num">4</span>
-                        <div><h3>Título registral, antes y hoy</h3>
-                        <p>El certificado de gravámenes en PDF aporta propietarios y linderos de la escritura, que se comparan lado a lado con el levantamiento.</p></div>
-                    </li>
-                    <li>
-                        <span class="plani-num">5</span>
-                        <div><h3>Exportar</h3>
-                        <p>DXF y PDF con los datos del informe, el mapa de ubicación y una firma por cada titular.</p></div>
-                    </li>
-                </ol>
-                <div class="plani-entrega">
-                    <span class="versalitas">Lo que entrega</span>
-                    <ul class="plani-lista">
-                        <li><i class="fas fa-file-code"></i><div><strong>DXF R12 georreferenciado</strong><span>Predio, vértices, cotas, linderos, afectaciones y márgenes en capas separadas, en el formato que abre cualquier programa de CAD.</span></div></li>
-                        <li><i class="fas fa-file-pdf"></i><div><strong>Lámina en PDF A4 o A3</strong><span>Con el cuadro de coordenadas, el mapa de ubicación sobre imagen satelital y el cajetín de firmas.</span></div></li>
-                        <li><i class="fas fa-file-signature"></i><div><strong>Informe de linderación</strong><span>Colindante y dimensión de cada lado, frente a lo que declara el título.</span></div></li>
-                    </ul>
-                    <p class="plani-privado"><i class="fas fa-laptop"></i> El levantamiento se procesa en su navegador: los puntos del predio no se suben a ningún servidor.</p>
-                    <a href="planimetria.html" class="btn btn-lg plani-btn"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
-                    <p class="plani-acceso">Herramienta del CAE-Ch que se habilita cuenta por cuenta. Solicítela a <a href="mailto:caechoficial@gmail.com?subject=Acceso%20a%20Planimetr%C3%ADa%20automatizada&body=Nombre%3A%0AN%C3%BAmero%20de%20registro%3A">caechoficial@gmail.com</a> con su número de registro.</p>
-                </div>
             </div>
         </div>
     </section>
@@ -3082,6 +3036,59 @@
                         El DICAT es un documento técnico-informativo del CAE-CH y no reemplaza los documentos
                         oficiales del GADMR.
                     </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         PLANIMETRÍA AUTOMATIZADA
+    ══════════════════════════════════════════════════════ -->
+    <section class="section section-blanca" id="planimetria">
+        <div class="container">
+            <div class="section-title">
+                <span class="eyebrow">Nuevo · Planimetría automatizada</span>
+                <h2>Del levantamiento de campo al plano del predio</h2>
+                <p>Cargue los puntos de la estación total o del GNSS. La plataforma dibuja el predio, reconoce a sus colindantes en el catastro, mide las afectaciones y arma el DXF y el informe de linderación.</p>
+            </div>
+            <div class="plani-grid">
+                <ol class="plani-pasos">
+                    <li>
+                        <span class="plani-num">1</span>
+                        <div><h3>Levantamiento</h3>
+                        <p>CSV o TXT de la estación total o del GNSS, en UTM 17S o en geográficas, o un DXF con el polígono trazado.</p></div>
+                    </li>
+                    <li>
+                        <span class="plani-num">2</span>
+                        <div><h3>Análisis automático</h3>
+                        <p>Superficie y linderos en plano; afectación vial y márgenes de ríos y quebradas sobre las capas certificadas.</p></div>
+                    </li>
+                    <li>
+                        <span class="plani-num">3</span>
+                        <div><h3>Colindantes</h3>
+                        <p>Cada lindero se cruza con el catastro vigente. Si un lado tiene varios dueños, se corta en tramos, cada uno con su colindante.</p></div>
+                    </li>
+                    <li>
+                        <span class="plani-num">4</span>
+                        <div><h3>Título registral, antes y hoy</h3>
+                        <p>El certificado de gravámenes en PDF aporta propietarios y linderos de la escritura, que se comparan lado a lado con el levantamiento.</p></div>
+                    </li>
+                    <li>
+                        <span class="plani-num">5</span>
+                        <div><h3>Exportar</h3>
+                        <p>DXF y PDF con los datos del informe, el mapa de ubicación y una firma por cada titular.</p></div>
+                    </li>
+                </ol>
+                <div class="plani-entrega">
+                    <span class="versalitas">Lo que entrega</span>
+                    <ul class="plani-lista">
+                        <li><i class="fas fa-file-code"></i><div><strong>DXF R12 georreferenciado</strong><span>Predio, vértices, cotas, linderos, afectaciones y márgenes en capas separadas, en el formato que abre cualquier programa de CAD.</span></div></li>
+                        <li><i class="fas fa-file-pdf"></i><div><strong>Lámina en PDF A4 o A3</strong><span>Con el cuadro de coordenadas, el mapa de ubicación sobre imagen satelital y el cajetín de firmas.</span></div></li>
+                        <li><i class="fas fa-file-signature"></i><div><strong>Informe de linderación</strong><span>Colindante y dimensión de cada lado, frente a lo que declara el título.</span></div></li>
+                    </ul>
+                    <p class="plani-privado"><i class="fas fa-laptop"></i> El levantamiento se procesa en su navegador: los puntos del predio no se suben a ningún servidor.</p>
+                    <a href="planimetria.html" class="btn btn-lg plani-btn"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
+                    <p class="plani-acceso">Herramienta del CAE-Ch que se habilita cuenta por cuenta. Solicítela a <a href="mailto:caechoficial@gmail.com?subject=Acceso%20a%20Planimetr%C3%ADa%20automatizada&body=Nombre%3A%0AN%C3%BAmero%20de%20registro%3A">caechoficial@gmail.com</a> con su número de registro.</p>
                 </div>
             </div>
         </div>
@@ -3745,8 +3752,10 @@
             if (reducido || !hero || !lejana) return;
             const y = window.scrollY;
             if (y > hero.offsetHeight) return;
-            lejana.style.transform = 'translateY(' + (y * 0.16).toFixed(1) + 'px)';
-            media.style.transform = 'translateY(' + (y * 0.07).toFixed(1) + 'px)';
+            // Deriva suave y con tope: las montañas se asientan detrás de los
+            // edificios, pero nunca se hunden hasta desaparecer.
+            lejana.style.transform = 'translateY(' + Math.min(y * 0.05, 36).toFixed(1) + 'px)';
+            media.style.transform = 'translateY(' + Math.min(y * 0.02, 14).toFixed(1) + 'px)';
         }
         let pendiente = false;
         window.addEventListener('scroll', function () {
