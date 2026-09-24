@@ -84,3 +84,8 @@ npm-debug.log*
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# RESEARCH - proximidad (Linea 2, estudio 2): se versiona entera, como economia;
+# solo se deja fuera la descarga cruda de OSM (osm_red.js la vuelve a bajar).
+RESEARCH/proximidad/fuentes/
+RESEARCH/proximidad/analisis.log
