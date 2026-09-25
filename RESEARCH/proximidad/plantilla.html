@@ -78,7 +78,9 @@ section.claro .figura{background:var(--hueso)}
 .figura-cab h3{font-size:1.02rem;font-weight:700}
 .figura-cab .sub{font-size:.82rem;color:var(--grafito-med);margin-top:4px;max-width:84ch}
 .figura-cuerpo{padding:12px 12px 6px;position:relative}
-.figura svg{display:block;width:100%;height:auto}
+/* Solo las graficas propias: un `.figura svg` a secas tambien agrandaba la
+   banderita SVG que Leaflet pone en la atribucion del mapa. */
+.figura-cuerpo > svg{display:block;width:100%;height:auto}
 .figura-pie{padding:2px 22px 18px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
 .leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--grafito-med);align-items:center}
 .leyenda span{display:inline-flex;align-items:center;gap:6px}
@@ -141,7 +143,7 @@ footer a{color:rgba(255,255,255,.85)}
   .tabla-caja{padding:0 16px 16px}
   .mapa{height:440px}
   .figura-cuerpo.ancha{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .figura-cuerpo.ancha svg{min-width:640px}
+  .figura-cuerpo.ancha > svg{min-width:640px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
