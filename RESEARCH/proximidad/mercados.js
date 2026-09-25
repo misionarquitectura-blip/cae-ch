@@ -15,7 +15,9 @@ module.exports = [
   { id: 'sanfco',     nombre: 'Mercado Pedro de Lizarzaburu (San Francisco)', dir: 'Juan de Velasco, entre 10 de Agosto y Primera Constituyente', c: [-78.6470824, -1.6747904], abasto: true, osm: 'way/255867414' },
   { id: 'santarosa',  nombre: 'Mercado Santa Rosa',                      dir: 'Rocafuerte, entre Esmeraldas y Chile',  c: [-78.654105, -1.6726025], abasto: true,  osm: 'node/7498185010' },
   { id: 'davalos',    nombre: 'Mercado General Dávalos',                 dir: 'Nueva York y Vicente Rocafuerte',       c: [-78.648293, -1.6657014], abasto: true,  osm: 'node/13652792901' },
-  { id: 'oriental',   nombre: 'Mercado Oriental',                        dir: 'Av. Antonio José de Sucre',             c: [-78.6441176, -1.6661931], abasto: true, osm: 'way/82697413' },
+  // Posicion corregida por el CAE-Ch (25-09-2026): el poligono de OSM y la direccion de la prensa
+  // ("Av. Antonio Jose de Sucre") lo desplazaban. Punto medio de Espejo entre las dos esquinas.
+  { id: 'oriental',   nombre: 'Mercado Oriental «Bolívar Chiriboga»',  dir: 'Eugenio Espejo, entre Luz Elisa Borja y Av. Luis Cordovez', c: [-78.643635, -1.666525], abasto: true, osm: 'way/82697413', nota: 'ubicación verificada por el CAE-Ch' },
   { id: 'concepcion', nombre: 'Plaza de la Concepción (Plaza Roja)',     dir: 'José de Orozco, entre Juan Larrea y Cristóbal Colón', c: [-78.6480, -1.6712], abasto: true, osm: null, nota: 'posición aproximada (±50 m): no está dibujada en OSM' },
   { id: 'hierbas',    nombre: 'Plaza de las Hierbas',                    dir: 'Otto Arosemena Gómez, junto a la UNACH', c: [-78.6404224, -1.6578631], abasto: true, osm: 'way/851948372' },
   { id: 'mayorista',  nombre: 'Mercado Mayorista San Pedro de Riobamba', dir: 'Av. Leopoldo Freire y Av. Circunvalación', c: [-78.6327137, -1.6859988], abasto: true, osm: 'way/110154625', escala: 'ciudad', nota: 'mayorista: abastece a los demás mercados y también vende al detal' },

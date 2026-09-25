@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CAE-CH | Mercados lejos, calles llenas — compacidad, proximidad y movilidad en Riobamba</title>
+<title>CAE-CH | Mercados lejos, calles llenas — Línea 2, rama 2.1: mercados y abasto</title>
 <meta name="description" content="Compacidad urbana en rejilla de 200 m, distancia por calle a nueve tipos de equipamiento y modelo de los viajes de abasto a los mercados de Riobamba. Línea 2 de investigación del CAE-Ch.">
 <meta name="theme-color" content="#E31E24">
 <link rel="canonical" href="https://cae-ch.org/RESEARCH/proximidad.html">
@@ -159,7 +159,7 @@ footer a{color:rgba(255,255,255,.85)}
     </a>
     <nav class="barra-nav" aria-label="Navegación de la investigación">
       <a href="index.html" class="btn btn-sm"><i class="fa-solid fa-arrow-left"></i> Investigación</a>
-      <a href="equipamiento.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-city"></i> Línea 2 · Equipamiento</a>
+      <a href="equipamiento.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-city"></i> Línea 2 · Estudio general</a>
       <a href="investigacion.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-layer-group"></i> Línea 1</a>
       <a href="economia.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-chart-line"></i> Línea 3</a>
       <a href="../index.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-house"></i> Inicio</a>
@@ -169,13 +169,15 @@ footer a{color:rgba(255,255,255,.85)}
 
 <div class="hero">
   <div class="wrap">
-    <div class="miga"><a href="index.html">Investigación territorial</a> &nbsp;·&nbsp; Línea 2 &nbsp;·&nbsp; Equipamiento e infraestructura urbana &nbsp;·&nbsp; Estudio 2</div>
+    <div class="miga"><a href="index.html">Investigación territorial</a> &nbsp;·&nbsp; Línea 2 &nbsp;·&nbsp; Equipamiento e infraestructura urbana &nbsp;·&nbsp; Rama 2.1 · Mercados y abasto</div>
     <div class="filete-tono"></div>
     <h1>Mercados lejos, calles llenas</h1>
-    <p>Compacidad, proximidad a los equipamientos y viajes de abasto en la ciudad de Riobamba.
-       El primer estudio de la línea contó cuántos equipamientos hay frente a los que pide la norma.
-       Este mira dónde están, a cuántos metros de calle quedan de la gente y qué recorridos
-       obliga a hacer esa distancia. La unidad de análisis es una rejilla de 200 × 200 m sobre
+    <p>Esta es una <strong>rama subalterna</strong> de la línea de investigación de equipamiento e
+       infraestructura urbana. El estudio general de la línea hace el balance de todo el equipamiento
+       frente a la norma; cada rama toma un tipo de equipamiento y sigue su efecto en la ciudad. La
+       rama 2.1 estudia los mercados de abasto: dónde están, a cuántos metros de calle quedan de la
+       gente y qué recorridos obliga a hacer esa distancia. La rama 2.2 hará lo mismo con las
+       instituciones educativas, que son el equipamiento que más viajes genera cada día. La unidad de análisis es una rejilla de 200 × 200 m sobre
        el límite urbano, con la población del Censo 2022 repartida predio a predio.</p>
   </div>
 </div>
@@ -252,7 +254,7 @@ footer a{color:rgba(255,255,255,.85)}
     <h2>Qué queda a distancia caminable y qué no</h2>
     <p>Para cada vivienda se midió la distancia <strong>por la red de calles</strong> (no en línea
        recta) hasta el equipamiento más cercano de nueve tipos, y se comparó con el radio de
-       influencia que usa el primer estudio de la línea (NAU de Quito, MSP, OMS). La
+       influencia que usa el estudio general de la línea (NAU de Quito, MSP, OMS). La
        <strong>proximidad simultánea</strong> cuenta cuántos de los nueve quedan dentro de su
        radio: es la medida de Rueda de una ciudad de distancias cortas.</p>
     <p id="txt-proximidad"></p>
@@ -393,8 +395,8 @@ footer a{color:rgba(255,255,255,.85)}
 <footer>
   <div class="wrap">
     Colegio de Arquitectos del Ecuador — Provincial de Chimborazo · Investigación territorial ·
-    Línea 2 · Estudio 2 · <span id="pie-fecha"></span><br>
-    <a href="index.html">Volver al eje de investigación</a> · <a href="equipamiento.html">Estudio 1: el ser y el deber ser</a>
+    Línea 2 · Rama 2.1 · Mercados y abasto · <span id="pie-fecha"></span><br>
+    <a href="index.html">Volver al eje de investigación</a> · <a href="equipamiento.html">Estudio general de la línea: el ser y el deber ser</a>
   </div>
 </footer>
 
@@ -453,7 +455,7 @@ document.getElementById('txt-proximidad').innerHTML = `La escuela y la cancha es
   poco más de ${fmt(Math.min(S.E.simult, S.SO.simult), 0)}. Educación inicial y bienestar social salen bajos en todas partes, pero ahí pesa el
   subregistro de OpenStreetMap: son alertas para verificar en campo, no cifras firmes.`;
 
-document.getElementById('txt-mercados').innerHTML = `El primer estudio de esta línea contaba 34 mercados y
+document.getElementById('txt-mercados').innerHTML = `El estudio general de esta línea contaba 34 mercados y
   una cobertura del 189 %. Era un error de clasificación: la categoría EA del PUGS agrupa el abasto <em>y</em> los gremios, y el
   Colegio de Arquitectos, el de Abogados y otros diecisiete colegios profesionales entraban como mercados. OpenStreetMap,
   además, dibuja varios mercados dos o tres veces. Depurado contra la prensa local y la ficha de turismo del GADM, quedan
@@ -603,9 +605,10 @@ const notas = [
     espacio de estancia son los ${fmt(M.estanciaHa, 1)} ha de parques, jardines, juegos y plazas peatonales dibujados como polígono en OSM.
     Rueda cuenta además las aceras de más de 5 m, que no tienen capa en Riobamba: la compacidad corregida real es algo menor que la que
     se muestra.`],
-  ['Radios de referencia', `Son los del primer estudio de la línea (NAU de Quito, Ord. 3457; MSP, AM 5212; OMS). Todavía no se han contrastado
-    con la ordenanza del PUGS de Riobamba, que es la norma aplicable. El inventario de equipamiento es el del primer estudio, salvo los
-    mercados, que se rehicieron desde cero.`],
+  ['Radios de referencia', `Son los del estudio general de la línea (NAU de Quito, Ord. 3457; MSP, AM 5212; OMS). El Código Urbano de
+    Riobamba (Ord. 016-2023, art. 178, tabla 3) ubica los mercados entre los equipamientos de infraestructura y <strong>no les fija radio de
+    influencia</strong> ni norma por habitante, así que para ellos se mantiene el kilómetro de la NAU como referencia. El inventario es el del
+    estudio general, salvo los mercados, que se rehicieron desde cero.`],
   ['Viajes de abasto', `${M.viajesSemana} compras por hogar y semana, al mercado más cercano por calle y por el camino más corto. Es un supuesto
     declarado, no una encuesta. Las cifras absolutas escalan con él, pero las comparaciones entre sectores y el efecto de un mercado
     nuevo no dependen de él.`],
