@@ -1,0 +1,401 @@
+[
+ {
+  "amie": "06H00222",
+  "nombre": "UNIDAD EDUCATIVA LEONTIEV VIGOTSKY",
+  "parroquia": "VELOZ",
+  "estudiantes": 1453,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00112",
+  "nombre": "UNIDAD EDUCATIVA SANTA MARIANA DE JESUS",
+  "parroquia": "MALDONADO",
+  "estudiantes": 1063,
+  "sostenimiento": "Fiscomisional"
+ },
+ {
+  "amie": "06H00221",
+  "nombre": "UNIDAD EDUCATIVA THE BRITISH SCHOOL",
+  "parroquia": "MALDONADO",
+  "estudiantes": 547,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00097",
+  "nombre": "UNIDAD EDUCATIVA NUESTRO MUNDO ECO RIO",
+  "parroquia": "MALDONADO",
+  "estudiantes": 494,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01917",
+  "nombre": "UNIDAD EDUCATIVA PCEI EVEREST",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 473,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00123",
+  "nombre": "UNIDAD EDUCATIVA CRISTIANA NAZARENO",
+  "parroquia": "MALDONADO",
+  "estudiantes": 431,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00088",
+  "nombre": "UNIDAD EDUCATIVA SAN MATEO",
+  "parroquia": "MALDONADO",
+  "estudiantes": 381,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00170",
+  "nombre": "UNIDAD EDUCATIVA PENSIONADO AMERICANO INTERNATIONAL SCHOOL",
+  "parroquia": "VELASCO",
+  "estudiantes": 321,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00143",
+  "nombre": "ESCUELA DE EDUCACION BASICA SEMILLITAS",
+  "parroquia": "VELASCO",
+  "estudiantes": 235,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01425",
+  "nombre": "ESCUELA DE EDUCACION BASICA ABC",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 224,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00497",
+  "nombre": "UNIDAD EDUCATIVA NUEVO MUNDO",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 201,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00040",
+  "nombre": "ESCUELA DE EDUCACION BASICA CAPULLITOS",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 176,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00228",
+  "nombre": "UNIDAD EDUCATIVA PRINCETON",
+  "parroquia": "VELOZ",
+  "estudiantes": 168,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01775",
+  "nombre": "ESCUELA DE EDUCACION BASICA SAN PABLO",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 161,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00156",
+  "nombre": "ESCUELA DE EDUCACION BASICA SAN FRANCISCO DE ASIS",
+  "parroquia": "VELASCO",
+  "estudiantes": 119,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01933",
+  "nombre": "UNIDAD EDUCATIVA MONTESSORI",
+  "parroquia": "VELASCO",
+  "estudiantes": 100,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00140",
+  "nombre": "COLEGIO DE BACHILLERATO BERNARDO DAVALOS LEON",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 98,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00130",
+  "nombre": "UNIDAD EDUCATIVA LEONARDO DA VINCI",
+  "parroquia": "MALDONADO",
+  "estudiantes": 96,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00226",
+  "nombre": "UNIDAD EDUCATIVA AMERICAN HIGH SCHOOL",
+  "parroquia": "VELOZ",
+  "estudiantes": 96,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00238",
+  "nombre": "UNIDAD EDUCATIVA THE OXFORD GARDENS SCHOOL",
+  "parroquia": "VELOZ",
+  "estudiantes": 71,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01703",
+  "nombre": "UNIDAD EDUCATIVA PCEI JOSE MARIA VELAZ",
+  "parroquia": "VELOZ",
+  "estudiantes": 71,
+  "sostenimiento": "Fiscomisional"
+ },
+ {
+  "amie": "06H01926",
+  "nombre": "COLEGIO DE BACHILLERATO PCEI OXFORD",
+  "parroquia": "VELOZ",
+  "estudiantes": 66,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00135",
+  "nombre": "CENTRO DE EDUCACION INICIAL DR ALFONSO VILLAGOMEZ",
+  "parroquia": "MALDONADO",
+  "estudiantes": 62,
+  "sostenimiento": "Fiscal"
+ },
+ {
+  "amie": "06H01774",
+  "nombre": "CENTRO DE EDUCACION INICIAL SAFARI KIDS",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 62,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01920",
+  "nombre": "CENTRO DE EDUCACION INICIAL BABY TESLA",
+  "parroquia": "VELASCO",
+  "estudiantes": 58,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01535",
+  "nombre": "PLANETA AZUL",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 55,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00053",
+  "nombre": "UNIDAD EDUCATIVA PCEI LIBERTADOR",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 54,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01909",
+  "nombre": "CENTRO DE EDUCACION INICIAL LECHE Y MIEL",
+  "parroquia": "VELOZ",
+  "estudiantes": 47,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01931",
+  "nombre": "UNIDAD EDUCATIVA PCEI NUEVO AMANECER",
+  "parroquia": "VELASCO",
+  "estudiantes": 46,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01602",
+  "nombre": "CENTRO DE EDUCACION INICIAL PEQUEÑO PARAISO",
+  "parroquia": "VELASCO",
+  "estudiantes": 44,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01930",
+  "nombre": "CENTRO DE EDUCACION INICIAL EDUARDO KINGMAN KIDS",
+  "parroquia": "VELASCO",
+  "estudiantes": 44,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01924",
+  "nombre": "CENTRO DE EDUCACION INICIAL SORI KIDS",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 42,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00094",
+  "nombre": "ESCUELA DE EDUCACION BASICA BENJAMIN FRANKLIN SCIENCE SCHOOL",
+  "parroquia": "MALDONADO",
+  "estudiantes": 41,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01906",
+  "nombre": "COLEGIO DE BACHILLERATO MARIA MAZZARELLO",
+  "parroquia": "VELOZ",
+  "estudiantes": 39,
+  "sostenimiento": "Fiscomisional"
+ },
+ {
+  "amie": "06H00134",
+  "nombre": "UNIDAD EDUCATIVA ESPECIALIZADA SORDOS DE CHIMBORAZO",
+  "parroquia": "MALDONADO",
+  "estudiantes": 33,
+  "sostenimiento": "Fiscal"
+ },
+ {
+  "amie": "06H00061",
+  "nombre": "UNIDAD EDUCATIVA GEORGE WASHINGTON",
+  "parroquia": "VELOZ",
+  "estudiantes": 30,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00264",
+  "nombre": "CENTRO DE EDUCACION INICIAL AMIGUITOS",
+  "parroquia": "YARUQUIES",
+  "estudiantes": 30,
+  "sostenimiento": "Fiscal"
+ },
+ {
+  "amie": "06H01776",
+  "nombre": "CENTRO DE EDUCACION INICIAL PEKELANDIA",
+  "parroquia": "VELASCO",
+  "estudiantes": 29,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00050",
+  "nombre": "UNIDAD EDUCATIVA ESPECIALIZADA DR. LUIS BENAVIDES BENAVIDES",
+  "parroquia": "VELASCO",
+  "estudiantes": 27,
+  "sostenimiento": "Fiscal"
+ },
+ {
+  "amie": "06H01531",
+  "nombre": "UNIDAD EDUCATIVA EBENEZER",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 27,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01915",
+  "nombre": "CENTRO DE EDUCACION INICIAL SANTO DOMINGO DE GUZMAN",
+  "parroquia": "VELASCO",
+  "estudiantes": 22,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00069",
+  "nombre": "CENTRO DE EDUCACION INICIAL MIS PRIMEROS AMIGOS",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 21,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00154",
+  "nombre": "UNIDAD EDUCATIVA PCEI CRUZADA SOCIAL",
+  "parroquia": "VELASCO",
+  "estudiantes": 21,
+  "sostenimiento": "Fiscal"
+ },
+ {
+  "amie": "06H01907",
+  "nombre": "CENTRO DE EDUCACION INICIAL ANGEL GUARDIAN",
+  "parroquia": "VELASCO",
+  "estudiantes": 21,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01932",
+  "nombre": "CENTRO DE EDUCACION INICIAL JR. ENGLISH",
+  "parroquia": "VELASCO",
+  "estudiantes": 20,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01452",
+  "nombre": "COLEGIO DE BACHILLERATO PCEI SULTANA DE LOS ANDES",
+  "parroquia": "VELASCO",
+  "estudiantes": 19,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06B00360",
+  "nombre": "UNIDAD EDUCATIVA INTERCULTURAL BILINGÜE PCEI PACHAYACHACHIK",
+  "parroquia": "VELOZ",
+  "estudiantes": 18,
+  "sostenimiento": "Fiscomisional"
+ },
+ {
+  "amie": "06H01777",
+  "nombre": "CENTRO DE EDUCACION INICIAL PARTICULAR ESTRELLITAS DEL MAÑANA",
+  "parroquia": "VELASCO",
+  "estudiantes": 15,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01913",
+  "nombre": "COLEGIO DE BACHILLERATO PCEI MANUELITA SAENZ",
+  "parroquia": "VELASCO",
+  "estudiantes": 14,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H00009",
+  "nombre": "CENTRO DE EDUCACION INICIAL GAIA",
+  "parroquia": "VELASCO",
+  "estudiantes": 12,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01700",
+  "nombre": "CENTRO DE EDUCACION INICIAL THOMAS EDISON SCIENCE SCHOOL",
+  "parroquia": "MALDONADO",
+  "estudiantes": 12,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01911",
+  "nombre": "COLEGIO DE BACHILLERATO PCEI JOHANN HERBART",
+  "parroquia": "VELOZ",
+  "estudiantes": 12,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01918",
+  "nombre": "CENTRO DE EDUCACION INICIAL CHIKIHOUSE",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 7,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01910",
+  "nombre": "CENTRO DE EDUCACION INICIAL RIVER JUNIOR",
+  "parroquia": "LIZARZABURU",
+  "estudiantes": 5,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01927",
+  "nombre": "COLEGIO DE BACHILLERATO PCEI JOHN DEWEY",
+  "parroquia": "VELASCO",
+  "estudiantes": 5,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01935",
+  "nombre": "0",
+  "parroquia": "VELASCO",
+  "estudiantes": 5,
+  "sostenimiento": "Particular"
+ },
+ {
+  "amie": "06H01919",
+  "nombre": "CENTRO DE EDUCACION INICIAL MIS PRINCIPITOS",
+  "parroquia": "VELASCO",
+  "estudiantes": 4,
+  "sostenimiento": "Particular"
+ }
+]

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAE-CH | La escuela queda lejos de casa — Línea 2, rama 2.2: instituciones educativas</title>
+<meta name="description" content="Matrícula del Ministerio de Educación, norma del Código Urbano de Riobamba y modelo de los viajes a la escuela por la red de calles. Línea 2 de investigación del CAE-Ch, rama 2.2.">
+<meta name="theme-color" content="#E31E24">
+<link rel="canonical" href="https://cae-ch.org/RESEARCH/educacion.html">
+<meta property="og:title" content="CAE-CH | La escuela queda lejos de casa">
+<meta property="og:description" content="61 343 estudiantes, 85 % en unidades educativas grandes y dos de cada tres viajes escolares motorizados. Instituciones educativas y movilidad en Riobamba.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://cae-ch.org/RESEARCH/educacion.html">
+<meta property="og:locale" content="es_EC">
+<link rel="icon" type="image/png" href="../LOGO/favicon-caech.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="../analytics.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+/* Paleta, Montserrat y botones: caech-ui.css, enganchada al final del <head>.
+   Aqui solo lo propio de esta pagina. */
+:root{
+  --rojo-caech:#E31E24; --grafito:#2E3238; --grafito-med:#565B63;
+  --grafito-sua:#8B9098; --hueso:#F7F7F8; --blanco:#fff;
+  --borde:rgba(46,50,56,.12); --borde-marcado:rgba(46,50,56,.24);
+  --linea-2:#1E8449; --tono:var(--linea-2);
+  --dato-contexto:#C2C6CB; --dato-rejilla:#E7E8EA;
+  /* Lejos / cerca. Naranja y azul: el par calido/frio que sobrevive al
+     daltonismo, el mismo que usa la Linea 3. */
+  --lejos:#C05621; --cerca:#2563A8; --abasto:#8B9098;
+}
+body{background:var(--hueso);color:var(--grafito);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{line-height:1.22;text-wrap:balance}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+a{color:var(--rojo-caech)}
+
+header{background:var(--blanco);border-bottom:1px solid var(--borde);position:sticky;top:0;z-index:1000}
+.navbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 0}
+.logo-area{display:flex;align-items:center;text-decoration:none}
+.logo-area img{height:46px;width:auto;display:block}
+.barra-nav{display:flex;gap:8px;flex-wrap:wrap}
+
+.hero{background:linear-gradient(135deg,#17301F 0%,var(--grafito) 58%,#23262B 100%);color:#fff;padding:56px 0 50px}
+.hero .miga{font-size:.62rem;font-weight:300;text-transform:uppercase;letter-spacing:.28em;color:rgba(255,255,255,.72);margin-bottom:14px}
+.hero .miga a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3)}
+.hero .filete-tono{width:64px;height:3px;background:var(--tono);margin:0 0 20px}
+.hero h1{font-size:clamp(1.8rem,4.2vw,2.85rem);font-weight:700;color:#fff;max-width:24ch;margin-bottom:16px}
+.hero p{color:rgba(255,255,255,.82);max-width:74ch;font-size:.99rem}
+
+.titular{background:var(--blanco);border-top:3px solid var(--tono);padding:38px 0 34px;border-bottom:1px solid var(--borde)}
+.titular-caja{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:34px;align-items:center}
+.cifra-heroe{font-size:clamp(3rem,8vw,4.6rem);font-weight:700;color:var(--lejos);letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.cifra-heroe small{display:block;font-size:.72rem;font-weight:600;color:var(--grafito-med);letter-spacing:.12em;text-transform:uppercase;margin-top:12px;line-height:1.6}
+.titular p{color:var(--grafito-med);font-size:1.02rem;max-width:62ch}
+.titular p + p{margin-top:12px}
+.titular p strong{color:var(--grafito);font-weight:600}
+.mosaico{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--borde);border:1px solid var(--borde);margin-top:32px}
+.tarj{background:var(--blanco);padding:18px 20px}
+.tarj .rot{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--grafito-sua);display:block;margin-bottom:9px}
+.tarj b{font-size:1.72rem;font-weight:700;display:block;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tarj em{font-style:normal;font-size:.79rem;color:var(--grafito-med);display:block;margin-top:5px}
+
+section{padding:52px 0}
+section.claro{background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde)}
+.sec-rotulo{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--tono);display:block;margin-bottom:9px}
+section h2{font-size:clamp(1.35rem,2.8vw,1.85rem);font-weight:700;max-width:30ch;margin-bottom:12px}
+section > .wrap > p{color:var(--grafito-med);max-width:76ch;font-size:.96rem}
+section > .wrap > p + p{margin-top:12px}
+section p strong{color:var(--grafito);font-weight:600}
+
+.figura{background:var(--blanco);border:1px solid var(--borde);margin-top:28px}
+section.claro .figura{background:var(--hueso)}
+.figura-cab{padding:18px 22px 0}
+.figura-cab h3{font-size:1.02rem;font-weight:700}
+.figura-cab .sub{font-size:.82rem;color:var(--grafito-med);margin-top:4px;max-width:84ch}
+.figura-cuerpo{padding:12px 12px 6px;position:relative}
+/* Solo las graficas propias: un `.figura svg` a secas tambien agrandaba la
+   banderita SVG que Leaflet pone en la atribucion del mapa. */
+.figura-cuerpo > svg{display:block;width:100%;height:auto}
+.figura-pie{padding:2px 22px 18px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--grafito-med);align-items:center}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:14px;height:14px;display:block;flex-shrink:0;border:1px solid rgba(0,0,0,.08)}
+.leyenda i.pt{border-radius:50%}
+.ver-tabla{background:none;border:1px solid var(--borde);color:var(--grafito-med);font-size:.74rem;font-weight:600;
+  padding:.5em 1em;cursor:pointer;letter-spacing:.05em;font-family:inherit;border-radius:4px}
+.ver-tabla:hover{border-color:var(--grafito-sua);color:var(--grafito)}
+.ver-tabla:focus-visible,.pestanas button:focus-visible{outline:2px solid var(--tono);outline-offset:2px}
+
+/* Mapa y pestañas de capa */
+.pestanas{display:flex;gap:6px;flex-wrap:wrap;padding:14px 22px 0}
+.pestanas button{font-family:inherit;font-size:.76rem;font-weight:600;padding:.5em .95em;border-radius:4px;cursor:pointer;
+  background:var(--blanco);border:1px solid var(--borde-marcado);color:var(--grafito-med)}
+.pestanas button[aria-pressed="true"]{background:var(--tono);border-color:var(--tono);color:#fff}
+.mapa{height:560px;background:#e9eaec}
+.mapa-nota{font-size:.8rem;color:var(--grafito-med);padding:10px 22px 0;max-width:90ch;min-height:2.6em}
+.leaflet-container{font-family:'Montserrat',system-ui,sans-serif}
+.leaflet-tooltip.globo-mapa{font-size:.76rem;line-height:1.5;padding:8px 11px;border-radius:4px}
+
+.rejilla{stroke:var(--dato-rejilla);stroke-width:1}
+.eje-txt{font-size:11px;fill:var(--grafito-sua);font-variant-numeric:tabular-nums}
+.etiq{font-size:11.5px;font-weight:600;fill:var(--grafito-med)}
+.etiq.destacada{fill:var(--grafito);font-weight:700}
+.val{font-size:11px;fill:var(--grafito-med);font-variant-numeric:tabular-nums}
+
+.tabla-caja{overflow-x:auto;padding:0 22px 20px}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--borde);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--grafito-sua);font-weight:600;border-bottom:1.5px solid var(--borde-marcado)}
+td{font-variant-numeric:tabular-nums;color:var(--grafito-med)}
+tr.mia td{background:rgba(192,86,33,.08);color:var(--grafito);font-weight:600}
+tr.mia td:first-child{box-shadow:inset 3px 0 0 var(--lejos)}
+td.mal{color:var(--lejos);font-weight:600} td.bien{color:var(--cerca)}
+td.celda-calor{color:var(--grafito);text-align:center}
+[hidden]{display:none!important}
+
+.notas{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px;margin-top:28px}
+.nota{background:var(--blanco);border:1px solid var(--borde);border-left:3px solid var(--tono);padding:20px 22px}
+section.claro .nota{background:var(--hueso)}
+.nota.alerta{border-left-color:var(--lejos)}
+.nota h4{font-size:.94rem;font-weight:700;margin-bottom:8px}
+.nota p{font-size:.86rem;color:var(--grafito-med)}
+.nota p + p{margin-top:9px}
+.nota strong{color:var(--grafito);font-weight:600}
+
+.fuente-pie{margin-top:30px;font-size:.8rem;color:var(--grafito-sua);border-top:1px solid var(--borde);padding-top:18px;max-width:92ch}
+.fuente-pie a{color:var(--grafito-med)}
+footer{background:var(--grafito);color:rgba(255,255,255,.62);padding:32px 0;font-size:.82rem;text-align:center}
+footer a{color:rgba(255,255,255,.85)}
+
+@media (max-width:760px){
+  .wrap{padding:0 16px}
+  section{padding:40px 0}
+  .figura-pie{padding:2px 16px 16px}
+  .figura-cab{padding:16px 16px 0}
+  .pestanas{padding:12px 16px 0}
+  .mapa-nota{padding:10px 16px 0}
+  .tabla-caja{padding:0 16px 16px}
+  .mapa{height:440px}
+  .figura-cuerpo.ancha{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .figura-cuerpo.ancha > svg{min-width:640px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="stylesheet" href="../caech-ui.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap navbar">
+    <a href="../index.html" class="logo-area">
+      <img src="../LOGO/logo-caech.png" width="520" height="188"
+           alt="CAE-Ch · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo">
+    </a>
+    <nav class="barra-nav" aria-label="Navegación de la investigación">
+      <a href="index.html" class="btn btn-sm"><i class="fa-solid fa-arrow-left"></i> Investigación</a>
+      <a href="equipamiento.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-city"></i> Línea 2 · Estudio general</a>
+      <a href="proximidad.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-route"></i> Rama 2.1 · Mercados</a>
+      <a href="../index.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-house"></i> Inicio</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="miga"><a href="index.html">Investigación territorial</a> &nbsp;·&nbsp; Línea 2 &nbsp;·&nbsp; Equipamiento e infraestructura urbana &nbsp;·&nbsp; Rama 2.2 · Instituciones educativas</div>
+    <div class="filete-tono"></div>
+    <h1>La escuela queda lejos de casa</h1>
+    <p>Esta es una <strong>rama subalterna</strong> de la línea de investigación de equipamiento e
+       infraestructura urbana, como la de <a href="proximidad.html" style="color:#fff">mercados y abasto</a>.
+       Estudia las instituciones educativas porque son el equipamiento que más viajes genera: cada mañana
+       de clases decenas de miles de estudiantes salen a la misma hora hacia unos pocos destinos. La matrícula
+       viene del Registro Administrativo del Ministerio de Educación. La norma es la del Código Urbano de
+       Riobamba, y la población y la red de calles son las mismas de la rama 2.1.</p>
+  </div>
+</div>
+
+<div class="titular">
+  <div class="wrap">
+    <div class="titular-caja">
+      <div class="cifra-heroe" id="heroe">—<small>Distancia media estimada por calle<br>entre la casa y la escuela</small></div>
+      <div id="titular-texto"></div>
+    </div>
+    <div class="mosaico" id="mosaico"></div>
+  </div>
+</div>
+
+<!-- ── 1 · La oferta ──────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">01 · La oferta</span>
+    <h2>Pocas escuelas de barrio y muchas unidades educativas grandes</h2>
+    <p id="txt-oferta"></p>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Instituciones y matrícula por tipo, frente al Código Urbano</h3>
+        <p class="sub">Área urbana del cantón Riobamba, año lectivo <span class="anio"></span>. EE1 y EE2 son las
+           tipologías del art. 178 del Código Urbano (Ord. 016-2023).</p>
+      </div>
+      <div class="tabla-caja" id="tabla-oferta" style="padding-top:14px"></div>
+    </div>
+    <div class="figura" id="fig-serie">
+      <div class="figura-cab">
+        <h3>Matrícula en las instituciones urbanas, 2009-2024</h3>
+        <p class="sub">Estudiantes al inicio de cada año lectivo. El año 2022-2023 no se dibuja: la fuente trae ese
+           año con decimales y un tercio de la matrícula, un error evidente del archivo.</p>
+      </div>
+      <div class="figura-cuerpo ancha" id="svg-serie"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 2 · Proximidad ─────────────────────────────────────────── -->
+<section class="claro">
+  <div class="wrap">
+    <span class="sec-rotulo">02 · Proximidad</span>
+    <h2>Se cumple el radio zonal, no el barrial</h2>
+    <p id="txt-proximidad"></p>
+    <div class="figura" id="fig-mapa1">
+      <div class="figura-cab">
+        <h3>Distancia por calle a la escuela</h3>
+        <p class="sub">Celdas de 200 m con residentes de 3 a 17 años. Los círculos son las instituciones ubicadas,
+           con un tamaño según su matrícula. Pase el cursor o toque para ver los valores.</p>
+      </div>
+      <div class="pestanas" role="group" aria-label="Capa del mapa">
+        <button type="button" id="e1-min" data-capa="dMin" aria-pressed="true">Escuela más cercana</button>
+        <button type="button" id="e1-ee2" data-capa="dEE2" aria-pressed="false">Unidad educativa más cercana</button>
+        <button type="button" id="e1-esp" data-capa="dEsp" aria-pressed="false">Recorrido estimado</button>
+        <button type="button" id="e1-fl" data-capa="flujos" aria-pressed="false">Viajes de la mañana</button>
+      </div>
+      <p class="mapa-nota" id="e1-nota"></p>
+      <div class="figura-cuerpo"><div class="mapa" id="mapa1" role="img" aria-label="Mapa de distancias a la escuela y viajes escolares"></div></div>
+      <div class="figura-pie"><div class="leyenda" id="e1-leyenda"></div></div>
+    </div>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Sector por sector</h3>
+        <p class="sub">Residentes de 3 a 17 años, instituciones ubicadas y su matrícula. «Plazas por residente» mayor que 1
+           significa que el sector recibe estudiantes de otros; menor que 1, que los manda fuera.</p>
+      </div>
+      <div class="tabla-caja" id="tabla-sectores" style="padding-top:14px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 3 · Movilidad ──────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">03 · Movilidad</span>
+    <h2>Las mismas avenidas, a la misma hora</h2>
+    <p id="txt-movilidad"></p>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Las calles que cargan el viaje a la escuela</h3>
+        <p class="sub">Estudiantes × kilómetro por calle en el viaje de ida, según el modelo. En naranja, las calles
+           que también están entre las más cargadas por los viajes a los mercados (rama 2.1).</p>
+      </div>
+      <div class="figura-cuerpo ancha" id="svg-corredores"></div>
+      <div class="figura-pie"><div class="leyenda">
+        <span><i style="background:var(--lejos)"></i> También corredor de abasto</span>
+        <span><i style="background:var(--tono)"></i> Solo escolar</span></div></div>
+    </div>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Quién sale y quién recibe</h3>
+        <p class="sub">Estudiantes residentes que, según el modelo, estudian en otro sector (salen) y estudiantes de
+           otros sectores que llegan a sus escuelas (entran). No incluye a los que vienen de fuera del área urbana.</p>
+      </div>
+      <div class="figura-cuerpo ancha" id="svg-balance"></div>
+      <div class="figura-pie"><div class="leyenda">
+        <span><i style="background:var(--lejos)"></i> Salen del sector</span>
+        <span><i style="background:var(--cerca)"></i> Entran al sector</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4 · Pendientes ─────────────────────────────────────────── -->
+<section class="claro">
+  <div class="wrap">
+    <span class="sec-rotulo">04 · Lo que falta ubicar</span>
+    <h2>Instituciones del registro que todavía no están en el mapa</h2>
+    <p id="txt-sin"></p>
+    <div class="figura">
+      <div class="tabla-caja" id="tabla-sin" style="padding-top:14px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 5 · Método ─────────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">05 · Método y límites</span>
+    <h2>Cómo se hizo, y dónde puede fallar</h2>
+    <div class="notas" id="notas-metodo"></div>
+    <p class="fuente-pie" id="fuentes"></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Colegio de Arquitectos del Ecuador — Provincial de Chimborazo · Investigación territorial ·
+    Línea 2 · Rama 2.2 · Instituciones educativas · <span id="pie-fecha"></span><br>
+    <a href="index.html">Volver al eje de investigación</a> · <a href="equipamiento.html">Estudio general de la línea</a> · <a href="proximidad.html">Rama 2.1: mercados y abasto</a>
+  </div>
+</footer>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('datos').textContent);
+const M = D.meta, C = D.ciudad;
+const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString('es-EC', { minimumFractionDigits: d, maximumFractionDigits: d });
+const km = m => fmt(m / 1000, 1) + ' km';
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const S = Object.fromEntries(D.sectores.map(s => [s.id, s]));
+const NOMBRE_SECTOR = { Centro: 'Centro', N: 'Norte', NE: 'Noreste', E: 'Este', SE: 'Sureste', S: 'Sur', SO: 'Suroeste', O: 'Oeste', NO: 'Noroeste' };
+const ORDEN = ['Centro', 'N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+const clase = Object.fromEntries(D.porClase.map(c => [c.clase, c]));
+const ee = n => D.porClase.filter(c => c.norma === n);
+const nEE1 = ee('EE1').reduce((a, c) => a + c.n, 0), nEE2 = ee('EE2').reduce((a, c) => a + c.n, 0);
+const mEE2 = ee('EE2').reduce((a, c) => a + c.estudiantes, 0);
+const reqEE1 = Math.ceil(M.poblacion / 1000), reqEE2 = Math.ceil(M.poblacion / 10000);
+const externos = M.matriculaOrdinaria - M.edadEscolar;
+const sens = D.sensibilidad;
+document.querySelectorAll('.anio').forEach(e => e.textContent = M.anioLectivo.replace(' Inicio', ''));
+
+/* ── Titular ─────────────────────────────────────────── */
+document.getElementById('heroe').firstChild.textContent = km(C.dMedia);
+document.getElementById('titular-texto').innerHTML = `
+  <p>Las ${fmt(M.instituciones)} instituciones educativas del área urbana tienen <strong>${fmt(M.matricula)} estudiantes</strong>.
+     En la ciudad viven unos ${fmt(M.edadEscolar)} niños y adolescentes de 3 a 17 años. La diferencia, <strong>al menos
+     ${fmt(externos)} estudiantes</strong>, llega cada mañana desde las parroquias rurales y los cantones vecinos.</p>
+  <p>Los que viven en la ciudad tampoco estudian cerca. Según el modelo, el <strong>${fmt(C.pctMotor, 0)} %</strong> de sus viajes
+     pasa de 1,5 km, la distancia a partir de la cual la escuela deja de ir a pie. Casi todos esos recorridos entran por las
+     mismas avenidas que llevan la compra a los mercados.</p>`;
+const tarj = [
+  ['Estudiantes en la ciudad', fmt(M.matricula), `${fmt(M.docentes)} docentes en ${fmt(M.instituciones)} instituciones`],
+  ['Llegan de fuera, como mínimo', fmt(externos), `el ${fmt(externos / M.matriculaOrdinaria * 100, 0)} % de la matrícula ordinaria`],
+  ['En unidades educativas (EE2)', fmt(mEE2 / M.matricula * 100, 0) + ' %', `de la matrícula; ${fmt(nEE2)} instituciones de ${fmt(M.instituciones)}`],
+  ['Escuela a menos de 400 m', fmt(C.pct400, 0) + ' %', 'de los residentes de 3 a 17 años (radio EE1)'],
+  ['Viaje escolar motorizado', fmt(C.pctMotor, 0) + ' %', `entre ${fmt(sens[0].pctMotor, 0)} y ${fmt(sens[1].pctMotor, 0)} % según el supuesto de elección`]
+];
+document.getElementById('mosaico').innerHTML = tarj.map(([r, b, e]) => `<div class="tarj"><span class="rot">${r}</span><b>${b}</b><em>${e}</em></div>`).join('');
+
+/* ── 1 · Oferta ─────────────────────────────────────── */
+document.getElementById('txt-oferta').innerHTML = `El Código Urbano distingue dos escalas. La <strong>EE1</strong> es la escuela de barrio (nivel básico
+  y preescolar): una por cada 1 000 habitantes, a no más de 400 m. La <strong>EE2</strong> es el colegio o la unidad educativa:
+  una por cada 10 000 habitantes, a 2 km. Con ${fmt(M.poblacion)} habitantes, la norma pide ${fmt(reqEE1)} EE1 y ${fmt(reqEE2)} EE2.
+  Hay <strong>${fmt(nEE1)} EE1 y ${fmt(nEE2)} EE2</strong>. Es el resultado de la política de unidades educativas, que fusionó
+  escuelas pequeñas en planteles grandes con todos los niveles. Hoy el ${fmt(mEE2 / M.matricula * 100, 0)} % de los estudiantes va a
+  una EE2, y ${fmt([...D.escuelas, ...D.sinUbicar].filter(x => x.estudiantes >= 3000).length)} planteles superan los 3 000 alumnos. Un plantel de ese tamaño es un generador de tráfico,
+  no un equipamiento de barrio.`;
+const NOM_CLASE = { inicial: 'Centro de educación inicial', basica: 'Escuela de educación básica', sin_dato: 'Sin nivel en el nombre',
+  unidad: 'Unidad educativa', bachillerato: 'Colegio de bachillerato', pcei: 'Educación para jóvenes y adultos (PCEI)', especial: 'Educación especial' };
+document.getElementById('tabla-oferta').innerHTML = `<table><thead><tr><th>Tipo</th><th>Norma</th><th>Instituciones</th><th>Estudiantes</th><th>Estudiantes por institución</th></tr></thead><tbody>
+  ${D.porClase.slice().sort((a, b) => a.norma.localeCompare(b.norma) || b.estudiantes - a.estudiantes).map(c => `<tr><td>${NOM_CLASE[c.clase]}</td><td style="text-align:left">${c.norma}</td><td>${fmt(c.n)}</td><td>${fmt(c.estudiantes)}</td><td>${fmt(c.estudiantes / c.n)}</td></tr>`).join('')}
+  <tr class="mia"><td>EE1 existentes / que pide la norma</td><td style="text-align:left">EE1</td><td>${fmt(nEE1)} / ${fmt(reqEE1)}</td><td colspan="2" class="mal">${fmt(nEE1 / reqEE1 * 100, 0)} % de la norma</td></tr>
+  <tr><td>EE2 existentes / que pide la norma</td><td style="text-align:left">EE2</td><td>${fmt(nEE2)} / ${fmt(reqEE2)}</td><td colspan="2" class="bien">${fmt(nEE2 / reqEE2 * 100, 0)} % de la norma</td></tr>
+  </tbody></table>
+  <p style="font-size:.8rem;color:var(--grafito-med);margin-top:10px">Por sostenimiento: ${D.porSostenimiento.map(s => `${s.sost.toLowerCase()}, ${fmt(s.n)} instituciones y ${fmt(s.estudiantes)} estudiantes`).join('; ')}.</p>`;
+
+const NS = 'http://www.w3.org/2000/svg';
+function svg(w, h, label) { const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('role', 'img'); s.setAttribute('aria-label', label); return s; }
+function el(tag, at, txt) { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; return e; }
+
+(function serie() {
+  const P = D.serie.filter(s => !s.anomalo), W = 900, H = 300, x0 = 60, x1 = W - 30, y0 = 20, y1 = H - 40;
+  const max = 70000, n = D.serie.length;
+  const s = svg(W, H, 'Matrícula urbana por año lectivo');
+  const X = a => x0 + D.serie.findIndex(z => z.anio === a) / (n - 1) * (x1 - x0), Y = v => y1 - v / max * (y1 - y0);
+  for (let v = 0; v <= max; v += 10000) s.append(el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), class: 'rejilla' }), el('text', { x: x0 - 8, y: Y(v) + 4, 'text-anchor': 'end', class: 'eje-txt' }, fmt(v)));
+  D.serie.forEach((z, i) => { if (i % 3 === 0 || i === n - 1) s.append(el('text', { x: X(z.anio), y: y1 + 18, 'text-anchor': 'middle', class: 'eje-txt' }, z.anio)); });
+  // Dos tramos: el hueco de 2022-2023 no se une.
+  const tramo = L => L.map((z, i) => `${i ? 'L' : 'M'}${X(z.anio)},${Y(z.urbana)}`).join('');
+  const k = P.findIndex(z => z.anio > '2022');
+  s.append(el('path', { d: tramo(P.slice(0, k)), fill: 'none', stroke: css('--tono'), 'stroke-width': 2.5 }));
+  s.append(el('path', { d: tramo(P.slice(k - 1)), fill: 'none', stroke: css('--tono'), 'stroke-width': 2.5, 'stroke-dasharray': '5 5' }));
+  P.forEach(z => s.append(el('circle', { cx: X(z.anio), cy: Y(z.urbana), r: 3.5, fill: css('--tono') })));
+  const pico = P.reduce((a, b) => b.urbana > a.urbana ? b : a), ult = P[P.length - 1];
+  s.append(el('text', { x: X(pico.anio), y: Y(pico.urbana) - 10, 'text-anchor': 'middle', class: 'val' }, `${fmt(pico.urbana)} (${pico.anio})`));
+  s.append(el('text', { x: X(ult.anio) - 4, y: Y(ult.urbana) + 20, 'text-anchor': 'end', class: 'val' }, `${fmt(ult.urbana)} (${ult.anio})`));
+  document.getElementById('svg-serie').append(s);
+})();
+
+/* ── 2 · Proximidad ─────────────────────────────────── */
+const dMinCiudad = D.sectores.reduce((a, s) => a + s.dMin * s.ninos, 0) / D.sectores.reduce((a, s) => a + s.ninos, 0);
+const peor = D.sectores.slice().sort((a, b) => a.pct400 - b.pct400);
+document.getElementById('txt-proximidad').innerHTML = `El radio zonal se cumple casi en toda la ciudad: el <strong>${fmt(C.pctEE2, 0)} %</strong> de los residentes de
+  3 a 17 años tiene una unidad educativa a menos de 2 km por calle. El barrial no: solo el <strong>${fmt(C.pct400, 0)} %</strong> tiene
+  alguna institución a 400 m, y en el ${NOMBRE_SECTOR[peor[0].id].toLowerCase()}, el ${NOMBRE_SECTOR[peor[1].id].toLowerCase()} y el
+  ${NOMBRE_SECTOR[peor[2].id].toLowerCase()} la cifra baja a ${fmt(peor[0].pct400, 0)}, ${fmt(peor[1].pct400, 0)} y ${fmt(peor[2].pct400, 0)} %.
+  Pero la escuela más cercana no es, por lo general, a la que se va. Con el modelo de elección, el recorrido medio es de
+  <strong>${km(C.dMedia)}</strong>, ${fmt(C.dMedia / dMinCiudad, 0)} veces la distancia a la escuela más cercana (${fmt(dMinCiudad)} m). En el noroeste llega a ${km(S.NO.dEsperada)}: allí viven
+  ${fmt(S.NO.ninos)} niños y adolescentes y hay ${fmt(S.NO.plazasPorNino, 2)} plazas por cada uno.`;
+document.getElementById('tabla-sectores').innerHTML = `<table><thead><tr><th>Sector</th><th>Residentes 3-17</th><th>Instituciones (EE1 / EE2)</th><th>Matrícula</th>
+  <th>Plazas por residente</th><th>Con escuela a 400 m</th><th>Escuela más cercana (m)</th><th>Recorrido estimado (m)</th></tr></thead><tbody>
+  ${ORDEN.map(id => { const d = S[id]; return `<tr class="${id === 'NO' ? 'mia' : ''}"><td>${NOMBRE_SECTOR[id]}</td><td>${fmt(d.ninos)}</td><td>${d.escuelas} (${d.ee1} / ${d.ee2})</td>
+    <td>${fmt(d.matricula)}</td><td class="${d.plazasPorNino < 1 ? 'mal' : 'bien'}">${fmt(d.plazasPorNino, 2)}</td><td class="${d.pct400 < 20 ? 'mal' : ''}">${fmt(d.pct400, 0)} %</td>
+    <td>${fmt(d.dMin)}</td><td>${fmt(d.dEsperada)}</td></tr>`; }).join('')}</tbody></table>`;
+
+/* ── 3 · Movilidad ─────────────────────────────────── */
+const comunes = D.corredores.filter(c => c.tambienAbasto).length;
+const motor = Math.round(M.edadEscolar * C.pctMotor / 100);
+document.getElementById('txt-movilidad').innerHTML = `Si el ${fmt(C.pctMotor, 0)} % de los viajes escolares urbanos pasa de 1,5 km, son unos
+  <strong>${fmt(motor)} estudiantes en bus, taxi o auto</strong> cada mañana de clases, más los ${fmt(externos)} que llegan de fuera, y casi todos
+  en la misma media hora antes de la entrada. El modelo reparte esos viajes por la red. ${comunes} de las 12 calles más cargadas por la escuela también están entre
+  las más cargadas por los viajes a los mercados. La Avenida José A. Lizarzaburu, la Pedro Vicente Maldonado, la Canónigo Ramos, la 9 de Octubre y
+  la Daniel León Borja reciben las dos demandas. El centro recibe ${fmt(S.Centro.entran)} estudiantes de otros sectores. El noroeste manda fuera
+  a ${fmt(S.NO.salen)}. El este, con ${fmt(S.E.plazasPorNino, 1)} plazas por residente (Carlos Cisneros y Juan de Velasco), es el mayor
+  receptor relativo.`;
+(function corredores() {
+  const L = D.corredores.slice(0, 12), W = 900, fila = 28, H = L.length * fila + 30, x0 = 260, x1 = W - 70;
+  const max = Math.ceil(Math.max(...L.map(c => c.estudianteKm)) / 1000) * 1000;
+  const s = svg(W, H, 'Estudiantes por kilómetro por calle');
+  for (let v = 0; v <= max; v += 1000) { const x = x0 + v / max * (x1 - x0); s.append(el('line', { x1: x, x2: x, y1: 4, y2: H - 22, class: 'rejilla' }), el('text', { x, y: H - 6, 'text-anchor': 'middle', class: 'eje-txt' }, fmt(v))); }
+  L.forEach((c, i) => {
+    const y = 6 + i * fila, w = c.estudianteKm / max * (x1 - x0);
+    s.append(el('text', { x: x0 - 10, y: y + 13, 'text-anchor': 'end', class: 'etiq' }, c.nombre.replace(/^Avenida /, 'Av. ')));
+    s.append(el('rect', { x: x0, y, width: w, height: 18, fill: c.tambienAbasto ? css('--lejos') : css('--tono') }));
+    s.append(el('text', { x: x0 + w + 6, y: y + 13, class: 'val' }, fmt(c.estudianteKm)));
+  });
+  document.getElementById('svg-corredores').append(s);
+})();
+(function balance() {
+  const W = 900, fila = 30, H = ORDEN.length * fila + 34, xc = 450, esc = 380 / Math.max(...D.sectores.map(s => Math.max(s.salen, s.entran)));
+  const s = svg(W, H, 'Estudiantes que salen y entran por sector');
+  s.append(el('line', { x1: xc, x2: xc, y1: 2, y2: H - 22, stroke: css('--grafito-sua') }));
+  s.append(el('text', { x: xc - 8, y: H - 6, 'text-anchor': 'end', class: 'eje-txt' }, '← salen'), el('text', { x: xc + 8, y: H - 6, class: 'eje-txt' }, 'entran →'));
+  ORDEN.forEach((id, i) => {
+    const d = S[id], y = 4 + i * fila;
+    s.append(el('rect', { x: xc - d.salen * esc, y, width: d.salen * esc, height: 20, fill: css('--lejos') }));
+    s.append(el('rect', { x: xc, y, width: d.entran * esc, height: 20, fill: css('--cerca') }));
+    s.append(el('text', { x: xc - d.salen * esc - 6, y: y + 14, 'text-anchor': 'end', class: 'val' }, `${NOMBRE_SECTOR[id]} · ${fmt(d.salen)}`));
+    s.append(el('text', { x: xc + d.entran * esc + 6, y: y + 14, class: 'val' }, fmt(d.entran)));
+  });
+  document.getElementById('svg-balance').append(s);
+})();
+
+/* ── 4 · Sin ubicar ─────────────────────────────────── */
+const mSin = D.sinUbicar.reduce((a, x) => a + x.estudiantes, 0);
+document.getElementById('txt-sin').innerHTML = `El registro del Ministerio no trae coordenadas. Las instituciones se ubicaron cruzando su nombre con OpenStreetMap
+  y su geocodificador. Quedan <strong>${fmt(D.sinUbicar.length)} sin ubicar, con ${fmt(mSin)} estudiantes</strong>, el
+  ${fmt(mSin / M.matricula * 100, 0)} % de la matrícula. Están en las cifras de oferta (sección 01), pero no en el mapa ni en el modelo
+  de viajes. Casi todas son particulares o PCEI. Para completarlas basta anotar sus coordenadas en
+  <code>RESEARCH/educacion/ubicaciones_manual.json</code> y volver a correr el análisis.`;
+document.getElementById('tabla-sin').innerHTML = `<table><thead><tr><th>Institución</th><th>Código AMIE</th><th>Parroquia</th><th>Sostenimiento</th><th>Estudiantes</th></tr></thead><tbody>
+  ${D.sinUbicar.slice(0, 20).map(x => `<tr><td>${x.nombre}</td><td style="text-align:left">${x.amie}</td><td style="text-align:left">${x.parroquia}</td><td style="text-align:left">${x.sostenimiento}</td><td>${fmt(x.estudiantes)}</td></tr>`).join('')}
+  ${D.sinUbicar.length > 20 ? `<tr><td colspan="4">Otras ${D.sinUbicar.length - 20} instituciones</td><td>${fmt(D.sinUbicar.slice(20).reduce((a, x) => a + x.estudiantes, 0))}</td></tr>` : ''}</tbody></table>`;
+
+/* ── 5 · Método ─────────────────────────────────────── */
+const notas = [
+  ['Matrícula', `Registro Administrativo Histórico del MINEDUC, corte «Inicio» del año lectivo ${M.anioLectivo.replace(' Inicio', '')}, área urbana del cantón.
+    El nivel (EE1 o EE2) se deduce del nombre oficial, que el Ministerio normaliza: «Centro de educación inicial» y «Escuela de educación
+    básica» son EE1; «Unidad educativa», «Colegio de bachillerato», educación especial y PCEI son EE2, como dice el art. 178.`],
+  ['Residentes en edad escolar', `${fmt(M.ninos311)} de 3 a 11 años (nueve doceavos del grupo de 0 a 11 del censo) y ${fmt(M.adol1217)} de 12 a 17, repartidos por
+    la ciudad como la población de la rama 2.1. Se supone que todos estudian, así que los ${fmt(externos)} que llegan de fuera son un mínimo.`],
+  ['Modelo de elección', `Cada residente se reparte entre las escuelas ubicadas en proporción a su matrícula y a e<sup>−d/L</sup>, con d por calle y
+    L = ${fmt(M.L)} m (el radio EE2). Con L = ${fmt(sens[0].L)} m el recorrido medio baja a ${km(sens[0].dMedia)} y el viaje motorizado al ${fmt(sens[0].pctMotor, 0)} %.
+    Con L = ${fmt(sens[1].L)} m sube a ${km(sens[1].dMedia)} y ${fmt(sens[1].pctMotor, 0)} %. Sin encuesta origen-destino no se puede calibrar: el rango es la
+    incertidumbre real.`],
+  ['Lo que el modelo no ve', `Las rutas escolares, el bus urbano (sin datos en OSM), las jornadas vespertinas y los estudiantes que llegan de fuera
+    del área urbana. Tampoco distingue la escuela del colegio dentro de una misma unidad educativa: un niño de 6 años y uno de 17
+    eligen igual.`],
+  ['Norma', `Código Urbano de Riobamba, Ord. 016-2023, art. 178, tabla 3: EE1 barrial 400 m, 0,80 m²/hab, lote mínimo 800 m², 1 000 hab;
+    EE2 zonal 2 000 m, 1,00 m²/hab, lote mínimo 10 000 m², 10 000 hab.`]
+];
+document.getElementById('notas-metodo').innerHTML = notas.map(([h, p]) => `<div class="nota"><h4>${h}</h4><p>${p}</p></div>`).join('');
+document.getElementById('fuentes').innerHTML = `Fuentes: Ministerio de Educación, <a href="https://www.datosabiertos.gob.ec/dataset/registro-de-matricula-mineduc" target="_blank" rel="noopener">Registro
+  Administrativo Histórico 2009-2024</a> (datosabiertos.gob.ec); GAD Municipal de Riobamba, Código Urbano, Ordenanza 016-2023 (Registro Oficial
+  Edición Especial 885, 23-05-2023); INEC, Censo de Población y Vivienda 2022; catastro del GADM Riobamba (1 sep 2026); red de calles y ubicación
+  de escuelas © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a> (ODbL). Análisis
+  reproducible en <code>RESEARCH/educacion/</code>.`;
+document.getElementById('pie-fecha').textContent = 'datos al ' + M.generado.split('-').reverse().join('-');
+
+/* ── Mapa ───────────────────────────────────────────── */
+const mapa = L.map('mapa1', { preferCanvas: true, scrollWheelZoom: false }).setView([-1.662, -78.656], 13);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19, maxNativeZoom: 16, attribution: 'Base © Esri · Datos © OpenStreetMap, MINEDUC, GADM Riobamba, INEC' }).addTo(mapa);
+L.geoJSON(D.limite, { style: { color: css('--grafito'), weight: 1.5, fill: false }, interactive: false }).addTo(mapa);
+const encuadrar = () => { mapa.invalidateSize(); mapa.fitBounds(L.geoJSON(D.limite).getBounds(), { padding: [10, 10], maxZoom: 14 }); };
+encuadrar();
+if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { encuadrar(); io.disconnect(); } }); io.observe(document.getElementById('mapa1')); }
+const RAMPA = ['#2563A8', '#7FA6D1', '#E8E2DA', '#E0A07A', '#C05621', '#7A2E0E'];
+const CAPAS = {
+  dMin: { cortes: [200, 400, 800, 1200, 2000], nom: 'Escuela más cercana', nota: 'Distancia por calle desde las viviendas de la celda hasta la institución más cercana, de cualquier tipo. Radio EE1: 400 m.' },
+  dEE2: { cortes: [500, 1000, 1500, 2000, 3000], nom: 'Unidad educativa más cercana', nota: 'Distancia por calle hasta la unidad educativa o colegio (EE2) más cercano. Radio EE2: 2 000 m.' },
+  dEsp: { cortes: [1000, 1500, 2000, 3000, 4000], nom: 'Recorrido estimado', nota: 'Distancia media por calle a la escuela a la que se va, según el modelo de elección (no a la más cercana).' }
+};
+const colorDe = (v, c) => { let i = 0; while (i < c.cortes.length && v >= c.cortes[i]) i++; return RAMPA[i]; };
+const rect = D.celdas.map(c => L.rectangle([[c.b[1], c.b[0]], [c.b[3], c.b[2]]], { weight: 0.3, color: '#fff', fillOpacity: 0.75 })
+  .bindTooltip(`<b>${NOMBRE_SECTOR[c.s]}</b><br>${fmt(c.ninos)} residentes de 3 a 17 años<br>Escuela más cercana: ${fmt(c.dMin)} m<br>Unidad educativa más cercana: ${fmt(c.dEE2)} m<br>Recorrido estimado: ${fmt(c.dEsp)} m`, { className: 'globo-mapa', sticky: true }));
+const gCeldas = L.layerGroup(rect).addTo(mapa);
+const maxF = Math.max(...D.flujos.map(f => f[4]));
+const gFlujos = L.layerGroup(D.flujos.slice().sort((a, b) => a[4] - b[4]).map(f => L.polyline([[f[1], f[0]], [f[3], f[2]]],
+  { color: css('--tono'), weight: 0.8 + 9 * Math.sqrt(f[4] / maxF), opacity: 0.85, lineCap: 'round' })
+  .bindTooltip(`${fmt(f[4])} estudiantes pasan por este tramo`, { className: 'globo-mapa', sticky: true })));
+const maxE = Math.max(...D.escuelas.map(e => e.estudiantes));
+const gEsc = L.layerGroup(D.escuelas.map(e => L.circleMarker([e.c[1], e.c[0]], {
+  radius: 3 + 11 * Math.sqrt(e.estudiantes / maxE), color: '#fff', weight: 1.5, fillColor: e.norma === 'EE2' ? css('--grafito') : css('--cerca'), fillOpacity: 0.95 })
+  .bindTooltip(`<b>${e.nombre}</b><br>${e.norma} · ${e.sostenimiento.toLowerCase()}<br>${fmt(e.estudiantes)} estudiantes`, { className: 'globo-mapa' }))).addTo(mapa);
+const escLey = `<span><i class="pt" style="background:${css('--grafito')}"></i>Unidad educativa o colegio (EE2)</span><span><i class="pt" style="background:${css('--cerca')}"></i>Escuela o inicial (EE1)</span>`;
+function pintar(capa) {
+  const nota = document.getElementById('e1-nota'), ley = document.getElementById('e1-leyenda');
+  if (capa === 'flujos') {
+    mapa.removeLayer(gCeldas); gFlujos.addTo(mapa); gEsc.remove(); gEsc.addTo(mapa);
+    nota.textContent = 'Viaje de ida a la escuela según el modelo. El grosor es el número de estudiantes que pasan por el tramo; se omiten los tramos con menos de 40.';
+    ley.innerHTML = `<span><i style="background:${css('--tono')};height:3px"></i>Estudiantes por tramo (grosor)</span>` + escLey;
+    return;
+  }
+  mapa.removeLayer(gFlujos); gCeldas.addTo(mapa); gEsc.remove(); gEsc.addTo(mapa);
+  const c = CAPAS[capa];
+  D.celdas.forEach((d, i) => rect[i].setStyle({ fillColor: colorDe(d[capa], c) }));
+  nota.textContent = c.nota;
+  const t = [`< ${fmt(c.cortes[0])}`, ...c.cortes.slice(0, -1).map((v, i) => `${fmt(v)} – ${fmt(c.cortes[i + 1])}`), `≥ ${fmt(c.cortes[c.cortes.length - 1])}`];
+  ley.innerHTML = `<strong style="font-weight:600;color:var(--grafito)">${c.nom} (m por calle)</strong>` + t.map((x, i) => `<span><i style="background:${RAMPA[i]}"></i>${x}</span>`).join('') + escLey;
+}
+const bs = document.querySelectorAll('#fig-mapa1 .pestanas button');
+bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', x === b)); pintar(b.dataset.capa); }));
+pintar('dMin');
+</script>
+</body>
+</html>

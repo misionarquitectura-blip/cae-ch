@@ -89,3 +89,7 @@ Thumbs.db
 # solo se deja fuera la descarga cruda de OSM (osm_red.js la vuelve a bajar).
 RESEARCH/proximidad/fuentes/
 RESEARCH/proximidad/analisis.log
+
+# RESEARCH - educacion (Linea 2, rama 2.2): se versiona entera salvo la descarga
+# del MINEDUC (64 MB, se vuelve a bajar de datosabiertos.gob.ec) y la cache de Nominatim.
+RESEARCH/educacion/fuentes/

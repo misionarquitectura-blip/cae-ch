@@ -161,6 +161,24 @@ function dijkstra(fuentes) {
 }
 const distPunto = (R, q) => q.nodo === null || !R.dist.has(q.nodo) ? Infinity : R.dist.get(q.nodo) + q.acceso;
 
+// ------------------------------------------------------------------ Sectores
+const OCT = ['E', 'NE', 'N', 'NO', 'O', 'SO', 'S', 'SE'];
+const sectorDe = ([x, y]) => {
+  const dx = x - CENTRO[0], dy = y - CENTRO[1];
+  if (Math.hypot(dx, dy) <= RADIO_CENTRO) return 'Centro';
+  const ang = (Math.atan2(dy, dx) * 180 / Math.PI + 360 + 22.5) % 360;
+  return OCT[Math.floor(ang / 45)];
+};
+for (const q of puntos) q.sector = sectorDe(q.p);
+
+// Base compartida con las otras ramas de la Linea 2 (RESEARCH/educacion):
+// poblacion por predio, rejilla, red de calles y sectores. Al cargarse con
+// require() el archivo se detiene aqui y no calcula nada de mercados.
+if (require.main !== module) {
+  module.exports = { G, POB, HOGARES, CELDA, CENTRO, RADIO_CENTRO, celdas, puntos, nodos, aristas, cercano, dijkstra, distPunto, sectorDe, kCelda, gx0, gy0, limWGS, dentro };
+  return;
+}
+
 // ------------------------------------------------------------- Equipamientos
 // Todo lo demas sale del inventario consolidado de la Linea 2, con una
 // correccion: en el catastro, EA solo es mercado si el propietario lo dice.
@@ -193,16 +211,6 @@ for (const s of SERVICIOS) {
   console.log(s.nom.padEnd(34), String(s.n).padStart(4), 'lugares, pob. a <=', s.radio, 'm por calle:', s.cobertura, '%');
 }
 for (const q of puntos) q.simult = SERVICIOS.reduce((a, s) => a + (q[s.id] <= s.radio ? 1 : 0), 0);
-
-// ------------------------------------------------------------------ Sectores
-const OCT = ['E', 'NE', 'N', 'NO', 'O', 'SO', 'S', 'SE'];
-const sectorDe = ([x, y]) => {
-  const dx = x - CENTRO[0], dy = y - CENTRO[1];
-  if (Math.hypot(dx, dy) <= RADIO_CENTRO) return 'Centro';
-  const ang = (Math.atan2(dy, dx) * 180 / Math.PI + 360 + 22.5) % 360;
-  return OCT[Math.floor(ang / 45)];
-};
-for (const q of puntos) q.sector = sectorDe(q.p);
 
 // ------------------------------------------------ Mercados: cuencas y flujos
 const RM = SERVICIOS[0].R;
