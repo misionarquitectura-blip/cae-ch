@@ -140,6 +140,69 @@ for (const e of aristas) if (e.cargaEsc > 0 && e.nombre) corr.set(e.nombre, (cor
 const MERC = LEE('../proximidad/datos.json').corredores.map(c => c.nombre);
 const corredores = [...corr].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([nombre, v]) => ({ nombre, estudianteKm: Math.round(v), tambienAbasto: MERC.includes(nombre) }));
 
+// ------------------------------------------------------ Educacion superior
+// Cada campus atrae su matricula desde toda la ciudad en proporcion a la
+// poblacion de cada punto y a exp(-d/L). Es un modelo con restriccion en el
+// destino: la matricula del campus es dato; lo que se modela es de donde vienen
+// los estudiantes. Los que residen fuera del area urbana no se asignan a la red.
+const UNIV = require('./universidades.js');
+const L_UNI = 3000, SENS_UNI = [1500, 6000];
+const CAMPUS = UNIV.map(u => {
+  const p = G.wgs2utm(u.c[0], u.c[1]); const [nodo, d0] = cercano(p);
+  const c = { ...u, p, nodo, d0, sector: sectorDe(p) };
+  c.R = dijkstra([{ nodo, d0, id: u.id }]);
+  c.d = puntos.map(q => q.nodo === null || !c.R.dist.has(q.nodo) ? Infinity : c.R.dist.get(q.nodo) + q.acceso);
+  return c;
+});
+function modeloUni(L, cargarRed) {
+  let km = 0, n = 0, motor = 0;
+  if (cargarRed) for (const e of aristas) e.cargaUni = 0;
+  for (const c of CAMPUS) {
+    const w = puntos.map((q, i) => c.d[i] === Infinity ? 0 : q.pob * Math.exp(-c.d[i] / L));
+    const W = w.reduce((a, b) => a + b, 0);
+    let kmC = 0; const peso = new Map();
+    puntos.forEach((q, i) => {
+      if (!w[i]) return; const t = c.estudiantes * w[i] / W;
+      km += t * c.d[i] / 1000; kmC += t * c.d[i] / 1000; n += t; if (c.d[i] > UMBRAL_PIE) motor += t;
+      if (cargarRed) peso.set(q.nodo, (peso.get(q.nodo) || 0) + t);
+    });
+    if (cargarRed) {
+      c.dMedia = Math.round(kmC * 1000 / c.estudiantes);
+      const orden = [...c.R.dist.keys()].sort((a, b) => c.R.dist.get(b) - c.R.dist.get(a));
+      for (const u of orden) {
+        const h = peso.get(u); if (!h) continue;
+        const eid = c.R.pred.get(u); if (eid === -1 || eid === undefined) continue;
+        const a = aristas[eid]; a.cargaUni += h;
+        const v = a.a === u ? a.b : a.a; peso.set(v, (peso.get(v) || 0) + h);
+      }
+    }
+  }
+  return { dMedia: Math.round(km * 1000 / n), pctMotor: +(motor / n * 100).toFixed(1), viajes: Math.round(n), km: Math.round(km) };
+}
+const uniBase = modeloUni(L_UNI, true);
+const uniSens = SENS_UNI.map(L => ({ L, ...modeloUni(L, false) }));
+console.log('universidades L =', L_UNI, uniBase, uniSens);
+
+const flujosUni = [];
+for (const e of aristas) {
+  if (e.cargaUni < 40 || !nodos.has(e.a) || !nodos.has(e.b)) continue;
+  const a = nodos.get(e.a), b = nodos.get(e.b);
+  flujosUni.push([+a.lon.toFixed(5), +a.lat.toFixed(5), +b.lon.toFixed(5), +b.lat.toFixed(5), Math.round(e.cargaUni)]);
+}
+// Corredores de la manana educativa completa: escolares + universitarios
+const corrT = new Map();
+for (const e of aristas) {
+  const t = (e.cargaEsc || 0) + (e.cargaUni || 0);
+  // Las vias internas del campus de la ESPOCH (Longitudinal n, Transversal n) no son corredores urbanos.
+  if (t > 0 && e.nombre && !/^(Longitudinal|Transversal) \d/.test(e.nombre)) {
+    const v = corrT.get(e.nombre) || { esc: 0, uni: 0 };
+    v.esc += (e.cargaEsc || 0) * e.len / 1000; v.uni += (e.cargaUni || 0) * e.len / 1000; corrT.set(e.nombre, v);
+  }
+}
+const corredoresTotal = [...corrT].sort((a, b) => (b[1].esc + b[1].uni) - (a[1].esc + a[1].uni)).slice(0, 12)
+  .map(([nombre, v]) => ({ nombre, escolar: Math.round(v.esc), universitario: Math.round(v.uni), tambienAbasto: MERC.includes(nombre) }));
+console.log(corredoresTotal);
+
 // ----------------------------------------------------------- Salida
 const HEX = r => 3 * Math.sqrt(3) / 2 * r * r;
 // Misma definicion que la rama 2.1 y el estudio general: celdas con al menos un habitante.
@@ -170,6 +233,10 @@ const out = {
   },
   sensibilidad: sens.map(({ porSector, ...s }) => s),
   sectores, corredores, flujos, celdas: salidaCeldas,
+  universidades: {
+    L: L_UNI, ...uniBase, sensibilidad: uniSens, flujos: flujosUni, corredoresTotal,
+    campus: CAMPUS.map(({ R, p, nodo, d0, d, ...c }) => c)
+  },
   escuelas: ESC.map(({ R, p, nodo, d0, ...e }) => e),
   sinUbicar: SIN, serie, limite: B.limWGS
 };

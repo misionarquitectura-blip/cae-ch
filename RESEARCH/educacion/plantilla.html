@@ -231,7 +231,8 @@ footer a{color:rgba(255,255,255,.85)}
         <button type="button" id="e1-min" data-capa="dMin" aria-pressed="true">Escuela más cercana</button>
         <button type="button" id="e1-ee2" data-capa="dEE2" aria-pressed="false">Unidad educativa más cercana</button>
         <button type="button" id="e1-esp" data-capa="dEsp" aria-pressed="false">Recorrido estimado</button>
-        <button type="button" id="e1-fl" data-capa="flujos" aria-pressed="false">Viajes de la mañana</button>
+        <button type="button" id="e1-fl" data-capa="flujos" aria-pressed="false">Viajes escolares</button>
+        <button type="button" id="e1-un" data-capa="flujosUni" aria-pressed="false">Viajes universitarios</button>
       </div>
       <p class="mapa-nota" id="e1-nota"></p>
       <div class="figura-cuerpo"><div class="mapa" id="mapa1" role="img" aria-label="Mapa de distancias a la escuela y viajes escolares"></div></div>
@@ -279,10 +280,37 @@ footer a{color:rgba(255,255,255,.85)}
   </div>
 </section>
 
-<!-- ── 4 · Pendientes ─────────────────────────────────────────── -->
+<!-- ── 4 · Educacion superior ─────────────────────────────────── -->
 <section class="claro">
   <div class="wrap">
-    <span class="sec-rotulo">04 · Lo que falta ubicar</span>
+    <span class="sec-rotulo">04 · Educación superior</span>
+    <h2>Tres universidades, cuatro campus y una segunda hora punta</h2>
+    <p id="txt-uni"></p>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Campus universitarios en el área urbana</h3>
+        <p class="sub">Matrícula de grado publicada por cada universidad. La base oficial de la SENESCYT no está disponible.</p>
+      </div>
+      <div class="tabla-caja" id="tabla-uni" style="padding-top:14px"></div>
+    </div>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>La mañana educativa completa, calle por calle</h3>
+        <p class="sub">Estudiantes × kilómetro por calle en el viaje de ida: escolares (rama 2.2) y universitarios. Las
+           calles marcadas con ● también están entre las más cargadas por los viajes a los mercados (rama 2.1).</p>
+      </div>
+      <div class="figura-cuerpo ancha" id="svg-total"></div>
+      <div class="figura-pie"><div class="leyenda">
+        <span><i style="background:var(--tono)"></i> Escolares</span>
+        <span><i style="background:var(--cerca)"></i> Universitarios</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 5 · Pendientes ─────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">05 · Lo que falta ubicar</span>
     <h2>Instituciones del registro que todavía no están en el mapa</h2>
     <p id="txt-sin"></p>
     <div class="figura">
@@ -291,10 +319,10 @@ footer a{color:rgba(255,255,255,.85)}
   </div>
 </section>
 
-<!-- ── 5 · Método ─────────────────────────────────────────────── -->
-<section>
+<!-- ── 6 · Método ─────────────────────────────────────────────── -->
+<section class="claro">
   <div class="wrap">
-    <span class="sec-rotulo">05 · Método y límites</span>
+    <span class="sec-rotulo">06 · Método y límites</span>
     <h2>Cómo se hizo, y dónde puede fallar</h2>
     <div class="notas" id="notas-metodo"></div>
     <p class="fuente-pie" id="fuentes"></p>
@@ -344,7 +372,8 @@ const tarj = [
   ['Llegan de fuera, como mínimo', fmt(externos), `el ${fmt(externos / M.matriculaOrdinaria * 100, 0)} % de la matrícula ordinaria`],
   ['En unidades educativas (EE2)', fmt(mEE2 / M.matricula * 100, 0) + ' %', `de la matrícula; ${fmt(nEE2)} instituciones de ${fmt(M.instituciones)}`],
   ['Escuela a menos de 400 m', fmt(C.pct400, 0) + ' %', 'de los residentes de 3 a 17 años (radio EE1)'],
-  ['Viaje escolar motorizado', fmt(C.pctMotor, 0) + ' %', `entre ${fmt(sens[0].pctMotor, 0)} y ${fmt(sens[1].pctMotor, 0)} % según el supuesto de elección`]
+  ['Viaje escolar motorizado', fmt(C.pctMotor, 0) + ' %', `entre ${fmt(sens[0].pctMotor, 0)} y ${fmt(sens[1].pctMotor, 0)} % según el supuesto de elección`],
+  ['Estudiantes universitarios', fmt(D.universidades.viajes), `ESPOCH, UNACH y UNIANDES; recorrido medio de ${km(D.universidades.dMedia)}`]
 ];
 document.getElementById('mosaico').innerHTML = tarj.map(([r, b, e]) => `<div class="tarj"><span class="rot">${r}</span><b>${b}</b><em>${e}</em></div>`).join('');
 
@@ -443,7 +472,38 @@ document.getElementById('txt-movilidad').innerHTML = `Si el ${fmt(C.pctMotor, 0)
   document.getElementById('svg-balance').append(s);
 })();
 
-/* ── 4 · Sin ubicar ─────────────────────────────────── */
+/* ── 4 · Educacion superior ─────────────────────────── */
+const U = D.universidades, UC = Object.fromEntries(U.campus.map(c => [c.id, c]));
+const top3 = U.corredoresTotal.slice(0, 3).map(c => c.nombre.replace(/^Avenida /, 'Av. ')).join(', ');
+document.getElementById('txt-uni').innerHTML = `El registro del Ministerio de Educación termina en el bachillerato. Las tres universidades de la
+  ciudad suman <strong>${fmt(U.viajes)} estudiantes de grado</strong> en cuatro campus: la ESPOCH en el noroeste (${fmt(UC.espoch.estudiantes)}), la
+  UNACH en el Campus Norte y en La Dolorosa, y UNIANDES en la avenida Lizarzaburu. Con un modelo análogo al escolar, en el que cada
+  campus atrae a su matrícula desde toda la ciudad según la población y la distancia (L = ${fmt(U.L)} m), el recorrido medio es de
+  <strong>${km(U.dMedia)}</strong> y el <strong>${fmt(U.pctMotor, 0)} %</strong> de los viajes supera 1,5 km (entre ${fmt(U.sensibilidad[0].pctMotor, 0)} y
+  ${fmt(U.sensibilidad[1].pctMotor, 0)} % con L de ${fmt(U.sensibilidad[0].L)} y ${fmt(U.sensibilidad[1].L)} m). Los dos campus grandes están en el borde norte,
+  así que los viajes universitarios cargan ejes que la escuela apenas usa, como la avenida Milton Reyes, y más que duplican la carga escolar de la Antonio José de Sucre y la Unidad Nacional.
+  Sumadas las dos demandas, las calles más cargadas de la mañana son ${top3}.`;
+document.getElementById('tabla-uni').innerHTML = `<table><thead><tr><th>Universidad</th><th>Campus</th><th>Estudiantes</th><th>Año</th><th>Recorrido medio estimado</th><th>Fuente</th></tr></thead><tbody>
+  ${U.campus.map(c => `<tr><td>${c.nombre.split(' — ')[0]}</td><td style="text-align:left;white-space:normal;min-width:200px">${c.campus}</td><td>${fmt(c.estudiantes)}${c.supuesto ? ' *' : ''}</td><td>${c.anio}</td><td>${fmt(c.dMedia)} m</td>
+    <td style="text-align:left;white-space:normal;min-width:260px;font-size:.76rem">${c.fuente}${c.nota ? '. ' + c.nota : ''}</td></tr>`).join('')}
+  </tbody></table>
+  <p style="font-size:.8rem;color:var(--grafito-med);margin-top:10px">* ${U.campus.find(c => c.supuesto).supuesto} Los institutos tecnológicos superiores no se incluyen porque no publican su matrícula por sede.</p>`;
+(function total() {
+  const L = U.corredoresTotal, W = 900, fila = 28, H = L.length * fila + 30, x0 = 260, x1 = W - 70;
+  const max = Math.ceil(Math.max(...L.map(c => c.escolar + c.universitario)) / 1000) * 1000;
+  const s = svg(W, H, 'Estudiantes por kilómetro por calle, escolares y universitarios');
+  for (let v = 0; v <= max; v += 1000) { const x = x0 + v / max * (x1 - x0); s.append(el('line', { x1: x, x2: x, y1: 4, y2: H - 22, class: 'rejilla' }), el('text', { x, y: H - 6, 'text-anchor': 'middle', class: 'eje-txt' }, fmt(v))); }
+  L.forEach((c, i) => {
+    const y = 6 + i * fila, a = c.escolar / max * (x1 - x0), b = c.universitario / max * (x1 - x0);
+    s.append(el('text', { x: x0 - 10, y: y + 13, 'text-anchor': 'end', class: 'etiq' }, (c.tambienAbasto ? '● ' : '') + c.nombre.replace(/^Avenida /, 'Av. ')));
+    s.append(el('rect', { x: x0, y, width: a, height: 18, fill: css('--tono') }));
+    s.append(el('rect', { x: x0 + a, y, width: b, height: 18, fill: css('--cerca') }));
+    s.append(el('text', { x: x0 + a + b + 6, y: y + 13, class: 'val' }, fmt(c.escolar + c.universitario)));
+  });
+  document.getElementById('svg-total').append(s);
+})();
+
+/* ── 5 · Sin ubicar ─────────────────────────────────── */
 const mSin = D.sinUbicar.reduce((a, x) => a + x.estudiantes, 0);
 document.getElementById('txt-sin').innerHTML = `El registro del Ministerio no trae coordenadas. Las instituciones se ubicaron cruzando su nombre con OpenStreetMap
   y su geocodificador. Quedan <strong>${fmt(D.sinUbicar.length)} sin ubicar, con ${fmt(mSin)} estudiantes</strong>, el
@@ -465,6 +525,10 @@ const notas = [
     L = ${fmt(M.L)} m (el radio EE2). Con L = ${fmt(sens[0].L)} m el recorrido medio baja a ${km(sens[0].dMedia)} y el viaje motorizado al ${fmt(sens[0].pctMotor, 0)} %.
     Con L = ${fmt(sens[1].L)} m sube a ${km(sens[1].dMedia)} y ${fmt(sens[1].pctMotor, 0)} %. Sin encuesta origen-destino no se puede calibrar: el rango es la
     incertidumbre real.`],
+  ['Educación superior', `Matrícula de grado publicada por cada universidad (ver la tabla de la sección 04). Los orígenes se reparten como la
+    población urbana: no hay dato de dónde viven los estudiantes, y una parte reside fuera de la ciudad o en arriendo cerca del campus.
+    L = ${fmt(U.L)} m; con ${fmt(U.sensibilidad[0].L)} y ${fmt(U.sensibilidad[1].L)} m el recorrido medio va de ${km(U.sensibilidad[0].dMedia)} a ${km(U.sensibilidad[1].dMedia)}.
+    Las vías internas del campus de la ESPOCH no se cuentan como corredores urbanos.`],
   ['Lo que el modelo no ve', `Las rutas escolares, el bus urbano (sin datos en OSM), las jornadas vespertinas y los estudiantes que llegan de fuera
     del área urbana. Tampoco distingue la escuela del colegio dentro de una misma unidad educativa: un niño de 6 años y uno de 17
     eligen igual.`],
@@ -505,9 +569,23 @@ const maxE = Math.max(...D.escuelas.map(e => e.estudiantes));
 const gEsc = L.layerGroup(D.escuelas.map(e => L.circleMarker([e.c[1], e.c[0]], {
   radius: 3 + 11 * Math.sqrt(e.estudiantes / maxE), color: '#fff', weight: 1.5, fillColor: e.norma === 'EE2' ? css('--grafito') : css('--cerca'), fillOpacity: 0.95 })
   .bindTooltip(`<b>${e.nombre}</b><br>${e.norma} · ${e.sostenimiento.toLowerCase()}<br>${fmt(e.estudiantes)} estudiantes`, { className: 'globo-mapa' }))).addTo(mapa);
+const maxU = Math.max(...U.flujos.map(f => f[4]));
+const gFlujosUni = L.layerGroup(U.flujos.slice().sort((a, b) => a[4] - b[4]).map(f => L.polyline([[f[1], f[0]], [f[3], f[2]]],
+  { color: css('--cerca'), weight: 0.8 + 9 * Math.sqrt(f[4] / maxU), opacity: 0.85, lineCap: 'round' })
+  .bindTooltip(`${fmt(f[4])} estudiantes universitarios pasan por este tramo`, { className: 'globo-mapa', sticky: true })));
+const gCampus = L.layerGroup(U.campus.map(c => L.marker([c.c[1], c.c[0]], { icon: L.divIcon({ className: '',
+  html: `<div style="width:16px;height:16px;background:${css('--cerca')};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] }) })
+  .bindTooltip(`<b>${c.nombre.split(' — ')[0]}</b><br>${c.campus}<br>${fmt(c.estudiantes)} estudiantes (${c.anio})`, { className: 'globo-mapa' }))).addTo(mapa);
 const escLey = `<span><i class="pt" style="background:${css('--grafito')}"></i>Unidad educativa o colegio (EE2)</span><span><i class="pt" style="background:${css('--cerca')}"></i>Escuela o inicial (EE1)</span>`;
 function pintar(capa) {
   const nota = document.getElementById('e1-nota'), ley = document.getElementById('e1-leyenda');
+  mapa.removeLayer(gFlujosUni);
+  if (capa === 'flujosUni') {
+    mapa.removeLayer(gCeldas); mapa.removeLayer(gFlujos); gFlujosUni.addTo(mapa); gCampus.remove(); gCampus.addTo(mapa);
+    nota.textContent = 'Viaje de ida a los campus universitarios según el modelo. El grosor es el número de estudiantes que pasan por el tramo; se omiten los tramos con menos de 40.';
+    ley.innerHTML = `<span><i style="background:${css('--cerca')};height:3px"></i>Estudiantes universitarios por tramo (grosor)</span><span><i style="background:${css('--cerca')}"></i>Campus universitario</span>`;
+    return;
+  }
   if (capa === 'flujos') {
     mapa.removeLayer(gCeldas); gFlujos.addTo(mapa); gEsc.remove(); gEsc.addTo(mapa);
     nota.textContent = 'Viaje de ida a la escuela según el modelo. El grosor es el número de estudiantes que pasan por el tramo; se omiten los tramos con menos de 40.';
