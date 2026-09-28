@@ -4554,19 +4554,25 @@
                 if (tieneAfect && areaAfect > 0) {
                     filasAfect.push(['Area afectada (reserva vial)', `${areaAfect.toFixed(2)} m²`]);
                     const franjas = afectacionVial && afectacionVial.franjas;
+                    const callesCruzan = (afectacionVial && afectacionVial.callesQueCruzan) || [];
                     if (metodoAfect === 'vialidad') {
                         corredores.forEach(c => filasAfect.push([`Via ${nombreVia(c)}`,
                             `${c.area.toFixed(2)} m² dentro del predio, entre bordes externos separados ${c.ancho.toFixed(2)} m` +
                             (c.jerarquia ? ` (${c.jerarquia})` : '')]));
                     } else if (franjas && franjas.length > 1) {
-                        filasAfect.push(['Desglose por frente', franjas.map(f => `${f.toFixed(2)} m²`).join('  +  ') + `  =  ${areaAfect.toFixed(2)} m²`]);
+                        filasAfect.push(['Desglose por franja', franjas.map(f => `${f.toFixed(2)} m²`).join('  +  ') + `  =  ${areaAfect.toFixed(2)} m²`]);
                     }
                     if (afectacionVial && afectacionVial.areaEdificable != null) {
                         filasAfect.push(['Area util remanente', `${afectacionVial.areaEdificable.toFixed(2)} m²`]);
                     }
                     filasAfect.push(['Observacion', metodoAfect === 'vialidad'
                         ? 'En este sector no hay lineas de fabrica definidas. El area indicada es la parte del predio comprendida entre los bordes externos de la via trazados en la capa de Vialidad (GADMR y GADPCH). Es REFERENCIAL: el ancho oficial de la via y su derecho de via deben confirmarse con el ente competente.'
-                        : 'El area indicada corresponde a las franjas del predio comprendidas entre la linea de fabrica y el limite del lote hacia cada via circundante. Estas zonas no son edificables segun normativa municipal.']);
+                        : 'El area indicada corresponde a las franjas del predio comprendidas entre la linea de fabrica y el limite del lote hacia cada via circundante' +
+                          (callesCruzan.length ? ', y a la calzada de las vias que atraviesan el predio' : '') +
+                          '. Estas zonas no son edificables segun normativa municipal.']);
+                    callesCruzan.forEach(a => filasAfect.push(['Via que atraviesa el predio',
+                        `Dos lineas de fabrica paralelas, separadas ${a.toFixed(2)} m, cruzan el lote de lado a lado. La franja entre ellas es reserva vial ` +
+                        'y el predio queda dividido en partes a cada lado de la via; esas partes conservan su condicion de area util.']));
                     if (afectacionVial && afectacionVial.lfProlongada) {
                         filasAfect.push(['ADVERTENCIA - Trazado incompleto',
                             'El trazado de la linea de fabrica de la capa municipal termina dentro del predio y no lo cruza por completo. ' +
@@ -6490,6 +6496,12 @@
                 return { pts: out, prolongado: prolongado };
             }
 
+            // ¿Corta el segmento a-b algún lado del anillo?
+            function afCruzaAnillo(a, b, poly) {
+                for (let k = 0; k < poly.length; k++) if (afSegInt(a, b, poly[k], poly[(k + 1) % poly.length])) return true;
+                return false;
+            }
+
             // Recolecta las líneas de fábrica del entorno del predio y las encadena
             // en polilíneas maximales. El catastro entrega la LF fragmentada y
             // duplicada: sin este encadenado, tramos que mueren dentro del predio
@@ -6516,11 +6528,13 @@
                             const a = u[i], b = u[i + 1];
                             const ka = key(a), kb = key(b);
                             if (ka === kb) continue;
-                            // sólo tramos que tocan el predio o su franja perimetral
+                            // sólo tramos que tocan el predio o su franja perimetral,
+                            // o que lo cruzan de lado a lado con ambos extremos fuera
+                            // (una calle que atraviesa el lote)
                             const inA = afPip(a, P), inB = afPip(b, P);
                             const da = afDistToRing(a, P), db = afDistToRing(b, P);
                             if (!((inA && da <= AF_MAX_RETIRO) || (inB && db <= AF_MAX_RETIRO) ||
-                                  (!inA && da <= 2) || (!inB && db <= 2))) continue;
+                                  (!inA && da <= 2) || (!inB && db <= 2) || afCruzaAnillo(a, b, P))) continue;
                             const k = ka < kb ? ka + '|' + kb : kb + '|' + ka;
                             if (!segMap.has(k)) segMap.set(k, [a, b]);
                         }
@@ -6569,40 +6583,20 @@
                 const P = afRingUTM(predioGeoJSON);
                 if (!P || P.length < 3) return null;
                 const areaPredio = afShoelace(P);
-                const NUC = afNucleo(P);
-                if (!NUC) return null;
+                if (!afNucleo(P)) return null;
 
-                // Cuerdas válidas: trazados de LF que se mantienen cerca del
-                // borde. Un trazado que se interna en el predio pertenece a otra
-                // manzana y no define retiro de este lote.
-                const cand = [];
+                const cadenas = afCadenasLF(P).map(function (c) { return afExtender(c, P); });
+                // 1) Calles que atraviesan el predio entre dos LF paralelas
+                const cruces = afCallesQueCruzan(P, cadenas);
+                const piezas = cruces.piezas.slice();
+                // 2) Franjas de retiro junto al borde, en cada parte que quedó
                 let lfProlongada = false;
-                for (const chain of afCadenasLF(P)) {
-                    const ext = afExtender(chain, P);
-                    const paths = afInnerPaths(ext.pts, P).filter(function (p) {
-                        return afMaxSepBorde(p.pts, P) <= AF_MAX_RETIRO;
-                    });
-                    if (paths.length && ext.prolongado) lfProlongada = true;
-                    for (const p of paths) cand.push(p);
-                }
-                cand.sort(function (a, b) { return b.len - a.len; });
-
-                let resto = P.slice();
-                const piezas = [];
-                for (const orig of cand) {
-                    for (const path of afInnerPaths(orig.pts.slice(), resto)) {
-                        const par = afSplitByPath(resto, path);
-                        const A = par[0], B = par[1];
-                        if (A.length < 3 || B.length < 3) continue;
-                        const aA = afShoelace(A), aB = afShoelace(B);
-                        if (aA < 0.05 || aB < 0.05) continue;
-                        const keepA = afPip(NUC, A);
-                        const keep = keepA ? A : B, drop = keepA ? B : A;
-                        const ad = afShoelace(drop);
-                        if (ad / path.len > AF_MAX_RETIRO) continue;  // no es una franja de retiro
-                        resto = keep;
-                        piezas.push({ area: Math.round(ad * 100) / 100, ring: drop });
-                    }
+                const restos = [];
+                for (const R of cruces.partes) {
+                    const b = afFranjasBorde(R, cadenas, cruces.lineas);
+                    if (b.lfProlongada) lfProlongada = true;
+                    b.piezas.forEach(function (p) { piezas.push(p); });
+                    restos.push(b.resto);
                 }
                 piezas.sort(function (a, b) { return b.area - a.area; });
                 const total = piezas.reduce(function (s, v) { return s + v.area; }, 0);
@@ -6622,9 +6616,142 @@
                     franjas: piezas.map(function (p) { return p.area; }),
                     contornos: contornos,
                     lfProlongada: lfProlongada,
+                    callesQueCruzan: cruces.anchos,
                     edificable: Math.round((areaPredio - total) * 100) / 100,
-                    resto: resto
+                    restos: restos
                 };
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Calles que atraviesan el predio. Hay lotes (sobre todo grandes,
+            // anteriores al trazado vial) que el catastro dibuja de un solo
+            // cuerpo aunque una calle proyectada los parta: las dos líneas de
+            // fábrica de esa calle cruzan el lote de lado a lado. La franja
+            // entre ellas es la afectación, y lo que queda a cada lado sigue
+            // siendo predio. Se distingue de un lote angosto con retiros en
+            // frente y fondo porque aquí las partes exteriores son más anchas
+            // que la franja central; allí, al revés.
+            //
+            // Devuelve { piezas[], partes[], lineas[], anchos[] } en UTM.
+            // ─────────────────────────────────────────────────────────────────
+            function afCallesQueCruzan(P, cadenas) {
+                const res = { piezas: [], partes: [P.slice()], lineas: [], anchos: [] };
+                // Trazados que entran y salen del predio
+                const tr = [];
+                for (const ext of cadenas) {
+                    for (const p of afInnerPaths(ext.pts, P)) {
+                        if (p.len < 3) continue;
+                        // prolongar 1 m por cada extremo para que el corte sea limpio
+                        const q = p.pts.slice(), n = q.length;
+                        const alarga = function (a, b) {
+                            const L = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+                            return [a[0] + (a[0] - b[0]) / L, a[1] + (a[1] - b[1]) / L];
+                        };
+                        q[0] = alarga(q[0], q[1]); q[n - 1] = alarga(q[n - 1], q[n - 2]);
+                        tr.push({ pts: q, len: p.len, muestras: afMuestras(p.pts, 2) });
+                    }
+                }
+                if (tr.length < 2) return res;
+
+                // Parejas paralelas a una distancia de calle
+                const parejas = [];
+                for (let i = 0; i < tr.length; i++) {
+                    for (let j = i + 1; j < tr.length; j++) {
+                        const ds = tr[j].muestras.map(function (m) { return afDesfase(m, tr[i].pts); })
+                            .filter(function (o) { return o.interior; }).map(function (o) { return o.d; })
+                            .sort(function (a, b) { return a - b; });
+                        if (ds.length < 5) continue;   // < ~10 m de recorrido común
+                        const lo = ds[Math.floor(ds.length * 0.1)], hi = ds[Math.floor(ds.length * 0.9)];
+                        const med = ds[Math.floor(ds.length / 2)];
+                        if (hi - lo > 2 || Math.abs(med) < 3 || Math.abs(med) > VIA_ANCHO_MAX) continue;
+                        parejas.push({ a: tr[i], b: tr[j], d: med });
+                    }
+                }
+                // Las más angostas primero: una LF puede tener pareja a ambos lados
+                parejas.sort(function (x, y) { return Math.abs(x.d) - Math.abs(y.d); });
+
+                const usadas = new Set();
+                for (const par of parejas) {
+                    if (usadas.has(par.a) || usadas.has(par.b)) continue;
+                    const d0 = Math.min(0, par.d), d1 = Math.max(0, par.d), ancho = d1 - d0;
+                    // Cortar lo que queda de predio por las dos líneas y clasificar
+                    const piezas = afCortarPiezas(afCortarPiezas(res.partes, par.a.pts), par.b.pts);
+                    const calle = [], otras = [];
+                    let areaIzq = 0, areaDer = 0, areaCalle = 0;
+                    for (const pz of piezas) {
+                        const nuc = afNucleo(pz);
+                        const o = nuc && afDesfase(nuc, par.a.pts);
+                        if (o && o.interior && o.d > d0 && o.d < d1) {
+                            calle.push(pz); areaCalle += afShoelace(pz);
+                        } else {
+                            otras.push(pz);
+                            if (o && o.interior) { if (o.d <= d0) areaIzq += afShoelace(pz); else areaDer += afShoelace(pz); }
+                        }
+                    }
+                    const largo = Math.max(par.a.len, par.b.len);
+                    if (!calle.length || areaCalle < 1) continue;
+                    // Las dos partes exteriores más anchas que la calle
+                    if (areaIzq / largo <= ancho || areaDer / largo <= ancho) continue;
+                    usadas.add(par.a); usadas.add(par.b);
+                    res.partes = otras;
+                    res.lineas.push(par.a.pts, par.b.pts);
+                    res.anchos.push(Math.round(ancho * 100) / 100);
+                    calle.forEach(function (pz) { res.piezas.push({ area: Math.round(afShoelace(pz) * 100) / 100, ring: pz }); });
+                }
+                return res;
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // Franjas de retiro junto al borde de la parte `R` del predio.
+            //
+            // Corta el anillo con cada polilínea de LF encadenada y acumula las
+            // piezas del lado calle (las que NO contienen el núcleo edificable).
+            // Cubre todas las calles circundantes sin duplicar superficie,
+            // porque cada corte se aplica sobre el resto del anterior.
+            // `excluir` son las LF ya usadas como calle que cruza: coinciden
+            // con el borde de R y no deben volver a cortarlo.
+            // ─────────────────────────────────────────────────────────────────
+            function afFranjasBorde(R, cadenas, excluir) {
+                const NUC = afNucleo(R);
+                if (!NUC) return { piezas: [], resto: R, lfProlongada: false };
+                const sobreExcluida = function (pts) {
+                    return (excluir || []).some(function (L) {
+                        return afMuestras(pts, 1).every(function (m) { return afDesfase(m, L).abs < 0.05; });
+                    });
+                };
+
+                // Cuerdas válidas: trazados de LF que se mantienen cerca del
+                // borde. Un trazado que se interna en el predio pertenece a otra
+                // manzana y no define retiro de este lote.
+                const cand = [];
+                let lfProlongada = false;
+                for (const ext of cadenas) {
+                    const paths = afInnerPaths(ext.pts, R).filter(function (p) {
+                        return afMaxSepBorde(p.pts, R) <= AF_MAX_RETIRO && !sobreExcluida(p.pts);
+                    });
+                    if (paths.length && ext.prolongado) lfProlongada = true;
+                    for (const p of paths) cand.push(p);
+                }
+                cand.sort(function (a, b) { return b.len - a.len; });
+
+                let resto = R.slice();
+                const piezas = [];
+                for (const orig of cand) {
+                    for (const path of afInnerPaths(orig.pts.slice(), resto)) {
+                        const par = afSplitByPath(resto, path);
+                        const A = par[0], B = par[1];
+                        if (A.length < 3 || B.length < 3) continue;
+                        const aA = afShoelace(A), aB = afShoelace(B);
+                        if (aA < 0.05 || aB < 0.05) continue;
+                        const keepA = afPip(NUC, A);
+                        const keep = keepA ? A : B, drop = keepA ? B : A;
+                        const ad = afShoelace(drop);
+                        if (ad / path.len > AF_MAX_RETIRO) continue;  // no es una franja de retiro
+                        resto = keep;
+                        piezas.push({ area: Math.round(ad * 100) / 100, ring: drop });
+                    }
+                }
+                return { piezas: piezas, resto: resto, lfProlongada: lfProlongada };
             }
 
             // ═════════════════════════════════════════════════════════════════
@@ -6913,7 +7040,7 @@
                 if (!P || P.length < 3) return null;
                 const areaPredio = afShoelace(P);
                 const piezas = [];
-                let lfProlongada = false;
+                let lfProlongada = false, callesQueCruzan = [];
                 // Zona con línea de fábrica: manda ella. Sin ella (zona rural,
                 // vías provinciales) se leen los bordes de la capa de vialidad.
                 // Sin la capa 8 no se puede saber en qué zona está el predio.
@@ -6922,6 +7049,7 @@
                     const lf = calcularFranjasAfectacion(predioGeoJSON);
                     if (lf) {
                         lfProlongada = lf.lfProlongada;
+                        callesQueCruzan = lf.callesQueCruzan;
                         lf.contornos.forEach(function (c) { piezas.push({ area: c.area, ring: c.utm, origen: 'lf' }); });
                     }
                 }
@@ -6951,6 +7079,7 @@
                         };
                     }),
                     lfProlongada: lfProlongada,
+                    callesQueCruzan: callesQueCruzan,
                     corredores: viales.corredores.map(function (c) {
                         return { nombre: c.nombre, jerarquia: c.jerarquia, ancho: c.ancho, area: c.area };
                     }),
@@ -7085,6 +7214,7 @@
                     resultado.franjas = af.franjas;
                     resultado.contornos = af.contornos;
                     resultado.lfProlongada = af.lfProlongada;
+                    resultado.callesQueCruzan = af.callesQueCruzan;
                     resultado.areaEdificable = af.edificable;
                 }
 
