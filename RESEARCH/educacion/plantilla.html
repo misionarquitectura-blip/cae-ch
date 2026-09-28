@@ -325,7 +325,7 @@ const clase = Object.fromEntries(D.porClase.map(c => [c.clase, c]));
 const ee = n => D.porClase.filter(c => c.norma === n);
 const nEE1 = ee('EE1').reduce((a, c) => a + c.n, 0), nEE2 = ee('EE2').reduce((a, c) => a + c.n, 0);
 const mEE2 = ee('EE2').reduce((a, c) => a + c.estudiantes, 0);
-const reqEE1 = Math.ceil(M.poblacion / 1000), reqEE2 = Math.ceil(M.poblacion / 10000);
+const reqEE1 = M.reqEE1, reqEE2 = M.reqEE2;
 const externos = M.matriculaOrdinaria - M.edadEscolar;
 const sens = D.sensibilidad;
 document.querySelectorAll('.anio').forEach(e => e.textContent = M.anioLectivo.replace(' Inicio', ''));
@@ -349,19 +349,20 @@ const tarj = [
 document.getElementById('mosaico').innerHTML = tarj.map(([r, b, e]) => `<div class="tarj"><span class="rot">${r}</span><b>${b}</b><em>${e}</em></div>`).join('');
 
 /* ── 1 · Oferta ─────────────────────────────────────── */
-document.getElementById('txt-oferta').innerHTML = `El Código Urbano distingue dos escalas. La <strong>EE1</strong> es la escuela de barrio (nivel básico
-  y preescolar): una por cada 1 000 habitantes, a no más de 400 m. La <strong>EE2</strong> es el colegio o la unidad educativa:
-  una por cada 10 000 habitantes, a 2 km. Con ${fmt(M.poblacion)} habitantes, la norma pide ${fmt(reqEE1)} EE1 y ${fmt(reqEE2)} EE2.
-  Hay <strong>${fmt(nEE1)} EE1 y ${fmt(nEE2)} EE2</strong>. Es el resultado de la política de unidades educativas, que fusionó
-  escuelas pequeñas en planteles grandes con todos los niveles. Hoy el ${fmt(mEE2 / M.matricula * 100, 0)} % de los estudiantes va a
-  una EE2, y ${fmt([...D.escuelas, ...D.sinUbicar].filter(x => x.estudiantes >= 3000).length)} planteles superan los 3 000 alumnos. Un plantel de ese tamaño es un generador de tráfico,
-  no un equipamiento de barrio.`;
+document.getElementById('txt-oferta').innerHTML = `El Código Urbano distingue dos escalas. La <strong>EE1</strong> es la escuela de barrio (nivel
+  básico y preescolar), con radio de influencia de 400 m. La <strong>EE2</strong> es el colegio o la unidad educativa, con radio de 2 km y
+  población base de 10 000 habitantes. Cubrir el área habitada de la ciudad con esos radios exige ${fmt(reqEE1)} planteles EE1; la
+  capacidad exige ${fmt(reqEE2)} EE2. Hay <strong>${fmt(nEE1)} EE1 y ${fmt(nEE2)} EE2</strong>. La estructura es
+  coherente con el reordenamiento de la oferta educativa que el Ministerio impulsó en la década de 2010, orientado a concentrar
+  planteles pequeños en unidades educativas con todos los niveles. El ${fmt(mEE2 / M.matricula * 100, 0)} % de los estudiantes asiste a una
+  EE2, y ${fmt([...D.escuelas, ...D.sinUbicar].filter(x => x.estudiantes >= 3000).length)} planteles superan los 3 000 alumnos. A esa escala un plantel funciona como polo generador de
+  viajes, no como equipamiento barrial.`;
 const NOM_CLASE = { inicial: 'Centro de educación inicial', basica: 'Escuela de educación básica', sin_dato: 'Sin nivel en el nombre',
   unidad: 'Unidad educativa', bachillerato: 'Colegio de bachillerato', pcei: 'Educación para jóvenes y adultos (PCEI)', especial: 'Educación especial' };
 document.getElementById('tabla-oferta').innerHTML = `<table><thead><tr><th>Tipo</th><th>Norma</th><th>Instituciones</th><th>Estudiantes</th><th>Estudiantes por institución</th></tr></thead><tbody>
   ${D.porClase.slice().sort((a, b) => a.norma.localeCompare(b.norma) || b.estudiantes - a.estudiantes).map(c => `<tr><td>${NOM_CLASE[c.clase]}</td><td style="text-align:left">${c.norma}</td><td>${fmt(c.n)}</td><td>${fmt(c.estudiantes)}</td><td>${fmt(c.estudiantes / c.n)}</td></tr>`).join('')}
-  <tr class="mia"><td>EE1 existentes / que pide la norma</td><td style="text-align:left">EE1</td><td>${fmt(nEE1)} / ${fmt(reqEE1)}</td><td colspan="2" class="mal">${fmt(nEE1 / reqEE1 * 100, 0)} % de la norma</td></tr>
-  <tr><td>EE2 existentes / que pide la norma</td><td style="text-align:left">EE2</td><td>${fmt(nEE2)} / ${fmt(reqEE2)}</td><td colspan="2" class="bien">${fmt(nEE2 / reqEE2 * 100, 0)} % de la norma</td></tr>
+  <tr class="mia"><td>EE1 existentes / requeridos por cobertura de 400 m</td><td style="text-align:left">EE1</td><td>${fmt(nEE1)} / ${fmt(reqEE1)}</td><td colspan="2" class="mal">${fmt(nEE1 / reqEE1 * 100, 0)} % de la norma</td></tr>
+  <tr><td>EE2 existentes / requeridos (1 por 10 000 hab)</td><td style="text-align:left">EE2</td><td>${fmt(nEE2)} / ${fmt(reqEE2)}</td><td colspan="2" class="bien">${fmt(nEE2 / reqEE2 * 100, 0)} % de la norma</td></tr>
   </tbody></table>
   <p style="font-size:.8rem;color:var(--grafito-med);margin-top:10px">Por sostenimiento: ${D.porSostenimiento.map(s => `${s.sost.toLowerCase()}, ${fmt(s.n)} instituciones y ${fmt(s.estudiantes)} estudiantes`).join('; ')}.</p>`;
 

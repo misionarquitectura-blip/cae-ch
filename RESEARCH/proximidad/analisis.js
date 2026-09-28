@@ -183,21 +183,31 @@ if (require.main !== module) {
 // Todo lo demas sale del inventario consolidado de la Linea 2, con una
 // correccion: en el catastro, EA solo es mercado si el propietario lo dice.
 const C = LEE('../equipamiento/consolidado.json');
+// Radios del Codigo Urbano de Riobamba (Ord. 016-2023, art. 178, tabla 3); el
+// mercado, que esa tabla no dimensiona, con el de la NAU (EA1). `sub` enlaza cada
+// servicio con su fila del balance del estudio general. La educacion sale del
+// registro del MINEDUC ubicado en ../educacion/instituciones.json: para la
+// escala EE1 cuenta cualquier plantel con educacion inicial o basica (las
+// unidades educativas la imparten); para la EE2, las unidades y los colegios.
 const SERVICIOS = [
-  { id: 'mercado',   nom: 'Mercado de abasto',         radio: 1000 },
-  { id: 'inicial',   nom: 'Educación inicial',          radio: 400,  sub: 'Educación inicial' },
-  { id: 'basica',    nom: 'Educación básica y bachillerato', radio: 1000, sub: 'Educación básica y bachillerato' },
-  { id: 'salud',     nom: 'Centro de salud',            radio: 800,  sub: 'Centro de salud' },
-  { id: 'verde',     nom: 'Área verde',                 radio: 400,  sub: 'Áreas verdes y recreación' },
-  { id: 'deporte',   nom: 'Equipamiento deportivo',     radio: 1000, sub: 'Equipamiento deportivo' },
-  { id: 'cultural',  nom: 'Cultural / casa comunal',    radio: 1000, sub: 'Cultural' },
-  { id: 'bienestar', nom: 'Bienestar social',           radio: 800,  sub: 'Bienestar social' },
-  { id: 'seguridad', nom: 'UPC / seguridad',            radio: 800,  sub: 'UPC / seguridad barrial' }
+  { id: 'mercado',   nom: 'Mercado de abasto',          radio: 1000, sub: 'Mercado barrial/zonal', norma: 'NAU EA1' },
+  { id: 'ee1',       nom: 'Escuela o educación inicial', radio: 400,  sub: 'Escuelas e inicial (EE1)', norma: 'EE1',
+    edu: x => /^(inicial|basica|unidad|sin_dato)$/.test(x.clase) },
+  { id: 'ee2',       nom: 'Unidad educativa o colegio',  radio: 2000, sub: 'Unidades educativas y colegios (EE2)', norma: 'EE2',
+    edu: x => /^(unidad|bachillerato)$/.test(x.clase) },
+  { id: 'salud',     nom: 'Subcentro o centro de salud', radio: 800,  sub: 'Centro de salud', norma: 'ES1' },
+  { id: 'verde',     nom: 'Parque barrial',              radio: 400,  sub: 'Áreas verdes y recreación', norma: 'ED1' },
+  { id: 'deporte',   nom: 'Equipamiento deportivo',      radio: 3000, sub: 'Equipamiento deportivo', norma: 'ED2' },
+  { id: 'cultural',  nom: 'Casa comunal o biblioteca',   radio: 400,  sub: 'Cultural', norma: 'EC1' },
+  { id: 'bienestar', nom: 'Centro infantil o de bienestar', radio: 400, sub: 'Bienestar social', norma: 'EB1' },
+  { id: 'seguridad', nom: 'UPC',                         radio: 400,  sub: 'UPC / seguridad barrial', norma: 'EG1' }
 ];
+const EDU = LEE('../educacion/instituciones.json');
 const MERC_ABASTO = MERCADOS.filter(m => m.abasto);
 for (const s of SERVICIOS) {
   let lugares;
   if (s.id === 'mercado') lugares = MERC_ABASTO.map(m => ({ id: m.id, c: m.c }));
+  else if (s.edu) lugares = EDU.filter(s.edu).map(x => ({ id: x.amie, c: x.c }));
   else lugares = [
     ...C.establecimientos.filter(e => e.sub === s.sub).map((e, i) => ({ id: 'c' + i, c: e.c })),
     ...C.osm.filter(o => o.publico && o.sub === s.sub).map((o, i) => ({ id: 'o' + i, c: o.c }))
@@ -401,7 +411,7 @@ const out = {
     centro: G.utm2wgs(...CENTRO).map(v => +v.toFixed(6))
   },
   ciudad, sectores,
-  servicios: SERVICIOS.map(({ id, nom, radio, n, cobertura }) => ({ id, nom, radio, n, cobertura })),
+  servicios: SERVICIOS.map(({ id, nom, radio, n, cobertura, sub, norma }) => ({ id, nom, radio, n, cobertura, sub, norma })),
   mercados: MERCADOS.map(m => ({ ...m, ...(porMercado[m.id] ? { pob: Math.round(porMercado[m.id].pob), hog: Math.round(porMercado[m.id].hog), dMedia: Math.round(porMercado[m.id].dsum / porMercado[m.id].pob) } : {}) })),
   dudosos: MERCADOS.dudosos,
   corredores, flujos,

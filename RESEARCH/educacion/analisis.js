@@ -141,6 +141,9 @@ const MERC = LEE('../proximidad/datos.json').corredores.map(c => c.nombre);
 const corredores = [...corr].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([nombre, v]) => ({ nombre, estudianteKm: Math.round(v), tambienAbasto: MERC.includes(nombre) }));
 
 // ----------------------------------------------------------- Salida
+const HEX = r => 3 * Math.sqrt(3) / 2 * r * r;
+// Misma definicion que la rama 2.1 y el estudio general: celdas con al menos un habitante.
+let AREA_HAB = 0; for (const c of celdas.values()) if (Math.round(c.pob) > 0) AREA_HAB += c.area;
 const ordinaria = URB.filter(x => x.clase !== 'pcei');
 const serie = Object.entries(REG.serie).map(([anio, s]) => ({ anio, urbana: Math.round(s.urbana), rural: Math.round(s.rural), instUrbanas: s.instUrbanas,
   // 2022-2023 viene con decimales y un tercio de la matricula: error de la fuente, no dato.
@@ -152,7 +155,11 @@ const out = {
     L: L_BASE, umbralPie: UMBRAL_PIE, radioEE1: RADIO_EE1, radioEE2: RADIO_EE2, radioCentro: RADIO_CENTRO,
     centro: G.utm2wgs(...CENTRO).map(v => +v.toFixed(6)),
     instituciones: URB.length, matricula: suma(URB, x => x.estudiantes), matriculaOrdinaria: suma(ordinaria, x => x.estudiantes),
-    docentes: suma(URB, x => x.docentes), ubicadas: ESC.length, matriculaUbicada: suma(ESC, e => e.estudiantes)
+    docentes: suma(URB, x => x.docentes), ubicadas: ESC.length, matriculaUbicada: suma(ESC, e => e.estudiantes),
+    // Unidades requeridas con el criterio del estudio general: EE1 por cobertura del
+    // area habitada con 400 m; EE2 el mayor entre la cobertura de 2 km y 1 por 10 000 hab.
+    areaHabitada: Math.round(AREA_HAB), reqEE1: Math.ceil(AREA_HAB / HEX(RADIO_EE1)),
+    reqEE2: Math.max(Math.ceil(AREA_HAB / HEX(RADIO_EE2)), Math.ceil(POB / 10000))
   },
   porClase: Object.values(URB.reduce((a, x) => { const k = x.clase; a[k] = a[k] || { clase: k, norma: x.norma, n: 0, estudiantes: 0 }; a[k].n++; a[k].estudiantes += x.estudiantes; return a; }, {})),
   porSostenimiento: Object.values(URB.reduce((a, x) => { const k = x.sostenimiento; a[k] = a[k] || { sost: k, n: 0, estudiantes: 0 }; a[k].n++; a[k].estudiantes += x.estudiantes; return a; }, {})),
