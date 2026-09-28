@@ -1,0 +1,352 @@
+{
+ "06H00222": {
+  "c": [
+   [
+    -78.649252,
+    -1.677457
+   ],
+   [
+    -78.655117,
+    -1.686326
+   ]
+  ],
+  "fuente": "Google Maps, Vigotsky centro Chile y Juan de Velasco",
+  "revisado": "2026-09-28",
+  "nota": "Dos sedes en Google Maps (centro y campus El Pedregal); la matrícula se reparte por igual."
+ },
+ "06H00112": {
+  "c": [
+   -78.646951,
+   -1.671908
+  ],
+  "fuente": "Google Maps, Santa Mariana colegio Orozco y 5 de Junio",
+  "revisado": "2026-09-28"
+ },
+ "06H00221": {
+  "c": [
+   -78.640694,
+   -1.673262
+  ],
+  "fuente": "Google Maps, The British School",
+  "revisado": "2026-09-28"
+ },
+ "06H00097": {
+  "c": [
+   -78.629001,
+   -1.675145
+  ],
+  "fuente": "Google Maps, Nuestro Mundo Eco Rio",
+  "revisado": "2026-09-28"
+ },
+ "06H01917": {
+  "c": [
+   -78.654277,
+   -1.682739
+  ],
+  "fuente": "Google Maps, PCEI Everest",
+  "revisado": "2026-09-28",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC"
+ },
+ "06H00123": {
+  "c": [
+   -78.640747,
+   -1.67258
+  ],
+  "fuente": "Google Maps, Cristiana Nazareno",
+  "revisado": "2026-09-28"
+ },
+ "06H00088": {
+  "c": [
+   -78.632702,
+   -1.6745
+  ],
+  "fuente": "Google Maps, San Mateo (Escuela San Mateo)",
+  "revisado": "2026-09-28"
+ },
+ "06H00170": {
+  "c": [
+   -78.665776,
+   -1.652589
+  ],
+  "fuente": "Google Maps, Pensionado Americano",
+  "revisado": "2026-09-28"
+ },
+ "06H01425": {
+  "c": [
+   -78.64095,
+   -1.642848
+  ],
+  "fuente": "Google Maps, Escuela ABC",
+  "revisado": "2026-09-28",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC"
+ },
+ "06H00497": {
+  "c": [
+   -78.665645,
+   -1.656842
+  ],
+  "fuente": "Google Maps, Nuevo Mundo (Liceo Nuevo Mundo)",
+  "revisado": "2026-09-28"
+ },
+ "06H00040": {
+  "c": [
+   -78.657621,
+   -1.670178
+  ],
+  "fuente": "Google Maps, Capullitos",
+  "revisado": "2026-09-28"
+ },
+ "06H00228": {
+  "c": [
+   -78.646427,
+   -1.682286
+  ],
+  "fuente": "Google Maps, Princeton",
+  "revisado": "2026-09-28"
+ },
+ "06H00156": {
+  "c": [
+   -78.651407,
+   -1.666314
+  ],
+  "fuente": "Google Maps, San Francisco de Asis",
+  "revisado": "2026-09-28"
+ },
+ "06H01933": {
+  "c": [
+   -78.677554,
+   -1.635714
+  ],
+  "fuente": "Google Maps, Montessori",
+  "revisado": "2026-09-28"
+ },
+ "06H00140": {
+  "c": [
+   -78.657621,
+   -1.670178
+  ],
+  "fuente": "Google Maps, Bernardo Davalos Leon",
+  "revisado": "2026-09-28"
+ },
+ "06H00226": {
+  "c": [
+   -78.637347,
+   -1.692581
+  ],
+  "fuente": "Google Maps, American High School",
+  "revisado": "2026-09-28",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC"
+ },
+ "06H00238": {
+  "c": [
+   -78.646899,
+   -1.682865
+  ],
+  "fuente": "Google Maps, Oxford Gardens",
+  "revisado": "2026-09-28"
+ },
+ "06H01703": {
+  "c": [
+   -78.650702,
+   -1.676426
+  ],
+  "fuente": "Google Maps, Jose Maria Velaz",
+  "revisado": "2026-09-28"
+ },
+ "06H01926": {
+  "c": [
+   -78.646895,
+   -1.682862
+  ],
+  "fuente": "Google Maps, PCEI Oxford",
+  "revisado": "2026-09-28"
+ },
+ "06H00135": {
+  "c": [
+   -78.638114,
+   -1.663185
+  ],
+  "fuente": "Google Maps, CEI Alfonso Villagomez",
+  "revisado": "2026-09-28"
+ },
+ "06H01774": {
+  "c": [
+   -78.665282,
+   -1.658011
+  ],
+  "fuente": "Google Maps, Safari Kids",
+  "revisado": "2026-09-28"
+ },
+ "06H01535": {
+  "c": [
+   -78.664547,
+   -1.653327
+  ],
+  "fuente": "Google Maps, Planeta Azul",
+  "revisado": "2026-09-28",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC"
+ },
+ "06H00053": {
+  "c": [
+   -78.677034,
+   -1.662372
+  ],
+  "fuente": "Google Maps, PCEI Libertador",
+  "revisado": "2026-09-28"
+ },
+ "06H01909": {
+  "c": [
+   -78.645109,
+   -1.68192
+  ],
+  "fuente": "Google Maps, Leche y Miel",
+  "revisado": "2026-09-28"
+ },
+ "06H01931": {
+  "c": [
+   -78.649119,
+   -1.672394
+  ],
+  "fuente": "Google Maps, PCEI Nuevo Amanecer",
+  "revisado": "2026-09-28"
+ },
+ "06H01602": {
+  "c": [
+   -78.647501,
+   -1.667626
+  ],
+  "fuente": "Google Maps, Pequeno Paraiso Espana y Venezuela",
+  "revisado": "2026-09-28"
+ },
+ "06H01924": {
+  "c": [
+   -78.679534,
+   -1.640488
+  ],
+  "fuente": "Google Maps, Sori Kids",
+  "revisado": "2026-09-28"
+ },
+ "06H00094": {
+  "c": [
+   -78.639485,
+   -1.666953
+  ],
+  "fuente": "Google Maps, Benjamin Franklin",
+  "revisado": "2026-09-28"
+ },
+ "06H00134": {
+  "c": [
+   -78.642435,
+   -1.674398
+  ],
+  "fuente": "Google Maps, Sordos de Chimborazo",
+  "revisado": "2026-09-28"
+ },
+ "06H00061": {
+  "c": [
+   -78.669382,
+   -1.685066
+  ],
+  "fuente": "Google Maps, George Washington",
+  "revisado": "2026-09-28"
+ },
+ "06H01776": {
+  "c": [
+   -78.642117,
+   -1.674692
+  ],
+  "fuente": "Google Maps, Pekelandia",
+  "revisado": "2026-09-28",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC"
+ },
+ "06H00050": {
+  "c": [
+   -78.659093,
+   -1.664027
+  ],
+  "fuente": "Google Maps, Luis Benavides",
+  "revisado": "2026-09-28",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC"
+ },
+ "06H01531": {
+  "c": [
+   -78.653785,
+   -1.673106
+  ],
+  "fuente": "Google Maps, Ebenezer",
+  "revisado": "2026-09-28"
+ },
+ "06H00069": {
+  "c": [
+   -78.660689,
+   -1.664602
+  ],
+  "fuente": "Google Maps, Mis Primeros Amigos",
+  "revisado": "2026-09-28"
+ },
+ "06B00360": {
+  "c": [
+   -78.659357,
+   -1.677
+  ],
+  "fuente": "Google Maps, Pachayachachik",
+  "revisado": "2026-09-28",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC"
+ },
+ "06H01777": {
+  "c": [
+   -78.6655,
+   -1.64767
+  ],
+  "fuente": "Google Maps, Estrellitas del Manana",
+  "revisado": "2026-09-28"
+ },
+ "06H01913": {
+  "c": [
+   -78.653506,
+   -1.66794
+  ],
+  "fuente": "Google Maps, Manuelita Saenz",
+  "revisado": "2026-09-28"
+ },
+ "06H00009": {
+  "c": [
+   -78.667385,
+   -1.646383
+  ],
+  "fuente": "Google Maps, Gaia",
+  "revisado": "2026-09-28"
+ },
+ "06H01700": {
+  "c": [
+   -78.638802,
+   -1.666376
+  ],
+  "fuente": "Google Maps, Thomas Edison",
+  "revisado": "2026-09-28"
+ },
+ "06H01918": {
+  "c": [
+   -78.666798,
+   -1.65605
+  ],
+  "fuente": "Google Maps, Chiki House",
+  "revisado": "2026-09-28"
+ },
+ "06H01910": {
+  "c": [
+   -78.676716,
+   -1.648875
+  ],
+  "fuente": "Google Maps, River Junior",
+  "revisado": "2026-09-28"
+ },
+ "06H01919": {
+  "c": [
+   -78.665181,
+   -1.643464
+  ],
+  "fuente": "Google Maps, Mis Principitos",
+  "revisado": "2026-09-28"
+ }
+}

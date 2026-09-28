@@ -21,6 +21,27 @@
   "score": 1
  },
  {
+  "amie": "06B00360",
+  "nombre": "UNIDAD EDUCATIVA INTERCULTURAL BILINGÜE PCEI PACHAYACHACHIK",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Fiscomisional",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 18,
+  "docentes": 2,
+  "c": [
+   -78.659357,
+   -1.677
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Pachayachachik",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC",
+  "nota": null
+ },
+ {
   "amie": "06H00002",
   "nombre": "UNIDAD EDUCATIVA JEFFERSON",
   "parroquia": "LIZARZABURU",
@@ -61,6 +82,27 @@
   "ref": "way/304919502",
   "nombreOSM": "Escuela Nicanor Larrea León",
   "score": 1
+ },
+ {
+  "amie": "06H00009",
+  "nombre": "CENTRO DE EDUCACION INICIAL GAIA",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 12,
+  "docentes": 2,
+  "c": [
+   -78.667385,
+   -1.646383
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Gaia",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00010",
@@ -315,6 +357,27 @@
   "score": 1
  },
  {
+  "amie": "06H00040",
+  "nombre": "ESCUELA DE EDUCACION BASICA CAPULLITOS",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "basica",
+  "norma": "EE1",
+  "estudiantes": 176,
+  "docentes": 10,
+  "c": [
+   -78.657621,
+   -1.670178
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Capullitos",
+  "verificar": null,
+  "nota": null
+ },
+ {
   "amie": "06H00043",
   "nombre": "UNIDAD EDUCATIVA VICENTE ANDA AGUIRRE",
   "parroquia": "LIZARZABURU",
@@ -355,6 +418,90 @@
   "ref": "node/5862642798",
   "nombreOSM": "United Educativa Once de Noviembre",
   "score": 0.9
+ },
+ {
+  "amie": "06H00050",
+  "nombre": "UNIDAD EDUCATIVA ESPECIALIZADA DR. LUIS BENAVIDES BENAVIDES",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Educación Especial",
+  "sostenimiento": "Fiscal",
+  "clase": "especial",
+  "norma": "EE2",
+  "estudiantes": 27,
+  "docentes": 6,
+  "c": [
+   -78.659093,
+   -1.664027
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Luis Benavides",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC",
+  "nota": null
+ },
+ {
+  "amie": "06H00053",
+  "nombre": "UNIDAD EDUCATIVA PCEI LIBERTADOR",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Particular",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 54,
+  "docentes": 3,
+  "c": [
+   -78.677034,
+   -1.662372
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, PCEI Libertador",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H00061",
+  "nombre": "UNIDAD EDUCATIVA GEORGE WASHINGTON",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 30,
+  "docentes": 8,
+  "c": [
+   -78.669382,
+   -1.685066
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, George Washington",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H00069",
+  "nombre": "CENTRO DE EDUCACION INICIAL MIS PRIMEROS AMIGOS",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 21,
+  "docentes": 2,
+  "c": [
+   -78.660689,
+   -1.664602
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Mis Primeros Amigos",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00080",
@@ -399,6 +546,48 @@
   "score": 0.84
  },
  {
+  "amie": "06H00088",
+  "nombre": "UNIDAD EDUCATIVA SAN MATEO",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 381,
+  "docentes": 29,
+  "c": [
+   -78.632702,
+   -1.6745
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, San Mateo (Escuela San Mateo)",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H00094",
+  "nombre": "ESCUELA DE EDUCACION BASICA BENJAMIN FRANKLIN SCIENCE SCHOOL",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "basica",
+  "norma": "EE1",
+  "estudiantes": 41,
+  "docentes": 3,
+  "c": [
+   -78.639485,
+   -1.666953
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Benjamin Franklin",
+  "verificar": null,
+  "nota": null
+ },
+ {
   "amie": "06H00096",
   "nombre": "UNIDAD EDUCATIVA CARLOS CISNEROS",
   "parroquia": "MALDONADO",
@@ -420,6 +609,27 @@
   "score": 1
  },
  {
+  "amie": "06H00097",
+  "nombre": "UNIDAD EDUCATIVA NUESTRO MUNDO ECO RIO",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 494,
+  "docentes": 25,
+  "c": [
+   -78.629001,
+   -1.675145
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Nuestro Mundo Eco Rio",
+  "verificar": null,
+  "nota": null
+ },
+ {
   "amie": "06H00110",
   "nombre": "UNIDAD EDUCATIVA LICEO POLICIAL CHIMBORAZO",
   "parroquia": "MALDONADO",
@@ -437,6 +647,27 @@
   ],
   "fuente": "nominatim",
   "nombreOSM": "Unidad Educativa \"LICEO POLICIAL\" CHIMBORAZO"
+ },
+ {
+  "amie": "06H00112",
+  "nombre": "UNIDAD EDUCATIVA SANTA MARIANA DE JESUS",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Fiscomisional",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 1063,
+  "docentes": 57,
+  "c": [
+   -78.646951,
+   -1.671908
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Santa Mariana colegio Orozco y 5 de Junio",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00116",
@@ -458,6 +689,27 @@
   "ref": "node/4150041719",
   "nombreOSM": "INSTITUTO TECNOLÓGICO SUPERIOR EUGENIO ESPEJO",
   "score": 0.84
+ },
+ {
+  "amie": "06H00123",
+  "nombre": "UNIDAD EDUCATIVA CRISTIANA NAZARENO",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 431,
+  "docentes": 21,
+  "c": [
+   -78.640747,
+   -1.67258
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Cristiana Nazareno",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00128",
@@ -523,6 +775,48 @@
   "score": 0.6
  },
  {
+  "amie": "06H00134",
+  "nombre": "UNIDAD EDUCATIVA ESPECIALIZADA SORDOS DE CHIMBORAZO",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Educación Especial",
+  "sostenimiento": "Fiscal",
+  "clase": "especial",
+  "norma": "EE2",
+  "estudiantes": 33,
+  "docentes": 18,
+  "c": [
+   -78.642435,
+   -1.674398
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Sordos de Chimborazo",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H00135",
+  "nombre": "CENTRO DE EDUCACION INICIAL DR ALFONSO VILLAGOMEZ",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Fiscal",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 62,
+  "docentes": 3,
+  "c": [
+   -78.638114,
+   -1.663185
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, CEI Alfonso Villagomez",
+  "verificar": null,
+  "nota": null
+ },
+ {
   "amie": "06H00138",
   "nombre": "UNIDAD EDUCATIVA JUAN DE VELASCO",
   "parroquia": "MALDONADO",
@@ -563,6 +857,27 @@
   "ref": "way/1119219665",
   "nombreOSM": "Escuela de educación basica Jesus Infante",
   "score": 1
+ },
+ {
+  "amie": "06H00140",
+  "nombre": "COLEGIO DE BACHILLERATO BERNARDO DAVALOS LEON",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "bachillerato",
+  "norma": "EE2",
+  "estudiantes": 98,
+  "docentes": 6,
+  "c": [
+   -78.657621,
+   -1.670178
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Bernardo Davalos Leon",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00142",
@@ -626,6 +941,27 @@
   "ref": "way/427747103",
   "nombreOSM": "Escuela Martiniano Guerrero Freire",
   "score": 1
+ },
+ {
+  "amie": "06H00156",
+  "nombre": "ESCUELA DE EDUCACION BASICA SAN FRANCISCO DE ASIS",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "basica",
+  "norma": "EE1",
+  "estudiantes": 119,
+  "docentes": 12,
+  "c": [
+   -78.651407,
+   -1.666314
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, San Francisco de Asis",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00157",
@@ -754,6 +1090,27 @@
   "score": 1
  },
  {
+  "amie": "06H00170",
+  "nombre": "UNIDAD EDUCATIVA PENSIONADO AMERICANO INTERNATIONAL SCHOOL",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 321,
+  "docentes": 20,
+  "c": [
+   -78.665776,
+   -1.652589
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Pensionado Americano",
+  "verificar": null,
+  "nota": null
+ },
+ {
   "amie": "06H00171",
   "nombre": "UNIDAD EDUCATIVA ESPECIALIZADA CARLOS GARBAY",
   "parroquia": "VELASCO",
@@ -880,6 +1237,73 @@
   "score": 1
  },
  {
+  "amie": "06H00221",
+  "nombre": "UNIDAD EDUCATIVA THE BRITISH SCHOOL",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 547,
+  "docentes": 38,
+  "c": [
+   -78.640694,
+   -1.673262
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, The British School",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H00222",
+  "nombre": "UNIDAD EDUCATIVA LEONTIEV VIGOTSKY",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 727,
+  "docentes": 34,
+  "c": [
+   -78.649252,
+   -1.677457
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Vigotsky centro Chile y Juan de Velasco",
+  "verificar": null,
+  "nota": "Dos sedes en Google Maps (centro y campus El Pedregal); la matrícula se reparte por igual.",
+  "sede": 1,
+  "sedes": 2
+ },
+ {
+  "amie": "06H00222",
+  "nombre": "UNIDAD EDUCATIVA LEONTIEV VIGOTSKY",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 727,
+  "docentes": 34,
+  "c": [
+   -78.655117,
+   -1.686326
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Vigotsky centro Chile y Juan de Velasco",
+  "verificar": null,
+  "nota": "Dos sedes en Google Maps (centro y campus El Pedregal); la matrícula se reparte por igual.",
+  "sede": 2,
+  "sedes": 2
+ },
+ {
   "amie": "06H00223",
   "nombre": "UNIDAD EDUCATIVA FE Y ALEGRIA",
   "parroquia": "VELOZ",
@@ -899,6 +1323,48 @@
   "ref": "node/10098079717",
   "nombreOSM": "Fe y Alegría",
   "score": 1
+ },
+ {
+  "amie": "06H00226",
+  "nombre": "UNIDAD EDUCATIVA AMERICAN HIGH SCHOOL",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 96,
+  "docentes": 14,
+  "c": [
+   -78.637347,
+   -1.692581
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, American High School",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC",
+  "nota": null
+ },
+ {
+  "amie": "06H00228",
+  "nombre": "UNIDAD EDUCATIVA PRINCETON",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 168,
+  "docentes": 17,
+  "c": [
+   -78.646427,
+   -1.682286
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Princeton",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00232",
@@ -941,6 +1407,27 @@
   "ref": "way/304920421",
   "nombreOSM": "Unidad Educativa Salesiana \"Santo Tomás Apóstol\"",
   "score": 0.93
+ },
+ {
+  "amie": "06H00238",
+  "nombre": "UNIDAD EDUCATIVA THE OXFORD GARDENS SCHOOL",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 71,
+  "docentes": 10,
+  "c": [
+   -78.646899,
+   -1.682865
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Oxford Gardens",
+  "verificar": null,
+  "nota": null
  },
  {
   "amie": "06H00239",
@@ -1048,6 +1535,27 @@
   "score": 1
  },
  {
+  "amie": "06H00497",
+  "nombre": "UNIDAD EDUCATIVA NUEVO MUNDO",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 201,
+  "docentes": 20,
+  "c": [
+   -78.665645,
+   -1.656842
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Nuevo Mundo (Liceo Nuevo Mundo)",
+  "verificar": null,
+  "nota": null
+ },
+ {
   "amie": "06H01306",
   "nombre": "UNIDAD EDUCATIVA CHIMBORAZO PCEI",
   "parroquia": "LIZARZABURU",
@@ -1069,6 +1577,195 @@
   "score": 0.84
  },
  {
+  "amie": "06H01425",
+  "nombre": "ESCUELA DE EDUCACION BASICA ABC",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "basica",
+  "norma": "EE1",
+  "estudiantes": 224,
+  "docentes": 22,
+  "c": [
+   -78.64095,
+   -1.642848
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Escuela ABC",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC",
+  "nota": null
+ },
+ {
+  "amie": "06H01531",
+  "nombre": "UNIDAD EDUCATIVA EBENEZER",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Particular",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 27,
+  "docentes": 12,
+  "c": [
+   -78.653785,
+   -1.673106
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Ebenezer",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01535",
+  "nombre": "PLANETA AZUL",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "sin_dato",
+  "norma": "EE1",
+  "estudiantes": 55,
+  "docentes": 3,
+  "c": [
+   -78.664547,
+   -1.653327
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Planeta Azul",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC",
+  "nota": null
+ },
+ {
+  "amie": "06H01602",
+  "nombre": "CENTRO DE EDUCACION INICIAL PEQUEÑO PARAISO",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 44,
+  "docentes": 5,
+  "c": [
+   -78.647501,
+   -1.667626
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Pequeno Paraiso Espana y Venezuela",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01700",
+  "nombre": "CENTRO DE EDUCACION INICIAL THOMAS EDISON SCIENCE SCHOOL",
+  "parroquia": "MALDONADO",
+  "codParroquia": "060102",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 12,
+  "docentes": 2,
+  "c": [
+   -78.638802,
+   -1.666376
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Thomas Edison",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01703",
+  "nombre": "UNIDAD EDUCATIVA PCEI JOSE MARIA VELAZ",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Fiscomisional",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 71,
+  "docentes": 4,
+  "c": [
+   -78.650702,
+   -1.676426
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Jose Maria Velaz",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01774",
+  "nombre": "CENTRO DE EDUCACION INICIAL SAFARI KIDS",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 62,
+  "docentes": 5,
+  "c": [
+   -78.665282,
+   -1.658011
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Safari Kids",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01776",
+  "nombre": "CENTRO DE EDUCACION INICIAL PEKELANDIA",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 29,
+  "docentes": 3,
+  "c": [
+   -78.642117,
+   -1.674692
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Pekelandia",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC",
+  "nota": null
+ },
+ {
+  "amie": "06H01777",
+  "nombre": "CENTRO DE EDUCACION INICIAL PARTICULAR ESTRELLITAS DEL MAÑANA",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 15,
+  "docentes": 4,
+  "c": [
+   -78.6655,
+   -1.64767
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Estrellitas del Manana",
+  "verificar": null,
+  "nota": null
+ },
+ {
   "amie": "06H01905",
   "nombre": "CENTRO DE EDUCACION INICIAL EUREKA KIDS",
   "parroquia": "MALDONADO",
@@ -1088,5 +1785,215 @@
   "ref": "node/5571123122",
   "nombreOSM": "Eureka",
   "score": 0.84
+ },
+ {
+  "amie": "06H01909",
+  "nombre": "CENTRO DE EDUCACION INICIAL LECHE Y MIEL",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 47,
+  "docentes": 5,
+  "c": [
+   -78.645109,
+   -1.68192
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Leche y Miel",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01910",
+  "nombre": "CENTRO DE EDUCACION INICIAL RIVER JUNIOR",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 5,
+  "docentes": 2,
+  "c": [
+   -78.676716,
+   -1.648875
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, River Junior",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01913",
+  "nombre": "COLEGIO DE BACHILLERATO PCEI MANUELITA SAENZ",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Particular",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 14,
+  "docentes": 2,
+  "c": [
+   -78.653506,
+   -1.66794
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Manuelita Saenz",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01917",
+  "nombre": "UNIDAD EDUCATIVA PCEI EVEREST",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Particular",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 473,
+  "docentes": 7,
+  "c": [
+   -78.654277,
+   -1.682739
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, PCEI Everest",
+  "verificar": "la parroquia del predio no coincide con la del registro del MINEDUC",
+  "nota": null
+ },
+ {
+  "amie": "06H01918",
+  "nombre": "CENTRO DE EDUCACION INICIAL CHIKIHOUSE",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 7,
+  "docentes": 1,
+  "c": [
+   -78.666798,
+   -1.65605
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Chiki House",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01919",
+  "nombre": "CENTRO DE EDUCACION INICIAL MIS PRINCIPITOS",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 4,
+  "docentes": 1,
+  "c": [
+   -78.665181,
+   -1.643464
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Mis Principitos",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01924",
+  "nombre": "CENTRO DE EDUCACION INICIAL SORI KIDS",
+  "parroquia": "LIZARZABURU",
+  "codParroquia": "060101",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "inicial",
+  "norma": "EE1",
+  "estudiantes": 42,
+  "docentes": 2,
+  "c": [
+   -78.679534,
+   -1.640488
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Sori Kids",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01926",
+  "nombre": "COLEGIO DE BACHILLERATO PCEI OXFORD",
+  "parroquia": "VELOZ",
+  "codParroquia": "060104",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Particular",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 66,
+  "docentes": 7,
+  "c": [
+   -78.646895,
+   -1.682862
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, PCEI Oxford",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01931",
+  "nombre": "UNIDAD EDUCATIVA PCEI NUEVO AMANECER",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Popular Permanente",
+  "sostenimiento": "Particular",
+  "clase": "pcei",
+  "norma": "EE2",
+  "estudiantes": 46,
+  "docentes": 8,
+  "c": [
+   -78.649119,
+   -1.672394
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, PCEI Nuevo Amanecer",
+  "verificar": null,
+  "nota": null
+ },
+ {
+  "amie": "06H01933",
+  "nombre": "UNIDAD EDUCATIVA MONTESSORI",
+  "parroquia": "VELASCO",
+  "codParroquia": "060103",
+  "area": "Urbana",
+  "tipo": "Ordinario",
+  "sostenimiento": "Particular",
+  "clase": "unidad",
+  "norma": "EE2",
+  "estudiantes": 100,
+  "docentes": 16,
+  "c": [
+   -78.677554,
+   -1.635714
+  ],
+  "fuente": "manual",
+  "detalle": "Google Maps, Montessori",
+  "verificar": null,
+  "nota": null
  }
 ]

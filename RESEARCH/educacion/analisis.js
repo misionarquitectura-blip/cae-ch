@@ -218,7 +218,7 @@ const out = {
     L: L_BASE, umbralPie: UMBRAL_PIE, radioEE1: RADIO_EE1, radioEE2: RADIO_EE2, radioCentro: RADIO_CENTRO,
     centro: G.utm2wgs(...CENTRO).map(v => +v.toFixed(6)),
     instituciones: URB.length, matricula: suma(URB, x => x.estudiantes), matriculaOrdinaria: suma(ordinaria, x => x.estudiantes),
-    docentes: suma(URB, x => x.docentes), ubicadas: ESC.length, matriculaUbicada: suma(ESC, e => e.estudiantes),
+    docentes: suma(URB, x => x.docentes), ubicadas: new Set(ESC.map(e => e.amie)).size, porVerificar: new Set(ESC.filter(e => e.verificar).map(e => e.amie)).size, matriculaUbicada: suma(ESC, e => e.estudiantes),
     // Unidades requeridas con el criterio del estudio general: EE1 por cobertura del
     // area habitada con 400 m; EE2 el mayor entre la cobertura de 2 km y 1 por 10 000 hab.
     areaHabitada: Math.round(AREA_HAB), reqEE1: Math.ceil(AREA_HAB / HEX(RADIO_EE1)),

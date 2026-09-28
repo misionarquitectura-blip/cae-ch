@@ -1,6 +1,7 @@
 // Ubica en el mapa las instituciones del registro del MINEDUC, que no trae
 // coordenadas. Tres pasos, en orden de confianza:
-//   1. ubicaciones_manual.json  (AMIE -> [lon, lat], verificadas por el CAE-Ch)
+//   1. ubicaciones_manual.json  (AMIE -> ficha de Google Maps revisada una a una y
+//      contrastada con la parroquia del registro; ver el campo `fuente`)
 //   2. nombre contra las escuelas de OpenStreetMap (amenity=school|kindergarten|college)
 //   3. Nominatim (geocodificador de OSM), acotado al area urbana; cache en fuentes/
 // Lo que no se ubica queda listado en sin_ubicar.json con su matricula.
@@ -35,7 +36,17 @@ const dentro = ([x, y]) => x > BBOX[0] && x < BBOX[2] && y > BBOX[1] && y < BBOX
   const salida = [], sin = [];
   for (const x of REG) {
     let u = null;
-    if (MANUAL[x.amie]) u = { c: MANUAL[x.amie], fuente: 'manual' };
+    // Manual: { c: [lon, lat] | [[lon, lat], ...], fuente, verificar?, nota? }. Varias
+    // sedes de un mismo AMIE se tratan como planteles con la matricula repartida por igual.
+    const man = MANUAL[x.amie];
+    if (man) {
+      const cs = Array.isArray(man) ? [man] : Array.isArray(man.c[0]) ? man.c : [man.c];
+      cs.forEach((c, k) => salida.push({ ...x, c, fuente: 'manual', detalle: man.fuente || null,
+        verificar: man.verificar || null, nota: man.nota || null,
+        estudiantes: Math.round(x.estudiantes / cs.length), docentes: Math.round(x.docentes / cs.length),
+        ...(cs.length > 1 ? { sede: k + 1, sedes: cs.length } : {}) }));
+      continue;
+    }
     if (!u) {
       let best = null, bs = 0;
       for (const o of OSM) { const p = parecido(x.nombre, o.nombre); if (p > bs) { bs = p; best = o; } }

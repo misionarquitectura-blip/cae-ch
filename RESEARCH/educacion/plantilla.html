@@ -505,11 +505,13 @@ document.getElementById('tabla-uni').innerHTML = `<table><thead><tr><th>Universi
 
 /* ── 5 · Sin ubicar ─────────────────────────────────── */
 const mSin = D.sinUbicar.reduce((a, x) => a + x.estudiantes, 0);
-document.getElementById('txt-sin').innerHTML = `El registro del Ministerio no trae coordenadas. Las instituciones se ubicaron cruzando su nombre con OpenStreetMap
-  y su geocodificador. Quedan <strong>${fmt(D.sinUbicar.length)} sin ubicar, con ${fmt(mSin)} estudiantes</strong>, el
-  ${fmt(mSin / M.matricula * 100, 0)} % de la matrícula. Están en las cifras de oferta (sección 01), pero no en el mapa ni en el modelo
-  de viajes. Casi todas son particulares o PCEI. Para completarlas basta anotar sus coordenadas en
-  <code>RESEARCH/educacion/ubicaciones_manual.json</code> y volver a correr el análisis.`;
+document.getElementById('txt-sin').innerHTML = `El registro del Ministerio no trae coordenadas. Las instituciones se ubicaron en tres pasos:
+  por nombre contra OpenStreetMap; con su geocodificador; y, para las restantes, con la ficha de Google Maps de cada una, revisada
+  individualmente y contrastada con la parroquia que declara el registro. ${fmt(M.porVerificar)} fichas coinciden en el nombre pero caen
+  en una parroquia distinta de la registrada, casi siempre junto a un límite parroquial; se conservan y quedan marcadas para verificar.
+  Quedan <strong>${fmt(D.sinUbicar.length)} sin ubicar, con ${fmt(mSin)} estudiantes</strong>, el ${fmt(mSin / M.matricula * 100, 1)} % de la matrícula:
+  instituciones sin ficha en ningún servicio o con una ficha cuya identidad no pudo confirmarse. Están en las cifras de oferta (sección 01),
+  pero no en el mapa ni en el modelo de viajes.`;
 document.getElementById('tabla-sin').innerHTML = `<table><thead><tr><th>Institución</th><th>Código AMIE</th><th>Parroquia</th><th>Sostenimiento</th><th>Estudiantes</th></tr></thead><tbody>
   ${D.sinUbicar.slice(0, 20).map(x => `<tr><td>${x.nombre}</td><td style="text-align:left">${x.amie}</td><td style="text-align:left">${x.parroquia}</td><td style="text-align:left">${x.sostenimiento}</td><td>${fmt(x.estudiantes)}</td></tr>`).join('')}
   ${D.sinUbicar.length > 20 ? `<tr><td colspan="4">Otras ${D.sinUbicar.length - 20} instituciones</td><td>${fmt(D.sinUbicar.slice(20).reduce((a, x) => a + x.estudiantes, 0))}</td></tr>` : ''}</tbody></table>`;
