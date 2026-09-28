@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#E31E24">
 <link rel="canonical" href="https://cae-ch.org/RESEARCH/educacion.html">
 <meta property="og:title" content="CAE-CH | La escuela queda lejos de casa">
-<meta property="og:description" content="61 343 estudiantes, 85 % en unidades educativas grandes y dos de cada tres viajes escolares motorizados. Instituciones educativas y movilidad en Riobamba.">
+<meta property="og:description" content="60 555 estudiantes, 86 % en unidades educativas grandes y dos de cada tres viajes escolares motorizados. Instituciones educativas y movilidad en Riobamba.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cae-ch.org/RESEARCH/educacion.html">
 <meta property="og:locale" content="es_EC">
@@ -173,10 +173,10 @@ footer a{color:rgba(255,255,255,.85)}
     <h1>La escuela queda lejos de casa</h1>
     <p>Esta es una <strong>rama subalterna</strong> de la línea de investigación de equipamiento e
        infraestructura urbana, como la de <a href="proximidad.html" style="color:#fff">mercados y abasto</a>.
-       Estudia las instituciones educativas porque son el equipamiento que más viajes genera: cada mañana
-       de clases decenas de miles de estudiantes salen a la misma hora hacia unos pocos destinos. La matrícula
-       viene del Registro Administrativo del Ministerio de Educación. La norma es la del Código Urbano de
-       Riobamba, y la población y la red de calles son las mismas de la rama 2.1.</p>
+       Se ocupa de las instituciones educativas por ser el equipamiento que genera más viajes diarios, con
+       orígenes dispersos, destinos concentrados y un mismo horario de entrada. La matrícula proviene del
+       Registro Administrativo del Ministerio de Educación y de los informes de las universidades; la norma de
+       referencia es el Código Urbano de Riobamba, y la población y la red vial son las de la rama 2.1.</p>
   </div>
 </div>
 
@@ -284,7 +284,7 @@ footer a{color:rgba(255,255,255,.85)}
 <section class="claro">
   <div class="wrap">
     <span class="sec-rotulo">04 · Educación superior</span>
-    <h2>Tres universidades, cuatro campus y una segunda hora punta</h2>
+    <h2>Tres universidades y cuatro campus, dos de ellos en el borde norte</h2>
     <p id="txt-uni"></p>
     <div class="figura">
       <div class="figura-cab">
@@ -307,22 +307,10 @@ footer a{color:rgba(255,255,255,.85)}
   </div>
 </section>
 
-<!-- ── 5 · Pendientes ─────────────────────────────────────────── -->
+<!-- ── 5 · Método ─────────────────────────────────────────────── -->
 <section>
   <div class="wrap">
-    <span class="sec-rotulo">05 · Lo que falta ubicar</span>
-    <h2>Instituciones del registro que todavía no están en el mapa</h2>
-    <p id="txt-sin"></p>
-    <div class="figura">
-      <div class="tabla-caja" id="tabla-sin" style="padding-top:14px"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ── 6 · Método ─────────────────────────────────────────────── -->
-<section class="claro">
-  <div class="wrap">
-    <span class="sec-rotulo">06 · Método y límites</span>
+    <span class="sec-rotulo">05 · Método y límites</span>
     <h2>Cómo se hizo, y dónde puede fallar</h2>
     <div class="notas" id="notas-metodo"></div>
     <p class="fuente-pie" id="fuentes"></p>
@@ -361,12 +349,12 @@ document.querySelectorAll('.anio').forEach(e => e.textContent = M.anioLectivo.re
 /* ── Titular ─────────────────────────────────────────── */
 document.getElementById('heroe').firstChild.textContent = km(C.dMedia);
 document.getElementById('titular-texto').innerHTML = `
-  <p>Las ${fmt(M.instituciones)} instituciones educativas del área urbana tienen <strong>${fmt(M.matricula)} estudiantes</strong>.
-     En la ciudad viven unos ${fmt(M.edadEscolar)} niños y adolescentes de 3 a 17 años. La diferencia, <strong>al menos
-     ${fmt(externos)} estudiantes</strong>, llega cada mañana desde las parroquias rurales y los cantones vecinos.</p>
-  <p>Los que viven en la ciudad tampoco estudian cerca. Según el modelo, el <strong>${fmt(C.pctMotor, 0)} %</strong> de sus viajes
-     pasa de 1,5 km, la distancia a partir de la cual la escuela deja de ir a pie. Casi todos esos recorridos entran por las
-     mismas avenidas que llevan la compra a los mercados.</p>`;
+  <p>Las ${fmt(M.instituciones)} instituciones educativas analizadas en el área urbana tienen <strong>${fmt(M.matricula)} estudiantes</strong>.
+     En la ciudad residen unos ${fmt(M.edadEscolar)} niños y adolescentes de 3 a 17 años. La diferencia en la matrícula ordinaria,
+     <strong>al menos ${fmt(externos)} estudiantes</strong>, corresponde a quienes residen fuera del área urbana y acuden a ella cada día.</p>
+  <p>Tampoco los residentes estudian cerca de su vivienda. Según el modelo, el <strong>${fmt(C.pctMotor, 0)} %</strong> de sus viajes
+     supera 1,5 km, umbral a partir del cual el desplazamiento deja de hacerse a pie. Los corredores más cargados por estos viajes
+     coinciden con los que concentran los viajes de abasto a los mercados.</p>`;
 const tarj = [
   ['Estudiantes en la ciudad', fmt(M.matricula), `${fmt(M.docentes)} docentes en ${fmt(M.instituciones)} instituciones`],
   ['Llegan de fuera, como mínimo', fmt(externos), `el ${fmt(externos / M.matriculaOrdinaria * 100, 0)} % de la matrícula ordinaria`],
@@ -384,7 +372,7 @@ document.getElementById('txt-oferta').innerHTML = `El Código Urbano distingue d
   capacidad exige ${fmt(reqEE2)} EE2. Hay <strong>${fmt(nEE1)} EE1 y ${fmt(nEE2)} EE2</strong>. La estructura es
   coherente con el reordenamiento de la oferta educativa que el Ministerio impulsó en la década de 2010, orientado a concentrar
   planteles pequeños en unidades educativas con todos los niveles. El ${fmt(mEE2 / M.matricula * 100, 0)} % de los estudiantes asiste a una
-  EE2, y ${fmt([...D.escuelas, ...D.sinUbicar].filter(x => x.estudiantes >= 3000).length)} planteles superan los 3 000 alumnos. A esa escala un plantel funciona como polo generador de
+  EE2, y ${fmt(D.escuelas.filter(x => x.estudiantes >= 3000).length)} planteles superan los 3 000 alumnos. A esa escala un plantel funciona como polo generador de
   viajes, no como equipamiento barrial.`;
 const NOM_CLASE = { inicial: 'Centro de educación inicial', basica: 'Escuela de educación básica', sin_dato: 'Sin nivel en el nombre',
   unidad: 'Unidad educativa', bachillerato: 'Colegio de bachillerato', pcei: 'Educación para jóvenes y adultos (PCEI)', especial: 'Educación especial' };
@@ -421,13 +409,14 @@ function el(tag, at, txt) { const e = document.createElementNS(NS, tag); for (co
 /* ── 2 · Proximidad ─────────────────────────────────── */
 const dMinCiudad = D.sectores.reduce((a, s) => a + s.dMin * s.ninos, 0) / D.sectores.reduce((a, s) => a + s.ninos, 0);
 const peor = D.sectores.slice().sort((a, b) => a.pct400 - b.pct400);
-document.getElementById('txt-proximidad').innerHTML = `El radio zonal se cumple casi en toda la ciudad: el <strong>${fmt(C.pctEE2, 0)} %</strong> de los residentes de
-  3 a 17 años tiene una unidad educativa a menos de 2 km por calle. El barrial no: solo el <strong>${fmt(C.pct400, 0)} %</strong> tiene
-  alguna institución a 400 m, y en el ${NOMBRE_SECTOR[peor[0].id].toLowerCase()}, el ${NOMBRE_SECTOR[peor[1].id].toLowerCase()} y el
-  ${NOMBRE_SECTOR[peor[2].id].toLowerCase()} la cifra baja a ${fmt(peor[0].pct400, 0)}, ${fmt(peor[1].pct400, 0)} y ${fmt(peor[2].pct400, 0)} %.
-  Pero la escuela más cercana no es, por lo general, a la que se va. Con el modelo de elección, el recorrido medio es de
-  <strong>${km(C.dMedia)}</strong>, ${fmt(C.dMedia / dMinCiudad, 0)} veces la distancia a la escuela más cercana (${fmt(dMinCiudad)} m). En el noroeste llega a ${km(S.NO.dEsperada)}: allí viven
-  ${fmt(S.NO.ninos)} niños y adolescentes y hay ${fmt(S.NO.plazasPorNino, 2)} plazas por cada uno.`;
+document.getElementById('txt-proximidad').innerHTML = `El radio zonal se cumple en casi toda la ciudad: el <strong>${fmt(C.pctEE2, C.pctEE2 >= 99.5 ? 1 : 0)} %</strong>
+  de los residentes de 3 a 17 años tiene una unidad educativa a menos de 2 km por calle. La cobertura barrial es menor: el
+  <strong>${fmt(C.pct400, 0)} %</strong> tiene alguna institución a 400 m, y en el ${NOMBRE_SECTOR[peor[0].id].toLowerCase()}, el
+  ${NOMBRE_SECTOR[peor[1].id].toLowerCase()} y el ${NOMBRE_SECTOR[peor[2].id].toLowerCase()} la proporción baja a ${fmt(peor[0].pct400, 0)},
+  ${fmt(peor[1].pct400, 0)} y ${fmt(peor[2].pct400, 0)} %. La distancia recorrida, sin embargo, no es la distancia a la escuela más
+  cercana. Con el modelo de elección, el recorrido medio es de <strong>${km(C.dMedia)}</strong>, ${fmt(C.dMedia / dMinCiudad, 0)} veces la
+  distancia a la institución más próxima (${fmt(dMinCiudad)} m). En el noroeste alcanza ${km(S.NO.dEsperada)}: allí residen
+  ${fmt(S.NO.ninos)} niños y adolescentes, con ${fmt(S.NO.plazasPorNino, 2)} plazas por residente.`;
 document.getElementById('tabla-sectores').innerHTML = `<table><thead><tr><th>Sector</th><th>Residentes 3-17</th><th>Instituciones (EE1 / EE2)</th><th>Matrícula</th>
   <th>Plazas por residente</th><th>Con escuela a 400 m</th><th>Escuela más cercana (m)</th><th>Recorrido estimado (m)</th></tr></thead><tbody>
   ${ORDEN.map(id => { const d = S[id]; return `<tr class="${id === 'NO' ? 'mia' : ''}"><td>${NOMBRE_SECTOR[id]}</td><td>${fmt(d.ninos)}</td><td>${d.escuelas} (${d.ee1} / ${d.ee2})</td>
@@ -437,13 +426,18 @@ document.getElementById('tabla-sectores').innerHTML = `<table><thead><tr><th>Sec
 /* ── 3 · Movilidad ─────────────────────────────────── */
 const comunes = D.corredores.filter(c => c.tambienAbasto).length;
 const motor = Math.round(M.edadEscolar * C.pctMotor / 100);
-document.getElementById('txt-movilidad').innerHTML = `Si el ${fmt(C.pctMotor, 0)} % de los viajes escolares urbanos pasa de 1,5 km, son unos
-  <strong>${fmt(motor)} estudiantes en bus, taxi o auto</strong> cada mañana de clases, más los ${fmt(externos)} que llegan de fuera, y casi todos
-  en la misma media hora antes de la entrada. El modelo reparte esos viajes por la red. ${comunes} de las 12 calles más cargadas por la escuela también están entre
-  las más cargadas por los viajes a los mercados. La Avenida José A. Lizarzaburu, la Pedro Vicente Maldonado, la Canónigo Ramos, la 9 de Octubre y
-  la Daniel León Borja reciben las dos demandas. El centro recibe ${fmt(S.Centro.entran)} estudiantes de otros sectores. El noroeste manda fuera
-  a ${fmt(S.NO.salen)}. El este, con ${fmt(S.E.plazasPorNino, 1)} plazas por residente (Carlos Cisneros y Juan de Velasco), es el mayor
-  receptor relativo.`;
+const compartidas = D.corredores.filter(c => c.tambienAbasto).slice(0, 5).map(c => c.nombre.replace(/^Avenida /, '').replace(/^Jose A\./, 'José A.'));
+const listaY = L => L.length > 1 ? L.slice(0, -1).join(', ') + ' y ' + L[L.length - 1] : L.join('');
+const receptor = D.sectores.slice().sort((a, b) => b.plazasPorNino - a.plazasPorNino)[0];
+const planteles = D.escuelas.filter(e => e.sector === receptor.id).sort((a, b) => b.estudiantes - a.estudiantes).slice(0, 2)
+  .map(e => e.nombre.replace(/^UNIDAD EDUCATIVA\s+/, '').toLowerCase().replace(/(^|\s)\S/g, t => t.toUpperCase()).replace(/ (De|Del|La|Los|Las|Y) /g, m => m.toLowerCase()));
+document.getElementById('txt-movilidad').innerHTML = `Si el ${fmt(C.pctMotor, 0)} % de los viajes escolares urbanos supera 1,5 km,
+  alrededor de <strong>${fmt(Math.round(motor / 1000) * 1000)} estudiantes</strong> se desplazan en bus, taxi o automóvil cada día lectivo, a los que se
+  suman unos ${fmt(Math.round(externos / 1000) * 1000)} que acuden desde fuera del área urbana, con un horario de entrada común. El modelo
+  asigna esos viajes a la red vial. De las 12 calles más cargadas por la demanda escolar, ${comunes} figuran también entre las más cargadas
+  por los viajes de abasto; entre ellas, las avenidas ${listaY(compartidas)}. El centro recibe ${fmt(S.Centro.entran)} estudiantes de otros
+  sectores y el noroeste envía fuera a ${fmt(S.NO.salen)}. El ${NOMBRE_SECTOR[receptor.id].toLowerCase()}, con ${fmt(receptor.plazasPorNino, 1)} plazas
+  por residente (${listaY(planteles)}), es el mayor receptor relativo.`;
 (function corredores() {
   const L = D.corredores.slice(0, 12), W = 900, fila = 28, H = L.length * fila + 30, x0 = 260, x1 = W - 70;
   const max = Math.ceil(Math.max(...L.map(c => c.estudianteKm)) / 1000) * 1000;
@@ -474,7 +468,7 @@ document.getElementById('txt-movilidad').innerHTML = `Si el ${fmt(C.pctMotor, 0)
 
 /* ── 4 · Educacion superior ─────────────────────────── */
 const U = D.universidades, UC = Object.fromEntries(U.campus.map(c => [c.id, c]));
-const top3 = U.corredoresTotal.slice(0, 3).map(c => c.nombre.replace(/^Avenida /, 'Av. ')).join(', ');
+// listaY se define en la seccion 03.
 document.getElementById('txt-uni').innerHTML = `El registro del Ministerio de Educación termina en el bachillerato. Las tres universidades de la
   ciudad suman <strong>${fmt(U.viajes)} estudiantes de grado</strong> en cuatro campus: la ESPOCH en el noroeste (${fmt(UC.espoch.estudiantes)}), la
   UNACH en el Campus Norte y en La Dolorosa, y UNIANDES en la avenida Lizarzaburu. Con un modelo análogo al escolar, en el que cada
@@ -482,7 +476,7 @@ document.getElementById('txt-uni').innerHTML = `El registro del Ministerio de Ed
   <strong>${km(U.dMedia)}</strong> y el <strong>${fmt(U.pctMotor, 0)} %</strong> de los viajes supera 1,5 km (entre ${fmt(U.sensibilidad[0].pctMotor, 0)} y
   ${fmt(U.sensibilidad[1].pctMotor, 0)} % con L de ${fmt(U.sensibilidad[0].L)} y ${fmt(U.sensibilidad[1].L)} m). Los dos campus grandes están en el borde norte,
   así que los viajes universitarios cargan ejes que la escuela apenas usa, como la avenida Milton Reyes, y más que duplican la carga escolar de la Antonio José de Sucre y la Unidad Nacional.
-  Sumadas las dos demandas, las calles más cargadas de la mañana son ${top3}.`;
+  Sumadas ambas demandas, las vías más cargadas son ${listaY(U.corredoresTotal.slice(0, 3).map(c => c.nombre.replace(/^Avenida /, 'la avenida ')))}.`;
 document.getElementById('tabla-uni').innerHTML = `<table><thead><tr><th>Universidad</th><th>Campus</th><th>Estudiantes</th><th>Año</th><th>Recorrido medio estimado</th><th>Fuente</th></tr></thead><tbody>
   ${U.campus.map(c => `<tr><td>${c.nombre.split(' — ')[0]}</td><td style="text-align:left;white-space:normal;min-width:200px">${c.campus}</td><td>${fmt(c.estudiantes)}${c.supuesto ? ' *' : ''}</td><td>${c.anio}</td><td>${fmt(c.dMedia)} m</td>
     <td style="text-align:left;white-space:normal;min-width:260px;font-size:.76rem">${c.fuente}${c.nota ? '. ' + c.nota : ''}</td></tr>`).join('')}
@@ -503,24 +497,15 @@ document.getElementById('tabla-uni').innerHTML = `<table><thead><tr><th>Universi
   document.getElementById('svg-total').append(s);
 })();
 
-/* ── 5 · Sin ubicar ─────────────────────────────────── */
-const mSin = D.sinUbicar.reduce((a, x) => a + x.estudiantes, 0);
-document.getElementById('txt-sin').innerHTML = `El registro del Ministerio no trae coordenadas. Las instituciones se ubicaron en tres pasos:
-  por nombre contra OpenStreetMap; con su geocodificador; y, para las restantes, con la ficha de Google Maps de cada una, revisada
-  individualmente y contrastada con la parroquia que declara el registro. ${fmt(M.porVerificar)} fichas coinciden en el nombre pero caen
-  en una parroquia distinta de la registrada, casi siempre junto a un límite parroquial; se conservan y quedan marcadas para verificar.
-  Quedan <strong>${fmt(D.sinUbicar.length)} sin ubicar, con ${fmt(mSin)} estudiantes</strong>, el ${fmt(mSin / M.matricula * 100, 1)} % de la matrícula:
-  instituciones sin ficha en ningún servicio o con una ficha cuya identidad no pudo confirmarse. Están en las cifras de oferta (sección 01),
-  pero no en el mapa ni en el modelo de viajes.`;
-document.getElementById('tabla-sin').innerHTML = `<table><thead><tr><th>Institución</th><th>Código AMIE</th><th>Parroquia</th><th>Sostenimiento</th><th>Estudiantes</th></tr></thead><tbody>
-  ${D.sinUbicar.slice(0, 20).map(x => `<tr><td>${x.nombre}</td><td style="text-align:left">${x.amie}</td><td style="text-align:left">${x.parroquia}</td><td style="text-align:left">${x.sostenimiento}</td><td>${fmt(x.estudiantes)}</td></tr>`).join('')}
-  ${D.sinUbicar.length > 20 ? `<tr><td colspan="4">Otras ${D.sinUbicar.length - 20} instituciones</td><td>${fmt(D.sinUbicar.slice(20).reduce((a, x) => a + x.estudiantes, 0))}</td></tr>` : ''}</tbody></table>`;
-
 /* ── 5 · Método ─────────────────────────────────────── */
 const notas = [
   ['Matrícula', `Registro Administrativo Histórico del MINEDUC, corte «Inicio» del año lectivo ${M.anioLectivo.replace(' Inicio', '')}, área urbana del cantón.
     El nivel (EE1 o EE2) se deduce del nombre oficial, que el Ministerio normaliza: «Centro de educación inicial» y «Escuela de educación
     básica» son EE1; «Unidad educativa», «Colegio de bachillerato», educación especial y PCEI son EE2, como dice el art. 178.`],
+  ['Ubicación de las instituciones', `El registro no trae coordenadas. Cada institución se ubicó por su nombre en OpenStreetMap o, en su
+    defecto, con su ficha de Google Maps, revisada una a una y contrastada con la parroquia que declara el registro. El estudio trabaja con
+    las ${fmt(M.instituciones)} instituciones ubicadas; se omiten ${fmt(M.omitidas)} cuya localización no pudo confirmarse, que suman
+    ${fmt(M.matriculaOmitida)} estudiantes (${fmt(M.matriculaOmitida / (M.matricula + M.matriculaOmitida) * 100, 1)} % de la matrícula urbana).`],
   ['Residentes en edad escolar', `${fmt(M.ninos311)} de 3 a 11 años (nueve doceavos del grupo de 0 a 11 del censo) y ${fmt(M.adol1217)} de 12 a 17, repartidos por
     la ciudad como la población de la rama 2.1. Se supone que todos estudian, así que los ${fmt(externos)} que llegan de fuera son un mínimo.`],
   ['Modelo de elección', `Cada residente se reparte entre las escuelas ubicadas en proporción a su matrícula y a e<sup>−d/L</sup>, con d por calle y
@@ -532,8 +517,8 @@ const notas = [
     L = ${fmt(U.L)} m; con ${fmt(U.sensibilidad[0].L)} y ${fmt(U.sensibilidad[1].L)} m el recorrido medio va de ${km(U.sensibilidad[0].dMedia)} a ${km(U.sensibilidad[1].dMedia)}.
     Las vías internas del campus de la ESPOCH no se cuentan como corredores urbanos.`],
   ['Lo que el modelo no ve', `Las rutas escolares, el bus urbano (sin datos en OSM), las jornadas vespertinas y los estudiantes que llegan de fuera
-    del área urbana. Tampoco distingue la escuela del colegio dentro de una misma unidad educativa: un niño de 6 años y uno de 17
-    eligen igual.`],
+    del área urbana. Tampoco distingue niveles dentro de una misma unidad educativa: aplica la misma función de elección a todas
+    las edades.`],
   ['Norma', `Código Urbano de Riobamba, Ord. 016-2023, art. 178, tabla 3: EE1 barrial 400 m, 0,80 m²/hab, lote mínimo 800 m², 1 000 hab;
     EE2 zonal 2 000 m, 1,00 m²/hab, lote mínimo 10 000 m², 10 000 hab.`]
 ];
@@ -541,7 +526,8 @@ document.getElementById('notas-metodo').innerHTML = notas.map(([h, p]) => `<div 
 document.getElementById('fuentes').innerHTML = `Fuentes: Ministerio de Educación, <a href="https://www.datosabiertos.gob.ec/dataset/registro-de-matricula-mineduc" target="_blank" rel="noopener">Registro
   Administrativo Histórico 2009-2024</a> (datosabiertos.gob.ec); GAD Municipal de Riobamba, Código Urbano, Ordenanza 016-2023 (Registro Oficial
   Edición Especial 885, 23-05-2023); INEC, Censo de Población y Vivienda 2022; catastro del GADM Riobamba (1 sep 2026); red de calles y ubicación
-  de escuelas © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a> (ODbL). Análisis
+  de escuelas © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a> (ODbL) y fichas de
+  Google Maps; matrícula universitaria de los informes de rendición de cuentas de ESPOCH, UNACH y UNIANDES. Análisis
   reproducible en <code>RESEARCH/educacion/</code>.`;
 document.getElementById('pie-fecha').textContent = 'datos al ' + M.generado.split('-').reverse().join('-');
 

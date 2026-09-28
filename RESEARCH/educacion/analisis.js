@@ -23,9 +23,12 @@ const UMBRAL_PIE = 1500;      // mas alla, el viaje escolar es motorizado casi s
 const RADIO_EE1 = 400, RADIO_EE2 = 2000;
 
 const REG = LEE('registro_riobamba.json');
-const URB = REG.instituciones.filter(x => x.area === 'Urbana');
+// El estudio trabaja con las instituciones ubicadas en el mapa. Las que no pudieron
+// ubicarse (sin_ubicar.json) se omiten de todas las cifras; su peso se declara en el metodo.
+const OMITIR = new Set(JSON.parse(fs.readFileSync('sin_ubicar.json', 'utf8')).map(x => x.amie));
+const URB_TODAS = REG.instituciones.filter(x => x.area === 'Urbana');
+const URB = URB_TODAS.filter(x => !OMITIR.has(x.amie));
 const UBI = LEE('instituciones.json');
-const SIN = LEE('sin_ubicar.json');
 const suma = (L, f) => L.reduce((a, x) => a + f(x), 0);
 
 // Escuelas ubicadas -> nodo de la red
@@ -217,7 +220,7 @@ const out = {
     poblacion: POB, ninos311: NINOS_3_11, adol1217: ADOL_12_17, edadEscolar: EDAD_ESCOLAR,
     L: L_BASE, umbralPie: UMBRAL_PIE, radioEE1: RADIO_EE1, radioEE2: RADIO_EE2, radioCentro: RADIO_CENTRO,
     centro: G.utm2wgs(...CENTRO).map(v => +v.toFixed(6)),
-    instituciones: URB.length, matricula: suma(URB, x => x.estudiantes), matriculaOrdinaria: suma(ordinaria, x => x.estudiantes),
+    instituciones: URB.length, omitidas: URB_TODAS.length - URB.length, matriculaOmitida: suma(URB_TODAS.filter(x => OMITIR.has(x.amie)), x => x.estudiantes), matricula: suma(URB, x => x.estudiantes), matriculaOrdinaria: suma(ordinaria, x => x.estudiantes),
     docentes: suma(URB, x => x.docentes), ubicadas: new Set(ESC.map(e => e.amie)).size, porVerificar: new Set(ESC.filter(e => e.verificar).map(e => e.amie)).size, matriculaUbicada: suma(ESC, e => e.estudiantes),
     // Unidades requeridas con el criterio del estudio general: EE1 por cobertura del
     // area habitada con 400 m; EE2 el mayor entre la cobertura de 2 km y 1 por 10 000 hab.
@@ -238,7 +241,7 @@ const out = {
     campus: CAMPUS.map(({ R, p, nodo, d0, d, ...c }) => c)
   },
   escuelas: ESC.map(({ R, p, nodo, d0, ...e }) => e),
-  sinUbicar: SIN, serie, limite: B.limWGS
+  serie, limite: B.limWGS
 };
 fs.writeFileSync('datos.json', JSON.stringify(out));
 console.log('datos.json', (fs.statSync('datos.json').size / 1024).toFixed(0), 'KB');
