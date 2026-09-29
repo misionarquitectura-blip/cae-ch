@@ -1512,8 +1512,8 @@
                             <li class="layer-item">
                                 <input type="checkbox" class="layer-checkbox" id="layer-7">
                                 <div class="layer-info" data-layer="7">
-                                    <div class="layer-name">Vialidad</div>
-                                    <div class="layer-source" id="layer-7-source">GADMR y GADPCH</div>
+                                    <div class="layer-name">Vialidad provincial (GADPCH)</div>
+                                    <div class="layer-source" id="layer-7-source">GADPCH – Gobierno Autónomo Descentralizado de la Provincia de Chimborazo · red vial rural</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -1527,8 +1527,8 @@
                             <li class="layer-item">
                                 <input type="checkbox" class="layer-checkbox" id="layer-8">
                                 <div class="layer-info" data-layer="8">
-                                    <div class="layer-name">Líneas de Fábrica</div>
-                                    <div class="layer-source" id="layer-8-source">GADMR – Certificación Ejes Viales</div>
+                                    <div class="layer-name">Líneas de Fábrica (GADMR)</div>
+                                    <div class="layer-source" id="layer-8-source">GADMR – Vialidad urbana · Certificación de ejes viales</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -4538,7 +4538,7 @@
                     : (capaDisp
                         ? (metodoAfect === 'vialidad' || metodoAfect === 'lf'
                             ? 'NO – PREDIO SIN AFECTACION DIRECTA (vialidad presente en el sector)'
-                            : 'NO ANALIZADO EN ZONA RURAL – Capa de Vialidad no activa')
+                            : 'NO ANALIZADO EN ZONA RURAL – Capa de Vialidad provincial (GADPCH) no activa')
                         : 'NO ANALIZADO – Capa de Lineas de Fabrica no activa');
                 const colorAfect = tieneAfect ? [180, 30, 30] : (capaDisp && metodoAfect ? [30, 130, 60] : [120, 120, 120]);
                 const anchoVia = afectacionVial ? afectacionVial.anchoVia : null;
@@ -4548,7 +4548,7 @@
                 if (metodoAfect) {
                     filasAfect.push(['Referencia utilizada', metodoAfect === 'lf'
                         ? 'Lineas de fabrica municipales (GADMR)'
-                        : (corredores.length ? 'Bordes externos de la capa de Vialidad' : 'Ejes de la capa de Vialidad') +
+                        : (corredores.length ? 'Bordes externos de la red vial provincial (GADPCH)' : 'Ejes de la red vial provincial (GADPCH)') +
                           ' (sector sin lineas de fabrica definidas)']);
                 }
                 if (tieneAfect && areaAfect > 0) {
@@ -4566,7 +4566,7 @@
                         filasAfect.push(['Area util remanente', `${afectacionVial.areaEdificable.toFixed(2)} m²`]);
                     }
                     filasAfect.push(['Observacion', metodoAfect === 'vialidad'
-                        ? 'En este sector no hay lineas de fabrica definidas. El area indicada es la parte del predio comprendida entre los bordes externos de la via trazados en la capa de Vialidad (GADMR y GADPCH). Es REFERENCIAL: el ancho oficial de la via y su derecho de via deben confirmarse con el ente competente.'
+                        ? 'En este sector no hay lineas de fabrica definidas. El area indicada es la parte del predio comprendida entre los bordes externos de la via trazados en la red vial provincial (GADPCH). Es REFERENCIAL: el ancho oficial de la via y su derecho de via deben confirmarse con el ente competente.'
                         : 'El area indicada corresponde a las franjas del predio comprendidas entre la linea de fabrica y el limite del lote hacia cada via circundante' +
                           (callesCruzan.length ? ', y a la calzada de las vias que atraviesan el predio' : '') +
                           '. Estas zonas no son edificables segun normativa municipal.']);
@@ -4583,17 +4583,17 @@
                 // Ejes que cruzan el lote sin bordes trazados: hay afectacion, pero no se puede medir
                 ejesSinAncho.forEach(e => filasAfect.push(['ADVERTENCIA - Ancho de via desconocido',
                     `El predio esta atravesado por el eje vial ${nombreVia(e)}` + (e.jerarquia ? ` (${e.jerarquia})` : '') +
-                    ` en ${e.longitud.toFixed(1)} m de recorrido, pero la capa de Vialidad no define el ancho ni los bordes de la via en este tramo. ` +
+                    ` en ${e.longitud.toFixed(1)} m de recorrido, pero la red vial provincial (GADPCH) no define el ancho ni los bordes de la via en este tramo. ` +
                     'El predio TIENE AFECTACION VIAL, cuya superficie no puede determinarse con la informacion disponible. ' +
                     'El propietario debe acercarse al ente competente (GAD Municipal de Riobamba o GAD Provincial de Chimborazo, segun la jurisdiccion de la via) ' +
                     'para conocer el ancho oficial y el alcance de la afectacion.']));
                 if (capaDisp && !metodoAfect) {
-                    filasAfect.push(['Nota', 'El predio no tiene lineas de fabrica en su entorno. Active la capa "Vialidad" en el Geovisor para evaluar la afectacion por los bordes de la via.']);
+                    filasAfect.push(['Nota', 'El predio no tiene lineas de fabrica en su entorno. Active la capa "Vialidad provincial (GADPCH)" en el Geovisor para evaluar la afectacion por los bordes de la via.']);
                 }
                 const etiquetaFuente = f => f === 'lf' ? 'entre lineas de fabrica'
                     : f === 'catastro' ? 'hasta el frente de los lotes de enfrente; referencial, sin linea de fabrica en esa acera'
                     : f === 'atributos' ? 'cota de la capa de lineas de fabrica'
-                    : f === 'vialidad' ? 'entre bordes externos, capa de Vialidad' : '';
+                    : f === 'vialidad' ? 'entre bordes externos, red vial provincial GADPCH' : '';
                 const anchosFrente = (afectacionVial && afectacionVial.anchosFrente) || [];
                 const textoFrente = f => f.ancho != null
                     ? `${f.ancho.toFixed(2)} m (${etiquetaFuente(f.fuente)})`
@@ -4862,7 +4862,7 @@
                         doc.rect(mg, y, 3, 3, 'FD'); doc.setLineWidth(0.2); doc.setDrawColor(0, 0, 0);
                         doc.text('Predio consultado', mg + 6, y + 2);
                         const colP = { 1: [251,140,0], 2: [46,125,50], 6: [21,101,192], 7: [17,17,17], 8: [216,27,96], 9: [106,27,154], 10: [206,147,216], 11: [0,105,92] };
-                        const nomP = { 1: 'PUGS Urbano', 2: 'PUGS Rural', 6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Lineas de Fabrica', 9: 'Construcciones IA - No reg.', 10: 'Construcciones IA - Todas', 11: 'Alcantarillado' };
+                        const nomP = { 1: 'PUGS Urbano', 2: 'PUGS Rural', 6: 'Catastro GADMR', 7: 'Vialidad provincial (GADPCH)', 8: 'Lineas de Fabrica (GADMR)', 9: 'Construcciones IA - No reg.', 10: 'Construcciones IA - Todas', 11: 'Alcantarillado' };
                         let lx = mg + 55, lrow = 0;
                         (planoVectorial.capas || []).forEach((id) => {
                             if (lrow >= 2) { y += 7; lx = mg; lrow = 0; }
@@ -5140,7 +5140,7 @@
                 const layerNames = {
                     1: 'PUGS Urbano', 2: 'PUGS Rural', 3: 'Infraestructura Electrica',
                     4: 'Agua Potable EP Riobamba', 5: 'Cobertura Telecomunicaciones',
-                    6: 'Catastro GADMR', 7: 'Vialidad', 8: 'Líneas de Fábrica',
+                    6: 'Catastro GADMR', 7: 'Vialidad provincial (GADPCH)', 8: 'Líneas de Fábrica (GADMR)',
                     11: 'Alcantarillado'
                 };
 
@@ -5161,6 +5161,7 @@
                 }
 
                 // Las capas 9 y 10 (construcciones IA) tienen su propia sección.
+                const aciertos = {}, sinCruce = [];
                 for (const i of [1, 2, 3, 4, 6, 7, 8, 11]) {
                     const checkbox  = document.getElementById(`layer-${i}`);
                     const isActive  = checkbox && checkbox.checked;
@@ -5210,8 +5211,31 @@
                         } catch (e) { }
                     });
 
-                    if (hits === 0) tableData.push([layerName, 'Resultado', 'No hay intersecciones']);
+                    aciertos[i] = hits;
+                    if (hits === 0) sinCruce.push({ id: i, fila: tableData.push([layerName, 'Resultado', '']) - 1 });
                 }
+                // Que una capa no toque el predio no siempre significa ausencia:
+                // la vialidad provincial no llega a la ciudad y cada PUGS cubre
+                // solo su zona. El texto dice qué significa en cada caso.
+                const pugsDe = { 1: 'urbano', 2: 'rural' };
+                sinCruce.forEach(function (sc) {
+                    const id = sc.id;
+                    let texto = 'Sin superposicion con el predio';
+                    if (id === 7) {
+                        texto = 'El predio no esta sobre la red vial provincial (GADPCH), que cubre la vialidad rural. ' +
+                            'La vialidad urbana es competencia del GADMR y se evalua con las lineas de fabrica: ver seccion 4C.';
+                    } else if (id === 8) {
+                        texto = 'Ninguna linea de fabrica cruza el predio. Frentes, ancho de via y afectacion: ver seccion 4C.';
+                    } else if (id === 1 || id === 2) {
+                        const otro = id === 1 ? 2 : 1;
+                        texto = aciertos[otro] > 0
+                            ? `No aplica: el predio esta en suelo ${pugsDe[otro]} y lo regula el PUGS ${pugsDe[otro] === 'urbano' ? 'Urbano' : 'Rural'}.`
+                            : aciertos[otro] === 0
+                                ? 'El predio queda fuera de las zonas del PUGS Urbano y del PUGS Rural cargadas.'
+                                : `No aplica: el predio esta fuera del suelo ${pugsDe[id]}. Active la capa "PUGS ${pugsDe[otro] === 'urbano' ? 'Urbano' : 'Rural'}" para ver su normativa.`;
+                    }
+                    tableData[sc.fila][2] = texto;
+                });
 
                 const csvCheckbox = document.getElementById('layer-csv');
                 tableData.push(['Consulta de Predio', 'Estado', csvCheckbox && csvCheckbox.checked ? 'ACTIVA' : 'INACTIVA']);
@@ -7983,11 +8007,14 @@
                     4: { name: 'Agua Potable EP Riobamba', icon: '💧' },
                     11: { name: 'Alcantarillado', icon: '🚱' },
                     5: { name: 'Telecomunicaciones', icon: '📡' },
-                    7: { name: 'Vialidad', icon: '🛣' }
+                    7: { name: 'Vialidad provincial (GADPCH)', icon: '🛣' },
+                    8: { name: 'Vialidad urbana (GADMR)', icon: '🏘' }
                 };
-                const results = [];
+                const results = [], fila = {};
+                const NEUTRO = [110, 110, 110];
                 for (const id in layerDefs) {
                     const def = layerDefs[id];
+                    fila[id] = results.length;
                     const cb = document.getElementById(`layer-${id}`);
                     const isActive = cb && cb.checked;
                     const hasLayer = !!geojsonLayers[id];
@@ -8118,6 +8145,14 @@
                         continue;
                     }
 
+                    // Vialidad: la urbana es del GADMR y se lee en las líneas de
+                    // fábrica; la rural es la red provincial del GADPCH. Que el
+                    // predio no toque una de las dos no significa que no tenga vía.
+                    if (String(id) === '8' || String(id) === '7') {
+                        results.push(factibilidadVial(Number(id), def.name, predioGeoJSON));
+                        continue;
+                    }
+
                     let intersecta = false;
                     let detalles = [];
                     geojsonLayers[id].eachLayer(function (lyr) {
@@ -8153,7 +8188,74 @@
                         results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Sin elementos en el área del predio', color: [192, 57, 43] });
                     }
                 }
+                // PUGS: cada plan cubre solo su zona. Si el predio está en la
+                // otra, esta fila no aplica; no es que falte normativa.
+                const fuera = function (x, otro, zona, otraZona) {
+                    if (!x || x.estado !== 'NO DETECTADO') return;
+                    const plan = 'PUGS ' + (otraZona === 'urbano' ? 'Urbano' : 'Rural');
+                    if (otro && otro.estado === 'DISPONIBLE') {
+                        Object.assign(x, { estado: 'NO APLICA', color: NEUTRO,
+                            detalle: `El predio esta en suelo ${otraZona}; lo regula el ${plan}.` });
+                    } else if (otro && otro.estado === 'NO VERIFICADO') {
+                        Object.assign(x, { estado: 'FUERA DE ZONA', color: NEUTRO,
+                            detalle: `El predio no esta en suelo ${zona}. Active la capa "${plan}" para verificar su normativa.` });
+                    } else if (otro && otro.estado === 'NO DETECTADO') {
+                        x.detalle = 'El predio queda fuera de las zonas del PUGS Urbano y del PUGS Rural cargadas.';
+                    }
+                };
+                fuera(results[fila[1]], results[fila[2]], 'urbano', 'rural');
+                fuera(results[fila[2]], results[fila[1]], 'rural', 'urbano');
                 return results;
+            }
+
+            // Fila de factibilidad vial. Capa 8: vialidad urbana del GADMR,
+            // por los frentes del predio a calles con línea de fábrica. Capa 7:
+            // red vial provincial del GADPCH, por vías con nombre o jerarquía
+            // a menos de 20 m del predio.
+            function factibilidadVial(id, nombre, predioGeoJSON) {
+                const NEUTRO = [110, 110, 110];
+                const P = afRingUTM(predioGeoJSON);
+                if (!P || P.length < 3) return { name: nombre, estado: 'SIN DATOS', detalle: 'Geometria del predio no valida', color: [200, 160, 50] };
+                const zonaLF = !!geojsonLayers[8] && afHayLF(predioGeoJSON, P);
+                if (id === 8) {
+                    if (!zonaLF) return { name: nombre, estado: 'NO APLICA', color: NEUTRO,
+                        detalle: 'Predio fuera de la zona con lineas de fabrica: su vialidad es la red provincial (GADPCH).' };
+                    let frentes = [];
+                    try { frentes = calcularAnchosVia(predioGeoJSON); } catch (e) { }
+                    if (!frentes.length) return { name: nombre, estado: 'SIN FRENTE', color: [200, 140, 30],
+                        detalle: 'Ningun lado del predio da a una calle con linea de fabrica (lote interior o frente sin linea de fabrica trazada).' };
+                    return { name: nombre, estado: 'DISPONIBLE', color: [39, 174, 96],
+                        detalle: frentes.map(function (f) {
+                            return `Frente ${f.dir}: ` + (f.ancho != null
+                                ? `via de ${f.ancho.toFixed(2)} m` + (f.fuente === 'catastro' ? ' (ref.)' : '')
+                                : 'via de ancho no medible');
+                        }).join('; ') + '. Detalle en la seccion 4C.' };
+                }
+                // Capa 7: tramos con atributos; los trazos sin atributos de la
+                // ciudad son bordillos y contornos de manzana, no vías provinciales.
+                let mejor = null;
+                try {
+                    for (const v of afViasLocales(predioGeoJSON, P)) {
+                        const pr = v.props || {};
+                        const nom = String(pr.NOMBRE_EJE || '').trim(), jer = String(pr.JERARQUIZA || pr.JERARQ_VIA || '').trim();
+                        if (!nom && !jer) continue;
+                        let d = Infinity;
+                        for (let i = 0; i < v.pts.length - 1; i++) {
+                            const a = v.pts[i], b = v.pts[i + 1];
+                            if (afPip(a, P) || afCruzaAnillo(a, b, P)) { d = 0; break; }
+                            d = Math.min(d, afDistToRing(a, P));
+                            for (const q of P) d = Math.min(d, afDist2Seg(q, a, b));
+                        }
+                        if (d <= 20 && (!mejor || d < mejor.d)) mejor = { d: d, nom: nom, jer: jer };
+                    }
+                } catch (e) { }
+                if (mejor) return { name: nombre, estado: 'DISPONIBLE', color: [39, 174, 96],
+                    detalle: (mejor.nom || 'Via sin denominacion') + (mejor.jer ? ` (${mejor.jer})` : '') +
+                        (mejor.d < 0.5 ? ', en contacto con el predio' : `, a ${mejor.d.toFixed(1)} m del lindero`) };
+                if (zonaLF) return { name: nombre, estado: 'NO APLICA', color: NEUTRO,
+                    detalle: 'Predio en zona con lineas de fabrica: su vialidad es urbana, competencia del GADMR (ver fila de vialidad urbana).' };
+                return { name: nombre, estado: 'NO DETECTADO', color: [192, 57, 43],
+                    detalle: 'Sin vias de la red provincial a menos de 20 m del predio.' };
             }
 
             // Anillo exterior del predio seleccionado, en su precisión original.

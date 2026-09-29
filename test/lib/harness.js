@@ -23,7 +23,7 @@ const FUNCIONES = [
     'afMuestras', 'afDesfase', 'afCajaGrados', 'afCajaPredio', 'afHayLF',
     'afViasLocales', 'afCortarPiezas',
     'calcularCorredoresViales', 'calcularAfectacionPredio',
-    'afSegmentosLF', 'afCortesRayo', 'afUnitario', 'afLotesCercanos', 'afHayPredioEn', 'afAnchoDesde', 'calcularAnchosVia',
+    'factibilidadVial', 'afSegmentosLF', 'afCortesRayo', 'afUnitario', 'afLotesCercanos', 'afHayPredioEn', 'afAnchoDesde', 'calcularAnchosVia',
     'lindAnilloValido', 'lindAnillosExteriores', 'lindProyeccion', 'lindLongitudIntervalos',
     'lindLadosPredio', 'lindMarcarVecino'
 ];
