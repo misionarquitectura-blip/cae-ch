@@ -4590,12 +4590,26 @@
                 if (capaDisp && !metodoAfect) {
                     filasAfect.push(['Nota', 'El predio no tiene lineas de fabrica en su entorno. Active la capa "Vialidad" en el Geovisor para evaluar la afectacion por los bordes de la via.']);
                 }
-                const fuenteLabel = fuenteAncho === 'calculado' ? ' (calculado perpendicularmente)'
-                    : fuenteAncho === 'atributos' ? ' (dato de tabla de atributos)'
-                    : fuenteAncho === 'vialidad' ? ' (entre bordes externos, capa de Vialidad)' : '';
-                filasAfect.push(['Ancho de via', anchoVia != null ? `${anchoVia.toFixed(2)} m${fuenteLabel}`
-                    : (ejesSinAncho.length ? 'Desconocido – consultar al ente competente' : 'No disponible en la zona del predio')]);
-                filasAfect.push(['Ancho de acera', anchoAcera != null ? `${anchoAcera.toFixed(2)} m` : 'No disponible en la zona del predio']);
+                const etiquetaFuente = f => f === 'lf' ? 'entre lineas de fabrica'
+                    : f === 'catastro' ? 'hasta el frente de los lotes de enfrente; referencial, sin linea de fabrica en esa acera'
+                    : f === 'atributos' ? 'cota de la capa de lineas de fabrica'
+                    : f === 'vialidad' ? 'entre bordes externos, capa de Vialidad' : '';
+                const anchosFrente = (afectacionVial && afectacionVial.anchosFrente) || [];
+                const textoFrente = f => f.ancho != null
+                    ? `${f.ancho.toFixed(2)} m (${etiquetaFuente(f.fuente)})`
+                    : 'Frente a via con linea de fabrica; ancho no medible (la acera opuesta no tiene linea de fabrica ni lotes catastrados)';
+                if (anchosFrente.length > 1) {
+                    anchosFrente.forEach(f => filasAfect.push([`Ancho de via - frente ${f.dir}`,
+                        textoFrente(f) + ` - lado de ${f.frente.toFixed(2)} m`]));
+                } else if (anchosFrente.length === 1 && anchosFrente[0].ancho == null && anchoVia == null) {
+                    filasAfect.push([`Ancho de via - frente ${anchosFrente[0].dir}`, textoFrente(anchosFrente[0])]);
+                } else {
+                    filasAfect.push(['Ancho de via', anchoVia != null
+                        ? `${anchoVia.toFixed(2)} m (${etiquetaFuente(fuenteAncho)})` + (anchosFrente.length ? ` - frente ${anchosFrente[0].dir}` : '')
+                        : (ejesSinAncho.length ? 'Desconocido – consultar al ente competente'
+                            : 'No determinado – el predio no tiene lineas de fabrica en sus frentes')]);
+                }
+                filasAfect.push(['Ancho de acera', anchoAcera != null ? `${anchoAcera.toFixed(2)} m` : 'No registrado en la cartografia municipal']);
                 y = at({
                     startY: y,
                     body: filasAfect,
@@ -7182,6 +7196,209 @@
                 return null;
             }
 
+            // ═════════════════════════════════════════════════════════════════
+            // ANCHO DE VÍA ENTRE LÍNEAS DE FÁBRICA, por frente del predio.
+            //
+            // El ancho de una calle urbana es la distancia entre las líneas de
+            // fábrica de sus dos aceras. Para cada lado del predio se busca la
+            // LF de su frente (sobre el lindero o metida hasta AF_MAX_RETIRO en
+            // el lote) y desde ella se tiende una perpendicular hacia la calle
+            // hasta la LF de enfrente. Todo en UTM y sin depender de cómo esté
+            // digitalizada la LF: en muchas manzanas es un contorno cerrado,
+            // cuyo primer y último vértice coinciden y no dan dirección.
+            // ═════════════════════════════════════════════════════════════════
+            const VIA_ANCHO_MIN = 3;    // calle más angosta que se reconoce (m)
+            const VIA_ANCHO_LF  = 40;   // calle más ancha que se busca entre LF (m)
+            const VIA_PARALELA_SEN = 0.35; // seno del ángulo máximo entre las LF de las dos aceras (~20°)
+            // Capas de la 8 que no son líneas de fábrica: cotas, ejes, aceras…
+            const LF_NO_LINDERO = ['A. EJES DE VIA', '0-ANCHOS VIALES', '-ACERA', '0-TRAZADO', 'cerramiento', '00punta 0', '.0.2'];
+
+            // Segmentos UTM de línea de fábrica a menos de `D` m del predio
+            function afSegmentosLF(predioGeoJSON, P, D) {
+                const segs = [];
+                if (!geojsonLayers[8]) return segs;
+                const bbP = afBbox(P), caja = afCajaPredio(predioGeoJSON, D);
+                geojsonLayers[8].eachLayer(function (lyr) {
+                    const f = lyr.feature;
+                    if (!f || !f.geometry) return;
+                    if (LF_NO_LINDERO.indexOf((f.properties || {}).Layer) >= 0) return;
+                    const g = f.geometry;
+                    const partes = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : null;
+                    if (!partes) return;
+                    const cg = afCajaGrados(f);
+                    if (cg[2] < caja[0] || cg[0] > caja[2] || cg[3] < caja[1] || cg[1] > caja[3]) return;
+                    for (const parte of partes) {
+                        let u;
+                        try { u = afDedupe(parte.map(afUTM)); } catch (e) { continue; }
+                        for (let i = 0; i < u.length - 1; i++) {
+                            const a = u[i], b = u[i + 1];
+                            if (Math.max(a[0], b[0]) < bbP[0] - D || Math.min(a[0], b[0]) > bbP[2] + D ||
+                                Math.max(a[1], b[1]) < bbP[1] - D || Math.min(a[1], b[1]) > bbP[3] + D) continue;
+                            segs.push([a, b]);
+                        }
+                    }
+                });
+                return segs;
+            }
+
+            // Cortes del rayo a→b con los segmentos, como distancias desde a
+            function afCortesRayo(a, b, segs) {
+                const L = Math.hypot(b[0] - a[0], b[1] - a[1]), out = [];
+                for (const s of segs) {
+                    const r = afSegInt(a, b, s[0], s[1]);
+                    if (r) out.push({ d: r.t * L, seg: s });
+                }
+                return out.sort(function (x, y) { return x.d - y.d; });
+            }
+
+            // Una perpendicular desde el punto M del lado (normal exterior n).
+            // Devuelve null si ese punto no da a una calle; { } si da a una
+            // calle cuyo ancho no se puede medir; o { ancho, fuente, cota }.
+            function afAnchoDesde(M, n, P, NUC, segs, lotes) {
+                // 1) LF del frente: la más cercana al lindero, desde AF_MAX_RETIRO
+                //    dentro del lote hasta 6 m fuera de él (hay lotes que no llegan a la LF)
+                const a = [M[0] - n[0] * AF_MAX_RETIRO, M[1] - n[1] * AF_MAX_RETIRO];
+                const b = [M[0] + n[0] * 6, M[1] + n[1] * 6];
+                let hit = null;
+                for (const c of afCortesRayo(a, b, segs)) {
+                    const t = c.d - AF_MAX_RETIRO;   // con signo: + hacia la calle
+                    if (!hit || Math.abs(t) < Math.abs(hit.t)) hit = { t: t, seg: c.seg };
+                }
+                if (!hit) return null;
+                const H = [M[0] + n[0] * hit.t, M[1] + n[1] * hit.t];
+                // 2) Normal de la LF, orientada hacia afuera del lote
+                const u = afUnitario(hit.seg);
+                if (!u) return null;
+                let m = [-u[1], u[0]];
+                if (m[0] * n[0] + m[1] * n[1] < 0) m = [-m[0], -m[1]];
+                // La calle queda del lado opuesto al núcleo del lote: si no, la
+                // LF encontrada es la del frente visto desde el fondo del lote.
+                if ((NUC[0] - H[0]) * m[0] + (NUC[1] - H[1]) * m[1] >= 0) return null;
+                const pto = function (d) { return [H[0] + m[0] * d, H[1] + m[1] * d]; };
+                // 3) LF de enfrente: primer corte más allá del ancho mínimo
+                const op = afCortesRayo(H, pto(VIA_ANCHO_LF), segs).find(function (c) { return c.d >= VIA_ANCHO_MIN; });
+                if (op) {
+                    // Las dos aceras de una calle son paralelas; si la LF de enfrente
+                    // va en otra dirección, el rayo salió por un cruce o una plaza.
+                    // Y la calle no pasa por dentro del predio ni por otros lotes:
+                    // si los cruza, en medio hay una manzana sin LF trazada.
+                    const v = afUnitario(op.seg);
+                    const d = op.d;
+                    if (v && Math.abs(u[0] * v[1] - u[1] * v[0]) <= VIA_PARALELA_SEN &&
+                        !afPip(pto(d / 2), P) && !afHayPredioEn([pto(d * 0.25), pto(d * 0.5), pto(d * 0.75)], P, lotes)) {
+                        return { ancho: d, fuente: 'lf', cota: [H, pto(d)] };
+                    }
+                }
+                // 4) Sin LF en la acera de enfrente: hasta el frente de los lotes
+                //    del otro lado de la calle (referencial).
+                for (let d = 0.5; d <= VIA_ANCHO_LF; d += 0.25) {
+                    if (!afHayPredioEn([pto(d)], P, lotes)) continue;
+                    if (d < VIA_ANCHO_MIN) break;       // pegado a otro lote: no es calle
+                    return { ancho: d, fuente: 'catastro', cota: [H, pto(d)] };
+                }
+                return {};
+            }
+
+            function afUnitario(seg) {
+                const dx = seg[1][0] - seg[0][0], dy = seg[1][1] - seg[0][1], L = Math.hypot(dx, dy);
+                return L < 1e-6 ? null : [dx / L, dy / L];
+            }
+
+            // Lotes del catastro (capa 6) a menos de `D` m del predio, como
+            // anillos UTM con su caja. Sin la capa, lista vacía.
+            function afLotesCercanos(predioGeoJSON, P, D) {
+                const out = [];
+                if (!geojsonLayers[6]) return out;
+                const caja = afCajaPredio(predioGeoJSON, D);
+                geojsonLayers[6].eachLayer(function (lyr) {
+                    const f = lyr.feature;
+                    if (!f || !f.geometry) return;
+                    const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [];
+                    if (!f._cajaPol) {
+                        let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+                        for (const pol of polys) for (const q of pol[0] || []) { a = Math.min(a, q[0]); b = Math.min(b, q[1]); c = Math.max(c, q[0]); d = Math.max(d, q[1]); }
+                        Object.defineProperty(f, '_cajaPol', { value: [a, b, c, d] });
+                    }
+                    const k = f._cajaPol;
+                    if (k[2] < caja[0] || k[0] > caja[2] || k[3] < caja[1] || k[1] > caja[3]) return;
+                    for (const pol of polys) {
+                        if (!pol[0] || pol[0].length < 4) continue;
+                        const r = pol[0].map(afUTM);
+                        out.push({ ring: r, bb: afBbox(r) });
+                    }
+                });
+                return out;
+            }
+
+            // ¿Cae alguno de los puntos UTM dentro de un lote distinto del predio `P`?
+            function afHayPredioEn(pts, P, lotes) {
+                for (const q of pts) {
+                    // el propio predio (u otra copia de su contorno) no cuenta
+                    if (afPip(q, P) || afDistToRing(q, P) < 0.5) continue;
+                    for (const l of lotes) {
+                        if (q[0] < l.bb[0] || q[0] > l.bb[2] || q[1] < l.bb[1] || q[1] > l.bb[3]) continue;
+                        if (afPip(q, l.ring)) return true;
+                    }
+                }
+                return false;
+            }
+
+            // Frentes a calle del predio: [{ dir, frente, ancho, fuente, cota }],
+            // un renglón por orientación, desde el lado más largo de ese frente.
+            // En cada lado se tienden cinco perpendiculares: el lado da a una
+            // calle si al menos dos encuentran su LF, y el ancho vale si al menos
+            // dos coinciden a ±1 m (una sola puede escaparse por una esquina).
+            // `ancho` es null cuando el frente existe pero no se puede medir.
+            // `fuente`: 'lf' (entre LF) o 'catastro' (hasta los lotes de enfrente).
+            function calcularAnchosVia(predioGeoJSON) {
+                const P = afRingUTM(predioGeoJSON);
+                if (!P || P.length < 3) return [];
+                const NUC = afNucleo(P);
+                if (!NUC) return [];
+                const D = AF_MAX_RETIRO + VIA_ANCHO_LF;
+                const segs = afSegmentosLF(predioGeoJSON, P, D);
+                if (!segs.length) return [];
+                const lotes = afLotesCercanos(predioGeoJSON, P, D);
+                const porDir = {};
+                for (const lado of lindLadosPredio(predioGeoJSON)) {
+                    if (lado.L < 2) continue;
+                    const n = [lado.nx, lado.ny], res = [];
+                    for (const f of [0.2, 0.35, 0.5, 0.65, 0.8]) {
+                        const M = [lado.a[0] + (lado.b[0] - lado.a[0]) * f, lado.a[1] + (lado.b[1] - lado.a[1]) * f];
+                        const r = afAnchoDesde(M, n, P, NUC, segs, lotes);
+                        if (r) res.push(r);
+                    }
+                    if (res.length < 2) continue;   // este lado no da a una calle
+                    // Ancho por consenso, primero entre LF y si no, hasta los lotes
+                    let medida = null;
+                    for (const fuente of ['lf', 'catastro']) {
+                        const med = res.filter(function (r) { return r.fuente === fuente; })
+                            .sort(function (x, y) { return x.ancho - y.ancho; });
+                        if (med.length < 2) continue;
+                        const mediana = med[Math.floor((med.length - 1) / 2)].ancho;
+                        const grupo = med.filter(function (r) { return Math.abs(r.ancho - mediana) <= 1; });
+                        if (grupo.length < 2) continue;
+                        medida = {
+                            ancho: Math.round(grupo.reduce(function (s, r) { return s + r.ancho; }, 0) / grupo.length * 100) / 100,
+                            fuente: fuente,
+                            cota: grupo[Math.floor(grupo.length / 2)].cota   // UTM, para dibujarla
+                        };
+                        break;
+                    }
+                    const fila = {
+                        dir: lado.dir, frente: Math.round(lado.L * 100) / 100,
+                        ancho: medida ? medida.ancho : null, fuente: medida ? medida.fuente : null, cota: medida ? medida.cota : null
+                    };
+                    // Por orientación: manda el lado medido y, entre iguales, el más largo
+                    const prev = porDir[lado.dir];
+                    const mejor = !prev || (fila.ancho != null && prev.ancho == null) ||
+                        ((fila.ancho != null) === (prev.ancho != null) && fila.frente > prev.frente);
+                    if (mejor) porDir[lado.dir] = fila;
+                }
+                return Object.keys(porDir).map(function (k) { return porDir[k]; })
+                    .sort(function (x, y) { return (y.ancho != null) - (x.ancho != null) || y.frente - x.frente; });
+            }
+
             // ─────────────────────────────────────────────────────────────────
             // Analiza la capa 8 (Líneas de Fábrica) y, fuera de su cobertura,
             // la capa 7 (Vialidad) contra el polígono del predio; devuelve si
@@ -7236,15 +7453,23 @@
                     } catch (e) { }
                 });
 
-                // ── Ancho de vía y acera: atributos → fallback perpendicular ──
+                // ── Ancho de vía: entre LF por frente → cotas → corredor ──
                 let anchoVia = null, anchoAcera = null, fuenteAncho = null;
                 let minDistVia = Infinity, minDistAcera = Infinity;
+                resultado.anchosFrente = [];
+                // 1) Medido entre la LF del frente y la de enfrente
+                if (resultado.metodo === 'lf') {
+                    try { resultado.anchosFrente = calcularAnchosVia(predioGeoJSON); } catch (e) { console.warn('Ancho de vía:', e); }
+                    // Sólo la medida entre LF se antepone a las cotas de la capa
+                    const f0 = resultado.anchosFrente[0];
+                    if (f0 && f0.fuente === 'lf') { anchoVia = f0.ancho; fuenteAncho = 'lf'; }
+                }
                 // Fuera de la zona con línea de fábrica, las LF que haya a 50–80 m
-                // son de otra calle: el ancho sale del corredor (paso 3).
+                // son de otra calle: el ancho sale del corredor (paso 4).
                 if (resultado.metodo !== 'vialidad') try {
                     const predioCentroid = turf.centroid(predioGeoJSON);
                     const predioBuffer = turf.buffer(predioGeoJSON, 0.05, { units: 'kilometers' });
-                    // 1) Buscar por atributos específicos (0-ANCHOS VIALES / -ACERA)
+                    // 2) Cotas de la capa (0-ANCHOS VIALES / -ACERA)
                     geojsonLayers[8].eachLayer(function (lyr) {
                         if (!lyr.feature) return;
                         try {
@@ -7258,7 +7483,7 @@
                             if (len < 0.5) return;
                             let dist = Infinity;
                             try { dist = turf.distance(predioCentroid, turf.centroid(featGeo), { units: 'meters' }); } catch (e) { }
-                            if (layer === '0-ANCHOS VIALES' && dist < minDistVia) {
+                            if (layer === '0-ANCHOS VIALES' && fuenteAncho !== 'lf' && dist < minDistVia) {
                                 minDistVia = dist;
                                 anchoVia = Math.round(len * 100) / 100;
                                 fuenteAncho = 'atributos';
@@ -7268,21 +7493,24 @@
                             }
                         } catch (e) { }
                     });
-                    // 2) Fallback: calcular perpendicular al centroide alineado con líneas de fábrica
-                    if (anchoVia === null) {
-                        const viaPerp = calcularAnchoPerpendicular(predioGeoJSON, 'LINEA DE FABRICA');
-                        if (viaPerp !== null) { anchoVia = viaPerp; fuenteAncho = 'calculado'; }
-                    }
+                    // 3) Acera: transecto perpendicular sobre la capa -ACERA
                     if (anchoAcera === null) {
                         const aceraPerp = calcularAnchoPerpendicular(predioGeoJSON, '-ACERA');
                         if (aceraPerp !== null) anchoAcera = aceraPerp;
                     }
                 } catch (e) { }
-                // 3) Zona sin línea de fábrica: el ancho del corredor medido
+                // 4) Zona sin línea de fábrica: el ancho del corredor medido
                 //    entre los bordes externos de la capa de vialidad.
                 if (anchoVia === null && resultado.corredores.length) {
                     anchoVia = resultado.corredores[0].ancho;
                     fuenteAncho = 'vialidad';
+                }
+                // 5) Sin LF enfrente: hasta el frente de los lotes de la otra acera
+                const fMedido = resultado.anchosFrente.find(function (f) { return f.ancho != null; });
+                if (anchoVia === null && fMedido) { anchoVia = fMedido.ancho; fuenteAncho = fMedido.fuente; }
+                // Una calle que atraviesa el predio también es vía de acceso
+                if (anchoVia === null && resultado.callesQueCruzan && resultado.callesQueCruzan.length) {
+                    anchoVia = resultado.callesQueCruzan[0]; fuenteAncho = 'lf';
                 }
                 resultado.anchoVia = anchoVia;
                 resultado.anchoAcera = anchoAcera;

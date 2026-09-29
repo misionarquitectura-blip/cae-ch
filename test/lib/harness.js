@@ -23,11 +23,12 @@ const FUNCIONES = [
     'afMuestras', 'afDesfase', 'afCajaGrados', 'afCajaPredio', 'afHayLF',
     'afViasLocales', 'afCortarPiezas',
     'calcularCorredoresViales', 'calcularAfectacionPredio',
+    'afSegmentosLF', 'afCortesRayo', 'afUnitario', 'afLotesCercanos', 'afHayPredioEn', 'afAnchoDesde', 'calcularAnchosVia',
     'lindAnilloValido', 'lindAnillosExteriores', 'lindProyeccion', 'lindLongitudIntervalos',
     'lindLadosPredio', 'lindMarcarVecino'
 ];
 const CONSTANTES = ['AF_MAX_RETIRO', 'AF_NODE_SNAP', 'LIND_TOL_M', 'LIND_MIN_M',
-    'VIA_VENTANA', 'VIA_PARALELA', 'VIA_BRECHA', 'VIA_ANCHO_MAX', 'VIA_ESPESOR', 'VIA_EJE_DENTRO', 'VIA_ZONA_LF'];
+    'VIA_VENTANA', 'VIA_PARALELA', 'VIA_BRECHA', 'VIA_ANCHO_MAX', 'VIA_ESPESOR', 'VIA_EJE_DENTRO', 'VIA_ZONA_LF', 'VIA_ANCHO_MIN', 'VIA_ANCHO_LF', 'VIA_PARALELA_SEN', 'LF_NO_LINDERO'];
 
 function extraerFuncion(src, nombre) {
     const i = src.indexOf('function ' + nombre + '(');
