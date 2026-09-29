@@ -36,6 +36,11 @@
 
     const LLAVE_TOKEN = 'caech_sesion_token';
 
+    // legal.html vive junto a este archivo: se resuelve contra la URL del
+    // propio script para que el enlace sirva desde cualquier carpeta.
+    const LEGAL = new URL('legal.html',
+        (document.currentScript && document.currentScript.src) || location.href).href;
+
     let perfil = null;
     let permisos = { pdf: false, dxf: false, csv: false, planimetria: false };
 
@@ -135,6 +140,11 @@
         .caech-acc-aviso.info{display:block;background:#EAF1F8;color:#17375E;border:1px solid #C7DAEC;border-left:3px solid #2563A8}
         .caech-acc-pie{font-size:12px;color:var(--grafito-sua,#8B9098);margin:14px 0 0;
             line-height:1.6;text-align:center}
+        .caech-acc-check{display:flex;gap:10px;align-items:flex-start;margin:4px 0 15px;
+            font-size:13px;line-height:1.55;color:var(--grafito-med,#565B63);cursor:pointer}
+        .caech-acc-check input{flex-shrink:0;width:17px;height:17px;margin:2px 0 0;
+            accent-color:var(--rojo-caech,#E31E24);cursor:pointer}
+        .caech-acc-check a{color:var(--rojo-hondo,#B2141A);font-weight:600}
         .caech-acc-enlace{background:none;border:0;color:var(--rojo-caech,#E31E24);
             text-decoration:underline;cursor:pointer;font-size:12px;padding:0;font-family:inherit}
         /* Reserva por si caech-ui.css no esta cargada en esta pagina:
@@ -306,10 +316,11 @@
                     cerrar();
                     pintarBarra();
 
+                    const seguir = conTerminos(alEntrar);
                     if (perfil.requiere_cambio_clave) {
-                        abrirCambioClave(clave.value, alEntrar);
-                    } else if (alEntrar) {
-                        alEntrar();
+                        abrirCambioClave(clave.value, seguir);
+                    } else {
+                        seguir();
                     }
                 }
 
@@ -349,6 +360,7 @@
             '  <input id="caech-reg-clave" type="password" autocomplete="new-password"></div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-repetir">Rep&iacute;tala</label>' +
             '  <input id="caech-reg-repetir" type="password" autocomplete="new-password"></div>' +
+            casillaTerminos('caech-reg-acepto') +
             '<button class="caech-acc-btn" id="caech-reg-crear">Crear mi cuenta</button>' +
             '<p class="caech-acc-pie">Contrase&ntilde;a: m&iacute;nimo 12 caracteres, con may&uacute;sculas, min&uacute;sculas y n&uacute;meros.<br>' +
             'Confirmar&aacute; su correo por enlace; luego el CAE-CH cotejar&aacute; su n&uacute;mero de registro ' +
@@ -360,6 +372,7 @@
                 const correo = el('caech-reg-correo');
                 const clave = el('caech-reg-clave');
                 const repetir = el('caech-reg-repetir');
+                const acepto = el('caech-reg-acepto');
                 const boton = el('caech-reg-crear');
                 nombre.focus();
 
@@ -373,13 +386,17 @@
                     if (clave.value !== repetir.value) {
                         return avisar(overlay, 'error', 'Las dos contraseñas no coinciden.');
                     }
+                    if (!acepto.checked) {
+                        return avisar(overlay, 'error', 'Para crear la cuenta debe aceptar los Términos y condiciones y la Política de privacidad.');
+                    }
                     boton.disabled = true;
                     boton.textContent = 'Creando...';
                     const r = await api('POST', '/api/registro', {
                         nombre: nombre.value,
                         registro_profesional: registro.value,
                         correo: correo.value,
-                        clave: clave.value
+                        clave: clave.value,
+                        acepta_terminos: true
                     });
                     boton.disabled = false;
                     boton.textContent = 'Crear mi cuenta';
@@ -390,7 +407,7 @@
                     // La cuenta existe pero no sirve hasta confirmar el correo,
                     // asi que no se inicia sesion: se explica el paso que falta.
                     avisar(overlay, 'exito', r.datos.mensaje);
-                    [nombre, registro, correo, clave, repetir].forEach(c => { c.disabled = true; });
+                    [nombre, registro, correo, clave, repetir, acepto].forEach(c => { c.disabled = true; });
                     boton.disabled = true;
                 }
 
@@ -398,6 +415,74 @@
                 [nombre, registro, correo, clave, repetir].forEach(campo => campo.addEventListener('keydown', e => {
                     if (e.key === 'Enter') crear();
                 }));
+            });
+    }
+
+    // ── Terminos y Politica de Privacidad ───────────────────────────
+
+    /**
+     * Casilla de aceptacion. Nace SIN marcar: el consentimiento tiene que
+     * ser un acto expreso de quien se registra (LOPDP), no un valor por
+     * defecto. Los enlaces abren en otra pestana para no perder el formulario.
+     */
+    function casillaTerminos(id) {
+        return '<label class="caech-acc-check" for="' + id + '">' +
+            '<input type="checkbox" id="' + id + '">' +
+            '<span>He le&iacute;do y acepto los <a href="' + LEGAL + '#terminos" target="_blank" rel="noopener">' +
+            'T&eacute;rminos y condiciones</a> y la <a href="' + LEGAL + '#privacidad" target="_blank" rel="noopener">' +
+            'Pol&iacute;tica de privacidad</a>, y consiento el tratamiento de mis datos para los fines ah&iacute; descritos.</span>' +
+            '</label>';
+    }
+
+    /**
+     * Envuelve lo que sigue al ingreso: si la cuenta no acepto la version
+     * vigente -cuentas creadas por la administracion, anteriores al
+     * 2026-10-01 o tras un cambio de los textos- se le pide antes de
+     * seguir. No bloquea: "Ahora no" continua y se volvera a pedir en el
+     * proximo ingreso. Las herramientas de la cuenta no cambian.
+     */
+    function conTerminos(siguiente) {
+        const fin = siguiente || function () {};
+        return function () {
+            if (perfil && perfil.terminos_pendientes) abrirTerminos(fin);
+            else fin();
+        };
+    }
+
+    function abrirTerminos(alTerminar) {
+        modal('caech-modal-terminos', 'T&eacute;rminos y privacidad',
+            '<div class="caech-acc-aviso"></div>' +
+            '<p>Para dejar constancia de su consentimiento, conforme a la Ley Org&aacute;nica de ' +
+            'Protecci&oacute;n de Datos Personales, le pedimos aceptar la versi&oacute;n vigente de los ' +
+            'T&eacute;rminos y de la Pol&iacute;tica de privacidad de la plataforma.</p>' +
+            casillaTerminos('caech-ter-acepto') +
+            '<button class="caech-acc-btn" id="caech-ter-aceptar">Aceptar y continuar</button>' +
+            '<p class="caech-acc-pie"><button class="caech-acc-enlace" id="caech-ter-luego">' +
+            'Ahora no; record&aacute;rmelo en el pr&oacute;ximo ingreso</button></p>',
+            (overlay, cerrar) => {
+                const acepto = el('caech-ter-acepto');
+                const boton = el('caech-ter-aceptar');
+
+                el('caech-ter-luego').addEventListener('click', () => { cerrar(); alTerminar(); });
+
+                boton.addEventListener('click', async () => {
+                    if (!acepto.checked) {
+                        return avisar(overlay, 'error', 'Marque la casilla para aceptar, o elija «Ahora no».');
+                    }
+                    boton.disabled = true;
+                    boton.textContent = 'Guardando...';
+                    const r = await api('POST', '/api/sesion/terminos', { acepta_terminos: true });
+                    boton.disabled = false;
+                    boton.textContent = 'Aceptar y continuar';
+                    if (r.estado !== 200) {
+                        return avisar(overlay, 'error', (r.datos && r.datos.error) || 'No se pudo registrar la aceptación.');
+                    }
+                    perfil = r.datos.afiliado;
+                    permisos = r.datos.permisos;
+                    cerrar();
+                    pintarBarra();
+                    alTerminar();
+                });
             });
     }
 

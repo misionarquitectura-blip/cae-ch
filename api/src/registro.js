@@ -13,8 +13,11 @@
 //  con {registro_validado: true}).
 //
 //  Flujo:
-//    1. POST /api/registro            {nombre, registro_profesional, correo, clave}
+//    1. POST /api/registro            {nombre, registro_profesional, correo, clave,
+//                                      acepta_terminos: true}
 //       Crea la cuenta sin verificar y envia el enlace de confirmacion.
+//       Sin la aceptacion expresa de los Terminos y la Politica de
+//       Privacidad no hay alta: queda la version aceptada y la fecha.
 //    2. GET  /api/registro/verificar?t=<token>
 //       Marca el correo verificado y redirige al sitio.
 //    3. POST /api/registro/reenviar   {correo}
@@ -28,7 +31,7 @@
 
 import { generarId, generarToken, sha256, hashearClave, hashIP } from './cripto.js';
 import { ahora, vencido, texto, correoValido, enFuturo } from './http.js';
-import { iteraciones, registrarEvento, perfilPublico, permisos, validarClave } from './sesiones.js';
+import { iteraciones, registrarEvento, perfilPublico, permisos, validarClave, VERSION_TERMINOS } from './sesiones.js';
 import { enviarCorreo, plantillaVerificacionRegistro } from './correo.js';
 
 const MIN_ENLACE      = 60 * 24;  // el enlace de confirmacion dura un dia
@@ -124,6 +127,9 @@ export async function registrar(env, request, datos) {
     const registro = normalizarRegistro(texto(datos.registro_profesional, 40));
 
     if (nombre.length < 3)     return malo('Escriba su nombre completo.');
+    if (datos.acepta_terminos !== true) {
+        return malo('Para crear la cuenta debe aceptar los Terminos y condiciones y la Politica de privacidad.');
+    }
     if (!correoValido(correo)) return malo('El correo no tiene un formato valido.');
     if (!registro) {
         return malo('Indique su numero de registro del CAE. Las cuentas son solo para colegiados.');
@@ -187,17 +193,17 @@ export async function registrar(env, request, datos) {
     await env.DB.prepare(
         'INSERT INTO afiliados (id, usuario, correo, nombre, registro_profesional, registro_validado, ' +
         ' nucleo, rol, origen, estado, hash_clave, requiere_cambio_clave, correo_verificado, ' +
-        ' creado_en, actualizado_en) ' +
-        "VALUES (?, ?, ?, ?, ?, 0, 'Chimborazo', 'usuario', 'registro', 'activo', ?, 0, 0, ?, ?)"
+        ' terminos_version, terminos_aceptados_en, creado_en, actualizado_en) ' +
+        "VALUES (?, ?, ?, ?, ?, 0, 'Chimborazo', 'usuario', 'registro', 'activo', ?, 0, 0, ?, ?, ?, ?)"
     ).bind(id, usuario, correo, nombre, registro,
-            await hashearClave(clave, iteraciones(env)), t, t).run();
+            await hashearClave(clave, iteraciones(env)), VERSION_TERMINOS, t, t, t).run();
 
     const fila = await env.DB.prepare('SELECT * FROM afiliados WHERE id = ?').bind(id).first();
     const envio = await enviarEnlace(env, fila);
 
     await registrarEvento(env, {
         tipo: 'registro', afiliado_id: id, usuario: usuario,
-        detalle: 'registro CAE ' + registro + ' pendiente de validar; '
+        detalle: 'registro CAE ' + registro + ' pendiente de validar; terminos ' + VERSION_TERMINOS + ' aceptados; '
                + (envio.enviado ? 'enlace enviado via ' + envio.proveedor : 'FALLO ENVIO: ' + envio.detalle),
         ip_hash: ip_hash
     });

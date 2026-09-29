@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS afiliados (
     requiere_cambio_clave INTEGER NOT NULL DEFAULT 1,
     clave_cambiada_en     TEXT,
 
+    -- Aceptacion de los Terminos y la Politica de Privacidad (LOPDP: el
+    -- responsable debe poder DEMOSTRAR el consentimiento). Se guarda la
+    -- version aceptada -la fecha de vigencia de legal.html- y cuando.
+    -- NULL o una version distinta de VERSION_TERMINOS = aceptacion pendiente.
+    terminos_version      TEXT,
+    terminos_aceptados_en TEXT,
+
     -- Verificacion del correo. Las cuentas que crea la administracion nacen
     -- verificadas: el CAE-CH responde por ellas y la clave se entrega en mano.
     -- Las del registro publico no pueden ingresar hasta confirmar el correo.

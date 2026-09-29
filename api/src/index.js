@@ -18,7 +18,7 @@
 import { json, ok, error, preflight, cuerpoJSON, texto, ahora } from './http.js';
 import { hashIP } from './cripto.js';
 import {
-    iniciarSesion, cerrarSesion, sesionActual, cambiarClave,
+    iniciarSesion, cerrarSesion, sesionActual, cambiarClave, aceptarTerminos,
     perfilPublico, permisos, registrarEvento, HERRAMIENTAS
 } from './sesiones.js';
 import {
@@ -92,6 +92,14 @@ async function enrutar(request, env, url, ruta, metodo) {
         const datos = await cuerpoJSON(request);
         if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
         return responder(await cambiarClave(env, request, sesion, datos));
+    }
+
+    if (ruta === '/api/sesion/terminos' && metodo === 'POST') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Sesion no valida o expirada.', 401, request, env);
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+        return responder(await aceptarTerminos(env, request, sesion, datos));
     }
 
     // ── Autorizacion de descarga (afiliados) ────────────────────────

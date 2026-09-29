@@ -11,7 +11,7 @@
     <link rel="icon" type="image/png" href="LOGO/favicon-caech.png">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <script src="analytics.js"></script>
+    <script src="caech-privacidad.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
@@ -160,6 +160,21 @@
 
         .destacado p:last-child { margin-bottom: 0; }
 
+        /* Tablas de la politica: tratamientos, proveedores y almacenamiento.
+           En movil se desplazan dentro de su caja, nunca la pagina entera. */
+        .tabla-legal { overflow-x: auto; margin: 6px 0 16px; }
+        .tabla-legal table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+        .tabla-legal th, .tabla-legal td {
+            text-align: left; vertical-align: top;
+            padding: 9px 10px; border-bottom: 1px solid #E6E6E6; color: var(--gris-medio);
+        }
+        .tabla-legal th {
+            background: var(--gris-claro); color: var(--gris-oscuro);
+            font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        }
+        .tabla-legal code { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; color: var(--gris-oscuro); }
+        .bloque h3[id] { scroll-margin-top: 90px; }
+
         footer {
             background-color: var(--gris-oscuro);
             color: rgba(255,255,255,0.75);
@@ -196,6 +211,7 @@
             <div class="indice">
                 <a href="#terminos">Términos y Condiciones</a>
                 <a href="#privacidad">Política de Privacidad</a>
+                <a href="#cookies">Cookies y almacenamiento</a>
                 <a href="#etica">Código de Ética</a>
             </div>
         </div>
@@ -207,7 +223,7 @@
             <!-- ═══════════════ TÉRMINOS Y CONDICIONES ═══════════════ -->
             <section class="bloque" id="terminos">
                 <h2>Términos y Condiciones</h2>
-                <p class="vigencia">Vigentes desde el 1 de septiembre de 2026</p>
+                <p class="vigencia">Vigentes desde el 1 de octubre de 2026</p>
 
                 <h3>1. Quién presta el servicio</h3>
                 <p>Esta plataforma la desarrolla y la mantiene el Colegio de Arquitectos del Ecuador — Provincial de Chimborazo (CAE-CH), organización profesional sin fines de lucro con sede en la Av. Daniel León Borja, Pasaje Centro de Arte y Cultura, Riobamba, provincia de Chimborazo, Ecuador.</p>
@@ -245,60 +261,161 @@
                 <h3>7. Limitación de responsabilidad</h3>
                 <p>El CAE-CH no responde por decisiones de inversión, diseño, compraventa o trámite tomadas exclusivamente sobre la base de esta plataforma. La verificación final es responsabilidad de quien usa la información.</p>
 
-                <h3>8. Cambios y ley aplicable</h3>
+                <h3>8. Aceptación</h3>
+                <p>Consultar el sitio y el visor supone conocer estas condiciones de uso. Crear una cuenta exige además <strong>aceptarlas de forma expresa</strong>, junto con la Política de Privacidad, marcando una casilla que nace sin marcar. La plataforma guarda la versión aceptada —la fecha de vigencia que encabeza cada sección— y el momento de la aceptación.</p>
+                <p>Las cuentas que da de alta la administración, y las que existían antes de esta versión, aceptan en su siguiente ingreso. Cuando estos textos cambien de forma sustancial, se pedirá aceptar la nueva versión al ingresar.</p>
+
+                <h3>9. Cambios y ley aplicable</h3>
                 <p>Estos términos pueden actualizarse; la fecha de vigencia encabeza esta sección. Se rigen por la legislación de la República del Ecuador.</p>
             </section>
 
             <!-- ═══════════════ POLÍTICA DE PRIVACIDAD ═══════════════ -->
             <section class="bloque" id="privacidad">
                 <h2>Política de Privacidad</h2>
-                <p class="vigencia">Vigente desde el 1 de septiembre de 2026 · Ley Orgánica de Protección de Datos Personales (LOPDP)</p>
+                <p class="vigencia">Vigente desde el 1 de octubre de 2026 · Ley Orgánica de Protección de Datos Personales (LOPDP) y su Reglamento</p>
 
                 <h3>1. Responsable del tratamiento</h3>
-                <p>Colegio de Arquitectos del Ecuador — Provincial de Chimborazo (CAE-CH). Av. Daniel León Borja, Pasaje Centro de Arte y Cultura, Riobamba, Chimborazo, Ecuador. Correo de contacto para asuntos de datos personales: <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>.</p>
+                <p>El responsable del tratamiento de los datos personales de esta plataforma es el <strong>Directorio del Colegio de Arquitectos del Ecuador — Provincial de Chimborazo (CAE-CH)</strong>, que decide para qué y cómo se tratan. Sede: Av. Daniel León Borja, Pasaje Centro de Arte y Cultura, Riobamba, Chimborazo, Ecuador.</p>
+                <p>Toda consulta, solicitud o reclamo sobre datos personales se dirige a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>, con el asunto «Protección de datos». El Directorio la atiende directamente.</p>
 
-                <h3>2. Cuándo hace falta una cuenta</h3>
+                <h3>2. Principios que aplicamos</h3>
+                <p>La LOPDP fija los principios que rigen todo tratamiento. Así se cumplen en esta plataforma:</p>
+                <ul>
+                    <li><strong>Juridicidad, lealtad y transparencia.</strong> Cada dato se trata con una base legal declarada en el punto 6, y esta política describe el funcionamiento real del sistema, no uno genérico.</li>
+                    <li><strong>Finalidad.</strong> Los datos se usan sólo para el fin con que se recogieron. El número de registro, por ejemplo, sirve únicamente para comprobar la condición de colegiado.</li>
+                    <li><strong>Pertinencia y minimización.</strong> No se piden cédula, RUC ni documentos de identidad. Del catastro de origen se eliminan los números de cédula y RUC antes de publicarlo. La consulta del mapa no exige cuenta ni deja rastro personal.</li>
+                    <li><strong>Proporcionalidad.</strong> La cuenta sólo se exige para descargar, que es el acto por el que el CAE-CH responde. Consultar es libre.</li>
+                    <li><strong>Confidencialidad.</strong> Los datos de las cuentas sólo los ve la administración del CAE-CH y no se ceden a terceros.</li>
+                    <li><strong>Calidad y exactitud.</strong> Usted puede corregir sus datos en cualquier momento. La copia del catastro se reemplaza íntegra en cada actualización de la fuente.</li>
+                    <li><strong>Conservación limitada.</strong> Cada dato tiene su plazo, descrito en el punto 9. Las sesiones caducan a las 8 horas.</li>
+                    <li><strong>Seguridad.</strong> Contraseñas, enlaces de confirmación, sesiones y direcciones IP se guardan sólo como resúmenes criptográficos irreversibles (punto 10).</li>
+                    <li><strong>Responsabilidad proactiva y demostrada.</strong> La plataforma registra la versión de esta política que cada cuenta aceptó, y cuándo, y lleva una bitácora de accesos y descargas.</li>
+                    <li><strong>Aplicación favorable al titular.</strong> Ante una duda sobre el alcance de esta política, se interpreta a favor de la persona cuyos datos se tratan.</li>
+                </ul>
+
+                <h3>3. Cuándo hace falta una cuenta</h3>
                 <p><strong>Para consultar, nunca.</strong> El visor geoespacial y las investigaciones territoriales se abren sin cuenta y sin registro. Si usted sólo consulta el mapa, el CAE-CH no recoge ningún dato personal suyo.</p>
                 <p><strong>Para descargar, siempre.</strong> El reporte DICAT en PDF, la tabla en CSV y el archivo DXF exigen una cuenta con el correo confirmado. Al crearla se piden el nombre, el <strong>número de registro del colegiado en el CAE</strong>, el correo electrónico y una contraseña. No se solicitan números de cédula, RUC ni ningún documento de identidad.</p>
                 <p><strong>Validación del número de registro.</strong> Las cuentas se otorgan sólo a miembros del CAE, de modo que la administración coteja el número declarado contra el padrón del colegio. Hasta que ese cotejo se complete, la cuenta existe y permite ingresar, pero las descargas siguen bloqueadas. La administración puede además dar de alta cuentas directamente, entregando las credenciales en la sede.</p>
 
-                <h3>3. Datos que se tratan</h3>
+                <h3>4. Datos que se tratan</h3>
                 <ul>
                     <li><strong>Datos de contacto que usted nos envía:</strong> nombre, correo electrónico y el mensaje que redacta. El formulario del sitio no almacena nada en un servidor: abre su propio cliente de correo con el texto ya redactado, de modo que el mensaje viaja por su proveedor de correo y llega a la cuenta institucional del CAE-CH.</li>
                     <li><strong>Datos de la solicitud del DICAT:</strong> clave catastral, dirección del predio y nombre del solicitante, entregados presencialmente o por correo. Se usan únicamente para elaborar y entregar el reporte.</li>
-                    <li><strong>Datos de la cuenta:</strong> nombre, usuario, correo electrónico y <strong>número de registro del colegiado en el CAE</strong>, junto con la constancia de si ese número ya fue cotejado contra el padrón, cuándo y por qué administrador. En las cuentas que da de alta la administración se añade además la fecha de vigencia de la afiliación. El número de registro se trata con un solo fin: comprobar que quien descarga es miembro del CAE. La contraseña <strong>no se guarda</strong>: sólo se conserva un resumen criptográfico irreversible del que no puede recuperarse el original.</li>
+                    <li><strong>Datos de la cuenta:</strong> nombre, usuario, correo electrónico y <strong>número de registro del colegiado en el CAE</strong>, junto con la constancia de si ese número ya fue cotejado contra el padrón, cuándo y por qué administrador. En las cuentas que da de alta la administración se añade además la fecha de vigencia de la afiliación. La contraseña <strong>no se guarda</strong>: sólo se conserva un resumen criptográfico irreversible del que no puede recuperarse el original.</li>
+                    <li><strong>Constancia de aceptación:</strong> la versión de los Términos y de esta Política que usted aceptó, y la fecha y hora de esa aceptación.</li>
                     <li><strong>Confirmación del correo:</strong> al registrarse se genera un enlace de un solo uso, válido 24 horas, del que se almacena únicamente un resumen criptográfico. Sirve para comprobar que la dirección le pertenece; sin esa confirmación la cuenta no puede usarse.</li>
                     <li><strong>Registro de uso de las herramientas:</strong> por cada descarga se anota la fecha, el formato (PDF, DXF o CSV), la clave catastral consultada y qué cuenta la pidió. También quedan registrados los ingresos y los intentos fallidos. Sirve para responder por el uso institucional de la herramienta y detectar accesos indebidos. <strong>La consulta del mapa no se registra por persona</strong>: como no exige cuenta, no hay a quién asociarla.</li>
                     <li><strong>Dirección IP:</strong> nunca se almacena en claro. Se guarda únicamente un resumen criptográfico irreversible, con el solo fin de frenar abusos automatizados. De ese resumen no puede reconstruirse la dirección original.</li>
-                    <li><strong>Datos de navegación:</strong> si la analítica web está activa, se recogen métricas agregadas de visitas, dispositivo y ubicación aproximada mediante Google Analytics. No se usan para identificar a personas concretas.</li>
                 </ul>
+                <p>El sitio <strong>no usa analítica web</strong> —ni Google Analytics ni ninguna otra— ni herramientas de publicidad o de seguimiento entre sitios.</p>
 
-                <h3>4. Información catastral de terceros</h3>
+                <h3>5. Información catastral de terceros</h3>
                 <p>La plataforma consulta el catastro predial que el GADM de Riobamba publica en su geoportal, cuya fuente original es esa municipalidad. Ese catastro incluye el nombre del titular del predio, la superficie y el avalúo, que en el ordenamiento ecuatoriano son información catastral de acceso público.</p>
+                <p>El visor permite buscar un predio por su clave catastral o por el <strong>nombre del titular</strong>, igual que el geoportal de origen. Esa búsqueda existe para que un profesional ubique el predio sobre el que trabaja por encargo de su propietario, y está sujeta a límites expresos:</p>
+                <ul>
+                    <li>Sólo muestra lo que ya publica la fuente, depurado como se indica abajo.</li>
+                    <li>Los Términos prohíben extraer la información de forma masiva, recomponer bases de datos de propietarios y usarlas con fines comerciales, publicitarios o de contacto no solicitado.</li>
+                    <li>El titular puede oponerse a que su nombre aparezca en nuestra copia (punto 11).</li>
+                </ul>
                 <div class="destacado">
                     <p><strong>Minimización aplicada.</strong> Antes de incorporar el catastro a la plataforma se depura su tabla de atributos: se conservan sólo los campos necesarios para elaborar el reporte y se eliminan el resto. En particular, se <strong>retiran los números de cédula y de RUC</strong> que la base de origen arrastra pegados al nombre del titular, así como los identificadores internos del servicio. Esos números no se almacenan, no se publican y no salen en ningún reporte.</p>
                 </div>
                 <p>Si usted es titular de un predio y considera que la información catastral que aparece aquí es inexacta o no debería difundirse, puede escribirnos y la retiraremos de nuestra copia. La corrección en la fuente debe gestionarse ante el GADM de Riobamba, que es la entidad responsable de ese registro.</p>
 
-                <h3>5. Finalidad y base legal</h3>
-                <p>Los datos de contacto se tratan para responder su consulta y elaborar el reporte solicitado; la base legal es su consentimiento al enviarnos el mensaje y la ejecución del servicio que nos pide. Los datos de la cuenta —incluido el número de registro— y el registro de uso se tratan para comprobar la condición de miembro del CAE y prestar el servicio al que da derecho y para responder por el uso de una herramienta institucional; la base legal es la ejecución de esa relación gremial y el interés legítimo del CAE-CH en la seguridad de la plataforma. La información catastral se trata por interés legítimo en el ejercicio de la función gremial y técnica del CAE-CH, sobre datos que ya son de acceso público.</p>
+                <h3>6. Finalidad y base legal</h3>
+                <div class="tabla-legal">
+                    <table>
+                        <thead><tr><th>Tratamiento</th><th>Para qué</th><th>Base legal (LOPDP)</th></tr></thead>
+                        <tbody>
+                            <tr><td>Contacto y solicitud del DICAT</td><td>Responder la consulta y elaborar el reporte pedido</td><td>Consentimiento al escribirnos y ejecución del servicio solicitado</td></tr>
+                            <tr><td>Cuenta y número de registro</td><td>Comprobar la condición de colegiado y prestar el servicio al que da derecho</td><td>Consentimiento expreso al registrarse y ejecución de la relación gremial</td></tr>
+                            <tr><td>Registro de uso y bitácora de accesos</td><td>Responder por el uso de una herramienta institucional y detectar accesos indebidos</td><td>Interés legítimo del CAE-CH en la seguridad de la plataforma</td></tr>
+                            <tr><td>Resumen de la dirección IP</td><td>Frenar registros e ingresos automatizados</td><td>Interés legítimo (seguridad)</td></tr>
+                            <tr><td>Catastro predial</td><td>Elaborar el DICAT y ubicar predios en el visor</td><td>Interés legítimo en la función gremial y técnica, sobre información catastral de acceso público</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
-                <h3>6. Con quién se comparte</h3>
-                <p>El CAE-CH no vende, alquila ni cede datos personales a terceros. Sólo intervienen los proveedores de infraestructura necesarios para que el sitio funcione: el alojamiento estático del sitio, el servicio de Cloudflare que aloja la base de afiliados y atiende la verificación de acceso, el proveedor que entrega los correos de verificación, el proveedor de correo electrónico institucional y, si está activa, la analítica web de Google.</p>
+                <h3>7. Consentimiento</h3>
+                <p>Cuando la base legal es su consentimiento, éste debe ser <strong>libre, específico, informado e inequívoco</strong>. Por eso:</p>
+                <ul>
+                    <li>La casilla de aceptación del registro nace sin marcar, y sin marcarla no se crea la cuenta.</li>
+                    <li>Los Términos y esta Política se enlazan junto a la casilla, para leerlos antes de aceptar.</li>
+                    <li>Se guarda la versión aceptada y la fecha, de modo que el CAE-CH pueda demostrar el consentimiento.</li>
+                    <li>Si estos textos cambian de forma sustancial, se le pedirá aceptar la nueva versión en su siguiente ingreso.</li>
+                </ul>
+                <p><strong>Puede revocar su consentimiento en cualquier momento</strong> escribiendo a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>. La revocación no afecta a los tratamientos hechos antes. Como la cuenta existe para las descargas, revocarlo supone darla de baja; la consulta del mapa sigue abierta sin cuenta.</p>
 
-                <h3>7. Conservación</h3>
+                <h3>8. Proveedores y transferencias internacionales</h3>
+                <p>El CAE-CH <strong>no vende, alquila ni cede</strong> datos personales. Sólo intervienen los proveedores técnicos sin los cuales el sitio no funciona. Actúan como encargados o prestadores de infraestructura, y algunos están fuera del Ecuador, lo que constituye una transferencia internacional de datos:</p>
+                <div class="tabla-legal">
+                    <table>
+                        <thead><tr><th>Proveedor</th><th>Qué hace</th><th>Qué dato recibe</th><th>Dónde</th></tr></thead>
+                        <tbody>
+                            <tr><td>GitHub Pages</td><td>Aloja las páginas del sitio</td><td>Dirección IP y datos técnicos de la visita</td><td>Estados Unidos</td></tr>
+                            <tr><td>Cloudflare</td><td>Aloja la base de cuentas y el servicio de acceso; sirve bibliotecas (cdnjs)</td><td>Datos de la cuenta y bitácora; IP al servir el contenido</td><td>Red global; empresa en EE. UU.</td></tr>
+                            <tr><td>Resend</td><td>Envía el correo de confirmación de la cuenta</td><td>Nombre y correo electrónico</td><td>Estados Unidos</td></tr>
+                            <tr><td>Google (Gmail)</td><td>Correo institucional del CAE-CH</td><td>Los mensajes que usted nos envía</td><td>Estados Unidos</td></tr>
+                            <tr><td>Google Fonts, Google Maps, Esri, OpenStreetMap, unpkg</td><td>Tipografía, mapas base, búsqueda de calles y bibliotecas del visor</td><td>Dirección IP y la zona del mapa que se visualiza</td><td>Varios, principalmente EE. UU. y Unión Europea</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Estos proveedores aplican sus propias medidas de seguridad y condiciones de tratamiento de datos. Los proveedores de mapas y tipografía no reciben ningún dato de su cuenta: sólo lo que su navegador envía al descargar el contenido.</p>
+
+                <h3>9. Conservación</h3>
                 <p>La correspondencia y las solicitudes se conservan mientras dure la gestión y el plazo de archivo institucional del CAE-CH. La copia local del catastro se reemplaza íntegramente en cada actualización de la fuente.</p>
-                <p>Las sesiones abiertas caducan a las 8 horas y se eliminan de forma automática. Los datos de la cuenta se conservan mientras dure la afiliación y el plazo de archivo institucional. El registro de uso de las herramientas y la bitácora de accesos se conservan mientras sean necesarios para acreditar el uso del servicio. Puede pedir la eliminación de sus datos en cualquier momento conforme al punto 8.</p>
+                <p>Las sesiones abiertas caducan a las 8 horas y se eliminan de forma automática. Los enlaces de confirmación caducan a las 24 horas. Los datos de la cuenta y la constancia de aceptación se conservan mientras dure la afiliación y el plazo de archivo institucional. El registro de uso de las herramientas y la bitácora de accesos se conservan mientras sean necesarios para acreditar el uso del servicio. Puede pedir la eliminación de sus datos en cualquier momento conforme al punto 11.</p>
 
-                <h3>8. Sus derechos</h3>
-                <p>Conforme a la LOPDP, usted puede solicitar acceso, rectificación, eliminación, oposición, portabilidad y la suspensión del tratamiento de sus datos personales, escribiendo a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>. Atendemos la solicitud en los plazos que fija la ley. Si considera que su solicitud no fue atendida, puede acudir a la Superintendencia de Protección de Datos Personales.</p>
+                <h3>10. Seguridad</h3>
+                <ul>
+                    <li>Todo el tráfico viaja cifrado (HTTPS).</li>
+                    <li>Las contraseñas se guardan con un algoritmo de derivación lento (PBKDF2-SHA256 con sal); los tokens de sesión, los enlaces de confirmación y las direcciones IP, sólo como resúmenes criptográficos.</li>
+                    <li>Tras varios intentos fallidos, el ingreso se bloquea temporalmente. Cambiar la contraseña cierra las demás sesiones abiertas.</li>
+                    <li>Las descargas y los ingresos quedan en una bitácora que sólo consulta la administración.</li>
+                </ul>
+                <p><strong>Vulneraciones de seguridad.</strong> Si se produjera un incidente que comprometa datos personales, el CAE-CH lo notificará a la Superintendencia de Protección de Datos Personales y a las personas afectadas, sin dilación y dentro de los plazos que fija la LOPDP, con la descripción de lo ocurrido y de las medidas adoptadas.</p>
 
-                <h3>9. Cookies y almacenamiento en su navegador</h3>
-                <p>El sitio no usa cookies propias de seguimiento. Si la analítica web está activa, Google Analytics puede instalar cookies de medición; puede bloquearlas desde la configuración de su navegador sin que ello afecte al funcionamiento del sitio.</p>
-                <p>Si usted inicia sesión, el visor guarda en el almacenamiento local de su navegador el identificador de esa sesión. Quien sólo consulta el mapa no deja nada guardado. Es un dato técnicamente necesario para que la herramienta funcione y no rastrean su navegación. La sesión caduca a las 8 horas y usted puede eliminarla en cualquier momento pulsando «Salir», lo que además la revoca en nuestros servidores. En un equipo compartido conviene cerrar sesión al terminar.</p>
+                <h3>11. Sus derechos</h3>
+                <p>Conforme a la LOPDP, usted tiene derecho a:</p>
+                <ul>
+                    <li><strong>Información:</strong> saber quién trata sus datos, para qué y con qué base. Es lo que describe esta política.</li>
+                    <li><strong>Acceso:</strong> obtener una copia de los datos que tenemos sobre usted, incluida la bitácora de su cuenta.</li>
+                    <li><strong>Rectificación y actualización:</strong> corregir datos inexactos o incompletos.</li>
+                    <li><strong>Eliminación:</strong> pedir que se borren sus datos cuando ya no sean necesarios o retire su consentimiento.</li>
+                    <li><strong>Oposición:</strong> oponerse a un tratamiento, en particular a que su nombre aparezca en nuestra copia del catastro.</li>
+                    <li><strong>Portabilidad:</strong> recibir sus datos en un formato estructurado y de uso común.</li>
+                    <li><strong>Suspensión del tratamiento:</strong> pedir que se detenga mientras se resuelve una reclamación.</li>
+                    <li><strong>No ser objeto de decisiones automatizadas:</strong> la plataforma no toma de forma automática decisiones que le afecten jurídicamente. La validación del número de registro, por ejemplo, la hace una persona de la administración.</li>
+                </ul>
+                <p><strong>Cómo ejercerlos:</strong> escriba a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a> desde el correo asociado a su cuenta —o, si se trata del catastro, indicando el nombre del titular y la clave catastral— y diga qué derecho ejerce. La solicitud es gratuita y se responde en un plazo no mayor a quince (15) días. Si considera que no fue atendida, puede presentar un reclamo ante la <strong>Superintendencia de Protección de Datos Personales</strong>.</p>
 
-                <h3>10. Cambios</h3>
-                <p>Cualquier modificación se publicará en esta página con su nueva fecha de vigencia.</p>
+                <h3 id="cookies">12. Cookies y almacenamiento en su navegador</h3>
+                <p><strong>El sitio no instala cookies</strong> ni utiliza herramientas de analítica, publicidad o seguimiento. Lo único que guarda en su navegador está en su almacenamiento local, es técnicamente necesario o no sale nunca de su equipo, y se detalla completo a continuación:</p>
+                <div class="tabla-legal">
+                    <table>
+                        <thead><tr><th>Nombre</th><th>Para qué</th><th>Tipo</th><th>Duración</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>caech_sesion_token</code></td><td>Mantener abierta la sesión de quien ingresa con su cuenta. No existe si usted sólo consulta el mapa.</td><td>Necesario · almacenamiento local</td><td>Hasta pulsar «Salir»; el servidor lo invalida a las 8 horas</td></tr>
+                            <tr><td><code>caech_aviso_privacidad</code></td><td>Recordar que ya leyó el aviso de privacidad, para no mostrarlo en cada página</td><td>Necesario · almacenamiento local</td><td>Hasta que cambie esta política</td></tr>
+                            <tr><td><code>caech_metricas</code></td><td>Contador del panel de métricas del visor: predios consultados, reportes generados y fecha de la última consulta. No se envía a ningún servidor.</td><td>Funcional · almacenamiento local</td><td>Hasta que usted lo reinicie o borre los datos del sitio</td></tr>
+                            <tr><td><code>caech_sesion</code></td><td>Contador de predios consultados en la pestaña abierta</td><td>Funcional · almacenamiento de sesión</td><td>Se borra al cerrar la pestaña</td></tr>
+                            <tr><td><code>planimetria:*</code></td><td>Sólo en la herramienta de planimetría: recuerda los datos del profesional (nombre, registro, equipo, precisión) para no volver a escribirlos</td><td>Funcional · almacenamiento local</td><td>Hasta que usted borre los datos del sitio</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Los proveedores de mapas y tipografía del punto 8 reciben su dirección IP al servir el contenido, pero el sitio no carga ninguno de sus scripts de seguimiento.</p>
+                <p><strong>Cómo eliminarlo:</strong> «Salir» borra la sesión y la revoca en nuestros servidores. Todo lo demás se elimina desde la configuración de su navegador («Borrar datos de sitios»), sin que ello impida usar el sitio. En un equipo compartido conviene cerrar sesión al terminar. Puede volver a ver el aviso de privacidad <a href="#cookies" id="reabrir-aviso">desde aquí</a>.</p>
+
+                <h3>13. Menores de edad</h3>
+                <p>La plataforma está dirigida a profesionales colegiados. No se crean cuentas para menores de edad ni se recogen deliberadamente sus datos.</p>
+
+                <h3>14. Cambios e historial de versiones</h3>
+                <p>Cualquier modificación se publicará en esta página con su nueva fecha de vigencia. Si es sustancial, se pedirá aceptarla en el siguiente ingreso.</p>
+                <ul>
+                    <li><strong>1 de octubre de 2026.</strong> Se retira la analítica web: el sitio deja de usar Google Analytics. El registro exige la aceptación expresa y guarda la versión aceptada. Se añaden los principios de la LOPDP, el responsable, la tabla de proveedores y transferencias, la seguridad, los derechos con su plazo y el detalle del almacenamiento en el navegador.</li>
+                    <li><strong>1 de septiembre de 2026.</strong> Versión inicial.</li>
+                </ul>
             </section>
 
             <!-- ═══════════════ CÓDIGO DE ÉTICA ═══════════════ -->
@@ -338,5 +455,14 @@
             <p>&copy; 2026 CAE-CH Provincial de Chimborazo · <a href="index.html">Volver al inicio</a></p>
         </div>
     </footer>
+    <script>
+        // "Volver a ver el aviso": caech-privacidad.js se carga con defer y
+        // expone window.caechPrivacidad cuando termina.
+        document.getElementById('reabrir-aviso').addEventListener('click', function (e) {
+            if (!window.caechPrivacidad) return;
+            e.preventDefault();
+            window.caechPrivacidad.mostrar();
+        });
+    </script>
 </body>
 </html>

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="analytics.js"></script>
+    <script src="caech-privacidad.js" defer></script>
     <script src="caech-acceso.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1758,9 +1758,10 @@
                 <div class="footer-column">
                     <h4>Legal</h4>
                     <ul class="footer-links">
-                        <li><a href="#">Términos y Condiciones</a></li>
-                        <li><a href="#">Política de Privacidad</a></li>
-                        <li><a href="#">Código de Ética</a></li>
+                        <li><a href="legal.html#terminos">Términos y Condiciones</a></li>
+                        <li><a href="legal.html#privacidad">Política de Privacidad</a></li>
+                        <li><a href="legal.html#cookies">Cookies y almacenamiento</a></li>
+                        <li><a href="legal.html#etica">Código de Ética</a></li>
                     </ul>
                 </div>
             </div>
@@ -8534,7 +8535,6 @@
         guardarMetricas(m);
         sessionStorage.setItem('caech_sesion', (parseInt(sessionStorage.getItem('caech_sesion') || '0') + 1).toString());
         actualizarPanelMetricas();
-        if (window.caechTrack) caechTrack('consultar_predio'); // evento GA4 (agregado global)
     }
     function incrementarMetricaDICAT() {
         const m = cargarMetricas();
@@ -8542,7 +8542,6 @@
         m.ultima = new Date().toLocaleString('es-EC');
         guardarMetricas(m);
         actualizarPanelMetricas();
-        if (window.caechTrack) caechTrack('descargar_dicat'); // evento GA4 (agregado global)
     }
     function actualizarPanelMetricas() {
         const m = cargarMetricas();

@@ -17,6 +17,18 @@ const HORAS_SESION    = 8;
 const CLAVE_MIN_LARGO = 12;
 
 /**
+ * Version vigente de los Terminos y la Politica de Privacidad: la fecha de
+ * vigencia que encabeza legal.html. Al cambiar esos textos se sube aqui y
+ * cada cuenta vuelve a aceptarlos en su siguiente ingreso.
+ */
+export const VERSION_TERMINOS = '2026-10-01';
+
+/** true si la cuenta no acepto todavia la version vigente. */
+export function terminosPendientes(fila) {
+    return fila.terminos_version !== VERSION_TERMINOS;
+}
+
+/**
  * Herramientas que se conceden cuenta por cuenta, aparte de las descargas.
  * Anadir una aqui es lo unico que hace falta: el panel dibuja una casilla
  * por cada una y `permisos()` la resuelve sola.
@@ -60,6 +72,8 @@ export function perfilPublico(fila) {
         herramientas: herramientasDe(fila),
         vigencia_hasta: fila.vigencia_hasta,
         requiere_cambio_clave: !!fila.requiere_cambio_clave,
+        terminos_version: fila.terminos_version || null,
+        terminos_pendientes: terminosPendientes(fila),
         ultimo_acceso: fila.ultimo_acceso
     };
 }
@@ -306,6 +320,38 @@ export async function cambiarClave(env, request, sesion, { clave_actual, clave_n
     });
 
     const actualizado = Object.assign({}, fila, { requiere_cambio_clave: 0 });
+    return {
+        estado: 200,
+        cuerpo: { ok: true, afiliado: perfilPublico(actualizado), permisos: permisos(actualizado) }
+    };
+}
+
+// ── Aceptacion de Terminos y Politica de Privacidad ────────────────
+
+/**
+ * Deja constancia de que la cuenta acepto la version vigente. Lo usan las
+ * cuentas que la administracion da de alta y las que existian antes de
+ * que el registro pidiera la aceptacion; el alta publica ya la trae.
+ * No condiciona permisos: sirve para PROBAR el consentimiento, no para
+ * cortar herramientas que la cuenta ya tenia.
+ */
+export async function aceptarTerminos(env, request, sesion, { acepta_terminos }) {
+    const fila = sesion.afiliado;
+    if (acepta_terminos !== true) {
+        return { estado: 400, cuerpo: { ok: false, error: 'Debe aceptar los Terminos y la Politica de Privacidad.' } };
+    }
+    const t = ahora();
+    if (terminosPendientes(fila)) {
+        await env.DB.prepare(
+            'UPDATE afiliados SET terminos_version = ?, terminos_aceptados_en = ?, actualizado_en = ? WHERE id = ?'
+        ).bind(VERSION_TERMINOS, t, t, fila.id).run();
+        await registrarEvento(env, {
+            tipo: 'terminos_aceptados', afiliado_id: fila.id, usuario: fila.usuario,
+            detalle: 'version ' + VERSION_TERMINOS,
+            ip_hash: await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
+        });
+    }
+    const actualizado = Object.assign({}, fila, { terminos_version: VERSION_TERMINOS, terminos_aceptados_en: t });
     return {
         estado: 200,
         cuerpo: { ok: true, afiliado: perfilPublico(actualizado), permisos: permisos(actualizado) }

@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <script src="analytics.js"></script>
+    <script src="caech-privacidad.js" defer></script>
     <script src="caech-acceso.js"></script>
     <style>
         /* Estilos generales */
@@ -3354,6 +3354,7 @@
                     <ul class="footer-links">
                         <li><a href="legal.html#terminos">Términos y condiciones</a></li>
                         <li><a href="legal.html#privacidad">Política de privacidad</a></li>
+                        <li><a href="legal.html#cookies">Cookies y almacenamiento</a></li>
                         <li><a href="legal.html#etica">Código de ética</a></li>
                     </ul>
                 </div>
@@ -3603,7 +3604,6 @@
             }
 
             if (moverFoco) chips[i].focus();
-            if (porGesto && window.caechTrack) caechTrack('dicat_seccion_' + s.n);
         }
 
         btnAnterior.addEventListener('click', function () { if (actual > 0) mostrar(actual - 1, true); });

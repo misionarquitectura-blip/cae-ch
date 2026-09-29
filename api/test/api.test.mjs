@@ -156,6 +156,34 @@ seccion('Cambio de clave obligatorio');
     comprobar('la sesion que hizo el cambio sigue viva', otraSesion.estado === 200);
 }
 
+// ── 4b. Aceptacion de Terminos y Privacidad ─────────────────────────
+seccion('Aceptacion de Terminos y Privacidad');
+{
+    // Una cuenta dada de alta por la administracion no paso por la casilla
+    // del registro: la aceptacion queda pendiente, sin quitarle permisos.
+    const antes = await llamar('GET', '/api/sesion', { token: tokenAdmin });
+    comprobar('la cuenta del admin nace con la aceptacion pendiente',
+        antes.datos?.afiliado?.terminos_pendientes === true, antes.datos?.afiliado);
+    comprobar('la aceptacion pendiente no quita permisos de descarga',
+        antes.datos?.permisos?.pdf === true, antes.datos?.permisos);
+
+    const sinMarcar = await llamar('POST', '/api/sesion/terminos', { token: tokenAdmin, cuerpo: {} });
+    comprobar('sin acepta_terminos: true no se registra nada', sinMarcar.estado === 400, sinMarcar.datos);
+
+    const sinSesion = await llamar('POST', '/api/sesion/terminos', { cuerpo: { acepta_terminos: true } });
+    comprobar('aceptar exige sesion', sinSesion.estado === 401);
+
+    const acepta = await llamar('POST', '/api/sesion/terminos', { token: tokenAdmin, cuerpo: { acepta_terminos: true } });
+    comprobar('registra la aceptacion', acepta.estado === 200, acepta.datos);
+    comprobar('guarda la version aceptada',
+        !!acepta.datos?.afiliado?.terminos_version && acepta.datos?.afiliado?.terminos_pendientes === false,
+        acepta.datos?.afiliado);
+
+    const despues = await llamar('GET', '/api/sesion', { token: tokenAdmin });
+    comprobar('la aceptacion persiste en la base', despues.datos?.afiliado?.terminos_pendientes === false,
+        despues.datos?.afiliado);
+}
+
 // ── 5. Descargas autorizadas y auditadas ────────────────────────────
 seccion('Descargas de afiliado');
 {
@@ -389,33 +417,44 @@ const CLAVE_USR  = 'RiobambaVecino2026';
 const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
 {
     const sinRegistro = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: CLAVE_USR }
+        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: CLAVE_USR, acepta_terminos: true }
     });
     comprobar('sin numero de registro del CAE no hay alta', sinRegistro.estado === 400, sinRegistro.datos);
 
+    const sinAceptar = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR }
+    });
+    comprobar('sin aceptar Terminos y Privacidad no hay alta', sinAceptar.estado === 400, sinAceptar.datos);
+
+    const aceptaTexto = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR,
+                  acepta_terminos: 'si' }
+    });
+    comprobar('la aceptacion debe ser un true expreso, no un texto', aceptaTexto.estado === 400, aceptaTexto.datos);
+
     const registroRaro = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', registro_profesional: 'ab', correo: CORREO_USR, clave: CLAVE_USR }
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: 'ab', correo: CORREO_USR, clave: CLAVE_USR, acepta_terminos: true }
     });
     comprobar('rechaza un numero de registro con mala pinta', registroRaro.estado === 400, registroRaro.datos);
 
     const corta = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: 'corta1A' }
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: 'corta1A', acepta_terminos: true }
     });
     comprobar('rechaza una clave debil', corta.estado === 400, corta.datos);
 
     const correoMalo = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: 'no-es-correo', clave: CLAVE_USR }
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: 'no-es-correo', clave: CLAVE_USR, acepta_terminos: true }
     });
     comprobar('rechaza un correo mal formado', correoMalo.estado === 400);
 
     const alta = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR }
+        cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR, acepta_terminos: true }
     });
     comprobar('crea la cuenta', alta.estado === 201, alta.datos);
 
     const registroTomado = await llamar('POST', '/api/registro', {
         cuerpo: { nombre: 'Otra Persona', registro_profesional: REGISTRO_USR,
-                  correo: 'otra' + Date.now() + '@example.com', clave: CLAVE_USR }
+                  correo: 'otra' + Date.now() + '@example.com', clave: CLAVE_USR, acepta_terminos: true }
     });
     comprobar('un numero de registro ya usado responde 409', registroTomado.estado === 409, registroTomado.datos);
     comprobar('no entrega token: la cuenta aun no sirve', !alta.datos.token);
@@ -425,7 +464,7 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
     comprobar('la respuesta lo senala para poder reenviar', sinConfirmar.datos?.correo_sin_verificar === true);
 
     const repetido = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Otro Nombre', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR }
+        cuerpo: { nombre: 'Otro Nombre', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR, acepta_terminos: true }
     });
     comprobar('un correo ya registrado responde igual que un alta (no filtra el padron)',
         repetido.estado === 201, repetido.datos);
@@ -451,6 +490,9 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
             comprobar('ya confirmado, puede ingresar', ingreso.estado === 200, ingreso.datos);
             comprobar('nace con rol usuario', ingreso.datos?.afiliado?.rol === 'usuario');
             comprobar('no exige cambio de clave: la eligio el', ingreso.datos?.afiliado?.requiere_cambio_clave === false);
+            comprobar('el alta deja constancia de la version aceptada',
+                !!ingreso.datos?.afiliado?.terminos_version && ingreso.datos?.afiliado?.terminos_pendientes === false,
+                ingreso.datos?.afiliado);
             tokenUsuario = ingreso.datos?.token;
 
             comprobar('guarda el numero de registro que declaro',
