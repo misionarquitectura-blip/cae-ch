@@ -1378,7 +1378,7 @@
                     <div style="display:flex;gap:6px;margin-top:6px">
                         <button class="btn-generar-informe" id="btn-export-dxf"
                                 onclick="exportarPredioDXF()"
-                                title="Descarga el poligono en UTM WGS84 17S, listo para abrir en CAD"
+                                title="Descarga el poligono en UTM WGS84 17S, con las capas activas en 40 m alrededor, listo para abrir en CAD"
                                 style="background:var(--linea-1,#2563A8);margin-top:0;font-size:12px;padding:8px 10px;flex:1">
                             <i class="fas fa-drafting-compass"></i> DXF
                         </button>
@@ -8307,8 +8307,14 @@
             // AutoCAD descarta el dibujo entero ("DXF inválido o incompleto") y
             // el archivo parece corrupto. Por eso aquí no hay LWPOLYLINE: R12
             // sólo entiende POLYLINE con sus VERTEX y su SEQEND.
+            //
+            // contexto (opcional): las capas activas del visor ya recortadas a
+            // 40 m alrededor del predio y en UTM, como las arma
+            // capasActivasParaDXF(): { marco: [[x,y]...], capas: [{ nombre,
+            // color, poligonos: [anillo...], lineas: [[[x,y]...]...],
+            // puntos: [[x,y]...] }] }. Cada una va en su propia capa del CAD.
             // ─────────────────────────────────────────────────────────────────
-            function construirDXF(utm, franjas, clave) {
+            function construirDXF(utm, franjas, clave, contexto) {
                 const L = [];
                 const g = function (c, v) { L.push(String(c)); L.push(String(v)); };
                 const num = function (v) {
@@ -8337,19 +8343,58 @@
                     .map(function (f) { return anillo(f && f.utm); })
                     .filter(function (a) { return a.length >= 3; });
 
-                let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-                const todos = predio.slice();
-                franjasUTM.forEach(function (a) { a.forEach(function (p) { todos.push(p); }); });
-                todos.forEach(function (p) {
-                    x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]);
-                    x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]);
+                // Capas de contexto: se descartan las piezas degeneradas que deja
+                // el recorte (anillos de menos de 3 vértices, tramos de uno solo)
+                // y las capas que quedan vacías, para no declarar capas sin dibujo.
+                const tramo = function (pts) {
+                    return (pts || []).filter(function (p) {
+                        return p && isFinite(Number(p[0])) && isFinite(Number(p[1]));
+                    }).map(function (p) { return [Number(p[0]), Number(p[1])]; });
+                };
+                const nombreCapa = function (n) {
+                    return String(n || '').toUpperCase().replace(/[^A-Z0-9_\-]/g, '_').substring(0, 31);
+                };
+                const reservadas = ['0', 'PREDIO', 'AFECTACION_VIAL', 'VERTICES', 'TEXTOS', 'MARCO'];
+                const ctxCapas = ((contexto && contexto.capas) || []).map(function (c) {
+                    return {
+                        nombre: nombreCapa(c.nombre),
+                        color: Math.min(255, Math.max(1, parseInt(c.color, 10) || 7)),
+                        poligonos: (c.poligonos || []).map(anillo).filter(function (a) { return a.length >= 3; }),
+                        lineas: (c.lineas || []).map(tramo).filter(function (a) { return a.length >= 2; }),
+                        puntos: tramo(c.puntos)
+                    };
+                }).filter(function (c) {
+                    return c.nombre && reservadas.indexOf(c.nombre) < 0 &&
+                        (c.poligonos.length || c.lineas.length || c.puntos.length);
                 });
+                const marco = ctxCapas.length ? anillo(contexto.marco) : [];
 
-                const alturaTexto = Math.max(Math.max(x1 - x0, y1 - y0) / 120, 0.35);
+                const caja = function (pts) {
+                    const b = [Infinity, Infinity, -Infinity, -Infinity];
+                    pts.forEach(function (p) {
+                        b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]);
+                        b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]);
+                    });
+                    return b;
+                };
+                // Los rótulos se dimensionan con el predio y sus franjas, no con
+                // el entorno: el contexto no debe agrandar los textos.
+                const propios = predio.slice();
+                franjasUTM.forEach(function (a) { a.forEach(function (p) { propios.push(p); }); });
+                const bp = caja(propios);
+                const todos = propios.concat(marco);
+                ctxCapas.forEach(function (c) {
+                    c.poligonos.concat(c.lineas).forEach(function (a) { a.forEach(function (p) { todos.push(p); }); });
+                    c.puntos.forEach(function (p) { todos.push(p); });
+                });
+                const bt = caja(todos);
+                const x0 = bt[0], x1 = bt[2], y1 = bt[3];
+
+                const alturaTexto = Math.max(Math.max(bp[2] - bp[0], bp[3] - bp[1]) / 120, 0.35);
                 // R12 no declara página de códigos: la etiqueta va en ASCII puro
                 const etiqueta = String(clave || '').replace(/[^\x20-\x7E]/g, '').trim();
-                const yEtiqueta = y0 - alturaTexto * 3;
-                const extY0 = etiqueta ? yEtiqueta - alturaTexto : y0;
+                const yEtiqueta = bp[1] - alturaTexto * 3;
+                const extY0 = etiqueta ? Math.min(bt[1], yEtiqueta - alturaTexto) : bt[1];
 
                 // ── HEADER ───────────────────────────────────────────────────
                 g(0, 'SECTION'); g(2, 'HEADER');
@@ -8374,6 +8419,10 @@
                     ['0', 7], ['PREDIO', 1], ['AFECTACION_VIAL', 5],
                     ['VERTICES', 3], ['TEXTOS', 7]
                 ];
+                if (ctxCapas.length) {
+                    if (marco.length >= 3) capas.push(['MARCO', 8]);
+                    ctxCapas.forEach(function (c) { capas.push([c.nombre, c.color]); });
+                }
                 g(0, 'TABLE'); g(2, 'LAYER'); g(70, capas.length);
                 capas.forEach(function (c) {
                     g(0, 'LAYER'); g(2, c[0]); g(70, 0); g(62, c[1]); g(6, 'CONTINUOUS');
@@ -8395,8 +8444,8 @@
                 // ── ENTITIES ─────────────────────────────────────────────────
                 g(0, 'SECTION'); g(2, 'ENTITIES');
 
-                const polilinea = function (capa, pts) {
-                    g(0, 'POLYLINE'); g(8, capa); g(66, 1); g(70, 1);
+                const polilinea = function (capa, pts, abierta) {
+                    g(0, 'POLYLINE'); g(8, capa); g(66, 1); g(70, abierta ? 0 : 1);
                     g(10, '0.0'); g(20, '0.0'); g(30, '0.0');
                     pts.forEach(function (p) {
                         g(0, 'VERTEX'); g(8, capa);
@@ -8410,6 +8459,18 @@
                     g(40, h.toFixed(3)); g(1, t); g(7, 'STANDARD');
                 };
 
+                // El entorno va primero, para que el predio quede encima al
+                // dibujarse en el orden del archivo, igual que en el plano.
+                if (ctxCapas.length && marco.length >= 3) polilinea('MARCO', marco);
+                ctxCapas.forEach(function (c) {
+                    c.poligonos.forEach(function (a) { polilinea(c.nombre, a); });
+                    c.lineas.forEach(function (a) { polilinea(c.nombre, a, true); });
+                    c.puntos.forEach(function (p) {
+                        g(0, 'POINT'); g(8, c.nombre);
+                        g(10, num(p[0])); g(20, num(p[1])); g(30, '0.0');
+                    });
+                });
+
                 polilinea('PREDIO', predio);
                 franjasUTM.forEach(function (a) { polilinea('AFECTACION_VIAL', a); });
 
@@ -8422,6 +8483,78 @@
 
                 g(0, 'ENDSEC'); g(0, 'EOF');
                 return L.join('\r\n') + '\r\n';
+            }
+
+            // Capas activas del visor para el DXF, recortadas a un marco de 40 m
+            // alrededor del predio y pasadas a UTM 17S. El marco es más amplio
+            // que el del plano vectorial (predio + 6 %), que en CAD dejaba los
+            // lotes vecinos reducidos a tiras y sin calle completa. Se recorta
+            // la geometría de verdad (turf.bboxClip), no sólo se filtra: un
+            // polígono del PUGS o una red de agua entera pesaría megas y
+            // taparía el predio en el CAD. La capa 5 (CNT) es un raster y no
+            // entra; del catastro se omite el propio predio, que ya va en PREDIO.
+            // [id, capa DXF, color ACI], de fondo a frente como en el plano
+            const MARGEN_DXF_M = 40;
+            const CAPAS_DXF = [
+                [1, 'PUGS_URBANO', 30], [2, 'PUGS_RURAL', 94], [4, 'AGUA_POTABLE', 150],
+                [10, 'IA_CONSTRUCCIONES', 211], [9, 'IA_NO_REGISTRADAS', 200],
+                [6, 'CATASTRO', 160], [3, 'ELECTRICA', 4], [11, 'ALCANTARILLADO', 130],
+                [8, 'LINEAS_FABRICA', 6], [7, 'VIALIDAD_PROVINCIAL', 7]
+            ];
+            function capasActivasParaDXF(predioGeoJSON, clave) {
+                // Margen en metros pasado a grados en la latitud del predio
+                const pb = turf.bbox(predioGeoJSON);
+                const lat0 = (pb[1] + pb[3]) / 2;
+                const dLat = MARGEN_DXF_M / 111320, dLng = MARGEN_DXF_M / (111320 * Math.cos(lat0 * Math.PI / 180));
+                const bb = [pb[0] - dLng, pb[1] - dLat, pb[2] + dLng, pb[3] + dLat];
+                const dentro = function (c) { return c[0] >= bb[0] && c[0] <= bb[2] && c[1] >= bb[1] && c[1] <= bb[3]; };
+                const aUTM = function (cs) { return cs.map(afUTM); };
+                const claveCons = String(clave || '').trim();
+                const capas = [];
+                CAPAS_DXF.forEach(function (def) {
+                    const id = def[0];
+                    const cb = document.getElementById('layer-' + id);
+                    if (!cb || !cb.checked || !geojsonLayers[id] || !geojsonLayers[id].eachLayer) return;
+                    const capa = { nombre: def[1], color: def[2], poligonos: [], lineas: [], puntos: [] };
+                    geojsonLayers[id].eachLayer(function (lyr) {
+                        const f = lyr.feature;
+                        if (!f || !f.geometry) return;
+                        // Descarte rápido por la caja de la feature
+                        let b = null;
+                        try {
+                            if (lyr.getBounds) {
+                                const lb = lyr.getBounds();
+                                if (lb && lb.isValid && lb.isValid()) b = [lb.getWest(), lb.getSouth(), lb.getEast(), lb.getNorth()];
+                            } else if (lyr.getLatLng) {
+                                const ll = lyr.getLatLng(); b = [ll.lng, ll.lat, ll.lng, ll.lat];
+                            }
+                            if (!b) b = turf.bbox(f);
+                        } catch (e) { return; }
+                        if (b[0] > bb[2] || b[2] < bb[0] || b[1] > bb[3] || b[3] < bb[1]) return;
+                        if (id === 6 && claveCons && f.properties &&
+                            String(f.properties.claves || '').trim() === claveCons) return;
+                        try {
+                            turf.flattenEach(f, function (s) {
+                                const gm = s.geometry;
+                                if (!gm) return;
+                                if (gm.type === 'Point') {
+                                    if (dentro(gm.coordinates)) capa.puntos.push(afUTM(gm.coordinates));
+                                    return;
+                                }
+                                if (gm.type !== 'LineString' && gm.type !== 'Polygon') return;
+                                const r = turf.bboxClip(s, bb).geometry;
+                                if (!r) return;
+                                if (r.type === 'Polygon') r.coordinates.forEach(function (a) { if (a.length >= 4) capa.poligonos.push(aUTM(a)); });
+                                else if (r.type === 'MultiPolygon') r.coordinates.forEach(function (p) { p.forEach(function (a) { if (a.length >= 4) capa.poligonos.push(aUTM(a)); }); });
+                                else if (r.type === 'LineString') { if (r.coordinates.length >= 2) capa.lineas.push(aUTM(r.coordinates)); }
+                                else if (r.type === 'MultiLineString') r.coordinates.forEach(function (l) { if (l.length >= 2) capa.lineas.push(aUTM(l)); });
+                            });
+                        } catch (e) { console.warn('Recorte DXF, capa ' + id + ':', e); }
+                    });
+                    if (capa.poligonos.length || capa.lineas.length || capa.puntos.length) capas.push(capa);
+                });
+                const marco = [[bb[0], bb[1]], [bb[2], bb[1]], [bb[2], bb[3]], [bb[0], bb[3]]].map(afUTM);
+                return { marco, capas };
             }
 
             window.exportarPredioDXF = async function () {
@@ -8438,7 +8571,10 @@
                         if (r && r.contornos && r.contornos.length) franjas = r.contornos;
                     } catch (e) { console.warn('Afectación para DXF:', e); }
                 }
-                const dxf = construirDXF(d.utm, franjas, d.clave);
+                let contexto = null;
+                try { contexto = capasActivasParaDXF(d.geoJSON, d.clave); }
+                catch (e) { console.warn('Capas activas para DXF:', e); }
+                const dxf = construirDXF(d.utm, franjas, d.clave, contexto);
                 descargarArchivo(`PREDIO_${d.clave.substring(0, 18)}_UTM17S.dxf`, dxf, 'application/dxf');
             };
 

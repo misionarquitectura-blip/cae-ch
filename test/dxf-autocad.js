@@ -204,4 +204,61 @@ try { salida = construirDXF(conNaN, null, 'x'); } catch (e) { salida = null; }
 H.chequear('descarta los vertices invalidos en vez de escribir NaN',
     salida !== null && !/NaN/.test(salida));
 
+// ── Capas activas del visor como contexto ────────────────────────────────────
+// Un marco alrededor del predio con un poligono recortado (con cierre repetido),
+// una linea abierta, un punto, una capa vacia y otra que intenta pisar PREDIO.
+const mx0 = bx0 - 20, mx1 = bx1 + 20, my0 = by0 - 15, my1 = by1 + 15;
+const contexto = {
+    marco: [[mx0, my0], [mx1, my0], [mx1, my1], [mx0, my1]],
+    capas: [
+        { nombre: 'CATASTRO', color: 160,
+          poligonos: [[[mx0, my0], [bx0, my0], [bx0, by0], [mx0, by0], [mx0, my0]], [[1, 1], [2, 2]]] },
+        { nombre: 'Lineas fabrica', color: 6, lineas: [[[mx0, by1], [mx1, by1]], [[mx0, my0]]] },
+        { nombre: 'ELECTRICA', color: 4, puntos: [[bx0 - 5, by0 - 5], [NaN, 3]] },
+        { nombre: 'VACIA', color: 3, poligonos: [], lineas: [], puntos: [] },
+        { nombre: 'PREDIO', color: 2, puntos: [[bx0, by0]] }
+    ]
+};
+const dxfCtx = construirDXF(utm, null, patron.clave, contexto);
+const lc = dxfCtx.split('\r\n'); lc.pop();
+const pc = [];
+for (let i = 0; i < lc.length; i += 2) pc.push([lc[i].trim(), lc[i + 1]]);
+const capasCtx = [];
+pc.forEach((p, i) => { if (p[0] === '0' && p[1] === 'LAYER') capasCtx.push(pc[i + 1][1]); });
+const entCtx = (capa, tipo) => pc.filter((p, i) =>
+    p[0] === '0' && p[1] === tipo && pc[i + 1] && pc[i + 1][0] === '8' && pc[i + 1][1] === capa);
+const cerrada = capa => {
+    const i = pc.findIndex((p, k) => p[0] === '0' && p[1] === 'POLYLINE' && pc[k + 1][1] === capa);
+    const k = pc.slice(i + 1).findIndex(q => q[0] === '70');
+    return i >= 0 && k >= 0 ? pc[i + 1 + k][1] : null;
+};
+
+H.chequear('con contexto sigue siendo ASCII y sin NaN',
+    !/[^\x09\x0a\x0d\x20-\x7e]/.test(dxfCtx) && !/NaN|Infinity|undefined/.test(dxfCtx));
+['MARCO', 'CATASTRO', 'LINEAS_FABRICA', 'ELECTRICA'].forEach(c =>
+    H.chequear(`declara la capa de contexto ${c}`, capasCtx.includes(c), capasCtx.join(', ')));
+H.chequear('no declara capas de contexto vacias', !capasCtx.includes('VACIA'));
+H.chequear('ninguna capa se declara dos veces', new Set(capasCtx).size === capasCtx.length,
+    capasCtx.join(', '));
+H.chequear('el contexto no puede escribir en PREDIO',
+    entCtx('PREDIO', 'POINT').length === 0 && entCtx('PREDIO', 'POLYLINE').length === 1);
+H.chequear('el poligono recortado sale cerrado y el anillo degenerado se descarta',
+    entCtx('CATASTRO', 'POLYLINE').length === 1 && cerrada('CATASTRO') === '1');
+H.chequear('la linea sale abierta (70 = 0) y el tramo de un vertice se descarta',
+    entCtx('LINEAS_FABRICA', 'POLYLINE').length === 1 && cerrada('LINEAS_FABRICA') === '0');
+H.chequear('los puntos validos del contexto salen como POINT',
+    entCtx('ELECTRICA', 'POINT').length === 1);
+H.chequear('el marco del plano es una polilinea cerrada', entCtx('MARCO', 'POLYLINE').length === 1 &&
+    cerrada('MARCO') === '1');
+const cuentaCtx = n => pc.filter(p => p[0] === '0' && p[1] === n).length;
+H.chequear('con contexto cada POLYLINE sigue cerrando con su SEQEND',
+    cuentaCtx('POLYLINE') === cuentaCtx('SEQEND'));
+const extMin = pc.findIndex(p => p[1] === '$EXTMIN');
+H.chequear('las extensiones abarcan el marco del contexto',
+    Number(pc[extMin + 1][1]) <= mx0 + 1e-3 && Number(pc[extMin + 2][1]) <= my0 + 1e-3);
+const alto = t => { const i = t.findIndex(p => p[0] === '0' && p[1] === 'TEXT'); return Number(t[t.slice(i).findIndex(p => p[0] === '40') + i][1]); };
+H.chequear('el contexto no agranda los rotulos del predio', alto(pc) === alto(pares));
+H.chequear('sin capas de contexto no se dibuja el marco',
+    !construirDXF(utm, null, 'x', { marco: contexto.marco, capas: [] }).includes('MARCO'));
+
 H.resumen('DXF para AutoCAD');
