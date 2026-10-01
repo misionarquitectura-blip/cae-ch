@@ -211,7 +211,7 @@ hasta un 12 %.
 
 Node ≥ 18 y los GeoJSON presentes en `DATA SET/` (`Catastro GADMR.geojson`,
 `LINEAS_FABRICA.geojson`, `agua_potable.geojson` y `alcantarillado.geojson`),
-más `DATA SET/telecom/` para `telecom.js`. `capas.js` no necesita datos: solo
+más `DATA SET/capas/telecom/` para `telecom.js`. `capas.js` no necesita datos: solo
 lee `capas.json`, `index.html` y `geovisor.html`.
 No hay dependencias externas: `servicios-basicos.js` trae su propia
 implementación mínima de las cuatro funciones de turf que usa el visor y

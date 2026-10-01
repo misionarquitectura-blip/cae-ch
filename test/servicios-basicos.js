@@ -20,8 +20,8 @@ const H = require('./lib/harness');
 const PASO = parseInt(process.argv[2] || '4000', 10);
 console.log('SERVICIOS BASICOS — agua potable y alcantarillado\n');
 
-const agua = H.leerGeoJSON('DATA SET/agua_potable.geojson');
-const alc  = H.leerGeoJSON('DATA SET/alcantarillado.geojson');
+const agua = H.leerGeoJSON('DATA SET/capas/agua_potable.geojson');
+const alc  = H.leerGeoJSON('DATA SET/capas/alcantarillado.geojson');
 
 // ── turf minimo: solo lo que usa analizarServiciosBasicos ────────────────────
 // Se implementa aqui para no arrastrar la dependencia al repositorio; son las
@@ -80,7 +80,7 @@ const turf = {
     }
 };
 
-const capas = { 4: H.stubCapa('DATA SET/agua_potable.geojson'), 11: H.stubCapa('DATA SET/alcantarillado.geojson') };
+const capas = { 4: H.stubCapa('DATA SET/capas/agua_potable.geojson'), 11: H.stubCapa('DATA SET/capas/alcantarillado.geojson') };
 const api = H.cargarServicios(capas, turf);
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -254,7 +254,7 @@ H.chequear(`longitud total de la red estable: ${(sumaPub / 1000).toFixed(2)} km,
 // ═════════════════════════════════════════════════════════════════════════════
 console.log(`\n3. Analisis sobre predios reales (1 de cada ${PASO})`);
 
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 
 // Distancia minima real: sin prefiltro por bbox, recorriendo TODOS los tramos.
 // Si el prefiltro de la funcion de produccion perdiera el tramo mas cercano,

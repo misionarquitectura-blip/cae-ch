@@ -1441,7 +1441,7 @@
                                 <input type="checkbox" class="layer-checkbox" id="layer-3">
                                 <div class="layer-info" data-layer="3">
                                     <div class="layer-name">Infraestructura Eléctrica</div>
-                                    <div class="layer-source" id="layer-3-source">EERSA – Empresa Eléctrica Riobamba S.A.</div>
+                                    <div class="layer-source" id="layer-3-source">EERSA – Red de distribución · Actualización: octubre 2026</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -1498,7 +1498,7 @@
                                 <input type="checkbox" class="layer-checkbox" id="layer-6">
                                 <div class="layer-info" data-layer="6">
                                     <div class="layer-name">Catastro GADMR</div>
-                                    <div class="layer-source" id="layer-6-source">GADMR – Catastro Predial · Actualización: septiembre 2026</div>
+                                    <div class="layer-source" id="layer-6-source">GADMR – Catastro Predial · Actualización: octubre 2026</div>
                                 </div>
                                 <div class="layer-actions">
                                     <button class="layer-action" title="Información">
@@ -2223,7 +2223,7 @@
             // ALTO, MEDIO, BAJO, GPON, CDMA). Eso permite, además de dibujarlos,
             // leer el píxel del predio para el DICAT sin que el antialiasing
             // deje colores intermedios imposibles de clasificar.
-            const TELECOM_BASE = 'DATA SET/telecom/';
+            const TELECOM_BASE = 'DATA SET/capas/telecom/';
 
             // Radio del "entorno inmediato" del predio, en metros. Es del orden
             // de un frente de manzana: lo que hay a esta distancia es lo que un
@@ -2651,6 +2651,33 @@
                 };
             }
 
+            function popupEersa(p) {
+                const fila = (k, v, par) => `<tr${par ? ' style="background:#f9f9f9"' : ''}><td style="font-weight:bold;color:#555;padding:3px 4px;width:48%">${k}</td><td style="padding:3px 4px">${v}</td></tr>`;
+                let titulo, filas;
+                if (p.t === 'p') {
+                    titulo = '<i class="fas fa-bolt"></i> Poste EERSA';
+                    filas = fila('Codigo', p.c || 'N/D') + fila('Red que soporta', EERSA_USO_POSTE[p.u] || 'N/D', 1) + fila('Material', EERSA_MATERIAL_POSTE[p.m] || 'N/D');
+                } else if (p.t === 't') {
+                    titulo = '<i class="fas fa-charging-station"></i> Transformador de distribucion';
+                    filas = fila('Puesto', p.c || 'N/D') + fila('Potencia nominal', p.kva != null ? eersaNum(p.kva) + ' kVA' : 'N/D', 1) +
+                            fila('Fases', p.f === 3 ? 'Trifasico' : p.f === 2 ? 'Bifasico' : p.f === 1 ? 'Monofasico' : 'N/D') +
+                            fila('Cargabilidad', p.car != null ? eersaNum(Math.round(p.car * 10) / 10) + ' %' : 'N/D', 1) +
+                            fila('Disponible estimado', eersaPotenciaDisponible(p.kva, p.car) != null ? eersaNum(eersaPotenciaDisponible(p.kva, p.car)) + ' kVA' : 'N/D') +
+                            fila('Red de baja', p.tr || 'N/D', 1);
+                } else {
+                    const mt = p.t === 'm';
+                    titulo = `<i class="fas fa-project-diagram"></i> Red de ${mt ? 'media' : 'baja'} tension`;
+                    filas = fila('Tipo', (p.s === 'S' ? 'Subterranea' : 'Aerea') + (EERSA_FASES[p.f] ? ' ' + EERSA_FASES[p.f] : '')) +
+                            fila('Tension', mt ? (p.kv ? eersaNum(p.kv) + ' kV' : 'N/D') : (p.v ? p.v + ' V' : 'N/D'), 1);
+                }
+                const fondo = p.t === 'm' ? '#C62828' : p.t === 't' ? '#F9A825' : '#00838F';
+                return `<div style="font-family:Segoe UI,sans-serif;min-width:200px">
+                    <div style="background:${fondo};color:${p.t === 't' ? '#222' : 'white'};padding:5px 8px;margin:-7px -7px 7px -7px;border-radius:3px 3px 0 0;font-weight:bold;font-size:12px">${titulo}</div>
+                    <table style="font-size:12px;width:100%;border-collapse:collapse">${filas}</table>
+                    <p style="margin:7px 0 0;font-size:10.5px;color:#888;line-height:1.3">Fuente: EERSA. La factibilidad de servicio la emite la EERSA.</p>
+                </div>`;
+            }
+
             function loadGeoJSONData(geojsonData, fileName, layerId) {
                 if (geojsonLayers[layerId] && window.map) {
                     window.map.removeLayer(geojsonLayers[layerId]);
@@ -2683,6 +2710,19 @@
 
                     geojsonLayers[layerId] = L.geoJSON(geojsonData, {
                         style: function (feature) {
+                            // Capa 3 — Red eléctrica EERSA: media tension en rojo,
+                            // baja tension en cian; la subterranea va punteada.
+                            if (layerId === 3) {
+                                const pr = feature.properties || {};
+                                const mt = pr.t === 'm';
+                                return {
+                                    color: mt ? '#C62828' : '#00838F',
+                                    weight: mt ? 2.2 : 1.4,
+                                    opacity: 0.85,
+                                    dashArray: pr.s === 'S' ? '4 3' : null
+                                };
+                            }
+
                             // Capa 11 — Alcantarillado: color por red, grosor por diámetro
                             if (layerId === 11) {
                                 return {
@@ -2759,6 +2799,13 @@
                             }
                         },
                         pointToLayer: function (feature, latlng) {
+                            // Capa 3: postes como punto fino, transformadores destacados
+                            if (layerId === 3) {
+                                const tr = feature.properties && feature.properties.t === 't';
+                                return L.circleMarker(latlng, tr
+                                    ? { radius: 5, fillColor: '#F9A825', color: '#5D4037', weight: 1.2, opacity: 1, fillOpacity: 0.95 }
+                                    : { radius: 2.5, fillColor: '#37474F', color: '#37474F', weight: 0.5, opacity: 0.9, fillOpacity: 0.8 });
+                            }
                             return L.circleMarker(latlng, {
                                 radius: 6,
                                 fillColor: layerColor,
@@ -2793,6 +2840,12 @@
                                         <p style="margin:7px 0 0;font-size:10.5px;color:#888;line-height:1.3">Huella detectada por modelo de IA. No implica edificación no declarada por sí sola.</p>
                                     </div>`;
                                 });
+                                return;
+                            }
+
+                            // Capa 3 (~170 K elementos): popup diferido, como la 10.
+                            if (layerId === 3) {
+                                layer.bindPopup(function () { return popupEersa(feature.properties); });
                                 return;
                             }
 
@@ -4102,7 +4155,7 @@
                 let y = 0;
 
                 const {
-                    meta = {}, colindantes = {}, factibilidades = [], posteCercano,
+                    meta = {}, colindantes = {}, factibilidades = [], redElectrica,
                     hasLayer3, afectacionVial, construccionesIA, servicios = null,
                     telecomunicaciones = null, intersectionData = [], utmCoords = [],
                     normativaPUGS = null, qrDataUrl = null,
@@ -4487,39 +4540,55 @@
                     });
                 }
 
-                // Sección 4B - Poste eléctrico
-                if (hasLayer3) {
-                    y = checkSpace(y, 52);
-                    y = sectionHeader('4B.  ANALISIS DE PROXIMIDAD - POSTE ELECTRICO MAS CERCANO (EERSA)', y);
-                    if (posteCercano) {
-                        y = at({
-                            startY: y,
-                            head: [['Atributo', 'Valor']],
-                            body: [
-                                ['Codigo de estructura (ID unico)', posteCercano.codigoEstructura || 'N/D'],
-                                ['Descripcion tecnica', posteCercano.descripcionTecnica || 'N/D'],
-                                ['Potencia', posteCercano.potencia && posteCercano.potencia !== 'N/D' ? posteCercano.potencia + ' W' : 'N/D'],
-                                ['Secuencia de fase', posteCercano.secuenciaFase || 'N/D'],
-                                ['Distancia al centroide del predio', (posteCercano.distancia || 0) + ' m'],
-                            ],
-                            theme: 'grid',
-                            styles: { fontSize: 9, cellPadding: 3 },
-                            headStyles: { fillColor: [241, 196, 15], textColor: [0, 0, 0], fontStyle: 'bold' },
-                            columnStyles: {
-                                0: { fontStyle: 'bold', fillColor: [255, 253, 230], cellWidth: 82 },
-                                1: { cellWidth: 'auto' },
-                            },
-                            margin: { left: mg, right: mg },
-                        });
-                    } else {
-                        y = at({
-                            startY: y,
-                            body: [['No se encontro ningun poste electrico en el area de analisis.']],
-                            theme: 'plain',
-                            styles: { fontSize: 9, cellPadding: 3, textColor: [120, 120, 120] },
-                            margin: { left: mg, right: mg },
-                        });
-                    }
+                // Sección 4B - Red eléctrica (EERSA)
+                if (hasLayer3 && redElectrica && redElectrica.capaDisponible) {
+                    const re = redElectrica;
+                    const filasRE = [];
+                    filasRE.push(['Poste mas cercano con baja tension', re.poste
+                        ? `Codigo EERSA ${re.poste.codigo} - ${re.poste.material}, red de ${re.poste.uso.toLowerCase()}`
+                        : 'Sin poste con red de baja tension a menos de 600 m']);
+                    if (re.poste) filasRE.push(['Distancia del poste al lindero', re.poste.distancia === 0
+                        ? 'Dentro del predio' : `${eersaNum(re.poste.distancia)} m`]);
+                    filasRE.push(['Red de baja tension (BT)', textoRedElectrica(re.redBT)]);
+                    filasRE.push(['Red de media tension (MT)', textoRedElectrica(re.redMT)]);
+                    filasRE.push(['Transformador mas cercano', textoTrafo(re.trafo)]);
+                    if (re.trafo) filasRE.push(['Potencia disponible estimada', textoDisponible(re.trafo)]);
+                    if (re.trafoTrifasico) filasRE.push(['Transformador trifasico mas cercano',
+                        `${textoTrafo(re.trafoTrifasico)}. Disponible: ${textoDisponible(re.trafoTrifasico)}`]);
+                    filasRE.push(['Observacion', 'Referencial. La potencia disponible se estima como kVA nominal x (1 - cargabilidad) ' +
+                        'del transformador mas cercano, que no necesariamente es el que alimenta el predio. ' +
+                        'La factibilidad de servicio, la potencia asignable y el punto de conexion los define la EERSA.']);
+
+                    y = checkSpace(y, 62);
+                    y = sectionHeader('4B.  RED ELECTRICA - FACTIBILIDAD REFERENCIAL (EERSA)', y);
+                    y = at({
+                        startY: y,
+                        head: [['Red electrica (EERSA)', 'Frente al predio']],
+                        body: filasRE,
+                        theme: 'grid',
+                        styles: { fontSize: 8.5, cellPadding: 3, overflow: 'linebreak' },
+                        headStyles: { fillColor: [241, 196, 15], textColor: [0, 0, 0], fontStyle: 'bold' },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', fillColor: [255, 253, 230], cellWidth: 62 },
+                            1: { cellWidth: 'auto' },
+                        },
+                        didParseCell(data) {
+                            if (data.section !== 'body' || data.column.index !== 1) return;
+                            const etq = String((filasRE[data.row.index] || [])[0] || '');
+                            const val = String((filasRE[data.row.index] || [])[1] || '');
+                            if (etq === 'Potencia disponible estimada') {
+                                data.cell.styles.fontStyle = 'bold';
+                                data.cell.styles.textColor = val.indexOf('0 kVA') === 0 ? [192, 57, 43]
+                                    : val.indexOf('Sin dato') === 0 ? [120, 120, 120] : [39, 174, 96];
+                            } else if (val.indexOf('Sin ') === 0) {
+                                data.cell.styles.textColor = [120, 120, 120];
+                            } else if (etq === 'Observacion') {
+                                data.cell.styles.textColor = [90, 90, 90];
+                                data.cell.styles.fontSize = 7.5;
+                            }
+                        },
+                        margin: { left: mg, right: mg },
+                    });
                 }
 
                 // Sección 4C - Afectación vial
@@ -4992,11 +5061,11 @@
                     showProgressBar('Leyendo cobertura de telecomunicaciones...');
                     const telecomunicaciones = await analizarTelecom(predioGeoJSON);
 
-                    showProgressBar('Verificando factibilidades...');
-                    const factibilidades = calcularFactibilidades(predioGeoJSON, servicios, telecomunicaciones);
+                    showProgressBar('Analizando red eléctrica (EERSA)...');
+                    const redElectrica = analizarRedElectrica(predioGeoJSON);
 
-                    showProgressBar('Analizando poste eléctrico más cercano...');
-                    const posteCercano = encontrarPosteMasCercano(predioGeoJSON);
+                    showProgressBar('Verificando factibilidades...');
+                    const factibilidades = calcularFactibilidades(predioGeoJSON, servicios, telecomunicaciones, redElectrica);
 
                     showProgressBar('Analizando afectación vial...');
                     const afectacionVial = calcularAfectacionVial(predioGeoJSON);
@@ -5094,7 +5163,7 @@
                         },
                         colindantes,
                         factibilidades,
-                        posteCercano,
+                        redElectrica,
                         hasLayer3:       !!geojsonLayers[3],
                         servicios,
                         telecomunicaciones,
@@ -5593,16 +5662,16 @@
 
                 // Carga on-demand: archivos predefinidos por capa
                 const layerFiles = {
-                    1: 'DATA SET/PUGS Urbano.geojson',
-                    2: 'DATA SET/PUGS Rural.geojson',
-                    3: 'DATA SET/LUMINARIA.geojson',
-                    4: 'DATA SET/agua_potable.geojson',
-                    6: 'DATA SET/Catastro GADMR.geojson',
-                    7: 'DATA SET/VIALIDAD_TOTAL.geojson',
-                    8: 'DATA SET/LINEAS_FABRICA.geojson',
+                    1: 'DATA SET/capas/PUGS Urbano.geojson',
+                    2: 'DATA SET/capas/PUGS Rural.geojson',
+                    3: 'DATA SET/capas/eersa.geojson',
+                    4: 'DATA SET/capas/agua_potable.geojson',
+                    6: 'DATA SET/capas/Catastro GADMR.geojson',
+                    7: 'DATA SET/capas/VIALIDAD_TOTAL.geojson',
+                    8: 'DATA SET/capas/LINEAS_FABRICA.geojson',
                     9: 'RESEARCH/no_registradas.geojson',
                     10: 'RESEARCH/construcciones_ia.geojson',
-                    11: 'DATA SET/alcantarillado.geojson'
+                    11: 'DATA SET/capas/alcantarillado.geojson'
                 };
 
                 // Manejar cambios en los checkboxes de las capas 1-11
@@ -5630,7 +5699,7 @@
                                     } catch (err) {
                                         console.warn('Error al cargar la capa 5:', err);
                                         alert('No se pudo cargar la cobertura de telecomunicaciones.\n\n' +
-                                              'Falta o está incompleta la carpeta "DATA SET/telecom". ' +
+                                              'Falta o está incompleta la carpeta "DATA SET/capas/telecom". ' +
                                               'Se regenera con: python "DATA SET/build_telecom.py"');
                                         this.checked = false;
                                     } finally {
@@ -6512,6 +6581,19 @@
                 return afDedupe(ring.map(afUTM));
             }
 
+            // Superficie del predio en UTM descontando sus huecos. Los cortes
+            // se hacen sobre el anillo exterior (afRingUTM), pero el GADMR
+            // dibuja algunos lotes con vacios interiores (55 en oct 2026) y el
+            // area edificable no puede contarlos: 060101004007064003 salia con
+            // 204 m2 de mas sobre los 14 081 m2 del predio.
+            function afAreaPredio(predioGeoJSON, P) {
+                const g = predioGeoJSON.geometry;
+                const huecos = (g.type === 'MultiPolygon' ? g.coordinates[0] : g.coordinates).slice(1);
+                return huecos.reduce(function (s, h) {
+                    return h.length < 4 ? s : s - afShoelace(afDedupe(h.map(afUTM)));
+                }, afShoelace(P));
+            }
+
             // Prolonga los extremos "colgantes" (que mueren dentro del predio)
             // hasta salir del anillo, siguiendo la dirección del tramo terminal.
             // Devuelve { pts, prolongado } — `prolongado` indica que el trazado
@@ -6621,7 +6703,7 @@
             function calcularFranjasAfectacion(predioGeoJSON) {
                 const P = afRingUTM(predioGeoJSON);
                 if (!P || P.length < 3) return null;
-                const areaPredio = afShoelace(P);
+                const areaPredio = afAreaPredio(predioGeoJSON, P);
                 if (!afNucleo(P)) return null;
 
                 const cadenas = afCadenasLF(P).map(function (c) { return afExtender(c, P); });
@@ -7077,7 +7159,7 @@
             function calcularAfectacionPredio(predioGeoJSON) {
                 const P = afRingUTM(predioGeoJSON);
                 if (!P || P.length < 3) return null;
-                const areaPredio = afShoelace(P);
+                const areaPredio = afAreaPredio(predioGeoJSON, P);
                 const piezas = [];
                 let lfProlongada = false, callesQueCruzan = [];
                 // Zona con línea de fábrica: manda ella. Sin ella (zona rural,
@@ -7696,94 +7778,121 @@
             }
 
             // ─────────────────────────────────────────────────────────────────
-            // Análisis de proximidad (Nearest Neighbor) — Poste más cercano
-            // Identifica el elemento puntual de infraestructura eléctrica (capa 3)
-            // más próximo al centroide del predio, independientemente de intersección.
+            // Red eléctrica frente al predio (capa 3, EERSA)
+            //
+            // Responde tres preguntas, todas medidas en UTM 17S contra el
+            // lindero del predio (no contra el centroide: lo que importa para
+            // una acometida es cuánto hay del borde del lote al poste):
+            //   1) poste más cercano que lleva baja tensión y su código EERSA;
+            //   2) qué red pasa por el frente (BT aérea/subterránea, fases) y
+            //      la media tensión más próxima;
+            //   3) transformador más cercano y su potencia remanente estimada
+            //      = kVA nominal × (1 − cargabilidad). Es una aproximación: el
+            //      servicio de la EERSA no dice qué transformador alimenta cada
+            //      tramo de baja, así que se toma el más próximo.
+            // La capa la genera DATA SET/build_eersa.py con propiedades cortas
+            // (t: p poste, t trafo, b red BT, m red MT).
             // ─────────────────────────────────────────────────────────────────
-            function encontrarPosteMasCercano(predioGeoJSON) {
-                if (!geojsonLayers[3]) return null;
+            const EERSA_USO_POSTE = { 1: 'Alumbrado publico', 2: 'Baja tension', 3: 'Media tension', 4: 'Media y baja tension', 7: 'Subtransmision' };
+            const EERSA_MATERIAL_POSTE = { 1: 'Hormigon', 2: 'Madera', 3: 'Plastico', 4: 'Metalico', 6: 'Torre' };
+            const EERSA_FASES = { 1: 'monofasica', 2: 'bifasica', 3: 'trifasica' };
+            const EERSA_RADIO_GRADOS = 0.006; // ~600 m: prefiltro por caja antes de proyectar
 
-                const centroide = turf.centroid(predioGeoJSON);
+            function eersaPotenciaDisponible(kva, car) {
+                if (kva == null || car == null) return null;
+                return Math.max(0, Math.round(kva * (1 - car / 100) * 10) / 10);
+            }
 
-                // Pre-filtro por bounding box extendido (~600 m) para mayor eficiencia
-                const bbox = turf.bbox(predioGeoJSON);
-                const buf = 0.006; // ~600 m en grados decimales
-                const bboxExp = [bbox[0] - buf, bbox[1] - buf, bbox[2] + buf, bbox[3] + buf];
+            function analizarRedElectrica(predioGeoJSON) {
+                const res = { capaDisponible: !!geojsonLayers[3], poste: null, redBT: null, redMT: null, trafo: null, trafoTrifasico: null };
+                if (!geojsonLayers[3]) return res;
+                const geom = predioGeoJSON && predioGeoJSON.geometry;
+                const anilloLL = !geom ? null : geom.type === 'Polygon' ? geom.coordinates[0]
+                               : geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
+                if (!anilloLL || anilloLL.length < 3) return res;
 
-                let posteMasCercano = null;
-                let distanciaMin = Infinity;
+                const anillo = anilloLL.map(servUTM);
+                const bb = turf.bbox(predioGeoJSON);
+                const caja = [bb[0] - EERSA_RADIO_GRADOS, bb[1] - EERSA_RADIO_GRADOS, bb[2] + EERSA_RADIO_GRADOS, bb[3] + EERSA_RADIO_GRADOS];
+                const enCaja = c => c[0] >= caja[0] && c[0] <= caja[2] && c[1] >= caja[1] && c[1] <= caja[3];
+                const r2 = v => Math.round(v * 100) / 100;
 
-                geojsonLayers[3].eachLayer(function (lyr) {
-                    if (!lyr.feature) return;
-                    try {
-                        const feat = lyr.toGeoJSON();
-                        const geomType = feat.geometry ? feat.geometry.type : null;
-                        if (!geomType) return;
-
-                        // Sólo procesar geometrías puntuales (postes / estructuras)
-                        if (geomType !== 'Point' && geomType !== 'MultiPoint') return;
-
-                        const coordsList = geomType === 'Point'
-                            ? [feat.geometry.coordinates]
-                            : feat.geometry.coordinates;
-
-                        // Descartar si ninguna coordenada está en el bbox expandido
-                        const enBbox = coordsList.some(function (c) {
-                            return c[0] >= bboxExp[0] && c[0] <= bboxExp[2] &&
-                                   c[1] >= bboxExp[1] && c[1] <= bboxExp[3];
-                        });
-                        if (!enBbox) return;
-
-                        coordsList.forEach(function (c) {
-                            const d = turf.distance(centroide, turf.point(c), { units: 'meters' });
-                            if (d < distanciaMin) {
-                                distanciaMin = d;
-                                posteMasCercano = { props: feat.properties, distancia: d };
-                            }
-                        });
-                    } catch (e) { }
-                });
-
-                if (!posteMasCercano) return null;
-
-                const p = posteMasCercano.props || {};
-
-                // ── Código de estructura (ID único) ───────────────────────────
-                const codigoEstructura =
-                    p.CODIGOESTRUCTURA || p.codigoestructura ||
-                    p.CODIGO || p.codigo ||
-                    (p.OBJECTID !== undefined ? 'OBJ-' + String(p.OBJECTID) : 'N/D');
-
-                // ── Descripción técnica (tipo, material, tamaño) ─────────────
-                const descParts = [];
-                const tipo = p.TIPO || p.tipo || p.SUBTIPO || p.subtipo || '';
-                const material = p.MATERIAL || p.material || '';
-                const tamano = p.TAMANO || p.tamano || '';
-                const descripcion = p.DESCRIPCION || p.descripcion || '';
-                if (tipo) descParts.push(tipo);
-                if (material) descParts.push('Material: ' + material);
-                if (tamano) descParts.push('Tamaño: ' + tamano);
-                if (!tipo && !material && descripcion) descParts.push(descripcion);
-                const descripcionTecnica = descParts.join(' | ') || 'N/D';
-
-                // ── Potencia ──────────────────────────────────────────────────
-                const potencia =
-                    (p.POTENCIA !== undefined && p.POTENCIA !== null) ? String(p.POTENCIA) :
-                    (p.potencia !== undefined && p.potencia !== null) ? String(p.potencia) : 'N/D';
-
-                // ── Secuencia de fase ─────────────────────────────────────────
-                const secuenciaFase =
-                    p.SECUENCIAFASE || p.secuenciafase ||
-                    p.FASECONEXION  || p.faseconexion  ||
-                    p.FASE || p.fase || 'N/D';
-
-                return {
-                    codigoEstructura,
-                    descripcionTecnica,
-                    potencia,
-                    secuenciaFase,
-                    distancia: Math.round(distanciaMin * 100) / 100
+                const distPunto = function (c) {
+                    const p = servUTM(c);
+                    if (servPuntoEnAnillo(p, anillo)) return 0;
+                    let d = Infinity;
+                    for (let j = 0; j < anillo.length - 1; j++) d = Math.min(d, servDistPuntoSegmento(p, anillo[j], anillo[j + 1]));
+                    return d;
                 };
+                const distLinea = function (coords) {
+                    if (!coords.some(enCaja)) return Infinity;
+                    const utm = coords.map(servUTM);
+                    if (utm.some(p => servPuntoEnAnillo(p, anillo))) return 0;
+                    let d = Infinity;
+                    for (let i = 0; i < utm.length - 1 && d > 0; i++)
+                        for (let j = 0; j < anillo.length - 1 && d > 0; j++)
+                            d = Math.min(d, servDistSegmentos(utm[i], utm[i + 1], anillo[j], anillo[j + 1]));
+                    return d;
+                };
+
+                let dPoste = Infinity, dBT = Infinity, dMT = Infinity, dTr = Infinity, dTr3 = Infinity;
+                geojsonLayers[3].eachLayer(function (lyr) {
+                    const f = lyr.feature;
+                    if (!f || !f.geometry || !f.properties) return;
+                    const p = f.properties, g = f.geometry;
+                    if (p.t === 'p' || p.t === 't') {
+                        if (g.type !== 'Point' || !enCaja(g.coordinates)) return;
+                        const d = distPunto(g.coordinates);
+                        if (p.t === 'p') {
+                            // Para conectarse sirve el poste que lleva baja tension
+                            if ((p.u === 2 || p.u === 4) && d < dPoste) {
+                                dPoste = d;
+                                res.poste = { codigo: p.c, uso: EERSA_USO_POSTE[p.u] || 'N/D', material: EERSA_MATERIAL_POSTE[p.m] || 'N/D', distancia: r2(d) };
+                            }
+                            return;
+                        }
+                        const tr = { codigo: p.c || 'N/D', kva: p.kva, fases: p.f, cargabilidad: p.car != null ? r2(p.car) : null,
+                                     voltajeSecundario: p.vs || null, tipoRed: p.tr || null, distancia: r2(d),
+                                     disponibleKVA: eersaPotenciaDisponible(p.kva, p.car) };
+                        if (d < dTr) { dTr = d; res.trafo = tr; }
+                        if (p.f === 3 && d < dTr3) { dTr3 = d; res.trafoTrifasico = tr; }
+                        return;
+                    }
+                    if (p.t !== 'b' && p.t !== 'm') return;
+                    const partes = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : [];
+                    let d = Infinity;
+                    partes.forEach(pt => { d = Math.min(d, distLinea(pt)); });
+                    if (d === Infinity) return;
+                    const red = { tipo: p.s === 'S' ? 'Subterranea' : 'Aerea', fases: EERSA_FASES[p.f] || null, distancia: r2(d) };
+                    if (p.t === 'b' && d < dBT) { dBT = d; res.redBT = Object.assign(red, { voltaje: p.v || null }); }
+                    if (p.t === 'm' && d < dMT) { dMT = d; res.redMT = Object.assign(red, { kv: p.kv || null }); }
+                });
+                // El trifasico solo aporta si no es ya el mas cercano
+                if (res.trafoTrifasico && res.trafo && res.trafoTrifasico.codigo === res.trafo.codigo) res.trafoTrifasico = null;
+                return res;
+            }
+
+            const eersaNum = v => String(v).replace('.', ',');
+
+            function textoRedElectrica(red) {
+                if (!red) return 'Sin red registrada a menos de 600 m';
+                const t = `${red.tipo}${red.fases ? ' ' + red.fases : ''}` +
+                          (red.voltaje ? `, ${red.voltaje} V` : '') +
+                          (red.kv ? `, ${eersaNum(red.kv)} kV` : '');
+                return red.distancia === 0 ? `${t} - pasa por el predio` : `${t} - a ${eersaNum(red.distancia)} m del lindero`;
+            }
+
+            function textoTrafo(tr) {
+                if (!tr) return 'Sin transformador registrado a menos de 600 m';
+                const fases = tr.fases === 3 ? ' trifasico' : tr.fases === 2 ? ' bifasico' : tr.fases === 1 ? ' monofasico' : '';
+                return `Puesto ${tr.codigo} - ${tr.kva != null ? eersaNum(tr.kva) + ' kVA' : 'kVA s/d'}${fases}` +
+                       ` - a ${eersaNum(tr.distancia)} m del lindero`;
+            }
+
+            function textoDisponible(tr) {
+                if (!tr || tr.disponibleKVA == null) return 'Sin dato de cargabilidad';
+                if (tr.disponibleKVA === 0) return `0 kVA - transformador al ${eersaNum(tr.cargabilidad)} % de su capacidad: la EERSA debe evaluar refuerzo`;
+                return `${eersaNum(tr.disponibleKVA)} kVA (de ${eersaNum(tr.kva)} kVA, cargabilidad ${eersaNum(tr.cargabilidad)} %)`;
             }
 
             // ─────────────────────────────────────────────────────────────────
@@ -7792,7 +7901,7 @@
             // Agua potable: la capa son polígonos de zona servida, así que la
             // pregunta es de pertenencia (dentro / parcial / fuera).
             // Alcantarillado: la capa son tramos de tubería, así que la pregunta
-            // es de proximidad, igual que con el poste de la EERSA.
+            // es de proximidad, igual que con la red de la EERSA.
             //
             // Todas las distancias se miden en el plano UTM 17S (metros), nunca
             // en grados: es la misma regla que usa el resto del informe.
@@ -8000,7 +8109,7 @@
                 return res;
             }
 
-            function calcularFactibilidades(predioGeoJSON, servicios, telecomunicaciones) {
+            function calcularFactibilidades(predioGeoJSON, servicios, telecomunicaciones, redElectrica) {
                 const layerDefs = {
                     1: { name: 'Uso de Suelo Urbano (PUGS)', icon: '🏙' },
                     2: { name: 'Uso de Suelo Rural (PUGS)', icon: '🌾' },
@@ -8045,6 +8154,22 @@
                             results.push({ name: def.name, estado: 'PARCIAL', detalle: `Predio parcialmente dentro de ${zona}.${caudal}`, color: [200, 140, 30] });
                         } else {
                             results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Fuera de las redes de distribucion registradas', color: [192, 57, 43] });
+                        }
+                        continue;
+                    }
+
+                    // Capa 3 — red eléctrica: el veredicto lo da analizarRedElectrica.
+                    // Disponible = hay red de baja tension a 100 m o menos del lindero.
+                    if (String(id) === '3' && redElectrica) {
+                        const bt = redElectrica.redBT, po = redElectrica.poste;
+                        if (!bt && !po) {
+                            results.push({ name: def.name, estado: 'NO DETECTADO', detalle: 'Sin red de baja tension a menos de 600 m', color: [192, 57, 43] });
+                        } else {
+                            const det = [bt ? 'Red BT ' + textoRedElectrica(bt).replace(/^Aerea/, 'aerea').replace(/^Subterranea/, 'subterranea') : null,
+                                         po ? `poste ${po.codigo} a ${eersaNum(po.distancia)} m` : null].filter(Boolean).join('; ');
+                            const cerca = (bt && bt.distancia <= 100) || (po && po.distancia <= 100);
+                            results.push({ name: def.name, estado: cerca ? 'DISPONIBLE' : 'PROXIMO', detalle: det,
+                                           color: cerca ? [39, 174, 96] : [200, 140, 30] });
                         }
                         continue;
                     }
@@ -8169,18 +8294,6 @@
                             }
                         } catch (e) { }
                     });
-
-                    // Capa 3 — Infraestructura Eléctrica: usar vecino más cercano
-                    // si ningún elemento interseca directamente el predio.
-                    if (!intersecta && String(id) === '3') {
-                        const posteCercano = encontrarPosteMasCercano(predioGeoJSON);
-                        if (posteCercano) {
-                            intersecta = true;
-                            detalles = [
-                                `Poste más cercano: ${posteCercano.codigoEstructura} — ${posteCercano.distancia} m`
-                            ];
-                        }
-                    }
 
                     if (intersecta) {
                         const det = [...new Set(detalles)].slice(0, 3).join(', ') || 'Presente en el área';
@@ -8640,7 +8753,7 @@
     ══════════════════════════════════════════════════════════ -->
     <script>
     // ── Fecha de corte del catastro ───────────────────────────────
-    const CATASTRO_FECHA_CORTE = new Date(2026, 8, 1); // 1 septiembre 2026, hora local
+    const CATASTRO_FECHA_CORTE = new Date(2026, 9, 1); // 1 octubre 2026, hora local
 
     function calcularVigenciaCatastro() {
         const ahora = new Date();
@@ -8942,6 +9055,40 @@
                     <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
+                    <strong>Red eléctrica EERSA — Octubre 2026</strong> — <span style="background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS ACTUALIZADOS</span>
+                    <div style="margin-top:4px">
+                        La capa <strong>Infraestructura Eléctrica</strong> deja de ser el inventario de luminarias y pasa a ser la red
+                        de distribución de la EERSA en el cantón: postes con red, transformadores y tramos de media y baja tensión.
+                        El DICAT reporta el <strong>poste más cercano con baja tensión</strong> y su código EERSA, la distancia al lindero,
+                        el <strong>tipo de red</strong> frente al predio (aérea o subterránea, mono, bi o trifásica) y la
+                        <strong>potencia disponible estimada</strong> del transformador más cercano. Antes se informaba como
+                        «código único» el tipo constructivo del poste, que comparten miles de postes.
+                    </div>
+                    <div class="historial-entry-date">Octubre 2026 · Fuente: EERSA · Datos actualizados</div>
+                </div>
+            </div>
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line"></div>
+                </div>
+                <div class="historial-entry-content">
+                    <strong>Actualización Octubre 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS VIGENTES</span>
+                    <div style="margin-top:4px">
+                        Catastro predial del GADMR al corte del <strong>1 de octubre de 2026</strong>. <strong id="hist-total-predios"></strong>
+                        Frente al corte de septiembre entran 3.877 claves catastrales nuevas y salen 527, y la capa pasa de
+                        74.365 a 77.215 predios. Se aplica la misma depuración: los 10 campos que usa el reporte, superficie y
+                        perímetro oficiales recalculados en UTM 17S y sin los números de documento pegados al nombre del propietario.
+                    </div>
+                    <div class="historial-entry-date">Octubre 2026 · Fuente: GADMR · Formato GeoJSON WGS84</div>
+                </div>
+            </div>
+            <div class="historial-entry">
+                <div>
+                    <div class="historial-dot"></div>
+                    <div class="historial-line"></div>
+                </div>
+                <div class="historial-entry-content">
                     <strong>Agua potable y telecomunicaciones — Septiembre 2026</strong> — <span style="background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS ACTUALIZADOS</span>
                     <div style="margin-top:4px">
                         <strong>Agua potable:</strong> EP Riobamba (antes EMAPAR) entregó sus redes de distribución
@@ -8989,10 +9136,10 @@
                     <div class="historial-line"></div>
                 </div>
                 <div class="historial-entry-content">
-                    <strong>Actualización Septiembre 2026</strong> — <span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600">DATOS VIGENTES</span>
+                    <strong>Actualización Septiembre 2026</strong>
                     <div style="margin-top:4px">
-                        Catastro predial del GADMR al corte de <strong>septiembre 2026</strong>, tomado de la vista de publicación
-                        vigente del geoportal municipal. <strong id="hist-total-predios"></strong>
+                        Catastro predial del GADMR al corte de <strong>septiembre 2026</strong> (74.365 predios), tomado de la vista de publicación
+                        vigente del geoportal municipal.
                         Se recupera el campo <strong>tipo de catastro</strong> (urbano / rural) que faltaba desde mayo,
                         se recalculan <strong>superficie y perímetro oficiales en UTM 17S</strong> — el servicio los publicaba en
                         Web Mercator, con un 0,67 % de exceso en área — y se depura la tabla de atributos: se conservan

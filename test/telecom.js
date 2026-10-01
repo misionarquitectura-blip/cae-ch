@@ -24,11 +24,11 @@ const path = require('path');
 const zlib = require('zlib');
 const H = require('./lib/harness');
 
-const BASE = path.join(H.RAIZ, 'DATA SET', 'telecom');
+const BASE = path.join(H.RAIZ, 'DATA SET', 'capas', 'telecom');
 console.log('TELECOMUNICACIONES — cobertura CNT EP (capa 5)\n');
 
 if (!fs.existsSync(path.join(BASE, 'manifest.json'))) {
-    console.log('  ! No existe DATA SET/telecom/manifest.json.');
+    console.log('  ! No existe DATA SET/capas/telecom/manifest.json.');
     console.log('    Se genera con: python "DATA SET/build_telecom.py"');
     process.exitCode = 1;
     return;

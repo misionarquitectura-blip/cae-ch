@@ -21,7 +21,7 @@ console.log('AFECTACION VIAL EN ZONA SIN LINEAS DE FABRICA\n');
 const capas = H.stubLineasFabrica();
 capas[7] = H.stubVialidad();
 const api = H.cargarGeovisor(capas);
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 const feat = f => ({ type: 'Feature', properties: f.properties, geometry: f.geometry });
 
 // ── Caso de referencia rural ────────────────────────────────────────────────
@@ -50,12 +50,14 @@ for (let i = 0; i < catastro.features.length; i += PASO) {
     if (!r) continue;
     n++;
     const clave = f.properties.claves;
-    const area = api.afShoelace(api.afRingUTM(feat(f)));
+    const P = api.afRingUTM(feat(f));
+    const area = api.afShoelace(P);            // anillo exterior: tope de la afectacion
+    const neta = api.afAreaPredio(feat(f), P); // sin vacios interiores: util + afectada
     if (r.corredores.length) conCorredor++;
     if (r.ejesSinAncho.length) sinAncho++;
     if (r.metodo === 'lf' && (r.totalVialidad > 0 || r.ejesSinAncho.length)) malos.push(`${clave} mezcla LF y vialidad`);
     if (r.total > area + 0.05) malos.push(`${clave} afectacion ${r.total} > predio ${area.toFixed(2)}`);
-    if (Math.abs(r.total + r.edificable - area) > 0.1) malos.push(`${clave} descuadre ${r.total}+${r.edificable}`);
+    if (Math.abs(r.total + r.edificable - neta) > 0.1) malos.push(`${clave} descuadre ${r.total}+${r.edificable}`);
     r.corredores.forEach(c => { if (!(c.ancho > 0 && c.ancho <= 40)) malos.push(`${clave} ancho ${c.ancho}`); });
 }
 console.log(`Predios evaluados: ${n} | con corredor: ${conCorredor} | ancho desconocido: ${sinAncho}\n`);

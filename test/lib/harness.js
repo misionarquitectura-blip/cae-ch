@@ -18,7 +18,7 @@ const FUNCIONES = [
     'anilloEnAnillo', 'medirGeometria',
     'afUTM', 'afShoelace', 'afBbox', 'afPip', 'afDist2Seg', 'afDistToRing',
     'afSegInt', 'afDedupe', 'afInnerPaths', 'afSplitByPath', 'afMaxSepBorde',
-    'afNucleo', 'afRingUTM', 'afExtender', 'afCruzaAnillo', 'afCadenasLF',
+    'afNucleo', 'afRingUTM', 'afAreaPredio', 'afExtender', 'afCruzaAnillo', 'afCadenasLF',
     'calcularFranjasAfectacion', 'afCallesQueCruzan', 'afFranjasBorde',
     'afMuestras', 'afDesfase', 'afCajaGrados', 'afCajaPredio', 'afHayLF',
     'afViasLocales', 'afCortarPiezas',
@@ -80,6 +80,21 @@ function cargarServicios(geojsonLayers, turf) {
     return new Function('geojsonLayers', 'turf', 'console', codigo)(geojsonLayers || {}, turf, console);
 }
 
+// Funciones de la capa 3 (red electrica EERSA): usan las mismas utilidades
+// UTM de servicios basicos y las tablas de codigos EERSA_*.
+const FUNCIONES_ELECTRICA = FUNCIONES_SERVICIOS.filter(f => f !== 'analizarServiciosBasicos').concat([
+    'eersaPotenciaDisponible', 'analizarRedElectrica', 'textoRedElectrica', 'textoTrafo', 'textoDisponible'
+]);
+const CONSTANTES_ELECTRICA = ['EERSA_USO_POSTE', 'EERSA_MATERIAL_POSTE', 'EERSA_FASES', 'EERSA_RADIO_GRADOS', 'eersaNum'];
+
+function cargarRedElectrica(geojsonLayers, turf) {
+    const src = fs.readFileSync(path.join(RAIZ, 'geovisor.html'), 'utf8');
+    let codigo = CONSTANTES_ELECTRICA.map(c => extraerConstante(src, c)).join('\n') + '\n';
+    codigo += FUNCIONES_ELECTRICA.map(f => extraerFuncion(src, f)).join('\n') + '\n';
+    codigo += 'return {' + FUNCIONES_ELECTRICA.concat(CONSTANTES_ELECTRICA).join(',') + '};';
+    return new Function('geojsonLayers', 'turf', 'console', codigo)(geojsonLayers || {}, turf, console);
+}
+
 // Funciones de la capa 5 (cobertura de telecomunicaciones). Necesitan un L
 // minimo (solo latLngBounds) y el objeto de estado `telecom`, que en el visor
 // es una constante del modulo.
@@ -124,13 +139,13 @@ function leerGeoJSON(rel) {
 
 // Capa 7 (vialidad de la provincia) simulada sobre el GeoJSON de produccion
 function stubVialidad() {
-    const v = leerGeoJSON('DATA SET/VIALIDAD_TOTAL.geojson');
+    const v = leerGeoJSON('DATA SET/capas/VIALIDAD_TOTAL.geojson');
     return { eachLayer: cb => { for (const f of v.features) cb({ feature: f }); } };
 }
 
 // Capa 8 (lineas de fabrica) simulada sobre el GeoJSON de produccion
 function stubLineasFabrica() {
-    const lf = leerGeoJSON('DATA SET/LINEAS_FABRICA.geojson');
+    const lf = leerGeoJSON('DATA SET/capas/LINEAS_FABRICA.geojson');
     return { 8: { eachLayer: cb => { for (const f of lf.features) cb({ feature: f }); } } };
 }
 
@@ -173,7 +188,7 @@ function resumen(titulo) {
 }
 
 module.exports = {
-    cargarGeovisor, cargarServicios, cargarTelecom, cargarDXF,
+    cargarGeovisor, cargarServicios, cargarRedElectrica, cargarTelecom, cargarDXF,
     leerGeoJSON, stubLineasFabrica, stubVialidad, stubCapa,
     buscarPredio, anillo, chequear, casiIgual, resumen, RAIZ
 };

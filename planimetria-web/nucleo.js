@@ -93,8 +93,8 @@ const FUNCIONES = [
     'latLngToUTM', 'utmToLatLng',
     'afUTM', 'afShoelace', 'afBbox', 'afPip', 'afDist2Seg', 'afDistToRing',
     'afSegInt', 'afDedupe', 'afInnerPaths', 'afSplitByPath', 'afMaxSepBorde',
-    'afNucleo', 'afRingUTM', 'afExtender', 'afCadenasLF',
-    'calcularFranjasAfectacion',
+    'afNucleo', 'afRingUTM', 'afAreaPredio', 'afExtender', 'afCruzaAnillo', 'afCadenasLF',
+    'calcularFranjasAfectacion', 'afCallesQueCruzan', 'afFranjasBorde', 'afDesfase', 'afMuestras',
     'lindAnilloValido', 'lindAnillosExteriores', 'lindProyeccion', 'lindLongitudIntervalos',
     'lindLadosPredio', 'lindMarcarVecino'
 ];

@@ -48,7 +48,7 @@ Cada descarga queda registrada en la tabla `descargas` con quién, qué formato 
 
 ## Alcance real del control — léalo antes de prometer nada
 
-El visor se sirve estático desde GitHub Pages y `DATA SET/Catastro GADMR.geojson`
+El visor se sirve estático desde GitHub Pages y `DATA SET/capas/Catastro GADMR.geojson`
 es un archivo **público del repositorio**. Este API blinda la *herramienta* de
 exportación y deja auditoría de cada descarga; **no vuelve secreta la geometría**
 —y desde que el visor es público, tampoco pretende hacerlo—,

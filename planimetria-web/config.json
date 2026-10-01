@@ -21,15 +21,15 @@
   },
 
   "capas": {
-    "catastro": "../DATA SET/Catastro GADMR.geojson",
-    "lineas_fabrica": "../DATA SET/LINEAS_FABRICA.geojson",
-    "pugs_urbano": "../DATA SET/PUGS Urbano.geojson",
-    "pugs_rural": "../DATA SET/PUGS Rural.geojson",
-    "parroquias": "../DATA SET/DATOS GEOVISOR 01 09 2026/capas/Parroquias.geojson",
-    "limite_urbano": "../DATA SET/DATOS GEOVISOR 01 09 2026/capas/Limite_Urbano.geojson"
+    "catastro": "../DATA SET/capas/Catastro GADMR.geojson",
+    "lineas_fabrica": "../DATA SET/capas/LINEAS_FABRICA.geojson",
+    "pugs_urbano": "../DATA SET/capas/PUGS Urbano.geojson",
+    "pugs_rural": "../DATA SET/capas/PUGS Rural.geojson",
+    "parroquias": "../DATA SET/fuentes/GADMR catastro 2026-10-01/Parroquias.geojson",
+    "limite_urbano": "../DATA SET/fuentes/GADMR catastro 2026-10-01/Limite_Urbano.geojson"
   },
 
-  "gdb_certificada": "../DATA SET/CERTIFICACION_EJES_VIALES.gdb",
+  "gdb_certificada": "../DATA SET/fuentes/CERTIFICACION_EJES_VIALES.gdb",
   "ogr2ogr": "C:/Program Files/QGIS 4.0.0/bin/ogr2ogr.exe",
 
   "elementos": [

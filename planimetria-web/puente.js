@@ -74,7 +74,7 @@
         preparando = (async () => {
             await cargarFuente();
             config = await json(RAIZ + 'planimetria-web/config.json');
-            manifiesto = await json(RAIZ + 'DATA SET/planimetria/manifiesto.json');
+            manifiesto = await json(RAIZ + 'DATA SET/capas/planimetria/manifiesto.json');
             capas = P.capas.crearCapasWeb(config, id => RAIZ + ((manifiesto.capas[id] || {}).url || ''));
 
             const ids = Object.keys(manifiesto.capas);
@@ -152,7 +152,7 @@
         'GET /api/estado': async () => {
             if (!config) {
                 config = await json(RAIZ + 'planimetria-web/config.json');
-                manifiesto = await json(RAIZ + 'DATA SET/planimetria/manifiesto.json');
+                manifiesto = await json(RAIZ + 'DATA SET/capas/planimetria/manifiesto.json');
             }
             const hay = id => !!manifiesto.capas[id];
             return {

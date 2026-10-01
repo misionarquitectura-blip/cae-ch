@@ -7,8 +7,12 @@
 //  los que tenian un extremo dentro o a <= 2 m del borde) y el DICAT decia
 //  "sin afectacion" aunque el mapa mostrara el trazado sobre el lote.
 //
-//  Caso de referencia: 060101004007064003 (14 127,72 m2), cruzado de norte a
-//  sur por una calle de ~10 m. Contraste por malla de 0,1 m: 706,07 m2.
+//  Caso de referencia: 060101004007064003, cruzado de norte a sur por una
+//  calle de ~10 m. Con el catastro de sep 2026 (14 127,72 m2) el contraste por
+//  malla de 0,1 m dio 706,07 m2 y el DICAT 706,10. En el corte de oct 2026 el
+//  GADMR lo redibujo ~2 m al sur y con un vacio interior de 204,10 m2: queda
+//  en 14 081,10 m2 y la calle en 709,32. Ese vacio es el que comprueba que el
+//  area edificable descuenta los huecos del predio.
 //
 //  Ejecutar:  node test/afectacion-calle-cruza.js
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,7 +24,7 @@ console.log('CALLES QUE ATRAVIESAN EL PREDIO\n');
 const capas = H.stubLineasFabrica();
 capas[7] = H.stubVialidad();
 const api = H.cargarGeovisor(capas);
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 const feat = f => ({ type: 'Feature', properties: f.properties, geometry: f.geometry });
 
 // ── Caso reportado ──────────────────────────────────────────────────────────
@@ -28,8 +32,8 @@ const r = api.calcularAfectacionPredio(feat(H.buscarPredio(catastro, '0601010040
 H.chequear('resuelto por linea de fabrica', r.metodo === 'lf', r.metodo);
 H.chequear('detecta una calle que cruza', r.callesQueCruzan.length === 1, JSON.stringify(r.callesQueCruzan));
 H.casiIgual('ancho entre las dos LF', r.callesQueCruzan[0], 10.1, 0.3, 'm');
-H.casiIgual('area de la calle vs malla 0,1 m', r.total, 706.07, 0.5, 'm2');
-H.casiIgual('area util + afectada = predio', r.total + r.edificable, 14127.72, 0.05, 'm2');
+H.casiIgual('area de la calle (oct 2026)', r.total, 709.32, 0.5, 'm2');
+H.casiIgual('area util + afectada = predio sin su vacio interior', r.total + r.edificable, 14081.10, 0.05, 'm2');
 
 // ── El lote al otro lado de la calle sigue siendo predio ────────────────────
 // Antes se descartaba como "franja" todo lo que quedaba mas alla de la

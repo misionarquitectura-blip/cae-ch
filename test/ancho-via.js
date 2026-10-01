@@ -19,9 +19,9 @@ const PASO = parseInt(process.argv[2] || '150', 10);
 console.log('ANCHO DE VIA POR FRENTE\n');
 
 const capas = H.stubLineasFabrica();
-capas[6] = H.stubCapa('DATA SET/Catastro GADMR.geojson');
+capas[6] = H.stubCapa('DATA SET/capas/Catastro GADMR.geojson');
 const api = H.cargarGeovisor(capas);
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 const feat = f => ({ type: 'Feature', properties: f.properties, geometry: f.geometry });
 const anchos = clave => api.calcularAnchosVia(feat(H.buscarPredio(catastro, clave)));
 const de = (r, dir) => r.find(f => f.dir === dir) || {};

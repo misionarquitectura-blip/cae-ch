@@ -19,7 +19,7 @@ const patron = require('./fixtures/linderos-060101004001061001.json');
 console.log('LINDEROS Y COTAS DEL DICAT — patron: predio ' + patron.clave + '\n');
 
 const api = H.cargarGeovisor({});
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 const feats = catastro.features;
 
 // Reproduce el volcado de calcularColindantes: acumula por (orientacion,
@@ -52,8 +52,13 @@ const lados = api.lindLadosPredio(predio);
 H.chequear(`numero de lados = ${patron.lados.length}`, lados.length === patron.lados.length,
     `obtenido ${lados.length}`);
 
+// El vertice con el que empieza el anillo lo decide la exportacion del GADMR y
+// cambia entre cortes (oct 2026 arranca en el V2 de sep). Se alinea el patron
+// con el lado que mide lo mismo que su lado 1 y desde ahi se exige el orden.
+const desfase = Math.max(0, lados.findIndex(l =>
+    Math.abs(l.L - patron.lados[0].longitudM) < 0.001 && l.dir === patron.lados[0].orientacion));
 patron.lados.forEach((esp, i) => {
-    const l = lados[i];
+    const l = lados[(i + desfase) % lados.length];
     if (!l) return;
     // 1 mm: por encima de eso volvio a colarse una longitud geodesica o un redondeo
     H.casiIgual(`lado ${i + 1} (${esp.orientacion})`, l.L, esp.longitudM, 0.001, 'm');

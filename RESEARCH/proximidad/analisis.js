@@ -24,7 +24,7 @@ const UMBRAL_MOTOR = 1500;                      // mas alla, el viaje de compra 
 const VIAJES_SEMANA = 2;                        // viajes de abasto por hogar y semana (supuesto declarado)
 
 // ------------------------------------------------------------ Limite urbano
-const limWGS = LEE(RAIZ + 'DATA SET/DATOS GEOVISOR 01 09 2026/capas/Limite_Urbano.geojson').features[0].geometry;
+const limWGS = LEE(RAIZ + 'DATA SET/fuentes/GADMR catastro 2026-10-01/Limite_Urbano.geojson').features[0].geometry;
 const LIM = G.toUTM(limWGS);
 const dentro = p => LIM.some(poly => G.pointInPoly(p, poly));
 let bx0 = 1e12, by0 = 1e12, bx1 = -1e12, by1 = -1e12;
@@ -51,7 +51,7 @@ console.log('rejilla:', celdas.size, 'celdas de', CELDA, 'm; limite', (areaLimit
 // (colegios, ministerios, GAD, iglesias...), mas las huellas de construccion
 // no registrada de la Linea 1 (una planta: es la hipotesis prudente).
 const puntos = []; // { p:[x,y], w, sc, ia, celda }
-const cat = LEE(RAIZ + 'DATA SET/Catastro GADMR.geojson');
+const cat = LEE(RAIZ + 'DATA SET/capas/Catastro GADMR.geojson');
 let nPred = 0, scTot = 0, scRes = 0;
 for (const f of cat.features) {
   const polys = G.toUTM(f.geometry); if (!polys.length) continue;
@@ -329,7 +329,7 @@ const hogFuera = puntos.reduce((a, q) => a + (q.sector !== 'Centro' ? q.hog : 0)
 // Candidatos: predios del GAD sin construccion, de al menos 3 000 m2, dentro del
 // limite urbano. Se elige por codicia el que mas reduce la distancia total
 // (hogares x metros) y se repite hasta tres.
-const PM = LEE(RAIZ + 'DATA SET/DATOS GEOVISOR 01 09 2026/capas/Predios_Municipales.geojson').features;
+const PM = LEE(RAIZ + 'DATA SET/fuentes/GADMR catastro 2026-10-01/Predios_Municipales.geojson').features;
 const cands = [], descartes = { verde: 0, parqueOSM: 0, ocupado: 0 };
 // Fraccion del lote cubierta por espacio de estancia de OSM (muestreo a 5 m)
 function enEstancia(polys) {

@@ -14,7 +14,7 @@ const patron = require('./fixtures/predio-060104007003003002.json');
 console.log('EXACTITUD GEOMETRICA — patron: estacion total, predio ' + patron.clave + '\n');
 
 const api = H.cargarGeovisor(H.stubLineasFabrica());
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 const feat = H.buscarPredio(catastro, patron.clave);
 if (!feat) { console.error('No se encontro el predio en el catastro.'); process.exit(1); }
 

@@ -17,7 +17,7 @@ console.log('DXF PARA AUTOCAD — predio ' + patron.clave + '\n');
 
 const api = H.cargarGeovisor({});
 const { construirDXF } = H.cargarDXF();
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 
 const feat = H.buscarPredio(catastro, patron.clave);
 if (!feat) { console.error('No se encontro el predio en el catastro.'); process.exit(1); }

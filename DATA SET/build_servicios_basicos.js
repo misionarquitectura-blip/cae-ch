@@ -1,11 +1,11 @@
 // Genera las capas de servicios básicos del GeoVisor a partir de los archivos
 // crudos de EMAPAR / EP Riobamba, exportados en EPSG:32717:
 //
-//   DATA SET/AGUA POTABLE EP RIOBAMBA/REDES_GENERAL.shp            ─┐
-//   DATA SET/AGUA POTABLE EP RIOBAMBA/REDES_DE_DISTRIBUCION_*.shp  ─┴> agua_potable.geojson
-//   DATA SET/Alcantarillado Sanitario.geojson ─┐
-//   DATA SET/Alcantarillado Fluvial.geojson    ├─> DATA SET/alcantarillado.geojson
-//   DATA SET/Alcantarillado Combinado.geojson ─┘
+//   DATA SET/fuentes/EP Riobamba agua y alcantarillado/Redes agua potable/REDES_GENERAL.shp            ─┐
+//   DATA SET/fuentes/EP Riobamba agua y alcantarillado/Redes agua potable/REDES_DE_DISTRIBUCION_*.shp  ─┴> agua_potable.geojson
+//   DATA SET/fuentes/EP Riobamba agua y alcantarillado/Alcantarillado Sanitario.geojson ─┐
+//   DATA SET/fuentes/EP Riobamba agua y alcantarillado/Alcantarillado Fluvial.geojson    ├─> DATA SET/capas/alcantarillado.geojson
+//   DATA SET/fuentes/EP Riobamba agua y alcantarillado/Alcantarillado Combinado.geojson ─┘
 //
 // Dos transformaciones, además de la reproyección a WGS84:
 //
@@ -65,10 +65,13 @@ function utm17sToWgs84(easting, northing) {
     ];
 }
 
-const BASE = __dirname;
+// Las descargas de la EP Riobamba viven en fuentes/; las capas que consume el
+// visor se escriben en capas/.
+const BASE = path.join(__dirname, 'fuentes', 'EP Riobamba agua y alcantarillado');
+const CAPAS = path.join(__dirname, 'capas');
 const leer = (n) => JSON.parse(fs.readFileSync(path.join(BASE, n), 'utf8'));
 const escribir = (n, fc) => {
-    const p = path.join(BASE, n);
+    const p = path.join(CAPAS, n);
     fs.writeFileSync(p, JSON.stringify(fc));
     return (fs.statSync(p).size / 1024 / 1024).toFixed(2);
 };
@@ -164,7 +167,7 @@ function leerShapefile(rel) {
 //  1. COBERTURA DE AGUA POTABLE — redes de distribución y subredes
 // ═══════════════════════════════════════════════════════════════════════════
 
-const AP_DIR = 'AGUA POTABLE EP RIOBAMBA';
+const AP_DIR = 'Redes agua potable';
 const AP_GENERAL = path.join(AP_DIR, 'REDES_GENERAL');
 const AP_SUBREDES = path.join(AP_DIR, 'REDES_DE_DISTRIBUCION_MARZO_2025');
 const AP_FUENTE = 'EP Riobamba (ex EMAPAR)';

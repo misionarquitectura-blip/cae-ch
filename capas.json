@@ -13,7 +13,7 @@
         "icono": "fas fa-city",
         "texto": "Información catastral georreferenciada del Gobierno Autónomo Descentralizado Municipal de Riobamba.",
         "badge": {
-          "texto": "Última actualización: septiembre 2026",
+          "texto": "Última actualización: octubre 2026",
           "fondo": "#eee",
           "color": "#555"
         }
@@ -22,7 +22,7 @@
         {
           "id": 6,
           "nombre": "Catastro GADMR",
-          "fuente": "GADMR – Catastro Predial · Actualización: septiembre 2026"
+          "fuente": "GADMR – Catastro Predial · Actualización: octubre 2026"
         }
       ]
     },
@@ -31,13 +31,18 @@
       "tarjeta": {
         "titulo": "Infraestructura eléctrica",
         "icono": "fas fa-bolt",
-        "texto": "Red eléctrica, cobertura y equipamiento de la Empresa Eléctrica de Riobamba (EERSA)."
+        "texto": "Postes, transformadores y redes de media y baja tensión de la Empresa Eléctrica Riobamba (EERSA) en el cantón. El DICAT reporta el poste más cercano con su código, el tipo de red frente al predio y la potencia disponible estimada del transformador.",
+        "badge": {
+          "texto": "EERSA · octubre 2026",
+          "fondo": "#eee",
+          "color": "#555"
+        }
       },
       "visor": [
         {
           "id": 3,
           "nombre": "Infraestructura Eléctrica",
-          "fuente": "EERSA – Empresa Eléctrica Riobamba S.A."
+          "fuente": "EERSA – Red de distribución · Actualización: octubre 2026"
         }
       ]
     },

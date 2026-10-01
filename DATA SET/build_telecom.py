@@ -18,9 +18,9 @@ Por que este script existe y no un L.tileLayer.wms directo:
 
 Lo que produce:
 
-  DATA SET/telecom/manifest.json             metadatos, leyenda y bounds
-  DATA SET/telecom/provincia/<capa>.png      Chimborazo completo (~28 m/px)
-  DATA SET/telecom/riobamba/<capa>_rRcC.png  canton Riobamba (~8 m/px, malla 2x2)
+  DATA SET/capas/telecom/manifest.json             metadatos, leyenda y bounds
+  DATA SET/capas/telecom/provincia/<capa>.png      Chimborazo completo (~28 m/px)
+  DATA SET/capas/telecom/riobamba/<capa>_rRcC.png  canton Riobamba (~8 m/px, malla 2x2)
 
 Los PNG salen normalizados a una paleta de 5 clases + transparente
 (ver PALETA). Eso hace los archivos pequenos y, sobre todo, permite que
@@ -79,7 +79,7 @@ BUFFER_KM = 2.0        # margen fuera del limite provincial
 # ------------------------------------------------------------
 # Salida
 # ------------------------------------------------------------
-BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "telecom")
+BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "capas", "telecom")
 LIMITE_GEOJSON = os.path.join(BASE, "chimborazo_dpa.geojson")
 
 # ------------------------------------------------------------

@@ -317,7 +317,7 @@
         <p>Detección de construcciones no declaradas en el catastro municipal de Riobamba mediante análisis de inteligencia artificial y contraste con datos catastrales oficiales.</p>
         <div class="badge-fila">
             <span class="badge-ia"><i class="fas fa-robot"></i> Fuente IA: Google Open Buildings · ML</span>
-            <span class="badge-ia"><i class="fas fa-calendar-check"></i> Catastro GADMR · corte 1 de septiembre de 2026</span>
+            <span class="badge-ia"><i class="fas fa-calendar-check"></i> Catastro GADMR · corte 1 de octubre de 2026</span>
             <span class="badge-ia"><i class="fas fa-lock-open"></i> Acceso libre, sin cuenta</span>
         </div>
     </div>
@@ -367,7 +367,7 @@
         <div class="ev-grid">
             <div class="ev-item" style="--c:#27AE60"><b id="ev-declaradas">—</b><span id="ev-declaradas-t">ya figuran con construcción declarada</span></div>
             <div class="ev-item" style="--c:#E31E24"><b id="ev-siguen">—</b><span id="ev-siguen-t">siguen sin declarar</span></div>
-            <div class="ev-item" style="--c:#2980B9"><b id="ev-nuevas">—</b><span>se suman por predios nuevos o redibujados en el catastro de septiembre</span></div>
+            <div class="ev-item" style="--c:#2980B9"><b id="ev-nuevas">—</b><span>se suman por predios nuevos o redibujados en el catastro de octubre</span></div>
             <div class="ev-item" style="--c:#6c757d"><b id="ev-fuera">—</b><span>quedaron fuera de todo predio (cambios de lindero)</span></div>
         </div>
     </div>
@@ -445,7 +445,7 @@
                         <strong>Fuente IA</strong>Google Open Buildings — detección ML de huellas de construcción.
                     </div>
                     <div class="metodo-item">
-                        <strong>Base catastral</strong>Predios GADMR (corte 1 sep 2026) con campo <code>sup_cons_c</code> = 0 (sin declaración).
+                        <strong>Base catastral</strong>Predios GADMR (corte 1 oct 2026) con campo <code>sup_cons_c</code> = 0 (sin declaración).
                     </div>
                     <div class="metodo-item">
                         <strong>Análisis</strong>Point-in-polygon: centroide IA vs polígono predio.
@@ -683,7 +683,7 @@ function mostrarEvolucion(ev) {
     if (!ev) return;
     const pct = n => (n / ev.no_registradas_antes * 100).toLocaleString('es-EC', { maximumFractionDigits: 1 }) + ' %';
     document.getElementById('ev-lead').textContent =
-        `El análisis se repitió con el catastro del 1 de septiembre de 2026 sobre las mismas huellas IA. ` +
+        `El análisis se repitió con el catastro del 1 de octubre de 2026 sobre las mismas huellas IA. ` +
         `De las ${fmt(ev.no_registradas_antes)} construcciones no registradas en abril, solo ${fmt(ev.ya_declaradas)} ` +
         `(${pct(ev.ya_declaradas)}) aparecen ahora con construcción declarada: el rezago del catastro frente a lo edificado casi no se movió.`;
     document.getElementById('ev-declaradas').textContent = fmt(ev.ya_declaradas);

@@ -9,8 +9,8 @@ node build.js                                # datos.json + plantilla.html -> ..
 ```
 
 ## Entradas
-- `DATA SET/Catastro GADMR.geojson` (corte 1 sep 2026) y `RESEARCH/no_registradas.geojson` (Línea 1).
-- `DATA SET/DATOS GEOVISOR 01 09 2026/capas/`: `Limite_Urbano` y `Predios_Municipales`.
+- `DATA SET/capas/Catastro GADMR.geojson` (corte 1 sep 2026) y `RESEARCH/no_registradas.geojson` (Línea 1).
+- `DATA SET/fuentes/GADMR catastro 2026-10-01/`: `Limite_Urbano` y `Predios_Municipales`.
 - `RESEARCH/equipamiento/consolidado.json` y `osm_areas.json`: el inventario del estudio 1.
   **Esa carpeta no se versiona**: hay que tenerla en local para regenerar.
 - `mercados.js`: la red municipal de mercados, depurada a mano (fuentes en el propio archivo).

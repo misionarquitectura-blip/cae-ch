@@ -15,7 +15,7 @@ const PASO = parseInt(process.argv[2] || '350', 10);
 console.log(`REGRESION CATASTRAL — 1 de cada ${PASO} predios\n`);
 
 const api = H.cargarGeovisor(H.stubLineasFabrica());
-const catastro = H.leerGeoJSON('DATA SET/Catastro GADMR.geojson');
+const catastro = H.leerGeoJSON('DATA SET/capas/Catastro GADMR.geojson');
 
 let n = 0, errores = 0, conAfect = 0, sumMs = 0, maxMs = 0;
 let areaExacta = 0, areaDesviada = 0;
@@ -61,8 +61,12 @@ for (let i = 0; i < catastro.features.length; i += PASO) {
         conAfect++;
         // La afectacion se calcula sobre el poligono principal, asi que la
         // coherencia se comprueba contra el area de ese anillo, no contra la
-        // superficie total de un predio multiparte.
-        const areaExterior = parseFloat(api.calculatePolygonArea(ring.map(c => ({ lat: c[1], lng: c[0] }))));
+        // superficie total de un predio multiparte. Los vacios interiores de
+        // ese poligono si se descuentan: no son superficie edificable.
+        const areaDe = r => parseFloat(api.calculatePolygonArea(r.map(c => ({ lat: c[1], lng: c[0] }))));
+        const g = f.geometry;
+        const huecos = (g.type === 'MultiPolygon' ? g.coordinates[0] : g.coordinates).slice(1);
+        const areaExterior = huecos.reduce((s, h) => s - areaDe(h), areaDe(ring));
         // Ninguna franja de retiro deberia comerse el predio entero.
         if (r.total >= areaExterior) excedidos.push(`${f.properties.claves} afect ${r.total} >= area ${areaExterior.toFixed(2)}`);
         // Coherencia interna
