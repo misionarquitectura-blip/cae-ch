@@ -35,6 +35,17 @@ import { permisos, registrarEvento } from './sesiones.js';
 
 const URL_CONFIRMAR_PAYPHONE = 'https://paymentbox.payphonetodoesposible.com/api/confirm';
 
+/**
+ * Credenciales de PayPhone tal como se usan. Se pegan a mano en
+ * `wrangler secret put`, asi que se limpian espacios, saltos de linea,
+ * comillas y un "Bearer " copiado de mas: cualquiera de ellos hace que
+ * PayPhone responda "Su aplicacion no esta autorizada".
+ */
+function credenciales(env) {
+    const limpiar = v => String(v || '').trim().replace(/^["']|["']$/g, '').replace(/^Bearer\s+/i, '').trim();
+    return { token: limpiar(env.PAYPHONE_TOKEN), storeId: limpiar(env.PAYPHONE_STORE_ID) };
+}
+
 /** Parametros de cobro leidos del entorno, con los valores del convenio. */
 export function tarifa(env) {
     const precio = parseInt(env.PRECIO_PREDIO_CENTAVOS, 10) || 2000;
@@ -49,7 +60,7 @@ export function tarifa(env) {
         iva_porcentaje: ivaPct,
         cupo_mensual: parseInt(env.CUPO_MENSUAL, 10) >= 0 ? parseInt(env.CUPO_MENSUAL, 10) : 4,
         dias_acceso: parseInt(env.DIAS_ACCESO_PREDIO, 10) || 30,
-        cobro_en_linea: !!(env.PAYPHONE_TOKEN && env.PAYPHONE_STORE_ID)
+        cobro_en_linea: !!(credenciales(env).token && credenciales(env).storeId)
     };
 }
 
@@ -259,8 +270,8 @@ export async function prepararPago(env, request, sesion, datos) {
             // al navegador porque asi funciona la Cajita: la autorizacion de
             // verdad esta en el Confirm, que solo hace este Worker.
             cajita: {
-                token: env.PAYPHONE_TOKEN,
-                storeId: env.PAYPHONE_STORE_ID,
+                token: credenciales(env).token,
+                storeId: credenciales(env).storeId,
                 clientTransactionId: id,
                 amount: t.precio,
                 amountWithTax: t.base,
@@ -305,7 +316,7 @@ export async function confirmarPago(env, request, sesion, datos) {
     try {
         r = await fetch(env.PAYPHONE_URL_CONFIRMAR || URL_CONFIRMAR_PAYPHONE, {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + env.PAYPHONE_TOKEN, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': 'Bearer ' + credenciales(env).token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: idPayphone, clientTxId: clientTx })
         });
         respuesta = await r.json().catch(() => null);

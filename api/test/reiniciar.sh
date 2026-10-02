@@ -39,10 +39,12 @@ rm -f /tmp/caech-wrangler.log
 # El registro publico viene apagado en wrangler.toml (espera a Resend) y
 # ademas se niega solo con MAIL_PROVEEDOR="consola". Aqui se enciende a
 # proposito: las pruebas leen el enlace de confirmacion de ese mismo log.
+# wrangler.toml manda "resend" en produccion; aqui se fuerza "consola",
+# porque en local no hay clave de Resend y el alta fallaria.
 # PayPhone se simula en el puerto 8791 (lo levanta api.test.mjs): el
 # token es de mentira y el Confirm apunta al simulador, nunca a PayPhone.
 npx wrangler dev --port 8787 --local \
-    --var REGISTRO_ACTIVO:si --var PERMITIR_CORREO_CONSOLA:si \
+    --var REGISTRO_ACTIVO:si --var PERMITIR_CORREO_CONSOLA:si --var MAIL_PROVEEDOR:consola \
     --var PAYPHONE_TOKEN:prueba-payphone --var PAYPHONE_STORE_ID:tienda-prueba \
     --var PAYPHONE_URL_CONFIRMAR:http://127.0.0.1:8791/api/confirm \
     > /tmp/caech-wrangler.log 2>&1 &
