@@ -57,7 +57,9 @@ HASH_ITERACIONES = "50000"
 # "consola" escribe el enlace en los logs (npx wrangler tail) sin enviar
 # nada: es el modo util mientras el dominio no este verificado.
 # "resend" envia de verdad (requiere RESEND_API_KEY y dominio verificado).
-MAIL_PROVEEDOR = "consola"
+# Activo desde el 2026-10-02: dominio cae-ch.org en Resend, region
+# sa-east-1, registros creados en Cloudflare con Auto configure.
+MAIL_PROVEEDOR = "resend"
 MAIL_REMITENTE = "CAE-CH <no-responder@cae-ch.org>"
 
 # "no" apaga el registro publico de cuentas sin volver a desplegar.
