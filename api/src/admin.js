@@ -35,7 +35,7 @@ export async function listarAfiliados(env, url) {
     const soloPendientes = !!(url && url.searchParams.get('pendientes'));
     const sql = soloPendientes
         ? "SELECT * FROM afiliados WHERE origen = 'registro' AND registro_validado = 0 "
-          + "AND estado = 'activo' ORDER BY creado_en"
+          + "AND registro_profesional IS NOT NULL AND estado = 'activo' ORDER BY creado_en"
         : 'SELECT * FROM afiliados ORDER BY estado, nombre COLLATE NOCASE';
 
     const { results } = await env.DB.prepare(sql).all();
@@ -150,8 +150,8 @@ export async function actualizarAfiliado(env, request, sesion, id, datos) {
         }
         campos.push('registro_profesional = ?'); valores.push(reg); cambios.push('registro');
     }
-    // Cotejo del numero contra el padron del CAE-CH: es lo que abre PDF,
-    // CSV y DXF a una cuenta nacida del registro publico.
+    // Cotejo del numero contra el padron del CAE-CH: es lo que da el cupo
+    // mensual de colegiado a una cuenta nacida del registro publico.
     if (datos.registro_validado !== undefined) {
         const validado = datos.registro_validado === true || datos.registro_validado === 1;
         if (validado && !(typeof datos.registro_profesional === 'string' ? datos.registro_profesional : fila.registro_profesional)) {

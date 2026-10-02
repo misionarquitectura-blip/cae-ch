@@ -4,43 +4,59 @@ Control de acceso a los productos del GeoVisor, sobre **Cloudflare Workers + D1*
 
 ## La regla, en una línea
 
-**El mapa es público; los productos exigen cuenta de colegiado.**
+**El mapa es público; los productos de un predio se habilitan por predio: gratis para el admin, con cupo para el colegiado y con pago para el resto.**
 
-Desde el 2026-09-04 el GeoVisor se abre sin cuenta y sin registro: cualquiera
-consulta todas las capas. Lo que pasa por este API son las tres descargas —DICAT
-en PDF, CSV y DXF—, y para ellas hace falta una cuenta con el correo confirmado
-y el **número de registro del CAE ya cotejado** contra el padrón del colegio.
-
-El pase de cortesía (un PDF por correo verificado) quedó **retirado** al abrir el
-mapa: `FREEMIUM_ACTIVO = "no"` y ese es además el valor por omisión del código.
-
-Hay tres roles:
+Desde el 2026-09-04 el GeoVisor se abre sin cuenta y sin registro. Desde el
+2026-10-02 (convenio entre el CAE-CH y el desarrollador) **cualquiera puede
+crear cuenta**: el número de registro del CAE es opcional.
 
 | Rol | Cómo se obtiene |
 |---|---|
-| `usuario` | **registro público**, declarando su número de registro del CAE y confirmando el correo |
+| `usuario` | **registro público** confirmando el correo; el número de registro del CAE es opcional |
 | `afiliado` | alta por la administración; credenciales entregadas en la sede |
 | `admin` | además gestiona el padrón |
 
-Y esto puede cada uno:
+| | cuenta pública (o colegiado por cotejar) | colegiado (`afiliado`, o `usuario` validado) | `admin` |
+|---|---|---|---|
+| Abrir el GeoVisor | sí (no hace falta cuenta) | sí | sí |
+| **DICAT, CSV y DXF** | pagando el predio | **4 predios al mes** sin pagar; después, pagando | libre |
+| **Planimetría** | gratis, con el equipo declarado | gratis, con el equipo declarado | con el equipo declarado |
 
-| | `usuario` sin validar | `usuario` validado | `afiliado` | `admin` |
-|---|---|---|---|---|
-| Abrir el GeoVisor | sí (no hace falta cuenta) | sí | sí | sí |
-| **PDF** (DICAT) | no | sí | sí | sí |
-| **DXF** | no | sí | sí | sí |
-| **CSV** | no | sí | sí | sí |
-| **Planimetría** | no | solo si se le concede | solo si se le concede | sí |
+### Cobro por predio (`src/cobros.js`)
 
-Las **herramientas** son la excepción a la regla: no se abren por ser colegiado.
-La planimetría —y lo que venga después— se concede **cuenta por cuenta** desde el
-panel, sobre una cuenta que ya tenga su registro cotejado. El administrador las
-tiene todas por su rol, sin figurar en ninguna lista: es quien las reparte.
+- Un predio habilitado abre **los tres formatos** durante `DIAS_ACCESO_PREDIO`
+  días (30). Repetir la descarga dentro del plazo no gasta cupo ni cobra otra vez.
+- Precio: `PRECIO_PREDIO_CENTAVOS` (2000 = USD 20,00 IVA incluido; base 17,39 +
+  IVA 2,61). El cupo del colegiado es `CUPO_MENSUAL` (4), por mes calendario de
+  Ecuador (UTC-5).
+- Sin cupo ni habilitación, `POST /api/descargas` responde **402** con
+  `requiere_pago`, la tarifa y el cupo. El visor lleva entonces a `pago.html`.
+- Pago con la **Cajita de PayPhone** en dos fases: `POST /api/pagos` prepara la
+  transacción (su id es el `clientTransactionId`) y `POST /api/pagos/confirmar`
+  llama al Confirm de PayPhone y **solo** habilita si el estado es aprobado, el
+  monto es el preparado y la transacción es de esa cuenta. Sin Confirm en 5
+  minutos, PayPhone reversa el cobro.
+- **Apagado hasta cargar los secretos** `PAYPHONE_TOKEN` y `PAYPHONE_STORE_ID`
+  (de PayPhone **Business**, aplicación tipo WEB con dominio `cae-ch.org` y URL
+  de respuesta `https://cae-ch.org/pago.html`). Mientras falten, `/api/pagos`
+  responde 503 explicando que se puede pagar en la sede.
+- Pago en sede o cortesía: el admin habilita el predio desde el panel
+  (`POST /api/admin/afiliados/:id/predios {clave_catastral}`), queda con `via = 'admin'`.
+- Los polígonos propios (CSV, coordenadas) no tienen clave catastral: el visor
+  les arma una a partir de la geometría (`GEO-E…-N…-A…`).
+- No se guardan datos de tarjeta: solo id de transacción, autorización y monto.
 
-Un `usuario` nace con `registro_validado = 0`: puede entrar y consultar, pero no
-descarga nada hasta que un administrador coteje su número contra el padrón con
-`PATCH /api/admin/afiliados/:id {registro_validado: true}`. Las cuentas que crea
-la administración nacen ya validadas, porque las hace con el padrón delante.
+### Declaración de equipo (`src/equipo.js`)
+
+La puerta de la planimetría (`POST /api/herramientas`) responde 403 con
+`requiere_declaracion` hasta que la cuenta declare su equipo
+(`POST /api/equipo`): receptor GNSS RTK, estación total, escáner LiDAR 3D u
+ortofoto verificada de 4 cm/px o mejor, con marca, modelo, serie y la
+aceptación de la declaración de responsabilidad. Si cambia ese texto se sube
+`VERSION_DECLARACION` y todos vuelven a declarar.
+
+Las herramientas que **no** estén en `HERRAMIENTAS_ABIERTAS` siguen
+concediéndose cuenta por cuenta desde el panel; el administrador las tiene todas.
 
 Cada descarga queda registrada en la tabla `descargas` con quién, qué formato y qué clave catastral.
 

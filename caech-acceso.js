@@ -2,16 +2,17 @@
    CAE-CH · Control de acceso a los productos del GeoVisor
    Cliente del Worker `caech-afiliados` (api/).
 
-   Reglas (desde el 2026-09-04):
+   Reglas (desde el 2026-10-02, convenio CAE-CH):
      · El GeoVisor  — abierto. El mapa entero se consulta sin cuenta.
-     · PDF, CSV, DXF — los tres exigen cuenta con el correo confirmado y
-                      el numero de registro del CAE ya cotejado por la
-                      administracion contra el padron del colegio.
-     · Herramientas  — lo que no es descarga (la planimetria, de momento)
-                      exige ademas una concesion expresa, cuenta por
-                      cuenta, desde el panel. El admin las tiene todas.
-
-   Ya no hay pase de cortesia: se retiro al abrir el visor al publico.
+     · Cuentas      — cualquiera puede crearla; el numero de registro del
+                      CAE es opcional y, cotejado, da el cupo de colegiado.
+     · PDF, CSV, DXF — se habilitan POR PREDIO: libre para el admin, con
+                      cupo mensual para el colegiado y con pago para el
+                      resto. Un predio habilitado abre los tres formatos.
+                      Si el Worker responde 402, aqui se ofrece el pago
+                      (pago.html, Cajita de PayPhone).
+     · Planimetria  — gratis para toda cuenta, previa declaracion del
+                      equipo de alta precision.
 
    `activo` es el interruptor general. Si alguna vez hay que apagar el
    control -por una caida del Worker, por ejemplo- basta ponerlo en false
@@ -38,11 +39,14 @@
 
     // legal.html vive junto a este archivo: se resuelve contra la URL del
     // propio script para que el enlace sirva desde cualquier carpeta.
-    const LEGAL = new URL('legal.html',
-        (document.currentScript && document.currentScript.src) || location.href).href;
+    const BASE_SCRIPT = (document.currentScript && document.currentScript.src) || location.href;
+    const LEGAL = new URL('legal.html', BASE_SCRIPT).href;
+    // La pagina de pago tambien vive junto a este archivo.
+    const PAGO = new URL('pago.html', BASE_SCRIPT).href;
 
+    const SIN_PERMISOS = { pdf: false, dxf: false, csv: false, planimetria: false, cobro: null };
     let perfil = null;
-    let permisos = { pdf: false, dxf: false, csv: false, planimetria: false };
+    let permisos = Object.assign({}, SIN_PERMISOS);
 
     // ── Utilidades ──────────────────────────────────────────────────
 
@@ -95,10 +99,10 @@
            llevan el hex correcto porque este archivo se inyecta tambien
            en paginas que quiza no carguen caech-ui.css. */
         .caech-acc-overlay{position:fixed;inset:0;background:rgba(46,50,56,.62);display:none;
-            align-items:center;justify-content:center;z-index:100000;padding:16px;
+            align-items:flex-start;justify-content:center;z-index:100000;padding:16px;overflow-y:auto;
             font-family:'Montserrat','Segoe UI',Tahoma,sans-serif}
         .caech-acc-overlay.activo{display:flex}
-        .caech-acc-caja{background:#fff;border-radius:var(--radio,4px);max-width:430px;width:100%;
+        .caech-acc-caja{margin:auto;background:#fff;border-radius:var(--radio,4px);max-width:430px;width:100%;
             box-shadow:0 18px 50px rgba(46,50,56,.32);overflow:hidden;font-size:14px}
         .caech-acc-cab{background:var(--grafito,#2E3238);color:#fff;padding:15px 20px;
             display:flex;justify-content:space-between;align-items:center;gap:12px;
@@ -114,7 +118,7 @@
         .caech-acc-campo label{display:block;font-size:11px;font-weight:600;
             letter-spacing:.08em;text-transform:uppercase;color:var(--grafito-med,#565B63);
             margin-bottom:5px}
-        .caech-acc-campo input{width:100%;padding:10px 12px;
+        .caech-acc-campo input,.caech-acc-campo select{width:100%;padding:10px 12px;background:#fff;
             border:1px solid var(--borde-marcado,rgba(46,50,56,.24));border-radius:var(--radio,4px);
             font-size:14px;box-sizing:border-box;font-family:inherit;color:var(--grafito,#2E3238)}
         /* Campo de contrasena con el boton del ojo dentro, a la derecha. */
@@ -125,7 +129,21 @@
             cursor:pointer;color:var(--grafito-sua,#8B9098);border-radius:0 var(--radio,4px) var(--radio,4px) 0}
         .caech-acc-ojo:hover,.caech-acc-ojo[aria-pressed="true"]{color:var(--rojo-caech,#E31E24)}
         .caech-acc-ojo:focus-visible{outline:2px solid var(--rojo-caech,#E31E24);outline-offset:-4px}
-        .caech-acc-campo input:focus{outline:none;border-color:var(--rojo-caech,#E31E24);
+        .caech-acc-campo small{display:block;font-size:12px;color:var(--grafito-sua,#8B9098);margin-top:4px;line-height:1.5}
+        .caech-acc-opciones{display:flex;gap:8px;margin-bottom:13px}
+        .caech-acc-opciones label{flex:1;display:flex;gap:8px;align-items:flex-start;padding:10px 12px;
+            border:1px solid var(--borde-marcado,rgba(46,50,56,.24));border-radius:var(--radio,4px);
+            font-size:13px;line-height:1.4;cursor:pointer;color:var(--grafito,#2E3238)}
+        .caech-acc-opciones label:has(input:checked){border-color:var(--rojo-caech,#E31E24);
+            box-shadow:0 0 0 1px var(--rojo-caech,#E31E24)}
+        .caech-acc-opciones input{accent-color:var(--rojo-caech,#E31E24);margin:2px 0 0}
+        .caech-acc-precio{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+            padding:12px 14px;background:var(--hueso,#F7F7F8);border:1px solid var(--borde,rgba(46,50,56,.12));
+            border-radius:var(--radio,4px);margin-bottom:13px}
+        .caech-acc-precio b{font-size:22px;color:var(--grafito,#2E3238)}
+        .caech-acc-precio span{font-size:12px;color:var(--grafito-med,#565B63);text-align:right;line-height:1.5}
+        .caech-acc-mono{font-family:var(--fuente-mono,ui-monospace),Consolas,monospace;word-break:break-all}
+        .caech-acc-campo input:focus,.caech-acc-campo select:focus{outline:none;border-color:var(--rojo-caech,#E31E24);
             box-shadow:0 0 0 3px rgba(227,30,36,.12)}
         /* La forma del boton la pone caech-ui.css; aqui solo el matiz
            secundario, que no existe en la hoja compartida. */
@@ -150,7 +168,7 @@
         /* Reserva por si caech-ui.css no esta cargada en esta pagina:
            sin ella, el boton del modal se quedaria sin forma. */
         .caech-acc-btn{display:inline-flex;align-items:center;justify-content:center;gap:.55em;
-            width:100%;min-height:42px;padding:.8em 1.4em;background:var(--rojo-caech,#E31E24);
+            box-sizing:border-box;width:100%;min-height:42px;padding:.8em 1.4em;background:var(--rojo-caech,#E31E24);
             color:#fff;border:1px solid transparent;border-radius:var(--radio,4px);
             font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.06em;
             line-height:1.15;text-transform:uppercase;cursor:pointer}
@@ -270,8 +288,8 @@
             '<button class="caech-acc-btn" id="caech-entrar">Ingresar</button>' +
             '<button class="caech-acc-btn caech-acc-btn-sec" id="caech-reenviar" hidden>Reenviarme el enlace de confirmaci&oacute;n</button>' +
             '<p class="caech-acc-pie">&iquest;No tiene cuenta? ' +
-            '<button class="caech-acc-enlace" id="caech-ir-registro">Cr&eacute;ela con su n&uacute;mero de registro</button><br>' +
-            'El mapa del GeoVisor es libre; la cuenta solo hace falta para descargar.</p>',
+            '<button class="caech-acc-enlace" id="caech-ir-registro">Cr&eacute;ela aqu&iacute;</button><br>' +
+            'El mapa del GeoVisor es libre; la cuenta hace falta para descargar y para la planimetr&iacute;a.</p>',
             (overlay, cerrar) => {
                 const usuario = el('caech-usuario');
                 const clave = el('caech-clave');
@@ -334,11 +352,10 @@
     // ── Registro publico ────────────────────────────────────────────
 
     /**
-     * Alta de cuenta. Las cuentas son solo para miembros del CAE, de modo
-     * que el alta exige el NUMERO DE REGISTRO del colegiado. Se acepta tal
-     * como se escribe y queda pendiente: la cuenta nace con rol 'usuario' y
-     * el registro sin validar, lo que permite ingresar pero no descargar
-     * hasta que la administracion lo coteje contra el padron.
+     * Alta de cuenta, abierta a cualquiera desde el 2026-10-02. El numero
+     * de registro del CAE es opcional: quien lo da entra como colegiado por
+     * cotejar (y mientras tanto paga como cualquiera); quien no, como cuenta
+     * publica. Una vez cotejado el numero, la cuenta recibe el cupo mensual.
      *
      * No se pide nombre de usuario: el servidor lo deriva del correo, y el
      * correo tambien sirve para ingresar.
@@ -346,14 +363,23 @@
     function abrirRegistro(alTerminar) {
         modal('caech-modal-registro', 'Crear una cuenta',
             '<div class="caech-acc-aviso"></div>' +
-            '<p>El mapa del GeoVisor se consulta libremente, sin cuenta. ' +
-            'La cuenta hace falta para <b>descargar el DICAT en PDF, el CSV y el DXF</b>, ' +
-            'y se otorga solo a miembros del CAE.</p>' +
+            '<p>El mapa del GeoVisor se consulta libremente, sin cuenta. La cuenta sirve para ' +
+            '<b>usar la planimetr&iacute;a</b> y para <b>descargar el DICAT, el CSV y el DXF</b> ' +
+            'de un predio.</p>' +
+            '<div class="caech-acc-opciones" role="radiogroup" aria-label="Tipo de cuenta">' +
+            '  <label><input type="radio" name="caech-reg-tipo" value="publica" checked>' +
+            '    <span><b>No soy colegiado</b><br>Pago cada predio</span></label>' +
+            '  <label><input type="radio" name="caech-reg-tipo" value="colegiado">' +
+            '    <span><b>Soy colegiado del CAE</b><br>Predios gratis al mes</span></label>' +
+            '</div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-nombre">Nombre completo</label>' +
             '  <input id="caech-reg-nombre" type="text" autocomplete="name"></div>' +
-            '<div class="caech-acc-campo"><label for="caech-reg-registro">N&uacute;mero de registro del CAE</label>' +
+            '<div class="caech-acc-campo" id="caech-reg-registro-caja" hidden>' +
+            '  <label for="caech-reg-registro">N&uacute;mero de registro del CAE</label>' +
             '  <input id="caech-reg-registro" type="text" autocapitalize="characters" spellcheck="false" ' +
-            '         placeholder="Como consta en su credencial"></div>' +
+            '         placeholder="Como consta en su credencial">' +
+            '  <small>Lo cotejamos contra el padr&oacute;n del colegio. Mientras tanto la cuenta ' +
+            '  funciona como cualquier otra.</small></div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-correo">Correo electr&oacute;nico</label>' +
             '  <input id="caech-reg-correo" type="email" autocomplete="email" autocapitalize="off" spellcheck="false"></div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-clave">Contrase&ntilde;a</label>' +
@@ -363,8 +389,7 @@
             casillaTerminos('caech-reg-acepto') +
             '<button class="caech-acc-btn" id="caech-reg-crear">Crear mi cuenta</button>' +
             '<p class="caech-acc-pie">Contrase&ntilde;a: m&iacute;nimo 12 caracteres, con may&uacute;sculas, min&uacute;sculas y n&uacute;meros.<br>' +
-            'Confirmar&aacute; su correo por enlace; luego el CAE-CH cotejar&aacute; su n&uacute;mero de registro ' +
-            'contra el padr&oacute;n y habilitar&aacute; las descargas.<br>' +
+            'Confirmar&aacute; su correo por enlace antes de poder ingresar.<br>' +
             '&iquest;Ya tiene cuenta? <button class="caech-acc-enlace" id="caech-ir-ingreso-2">Ingrese</button></p>',
             (overlay, cerrar) => {
                 const nombre = el('caech-reg-nombre');
@@ -374,14 +399,22 @@
                 const repetir = el('caech-reg-repetir');
                 const acepto = el('caech-reg-acepto');
                 const boton = el('caech-reg-crear');
+                const esColegiado = () => !!overlay.querySelector('input[name="caech-reg-tipo"][value="colegiado"]:checked');
                 nombre.focus();
+
+                overlay.querySelectorAll('input[name="caech-reg-tipo"]').forEach(r => r.addEventListener('change', () => {
+                    el('caech-reg-registro-caja').hidden = !esColegiado();
+                    if (esColegiado()) registro.focus();
+                }));
 
                 el('caech-ir-ingreso-2').addEventListener('click', () => { cerrar(); abrirIngreso(alTerminar); });
 
                 async function crear() {
-                    if (!nombre.value.trim() || !registro.value.trim()
-                        || !correo.value.trim() || !clave.value) {
+                    if (!nombre.value.trim() || !correo.value.trim() || !clave.value) {
                         return avisar(overlay, 'error', 'Complete todos los campos.');
+                    }
+                    if (esColegiado() && !registro.value.trim()) {
+                        return avisar(overlay, 'error', 'Escriba su número de registro del CAE, o elija «No soy colegiado».');
                     }
                     if (clave.value !== repetir.value) {
                         return avisar(overlay, 'error', 'Las dos contraseñas no coinciden.');
@@ -393,7 +426,7 @@
                     boton.textContent = 'Creando...';
                     const r = await api('POST', '/api/registro', {
                         nombre: nombre.value,
-                        registro_profesional: registro.value,
+                        registro_profesional: esColegiado() ? registro.value : '',
                         correo: correo.value,
                         clave: clave.value,
                         acepta_terminos: true
@@ -407,7 +440,8 @@
                     // La cuenta existe pero no sirve hasta confirmar el correo,
                     // asi que no se inicia sesion: se explica el paso que falta.
                     avisar(overlay, 'exito', r.datos.mensaje);
-                    [nombre, registro, correo, clave, repetir, acepto].forEach(c => { c.disabled = true; });
+                    [nombre, registro, correo, clave, repetir, acepto,
+                     ...overlay.querySelectorAll('input[name="caech-reg-tipo"]')].forEach(c => { c.disabled = true; });
                     boton.disabled = true;
                 }
 
@@ -604,7 +638,7 @@
         await api('DELETE', '/api/sesion');
         guardarToken(null);
         perfil = null;
-        permisos = { pdf: false, dxf: false, csv: false, planimetria: false };
+        permisos = Object.assign({}, SIN_PERMISOS);
         pintarBarra();
     }
 
@@ -652,11 +686,10 @@
                 abrirCambioClave(null, () => reintentar(formato, claveCatastral));
                 return false;
             }
-            // Cuenta creada pero con el numero de registro sin cotejar: no
-            // es un error del usuario, es un tramite en curso. Se explica
-            // en vez de dejarlo con un "no autorizado" seco.
-            if (r.datos && r.datos.registro_pendiente) {
-                avisarPendiente(r.datos.error);
+            // 402: el predio no esta habilitado y no queda cupo. No es un
+            // error, es un paso: se explica el precio y se ofrece pagar.
+            if (r.estado === 402 && r.datos && r.datos.requiere_pago) {
+                abrirPago(r.datos);
                 return false;
             }
             alert(r.datos.error || 'No se pudo autorizar la descarga.');
@@ -673,9 +706,10 @@
 
     /**
      * Puerta de las herramientas que no son descargas -la planimetria, de
-     * momento-. A diferencia de los tres formatos, estas no se abren por ser
-     * colegiado: las concede la administracion cuenta por cuenta, asi que el
-     * "no" mas probable no es un fallo sino un permiso que nadie ha dado.
+     * momento-. La planimetria esta abierta a toda cuenta, pero pide antes
+     * la declaracion del equipo: ese es el "no" mas probable, y se resuelve
+     * aqui mismo con el formulario. Las herramientas que no sean abiertas
+     * las concede la administracion cuenta por cuenta.
      * @returns {Promise<boolean>} true si se puede continuar.
      */
     async function autorizarHerramienta(herramienta, alEntrar) {
@@ -694,34 +728,128 @@
             abrirCambioClave(null, alEntrar || function () { location.reload(); });
             return false;
         }
-        if (r.datos && r.datos.registro_pendiente) {
-            avisarPendiente(r.datos.error);
+        if (r.datos && r.datos.requiere_declaracion) {
+            abrirDeclaracion(alEntrar || function () { location.reload(); });
             return false;
         }
         modal('caech-modal-herramienta', 'Herramienta no habilitada',
             '<div class="caech-acc-aviso info">' +
-            ((r.datos && r.datos.error) || 'Su cuenta no tiene habilitada esta herramienta.') +
+            esc((r.datos && r.datos.error) || 'Su cuenta no tiene habilitada esta herramienta.') +
             '</div>' +
-            '<p>Estas herramientas se conceden <b>cuenta por cuenta</b>. Si la necesita para su ' +
-            'trabajo, escriba a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a> ' +
-            'indicando su n&uacute;mero de registro.</p>');
+            '<p>Si la necesita para su trabajo, escriba a ' +
+            '<a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>.</p>');
         return false;
     }
 
-    /** Aviso de "su registro sigue en revision", con el tono correcto. */
-    function avisarPendiente(mensaje) {
-        modal('caech-modal-pendiente', 'Registro en revisi&oacute;n',
-            '<div class="caech-acc-aviso info">' +
-            (mensaje || 'Su n&uacute;mero de registro del CAE todav&iacute;a no ha sido validado.') +
-            '</div>' +
-            '<p>Las cuentas se otorgan solo a miembros del CAE, as&iacute; que la administraci&oacute;n ' +
-            'coteja cada n&uacute;mero de registro contra el padr&oacute;n del colegio antes de habilitar ' +
-            'las descargas. Es un paso manual y puede tomar algunas horas.</p>' +
-            '<p>Mientras tanto el <b>mapa completo del GeoVisor sigue abierto</b>: puede consultar ' +
-            'predios, capas y medidas sin ninguna restricci&oacute;n.</p>' +
-            '<p class="caech-acc-pie">&iquest;Cree que hay un error? Escriba a ' +
-            '<a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a> ' +
-            'indicando su n&uacute;mero de registro.</p>');
+    function esc(v) {
+        return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    const usd = centavos => 'USD ' + (centavos / 100).toFixed(2).replace('.', ',');
+
+    // ── Pago de un predio ───────────────────────────────────────────
+
+    /**
+     * Lo que se ve cuando el Worker responde 402 a una descarga: el precio,
+     * lo que incluye y el boton que lleva a pago.html. El cobro ocurre alla
+     * -la Cajita de PayPhone valida el dominio y vuelve a esa pagina-; aqui
+     * solo se explica y se envia. Sin credenciales de PayPhone cargadas, el
+     * Worker dice `cobro_en_linea: false` y se ofrece el pago en la sede.
+     */
+    function abrirPago(datos) {
+        const t = datos.tarifa || {};
+        const cupo = datos.cupo;
+        const clave = datos.clave_catastral || '';
+        const destino = PAGO + '?clave=' + encodeURIComponent(clave);
+
+        modal('caech-modal-pago', 'Habilitar este predio',
+            '<div class="caech-acc-aviso info">' + esc(datos.error || '') + '</div>' +
+            '<div class="caech-acc-precio"><b>' + usd(t.precio || 0) + '</b>' +
+            '<span>IVA incluido<br>base ' + usd(t.base || 0) + ' + IVA ' + usd(t.iva || 0) + '</span></div>' +
+            '<p>Incluye el <b>DICAT en PDF, el CSV y el DXF</b> de este predio, que podr&aacute; volver ' +
+            'a descargar durante <b>' + (t.dias_acceso || 30) + ' d&iacute;as</b>.<br>' +
+            'Predio: <span class="caech-acc-mono">' + esc(clave) + '</span></p>' +
+            (cupo ? '<p class="caech-acc-pie" style="text-align:left;margin-top:0">Predios gratuitos de este mes: ' +
+                cupo.usados + ' de ' + cupo.total + ' usados.</p>' : '') +
+            (t.cobro_en_linea
+                ? '<a class="caech-acc-btn" href="' + esc(destino) + '" style="text-decoration:none">Pagar con tarjeta</a>' +
+                  '<p class="caech-acc-pie">El pago lo procesa PayPhone; la plataforma no ve ni guarda los datos ' +
+                  'de su tarjeta. Al terminar volver&aacute; al visor con el predio abierto.</p>'
+                : '<div class="caech-acc-aviso exito" style="display:block">El pago en l&iacute;nea se habilita en breve. ' +
+                  'Mientras tanto puede pagar en la sede del CAE-CH (lunes a viernes, 09:00&ndash;13:00 y ' +
+                  '15:00&ndash;18:00) y la administraci&oacute;n habilitar&aacute; el predio en su cuenta.</div>' +
+                  '<p class="caech-acc-pie">Escriba a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a> ' +
+                  'indicando la clave del predio.</p>'));
+    }
+
+    // ── Declaracion de equipo (planimetria) ─────────────────────────
+
+    const TIPOS_EQUIPO = [
+        ['gnss_rtk', 'Receptor GNSS RTK'],
+        ['estacion_total', 'Estación total'],
+        ['lidar', 'Escáner láser LiDAR 3D'],
+        ['ortofoto', 'Ortofoto verificada (4 cm/px o mejor)']
+    ];
+
+    /**
+     * La planimetria solo trabaja con levantamientos de alta precision. Antes
+     * de abrirla, la cuenta declara el equipo -marca, modelo, serie- y asume
+     * la responsabilidad por los datos. Queda en el Worker con fecha; se
+     * puede volver a declarar si cambia de equipo.
+     */
+    function abrirDeclaracion(alTerminar) {
+        modal('caech-modal-equipo', 'Declaraci&oacute;n de equipo',
+            '<div class="caech-acc-aviso"></div>' +
+            '<p>La planimetr&iacute;a es gratuita, pero solo admite levantamientos tomados con ' +
+            '<b>equipo de alta precisi&oacute;n</b>. Indique el equipo con que trabaja.</p>' +
+            '<div class="caech-acc-campo"><label for="caech-eq-tipo">Tipo de equipo</label>' +
+            '  <select id="caech-eq-tipo">' + TIPOS_EQUIPO.map(t =>
+                '<option value="' + t[0] + '">' + t[1] + '</option>').join('') + '</select></div>' +
+            '<div class="caech-acc-campo"><label for="caech-eq-marca">Marca</label>' +
+            '  <input id="caech-eq-marca" type="text" autocomplete="off" placeholder="Trimble, Leica, Topcon, DJI…"></div>' +
+            '<div class="caech-acc-campo"><label for="caech-eq-modelo">Modelo</label>' +
+            '  <input id="caech-eq-modelo" type="text" autocomplete="off"></div>' +
+            '<div class="caech-acc-campo"><label for="caech-eq-serie">N&uacute;mero de serie</label>' +
+            '  <input id="caech-eq-serie" type="text" autocomplete="off" spellcheck="false"></div>' +
+            '<div class="caech-acc-campo" id="caech-eq-gsd-caja" hidden><label for="caech-eq-gsd">Resoluci&oacute;n verificada (cm/px)</label>' +
+            '  <input id="caech-eq-gsd" type="text" inputmode="decimal" placeholder="4 o menos">' +
+            '  <small>Para la ortofoto, indique la marca, el modelo y la serie del dron o la c&aacute;mara.</small></div>' +
+            '<label class="caech-acc-check" for="caech-eq-acepto"><input type="checkbox" id="caech-eq-acepto">' +
+            '<span>Declaro bajo mi responsabilidad que los levantamientos que procese en la planimetr&iacute;a ' +
+            'fueron tomados con este equipo, en buen estado y calibrado; que <b>no provienen</b> de Google Earth ' +
+            'o Google Maps, de GPS recreativos ni de tel&eacute;fonos m&oacute;viles; y que respondo por su ' +
+            'exactitud y por el uso de los planos e informes que genere.</span></label>' +
+            '<button class="caech-acc-btn" id="caech-eq-guardar">Declarar y continuar</button>',
+            (overlay, cerrar) => {
+                const tipo = el('caech-eq-tipo');
+                const boton = el('caech-eq-guardar');
+                tipo.addEventListener('change', () => { el('caech-eq-gsd-caja').hidden = tipo.value !== 'ortofoto'; });
+                el('caech-eq-marca').focus();
+
+                boton.addEventListener('click', async () => {
+                    if (!el('caech-eq-acepto').checked) {
+                        return avisar(overlay, 'error', 'Marque la declaración de responsabilidad para continuar.');
+                    }
+                    boton.disabled = true;
+                    boton.textContent = 'Guardando...';
+                    const r = await api('POST', '/api/equipo', {
+                        tipo: tipo.value,
+                        marca: el('caech-eq-marca').value,
+                        modelo: el('caech-eq-modelo').value,
+                        serie: el('caech-eq-serie').value,
+                        gsd_cm: tipo.value === 'ortofoto' ? el('caech-eq-gsd').value : null,
+                        acepta_responsabilidad: true
+                    });
+                    boton.disabled = false;
+                    boton.textContent = 'Declarar y continuar';
+                    if (r.estado !== 201) {
+                        return avisar(overlay, 'error', (r.datos && r.datos.error) || 'No se pudo guardar la declaración.');
+                    }
+                    cerrar();
+                    if (alTerminar) alTerminar();
+                });
+            });
     }
 
     // Tras ingresar o cambiar la clave, se retoma la accion pendiente.
@@ -781,6 +909,8 @@
         autorizarHerramienta: autorizarHerramienta,
         abrirIngreso: abrirIngreso,
         abrirRegistro: abrirRegistro,
+        /** Formulario de declaracion de equipo; tambien lo usa el panel. */
+        abrirDeclaracion: abrirDeclaracion,
         cerrarSesion: cerrarSesion,
         perfil: () => perfil,
         refrescar: pintarBarra,

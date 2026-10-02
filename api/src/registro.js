@@ -2,19 +2,20 @@
 //  Registro publico de usuarios.
 //
 //  El GeoVisor es publico: el mapa se abre sin cuenta. Lo que exige cuenta
-//  son los PRODUCTOS -DICAT en PDF, CSV y DXF- y esas cuentas son solo para
-//  miembros del CAE, de modo que el alta pide el NUMERO DE REGISTRO del
-//  colegiado.
+//  son los PRODUCTOS -DICAT en PDF, CSV y DXF- y la planimetria.
 //
-//  El numero se acepta tal como lo escribe quien se registra y queda
-//  pendiente: la cuenta nace con rol 'usuario' y `registro_validado = 0`,
-//  que deja entrar pero bloquea toda descarga hasta que la administracion
-//  lo coteje contra el padron del CAE-CH (PATCH /api/admin/afiliados/:id
-//  con {registro_validado: true}).
+//  Desde el 2026-10-02 cualquiera puede crear cuenta. El NUMERO DE
+//  REGISTRO del CAE es opcional:
+//    · sin numero: cuenta publica. Usa la planimetria y paga cada predio.
+//    · con numero: se acepta tal como lo escribe y queda pendiente
+//      (`registro_validado = 0`). Mientras tanto la cuenta funciona como
+//      publica; cuando la administracion lo coteja contra el padron
+//      (PATCH /api/admin/afiliados/:id con {registro_validado: true})
+//      recibe el cupo mensual de predios del colegiado.
 //
 //  Flujo:
-//    1. POST /api/registro            {nombre, registro_profesional, correo, clave,
-//                                      acepta_terminos: true}
+//    1. POST /api/registro            {nombre, correo, clave, acepta_terminos: true,
+//                                      registro_profesional?}
 //       Crea la cuenta sin verificar y envia el enlace de confirmacion.
 //       Sin la aceptacion expresa de los Terminos y la Politica de
 //       Privacidad no hay alta: queda la version aceptada y la fecha.
@@ -131,10 +132,8 @@ export async function registrar(env, request, datos) {
         return malo('Para crear la cuenta debe aceptar los Terminos y condiciones y la Politica de privacidad.');
     }
     if (!correoValido(correo)) return malo('El correo no tiene un formato valido.');
-    if (!registro) {
-        return malo('Indique su numero de registro del CAE. Las cuentas son solo para colegiados.');
-    }
-    if (!registroValido(registro)) {
+    // Vacio = cuenta publica. Si viene, tiene que parecer un numero real.
+    if (registro && !registroValido(registro)) {
         return malo('El numero de registro no parece valido. Escribalo tal como consta en su credencial del CAE.');
     }
 
@@ -155,7 +154,7 @@ export async function registrar(env, request, datos) {
     // esta tomado: no es un dato que se pueda sondear a ciegas -hay que
     // conocer el numero- y callarlo dejaria al colegiado sin saber por que
     // su alta no prospera.
-    const choqueRegistro = await env.DB.prepare(
+    const choqueRegistro = registro && await env.DB.prepare(
         'SELECT id FROM afiliados WHERE registro_profesional = ? AND correo != ? LIMIT 1'
     ).bind(registro, correo).first();
     if (choqueRegistro) {
@@ -185,7 +184,7 @@ export async function registrar(env, request, datos) {
         await registrarEvento(env, {
             tipo: 'registro', usuario: correo, detalle: 'correo ya existente', ip_hash: ip_hash
         });
-        return respuestaAlta();
+        return respuestaAlta(!!registro);
     }
 
     const id = generarId('usr');
@@ -195,7 +194,7 @@ export async function registrar(env, request, datos) {
         ' nucleo, rol, origen, estado, hash_clave, requiere_cambio_clave, correo_verificado, ' +
         ' terminos_version, terminos_aceptados_en, creado_en, actualizado_en) ' +
         "VALUES (?, ?, ?, ?, ?, 0, 'Chimborazo', 'usuario', 'registro', 'activo', ?, 0, 0, ?, ?, ?, ?)"
-    ).bind(id, usuario, correo, nombre, registro,
+    ).bind(id, usuario, correo, nombre, registro || null,
             await hashearClave(clave, iteraciones(env)), VERSION_TERMINOS, t, t, t).run();
 
     const fila = await env.DB.prepare('SELECT * FROM afiliados WHERE id = ?').bind(id).first();
@@ -203,7 +202,8 @@ export async function registrar(env, request, datos) {
 
     await registrarEvento(env, {
         tipo: 'registro', afiliado_id: id, usuario: usuario,
-        detalle: 'registro CAE ' + registro + ' pendiente de validar; terminos ' + VERSION_TERMINOS + ' aceptados; '
+        detalle: (registro ? 'registro CAE ' + registro + ' pendiente de validar' : 'cuenta publica')
+               + '; terminos ' + VERSION_TERMINOS + ' aceptados; '
                + (envio.enviado ? 'enlace enviado via ' + envio.proveedor : 'FALLO ENVIO: ' + envio.detalle),
         ip_hash: ip_hash
     });
@@ -221,18 +221,22 @@ export async function registrar(env, request, datos) {
         };
     }
 
-    return respuestaAlta();
+    return respuestaAlta(!!registro);
 }
 
-function respuestaAlta() {
+function respuestaAlta(colegiado) {
     return {
         estado: 201,
         cuerpo: {
             ok: true,
             mensaje: 'Le enviamos un enlace para confirmar su correo. Revise su bandeja de entrada '
                    + 'y la carpeta de correo no deseado; el enlace dura 24 horas. '
-                   + 'Despues la administracion del CAE-CH cotejara su numero de registro contra el '
-                   + 'padron y habilitara las descargas.'
+                   + (colegiado
+                       ? 'Despues la administracion del CAE-CH cotejara su numero de registro contra el '
+                         + 'padron y habilitara su cupo de colegiado; mientras tanto puede usar la cuenta '
+                         + 'como cualquier usuario.'
+                       : 'Con la cuenta confirmada podra usar la planimetria y habilitar predios para '
+                         + 'descargar el DICAT, el CSV y el DXF.')
         }
     };
 }

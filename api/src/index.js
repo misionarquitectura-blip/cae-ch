@@ -1,11 +1,11 @@
 // ════════════════════════════════════════════════════════════════════
 //  CAE-CH · API de afiliados  (Cloudflare Worker + D1)
 //
-//  Controla quien puede descargar los productos del GeoVisor:
-//    · PDF  — libre para afiliados; el publico general dispone de UN
-//             reporte de cortesia por correo verificado (freemium).
-//    · DXF  — solo afiliados con vigencia al dia.
-//    · CSV  — solo afiliados con vigencia al dia.
+//  Controla quien puede descargar los productos del GeoVisor. Desde el
+//  2026-10-02 cualquiera crea cuenta y los productos de un predio -DICAT
+//  en PDF, CSV y DXF- se habilitan por predio: libre para el admin, con
+//  cupo mensual para el colegiado y con pago para el resto (cobros.js).
+//  La planimetria es gratis para toda cuenta con el equipo declarado.
 //
 //  Alcance honesto del control: el visor se sirve estatico desde GitHub
 //  Pages y la capa de catastro es un GeoJSON publico del repositorio.
@@ -27,6 +27,11 @@ import {
 } from './admin.js';
 import { solicitarPase, verificarPase, consumirPase, estadoPase } from './freemium.js';
 import { registrar, verificarCorreo, reenviarVerificacion } from './registro.js';
+import {
+    autorizarPredio, estadoPredio, prepararPago, confirmarPago, resumenCuenta,
+    listarPagos, habilitarPredioAdmin
+} from './cobros.js';
+import { declaracionVigente, leerDeclaracion, declararEquipo } from './equipo.js';
 
 const FORMATOS = ['pdf', 'dxf', 'csv'];
 
@@ -117,25 +122,21 @@ async function enrutar(request, env, url, ruta, metodo) {
         const p = permisos(a);
         if (!p[formato]) {
             let motivo;
-            const pendiente = a.rol === 'usuario' && !a.registro_validado;
             if (a.requiere_cambio_clave) {
                 motivo = 'Debe cambiar su contrasena temporal antes de descargar.';
             } else if (!a.correo_verificado) {
                 motivo = 'Confirme su correo antes de descargar. Le enviamos el enlace al registrarse.';
-            } else if (pendiente) {
-                motivo = 'Su numero de registro del CAE todavia no ha sido validado por la administracion. '
-                       + 'El mapa sigue abierto; las descargas se habilitan en cuanto lo aprobemos.';
             } else {
-                motivo = 'Su afiliacion no esta vigente. Renuevela en la sede del CAE-CH.';
+                motivo = 'Su cuenta no esta vigente. Comuniquese con la sede del CAE-CH.';
             }
-            return error(motivo, 403, request, env, {
-                requiere_cambio_clave: !!a.requiere_cambio_clave,
-                registro_pendiente: pendiente,
-                solo_afiliados: pendiente
-            });
+            return error(motivo, 403, request, env, { requiere_cambio_clave: !!a.requiere_cambio_clave });
         }
 
-        const clave = texto(datos.clave_catastral, 60) || null;
+        // El predio: libre, ya habilitado, con cupo, o 402 con el precio.
+        const predio = await autorizarPredio(env, a, datos.clave_catastral);
+        if (!predio.ok) return json(predio.cuerpo, predio.estado, request, env);
+
+        const clave = predio.clave || texto(datos.clave_catastral, 60) || null;
         await env.DB.prepare(
             "INSERT INTO descargas (creado_en, formato, origen, afiliado_id, clave_catastral, ip_hash) VALUES (?, ?, 'afiliado', ?, ?, ?)"
         ).bind(
@@ -143,7 +144,10 @@ async function enrutar(request, env, url, ruta, metodo) {
             await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
         ).run();
 
-        return ok({ formato: formato, autorizado: true }, request, env);
+        return ok({
+            formato: formato, autorizado: true, via: predio.via,
+            vence_en: predio.vence_en || null, cupo: predio.cupo || null, predio_nuevo: !!predio.nuevo
+        }, request, env);
     }
 
     // ── Puerta de las herramientas ──────────────────────────────────
@@ -162,12 +166,19 @@ async function enrutar(request, env, url, ruta, metodo) {
 
         const a = sesion.afiliado;
         if (!permisos(a)[herramienta]) {
-            return error('Su cuenta no tiene habilitada esta herramienta. '
-                + 'La concede la administracion del CAE-CH, cuenta por cuenta.', 403, request, env, {
+            return error(a.requiere_cambio_clave
+                ? 'Debe cambiar su contrasena temporal antes de usar esta herramienta.'
+                : 'Su cuenta no tiene habilitada esta herramienta. '
+                  + 'La concede la administracion del CAE-CH, cuenta por cuenta.', 403, request, env, {
                 herramienta: herramienta,
-                requiere_cambio_clave: !!a.requiere_cambio_clave,
-                registro_pendiente: a.rol === 'usuario' && !a.registro_validado
+                requiere_cambio_clave: !!a.requiere_cambio_clave
             });
+        }
+
+        // La planimetria solo trabaja con equipo de alta precision declarado.
+        if (herramienta === 'planimetria' && !await declaracionVigente(env, a.id)) {
+            return error('Antes de usar la planimetria declare el equipo con que tomo el levantamiento.',
+                403, request, env, { herramienta: herramienta, requiere_declaracion: true });
         }
 
         await registrarEvento(env, {
@@ -176,6 +187,47 @@ async function enrutar(request, env, url, ruta, metodo) {
             ip_hash: await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
         });
         return ok({ herramienta: herramienta, autorizado: true }, request, env);
+    }
+
+    // ── Predios, cupo y pagos ───────────────────────────────────────
+    if (ruta === '/api/predios/estado' && metodo === 'GET') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Sesion no valida o expirada.', 401, request, env);
+        return responder(await estadoPredio(env, sesion, url.searchParams.get('clave') || ''));
+    }
+
+    if (ruta === '/api/cuenta/cobros' && metodo === 'GET') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Sesion no valida o expirada.', 401, request, env);
+        return responder(await resumenCuenta(env, sesion));
+    }
+
+    if (ruta === '/api/pagos' && metodo === 'POST') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Inicie sesion para pagar.', 401, request, env);
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+        return responder(await prepararPago(env, request, sesion, datos));
+    }
+
+    if (ruta === '/api/pagos/confirmar' && metodo === 'POST') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Inicie sesion para confirmar el pago.', 401, request, env);
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+        return responder(await confirmarPago(env, request, sesion, datos));
+    }
+
+    // ── Declaracion de equipo (planimetria) ─────────────────────────
+    if (ruta === '/api/equipo') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Sesion no valida o expirada.', 401, request, env);
+        if (metodo === 'GET') return responder(await leerDeclaracion(env, sesion));
+        if (metodo === 'POST') {
+            const datos = await cuerpoJSON(request);
+            if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+            return responder(await declararEquipo(env, request, sesion, datos));
+        }
     }
 
     // ── Registro publico ────────────────────────────────────────────
@@ -251,6 +303,15 @@ async function enrutar(request, env, url, ruta, metodo) {
             return responder(await actualizarAfiliado(env, request, sesion, mAfiliado[1], datos));
         }
 
+        // Habilitar un predio a mano (pago en sede, cortesia).
+        const mPredio = /^\/api\/admin\/afiliados\/([A-Za-z0-9_-]+)\/predios$/.exec(ruta);
+        if (mPredio && metodo === 'POST') {
+            const datos = await cuerpoJSON(request);
+            if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+            return responder(await habilitarPredioAdmin(env, request, sesion, mPredio[1], datos));
+        }
+
+        if (ruta === '/api/admin/pagos'     && metodo === 'GET') return responder(await listarPagos(env, url));
         if (ruta === '/api/admin/descargas' && metodo === 'GET') return responder(await listarDescargas(env, url));
         if (ruta === '/api/admin/eventos'   && metodo === 'GET') return responder(await listarEventos(env, url));
         if (ruta === '/api/admin/pases'     && metodo === 'GET') return responder(await listarPases(env, url));

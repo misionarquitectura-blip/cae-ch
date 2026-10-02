@@ -18,6 +18,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { createServer } from 'node:http';
 
 const API = process.env.API || 'http://127.0.0.1:8787';
 const CLAVE_TEMPORAL = process.argv[2];
@@ -191,6 +192,8 @@ seccion('Descargas de afiliado');
         const r = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato, clave_catastral: '060150010101' } });
         comprobar(formato.toUpperCase() + ' autorizado', r.estado === 200 && r.datos.autorizado === true, r.datos);
     }
+    const libre = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato: 'pdf' } });
+    comprobar('el admin descarga libre, sin cupo ni pago', libre.estado === 200 && libre.datos.via === 'libre', libre.datos);
     const invalido = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato: 'shp' } });
     comprobar('formato desconocido responde 400', invalido.estado === 400);
 
@@ -260,30 +263,64 @@ let tokenAfiliado = null;
     comprobar('el afiliado NO puede crear afiliados', intentoAlta.estado === 403);
 }
 
-// ── 7b. Herramientas concedidas cuenta por cuenta ───────────────────
-seccion('Herramientas (planimetria)');
+// ── 7b. Planimetria: abierta, con el equipo declarado ───────────────
+seccion('Planimetria y declaracion de equipo');
 {
     const sesionAfi = await llamar('GET', '/api/sesion', { token: tokenAfiliado });
-    comprobar('un afiliado NO tiene la planimetria por el solo hecho de serlo',
-        sesionAfi.datos?.permisos?.planimetria === false, sesionAfi.datos?.permisos);
-    comprobar('pero si conserva sus descargas',
-        sesionAfi.datos?.permisos?.pdf === true && sesionAfi.datos?.permisos?.dxf === true);
+    comprobar('la planimetria esta abierta a toda cuenta habilitada',
+        sesionAfi.datos?.permisos?.planimetria === true, sesionAfi.datos?.permisos);
+    comprobar('el afiliado cobra por cupo', sesionAfi.datos?.permisos?.cobro === 'cupo', sesionAfi.datos?.permisos);
 
-    const sinPermiso = await llamar('POST', '/api/herramientas', {
+    const sinDeclarar = await llamar('POST', '/api/herramientas', {
         token: tokenAfiliado, cuerpo: { herramienta: 'planimetria' }
     });
-    comprobar('sin concesion, la puerta responde 403', sinPermiso.estado === 403, sinPermiso.datos);
+    comprobar('sin declarar el equipo la puerta responde 403',
+        sinDeclarar.estado === 403 && sinDeclarar.datos?.requiere_declaracion === true, sinDeclarar.datos);
+
+    const vacia = await llamar('GET', '/api/equipo', { token: tokenAfiliado });
+    comprobar('todavia no hay declaracion', vacia.estado === 200 && vacia.datos?.declaracion === null, vacia.datos);
+
+    const base = { tipo: 'gnss_rtk', marca: 'Trimble', modelo: 'R12i', serie: '6342F01234', acepta_responsabilidad: true };
+    const tipoMalo = await llamar('POST', '/api/equipo', { token: tokenAfiliado, cuerpo: { ...base, tipo: 'celular' } });
+    comprobar('un equipo que no es de precision se rechaza', tipoMalo.estado === 400, tipoMalo.datos);
+
+    const sinSerie = await llamar('POST', '/api/equipo', { token: tokenAfiliado, cuerpo: { ...base, serie: '' } });
+    comprobar('sin numero de serie no hay declaracion', sinSerie.estado === 400, sinSerie.datos);
+
+    const ortoGruesa = await llamar('POST', '/api/equipo', {
+        token: tokenAfiliado, cuerpo: { ...base, tipo: 'ortofoto', gsd_cm: 6 }
+    });
+    comprobar('una ortofoto de 6 cm/px no alcanza', ortoGruesa.estado === 400, ortoGruesa.datos);
+
+    const sinAceptar = await llamar('POST', '/api/equipo', {
+        token: tokenAfiliado, cuerpo: { ...base, acepta_responsabilidad: 'si' }
+    });
+    comprobar('sin aceptar la responsabilidad no hay declaracion', sinAceptar.estado === 400, sinAceptar.datos);
+
+    const declara = await llamar('POST', '/api/equipo', { token: tokenAfiliado, cuerpo: base });
+    comprobar('declara su GNSS RTK', declara.estado === 201
+        && declara.datos?.declaracion?.serie === '6342F01234', declara.datos);
+
+    const abre = await llamar('POST', '/api/herramientas', {
+        token: tokenAfiliado, cuerpo: { herramienta: 'planimetria' }
+    });
+    comprobar('declarado, la puerta lo deja pasar', abre.estado === 200, abre.datos);
 
     const sesionAdmin = await llamar('GET', '/api/sesion', { token: tokenAdmin });
-    comprobar('el administrador la tiene por su rol, sin figurar en la lista',
-        sesionAdmin.datos?.permisos?.planimetria === true
-        && (sesionAdmin.datos?.afiliado?.herramientas || []).length === 0,
-        sesionAdmin.datos?.afiliado?.herramientas);
-
+    comprobar('el administrador tiene la planimetria',
+        sesionAdmin.datos?.permisos?.planimetria === true, sesionAdmin.datos?.permisos);
+    const adminSinDeclarar = await llamar('POST', '/api/herramientas', {
+        token: tokenAdmin, cuerpo: { herramienta: 'planimetria' }
+    });
+    comprobar('pero tambien declara su equipo antes de usarla',
+        adminSinDeclarar.datos?.requiere_declaracion === true, adminSinDeclarar.datos);
+    await llamar('POST', '/api/equipo', {
+        token: tokenAdmin, cuerpo: { tipo: 'estacion_total', marca: 'Leica', modelo: 'TS07', serie: '1234567', acepta_responsabilidad: true }
+    });
     const abreAdmin = await llamar('POST', '/api/herramientas', {
         token: tokenAdmin, cuerpo: { herramienta: 'planimetria' }
     });
-    comprobar('y la puede abrir', abreAdmin.estado === 200 && abreAdmin.datos?.autorizado === true);
+    comprobar('y la abre', abreAdmin.estado === 200 && abreAdmin.datos?.autorizado === true, abreAdmin.datos);
 
     const inventada = await llamar('POST', '/api/herramientas', {
         token: tokenAdmin, cuerpo: { herramienta: 'teletransporte' }
@@ -293,42 +330,53 @@ seccion('Herramientas (planimetria)');
     const seLaDaSolo = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
         token: tokenAfiliado, cuerpo: { herramientas: ['planimetria'] }
     });
-    comprobar('el afiliado NO se la puede conceder a si mismo', seLaDaSolo.estado === 403);
-
-    const conceder = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
-        token: tokenAdmin, cuerpo: { herramientas: ['planimetria'] }
-    });
-    comprobar('el admin se la concede', conceder.estado === 200, conceder.datos);
-    comprobar('y queda anotada en el perfil',
-        (conceder.datos?.afiliado?.herramientas || []).join() === 'planimetria',
-        conceder.datos?.afiliado?.herramientas);
+    comprobar('el afiliado NO puede tocar sus herramientas', seLaDaSolo.estado === 403);
 
     const malaLista = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
         token: tokenAdmin, cuerpo: { herramientas: ['planimetria', 'teletransporte'] }
     });
     comprobar('una lista con una herramienta desconocida se rechaza entera', malaLista.estado === 400);
 
-    const yaLaTiene = await llamar('GET', '/api/sesion', { token: tokenAfiliado });
-    comprobar('ahora el afiliado la ve concedida', yaLaTiene.datos?.permisos?.planimetria === true);
-
-    const abre = await llamar('POST', '/api/herramientas', {
-        token: tokenAfiliado, cuerpo: { herramienta: 'planimetria' }
-    });
-    comprobar('y la puerta lo deja pasar', abre.estado === 200, abre.datos);
-
-    const quitar = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
-        token: tokenAdmin, cuerpo: { herramientas: [] }
-    });
-    comprobar('quitarla es mandar la lista vacia', quitar.estado === 200
-        && (quitar.datos?.afiliado?.herramientas || []).length === 0, quitar.datos);
-
-    const yaNo = await llamar('POST', '/api/herramientas', {
-        token: tokenAfiliado, cuerpo: { herramienta: 'planimetria' }
-    });
-    comprobar('y la puerta vuelve a cerrarse', yaNo.estado === 403);
-
     const sinSesion = await llamar('POST', '/api/herramientas', { cuerpo: { herramienta: 'planimetria' } });
     comprobar('sin sesion no se abre ninguna herramienta', sinSesion.estado === 401);
+}
+
+// ── 7c. Cupo mensual del colegiado ──────────────────────────────────
+seccion('Cupo mensual del colegiado');
+{
+    const predios = ['0601500101', '0601500102', '0601500103', '0601500104'];
+    for (let i = 0; i < predios.length; i++) {
+        const r = await llamar('POST', '/api/descargas', {
+            token: tokenAfiliado, cuerpo: { formato: 'pdf', clave_catastral: predios[i] }
+        });
+        comprobar('predio ' + (i + 1) + ' de 4 entra por el cupo',
+            r.estado === 200 && r.datos?.via === 'cupo' && r.datos?.cupo?.usados === i + 1, r.datos);
+    }
+
+    const mismo = await llamar('POST', '/api/descargas', {
+        token: tokenAfiliado, cuerpo: { formato: 'dxf', clave_catastral: predios[0] }
+    });
+    comprobar('el DXF de un predio ya habilitado no gasta cupo',
+        mismo.estado === 200 && mismo.datos?.predio_nuevo === false && !mismo.datos?.cupo, mismo.datos);
+
+    const sinClave = await llamar('POST', '/api/descargas', { token: tokenAfiliado, cuerpo: { formato: 'csv' } });
+    comprobar('sin clave del predio no se autoriza nada', sinClave.estado === 400, sinClave.datos);
+
+    const quinto = await llamar('POST', '/api/descargas', {
+        token: tokenAfiliado, cuerpo: { formato: 'pdf', clave_catastral: '0601500105' }
+    });
+    comprobar('el quinto predio del mes pide pago (402)',
+        quinto.estado === 402 && quinto.datos?.requiere_pago === true, quinto.datos);
+    comprobar('y dice el precio y el cupo agotado',
+        quinto.datos?.tarifa?.precio === 2000 && quinto.datos?.cupo?.restantes === 0, quinto.datos);
+
+    const estado = await llamar('GET', '/api/predios/estado?clave=' + predios[1], { token: tokenAfiliado });
+    comprobar('el estado del predio lo da por habilitado via cupo',
+        estado.datos?.habilitado === true && estado.datos?.via === 'cupo' && !!estado.datos?.vence_en, estado.datos);
+
+    const resumen = await llamar('GET', '/api/cuenta/cobros', { token: tokenAfiliado });
+    comprobar('el resumen de la cuenta lista los 4 predios',
+        resumen.estado === 200 && resumen.datos?.predios?.length === 4 && resumen.datos?.cupo?.usados === 4, resumen.datos);
 }
 
 // ── 8. Suspension y vigencia ────────────────────────────────────────
@@ -416,11 +464,6 @@ const CORREO_USR = 'vecino' + Date.now() + '@example.com';
 const CLAVE_USR  = 'RiobambaVecino2026';
 const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
 {
-    const sinRegistro = await llamar('POST', '/api/registro', {
-        cuerpo: { nombre: 'Juan Vecino', correo: CORREO_USR, clave: CLAVE_USR, acepta_terminos: true }
-    });
-    comprobar('sin numero de registro del CAE no hay alta', sinRegistro.estado === 400, sinRegistro.datos);
-
     const sinAceptar = await llamar('POST', '/api/registro', {
         cuerpo: { nombre: 'Juan Vecino', registro_profesional: REGISTRO_USR, correo: CORREO_USR, clave: CLAVE_USR }
     });
@@ -500,21 +543,18 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
             comprobar('el numero nace SIN validar',
                 ingreso.datos?.afiliado?.registro_validado === false, ingreso.datos?.afiliado);
 
-            // Mientras el numero no se coteje contra el padron: se entra,
-            // se consulta el mapa (que ademas es publico) y no se descarga.
+            // Mientras el numero no se coteje contra el padron la cuenta
+            // funciona como publica: pide productos, pero paga cada predio.
             const p = ingreso.datos?.permisos;
-            comprobar('NO puede descargar el PDF', p?.pdf === false, p);
-            comprobar('NO puede exportar DXF', p?.dxf === false, p);
-            comprobar('NO puede exportar CSV', p?.csv === false, p);
-
-            const dxf = await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'dxf' } });
-            comprobar('el servidor rechaza el DXF', dxf.estado === 403, dxf.datos);
-            comprobar('y explica que el registro esta pendiente', dxf.datos?.registro_pendiente === true, dxf.datos);
+            comprobar('puede pedir productos', p?.pdf === true && p?.dxf === true && p?.csv === true, p);
+            comprobar('pero cobra por pago, no por cupo', p?.cobro === 'pago' && p?.colegiado === false, p);
 
             const pdfPendiente = await llamar('POST', '/api/descargas', {
                 token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' }
             });
-            comprobar('tampoco autoriza el PDF', pdfPendiente.estado === 403, pdfPendiente.datos);
+            comprobar('el PDF de un predio pide pago (402)', pdfPendiente.estado === 402, pdfPendiente.datos);
+            comprobar('y explica que el registro esta pendiente',
+                pdfPendiente.datos?.registro_pendiente === true, pdfPendiente.datos);
 
             const admin = await llamar('GET', '/api/admin/afiliados', { token: tokenUsuario });
             comprobar('un usuario no llega a la administracion', admin.estado === 403);
@@ -534,27 +574,30 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
                 validar.datos?.afiliado?.registro_validado === true, validar.datos?.afiliado);
 
             const tras = await llamar('GET', '/api/sesion', { token: tokenUsuario });
-            comprobar('validado, ya puede descargar el PDF', tras.datos?.permisos?.pdf === true, tras.datos?.permisos);
-            comprobar('validado, ya puede exportar DXF', tras.datos?.permisos?.dxf === true, tras.datos?.permisos);
-            comprobar('validado, ya puede exportar CSV', tras.datos?.permisos?.csv === true, tras.datos?.permisos);
+            comprobar('validado, pasa a cobrar por cupo de colegiado',
+                tras.datos?.permisos?.cobro === 'cupo' && tras.datos?.permisos?.colegiado === true, tras.datos?.permisos);
 
             const pdfOk = await llamar('POST', '/api/descargas', {
                 token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' }
             });
-            comprobar('y el servidor lo autoriza de verdad', pdfOk.estado === 200, pdfOk.datos);
+            comprobar('y el servidor lo autoriza con su cupo', pdfOk.estado === 200 && pdfOk.datos?.via === 'cupo', pdfOk.datos);
 
             const pdfOtro = await llamar('POST', '/api/descargas', {
                 token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010102' }
             });
-            comprobar('sin limite de uno: el segundo PDF tambien', pdfOtro.estado === 200, pdfOtro.datos);
+            comprobar('el segundo predio tambien', pdfOtro.estado === 200, pdfOtro.datos);
 
             const invalidar = await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
                 token: tokenAdmin, cuerpo: { registro_validado: false }
             });
             comprobar('el admin puede revocar la validacion', invalidar.estado === 200, invalidar.datos);
             const revocado = await llamar('GET', '/api/sesion', { token: tokenUsuario });
-            comprobar('revocado, vuelve a quedarse sin descargas',
-                revocado.datos?.permisos?.pdf === false, revocado.datos?.permisos);
+            comprobar('revocado, vuelve a pagar como cuenta publica',
+                revocado.datos?.permisos?.cobro === 'pago', revocado.datos?.permisos);
+            const yaHabilitado = await llamar('POST', '/api/descargas', {
+                token: tokenUsuario, cuerpo: { formato: 'csv', clave_catastral: '060150010101' }
+            });
+            comprobar('pero conserva los predios que ya habilito', yaHabilitado.estado === 200, yaHabilitado.datos);
 
             // Se deja validado para lo que sigue.
             await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
@@ -564,6 +607,160 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
     } else {
         console.log('  – tramo de confirmacion omitido (no se paso el log de wrangler)');
     }
+}
+
+// ── 10c. Cuenta publica y pago por predio ───────────────────────────
+// PayPhone se simula en el puerto 8791: `reiniciar.sh` arranca el Worker
+// con PAYPHONE_URL_CONFIRMAR apuntando aqui. El id de la transaccion
+// decide la respuesta: 777 devuelve otro monto, 999 un pago cancelado y
+// cualquier otro, aprobado por el monto que el Worker preparo.
+seccion('Cuenta publica y pago por predio');
+{
+    const preparados = new Map();
+    const llamadasConfirm = [];
+    const simulador = createServer((req, res) => {
+        let cuerpo = '';
+        req.on('data', c => { cuerpo += c; });
+        req.on('end', () => {
+            const d = JSON.parse(cuerpo || '{}');
+            llamadasConfirm.push({ auth: req.headers.authorization, ...d });
+            const monto = preparados.get(d.clientTxId) || 0;
+            const r = d.id === 999
+                ? { statusCode: 2, transactionStatus: 'Canceled', clientTransactionId: d.clientTxId, transactionId: d.id, amount: monto }
+                : { statusCode: 3, transactionStatus: 'Approved', clientTransactionId: d.clientTxId, transactionId: d.id,
+                    amount: d.id === 777 ? 100 : monto, authorizationCode: 'W' + d.id };
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(r));
+        });
+    });
+    await new Promise(r => simulador.listen(8791, '127.0.0.1', r));
+
+    const CORREO_PUB = 'publico' + Date.now() + '@example.com';
+    const CLAVE_PUB = 'GuanoPublico2026';
+    let tokenPub = null;
+
+    const alta = await llamar('POST', '/api/registro', {
+        cuerpo: { nombre: 'Rosa Publica', correo: CORREO_PUB, clave: CLAVE_PUB, acepta_terminos: true }
+    });
+    comprobar('sin numero de registro tambien hay alta (cuenta publica)', alta.estado === 201, alta.datos);
+
+    if (LOG) {
+        let m = null;
+        for (let i = 0; i < 20 && !m; i++) {
+            await new Promise(r => setTimeout(r, 250));
+            const enlaces = [...readFileSync(LOG, 'utf8').matchAll(/registro\/verificar\?t=([A-Za-z0-9_-]+)/g)];
+            m = enlaces.length ? enlaces.pop() : null;
+        }
+        if (m) await fetch(API + '/api/registro/verificar?t=' + m[1], { redirect: 'manual' });
+        const ingreso = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_PUB, clave: CLAVE_PUB } });
+        comprobar('la cuenta publica confirma e ingresa', ingreso.estado === 200, ingreso.datos);
+        tokenPub = ingreso.datos?.token;
+        const p = ingreso.datos?.permisos;
+        comprobar('nace sin numero de registro', ingreso.datos?.afiliado?.registro_profesional == null, ingreso.datos?.afiliado);
+        comprobar('cobra por pago y tiene la planimetria', p?.cobro === 'pago' && p?.planimetria === true, p);
+    } else {
+        console.log('  – tramo de cuenta publica omitido (no se paso el log de wrangler)');
+    }
+
+    if (tokenPub) {
+        const PREDIO = '0601500201';
+        const sinPagar = await llamar('POST', '/api/descargas', {
+            token: tokenPub, cuerpo: { formato: 'pdf', clave_catastral: PREDIO }
+        });
+        comprobar('sin pagar el predio responde 402', sinPagar.estado === 402 && sinPagar.datos?.requiere_pago === true, sinPagar.datos);
+        comprobar('una cuenta publica no tiene cupo', sinPagar.datos?.cupo === null, sinPagar.datos);
+        comprobar('el cobro en linea figura disponible', sinPagar.datos?.tarifa?.cobro_en_linea === true, sinPagar.datos?.tarifa);
+
+        async function preparar() {
+            const r = await llamar('POST', '/api/pagos', { token: tokenPub, cuerpo: { clave_catastral: PREDIO } });
+            if (r.datos?.cajita) preparados.set(r.datos.cajita.clientTransactionId, r.datos.cajita.amount);
+            return r;
+        }
+
+        const p1 = await preparar();
+        comprobar('prepara el pago', p1.estado === 201 && !!p1.datos?.pago?.id, p1.datos);
+        const c = p1.datos?.cajita || {};
+        comprobar('la cajita cobra USD 20 con IVA desglosado',
+            c.amount === 2000 && c.amountWithTax === 1739 && c.tax === 261 && c.amountWithoutTax === 0, c);
+        comprobar('el clientTransactionId es el id del pago y es alfanumerico',
+            c.clientTransactionId === p1.datos?.pago?.id && /^[A-Z0-9]{10,40}$/.test(c.clientTransactionId), c.clientTransactionId);
+
+        const ajeno = await llamar('POST', '/api/pagos/confirmar', {
+            token: tokenAdmin, cuerpo: { id: 4321, clientTransactionId: c.clientTransactionId }
+        });
+        comprobar('otra cuenta no puede confirmar un pago ajeno', ajeno.estado === 404, ajeno.datos);
+
+        const otroMonto = await llamar('POST', '/api/pagos/confirmar', {
+            token: tokenPub, cuerpo: { id: 777, clientTransactionId: c.clientTransactionId }
+        });
+        comprobar('un monto distinto al preparado se rechaza',
+            otroMonto.datos?.ok === false && otroMonto.datos?.pago?.estado === 'rechazado', otroMonto.datos);
+        comprobar('el Worker llamo al Confirm con el token de PayPhone',
+            llamadasConfirm.some(l => l.auth === 'Bearer prueba-payphone'), llamadasConfirm);
+
+        const sigue = await llamar('POST', '/api/descargas', { token: tokenPub, cuerpo: { formato: 'pdf', clave_catastral: PREDIO } });
+        comprobar('tras el rechazo el predio sigue cerrado', sigue.estado === 402);
+
+        const p2 = await preparar();
+        const cancelado = await llamar('POST', '/api/pagos/confirmar', {
+            token: tokenPub, cuerpo: { id: 999, clientTransactionId: p2.datos?.pago?.id }
+        });
+        comprobar('un pago cancelado en PayPhone queda cancelado',
+            cancelado.datos?.pago?.estado === 'cancelado', cancelado.datos);
+
+        const p3 = await preparar();
+        const aprobado = await llamar('POST', '/api/pagos/confirmar', {
+            token: tokenPub, cuerpo: { id: 12345, clientTransactionId: p3.datos?.pago?.id }
+        });
+        comprobar('un pago aprobado habilita el predio',
+            aprobado.estado === 200 && aprobado.datos?.ok === true && !!aprobado.datos?.vence_en, aprobado.datos);
+        comprobar('y guarda la autorizacion de PayPhone', aprobado.datos?.pago?.autorizacion === 'W12345', aprobado.datos?.pago);
+
+        const llamadasAntes = llamadasConfirm.length;
+        const repetido = await llamar('POST', '/api/pagos/confirmar', {
+            token: tokenPub, cuerpo: { id: 12345, clientTransactionId: p3.datos?.pago?.id }
+        });
+        comprobar('confirmar otra vez es idempotente y no vuelve a PayPhone',
+            repetido.datos?.ok === true && llamadasConfirm.length === llamadasAntes, repetido.datos);
+
+        for (const formato of ['pdf', 'dxf', 'csv']) {
+            const r = await llamar('POST', '/api/descargas', { token: tokenPub, cuerpo: { formato, clave_catastral: PREDIO } });
+            comprobar('pagado, ' + formato.toUpperCase() + ' autorizado', r.estado === 200 && r.datos?.via === 'pago', r.datos);
+        }
+
+        const otraVez = await llamar('POST', '/api/pagos', { token: tokenPub, cuerpo: { clave_catastral: PREDIO } });
+        comprobar('no deja pagar dos veces el mismo predio', otraVez.estado === 409 && otraVez.datos?.ya_habilitado === true, otraVez.datos);
+
+        const OTRO = 'GEO-E760123-N9815432-A512';
+        const otro = await llamar('POST', '/api/descargas', { token: tokenPub, cuerpo: { formato: 'pdf', clave_catastral: OTRO } });
+        comprobar('un poligono propio (clave GEO-) tambien se cobra', otro.estado === 402, otro.datos);
+
+        const yo = await llamar('GET', '/api/sesion', { token: tokenPub });
+        const sede = await llamar('POST', '/api/admin/afiliados/' + yo.datos.afiliado.id + '/predios', {
+            token: tokenAdmin, cuerpo: { clave_catastral: OTRO, motivo: 'pago en sede' }
+        });
+        comprobar('el admin habilita un predio pagado en la sede', sede.estado === 201 && sede.datos?.via === 'admin', sede.datos);
+        const tras = await llamar('POST', '/api/descargas', { token: tokenPub, cuerpo: { formato: 'pdf', clave_catastral: OTRO } });
+        comprobar('y la cuenta ya lo descarga', tras.estado === 200 && tras.datos?.via === 'admin', tras.datos);
+
+        const seHabilitaSolo = await llamar('POST', '/api/admin/afiliados/' + yo.datos.afiliado.id + '/predios', {
+            token: tokenPub, cuerpo: { clave_catastral: '0601500999' }
+        });
+        comprobar('una cuenta publica no se habilita predios a si misma', seHabilitaSolo.estado === 403);
+
+        const resumen = await llamar('GET', '/api/cuenta/cobros', { token: tokenPub });
+        comprobar('su resumen muestra los dos predios y los tres pagos cerrados',
+            resumen.datos?.predios?.length === 2 && resumen.datos?.pagos?.length === 3, resumen.datos);
+
+        const pagosAdmin = await llamar('GET', '/api/admin/pagos', { token: tokenAdmin });
+        comprobar('el admin ve los pagos con su estado',
+            pagosAdmin.estado === 200 && pagosAdmin.datos?.resumen?.some(f => f.estado === 'aprobado' && f.monto === 2000),
+            pagosAdmin.datos?.resumen);
+        const pagosAjeno = await llamar('GET', '/api/admin/pagos', { token: tokenPub });
+        comprobar('y una cuenta publica no', pagosAjeno.estado === 403);
+    }
+
+    simulador.close();
 }
 
 // ── 11. Bitacora ────────────────────────────────────────────────────

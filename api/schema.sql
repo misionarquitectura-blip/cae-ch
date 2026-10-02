@@ -20,11 +20,11 @@ CREATE TABLE IF NOT EXISTS afiliados (
     correo                TEXT    NOT NULL UNIQUE,          -- minusculas
     nombre                TEXT    NOT NULL,
 
-    -- Numero de registro del colegiado en el CAE. El alta publica lo exige
-    -- -las cuentas son solo para miembros- y lo guarda tal como lo escribe
-    -- quien se registra; `registro_validado` dice si la administracion ya lo
-    -- coteja contra el padron. Sin validar se abre el visor, pero no se
-    -- descarga nada.
+    -- Numero de registro del colegiado en el CAE. Opcional desde el
+    -- 2026-10-02: quien lo da se registra como colegiado y el numero se
+    -- guarda tal como lo escribe; `registro_validado` dice si la
+    -- administracion ya lo coteja contra el padron. Sin numero, o mientras
+    -- no se valide, la cuenta es publica: paga cada predio que descarga.
     registro_profesional  TEXT,
     registro_validado     INTEGER NOT NULL DEFAULT 0,
     registro_validado_en  TEXT,
@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS afiliados (
     herramientas          TEXT,
 
     nucleo                TEXT    NOT NULL DEFAULT 'Chimborazo',
-    -- usuario  : se registro por su cuenta. Abre el GeoVisor y, una vez
-    --            validado su numero de registro, descarga como afiliado.
+    -- usuario  : se registro por su cuenta. Paga cada predio; si dio su
+    --            numero de registro y se valida, tiene el cupo del colegiado.
     -- afiliado : colegiado del CAE-CH, alta por la administracion.
     -- admin    : ademas gestiona el padron.
     rol                   TEXT    NOT NULL DEFAULT 'usuario'
@@ -141,6 +141,68 @@ CREATE TABLE IF NOT EXISTS descargas (
 
 CREATE INDEX IF NOT EXISTS idx_descargas_fecha    ON descargas (creado_en);
 CREATE INDEX IF NOT EXISTS idx_descargas_afiliado ON descargas (afiliado_id);
+
+-- ── Predios habilitados ─────────────────────────────────────────────
+-- Una fila por predio que una cuenta puede descargar. `via` dice por que:
+--   cupo  : uno de los predios gratuitos del mes del colegiado
+--   pago  : pagado en linea (pago_id apunta a la transaccion)
+--   admin : concedido a mano por la administracion (pago en sede, cortesia)
+CREATE TABLE IF NOT EXISTS predios_habilitados (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    afiliado_id     TEXT    NOT NULL REFERENCES afiliados(id) ON DELETE CASCADE,
+    clave_catastral TEXT    NOT NULL,
+    via             TEXT    NOT NULL CHECK (via IN ('cupo', 'pago', 'admin')),
+    pago_id         TEXT    REFERENCES pagos(id) ON DELETE SET NULL,
+    creado_en       TEXT    NOT NULL,
+    vence_en        TEXT    NOT NULL,
+    concedido_por   TEXT                                    -- usuario del admin, si via = 'admin'
+);
+
+CREATE INDEX IF NOT EXISTS idx_predios_cuenta ON predios_habilitados (afiliado_id, clave_catastral);
+CREATE INDEX IF NOT EXISTS idx_predios_cupo   ON predios_habilitados (afiliado_id, via, creado_en);
+
+-- ── Pagos ───────────────────────────────────────────────────────────
+-- `id` es el clientTransactionId que se entrega a PayPhone. El Confirm se
+-- coteja contra esta fila -monto, cuenta y predio-, nunca contra lo que
+-- diga la URL de regreso.
+CREATE TABLE IF NOT EXISTS pagos (
+    id                   TEXT    PRIMARY KEY,
+    afiliado_id          TEXT    NOT NULL REFERENCES afiliados(id) ON DELETE CASCADE,
+    clave_catastral      TEXT    NOT NULL,
+    monto                INTEGER NOT NULL,                  -- centavos, IVA incluido
+    base                 INTEGER NOT NULL,                  -- centavos
+    iva                  INTEGER NOT NULL,                  -- centavos
+    estado               TEXT    NOT NULL DEFAULT 'preparado'
+                                 CHECK (estado IN ('preparado', 'aprobado', 'cancelado', 'rechazado')),
+    pasarela             TEXT    NOT NULL DEFAULT 'payphone',
+    transaccion          TEXT,                              -- transactionId de PayPhone
+    autorizacion         TEXT,                              -- authorizationCode
+    detalle              TEXT,                              -- motivo de rechazo, si lo hubo
+    creado_en            TEXT    NOT NULL,
+    confirmado_en        TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_pagos_cuenta ON pagos (afiliado_id, creado_en);
+CREATE INDEX IF NOT EXISTS idx_pagos_estado ON pagos (estado, creado_en);
+
+-- ── Declaracion de equipo (planimetria) ─────────────────────────────
+-- La vigente es la ultima de cada cuenta. Se conservan las anteriores:
+-- son la constancia de con que equipo declaro trabajar en cada momento.
+CREATE TABLE IF NOT EXISTS declaraciones_equipo (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    afiliado_id     TEXT    NOT NULL REFERENCES afiliados(id) ON DELETE CASCADE,
+    tipo            TEXT    NOT NULL
+                            CHECK (tipo IN ('gnss_rtk', 'estacion_total', 'lidar', 'ortofoto')),
+    marca           TEXT    NOT NULL,
+    modelo          TEXT    NOT NULL,
+    serie           TEXT    NOT NULL,
+    gsd_cm          REAL,                                   -- solo ortofoto: resolucion verificada
+    texto_version   TEXT    NOT NULL,                       -- version del texto de responsabilidad aceptado
+    creado_en       TEXT    NOT NULL,
+    ip_hash         TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_equipo_cuenta ON declaraciones_equipo (afiliado_id, creado_en);
 
 -- ── Bitacora de seguridad ───────────────────────────────────────────
 -- Ingresos, fallos, altas, bajas y cambios de clave. Sin datos personales

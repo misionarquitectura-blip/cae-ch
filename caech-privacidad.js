@@ -21,7 +21,7 @@
 (function () {
     'use strict';
 
-    var VERSION = '2026-10-01';
+    var VERSION = '2026-10-02';
     var LLAVE = 'caech_aviso_privacidad';
 
     // legal.html vive en la raiz; este archivo tambien. Resolverlo contra

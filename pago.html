@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago de predio | CAE-CH</title>
+    <meta name="description" content="Pago en línea de los productos de un predio del GeoVisor del CAE-CH: DICAT en PDF, CSV y DXF.">
+    <meta name="robots" content="noindex, nofollow">
+    <!-- PayPhone valida el dominio por el Referer: sin el origen, la cajita
+         responde "acceso denegado". -->
+    <meta name="referrer" content="origin-when-cross-origin">
+    <meta name="theme-color" content="#E31E24">
+    <link rel="icon" type="image/png" href="LOGO/favicon-caech.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="caech-ui.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--fuente-ui); background: var(--hueso); color: var(--grafito);
+            line-height: 1.6; font-size: 14px; min-height: 100vh;
+        }
+        a { color: var(--rojo-caech); }
+        header {
+            background: var(--blanco); border-bottom: 3px solid var(--rojo-caech);
+        }
+        .barra {
+            max-width: 640px; margin: 0 auto; padding: 12px 16px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .barra img { height: 38px; width: auto; display: block; }
+        .barra span {
+            font-size: 12px; font-weight: 700; letter-spacing: var(--tracking-caps);
+            text-transform: uppercase; color: var(--grafito-med);
+            border-left: 1px solid var(--borde-marcado); padding-left: 16px;
+        }
+        main { max-width: 640px; margin: 28px auto 48px; padding: 0 16px; }
+        .tarjeta {
+            background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio);
+            padding: 22px; margin-bottom: 18px;
+        }
+        h1 { font-size: 20px; margin-bottom: 6px; }
+        .sub { color: var(--grafito-med); margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; margin: 6px 0 4px; }
+        td { padding: 7px 0; border-bottom: 1px solid var(--borde); vertical-align: top; }
+        td:last-child { text-align: right; }
+        tr.total td { font-weight: 700; font-size: 16px; border-bottom: 0; }
+        .mono { font-family: var(--fuente-mono); word-break: break-all; }
+        .tenue { color: var(--grafito-sua); font-size: 12.5px; }
+        .aviso {
+            padding: 12px 14px; border-radius: var(--radio); margin-bottom: 16px; line-height: 1.55;
+            border: 1px solid; border-left-width: 3px;
+        }
+        .aviso.info  { background: #EAF1F8; color: #17375E; border-color: #C7DAEC; border-left-color: #2563A8; }
+        .aviso.exito { background: #E9F5EC; color: #14532D; border-color: #C8E6D0; border-left-color: #1E8449; }
+        .aviso.error { background: #FDECEA; color: #8E1015; border-color: #F5C6C0; border-left-color: var(--rojo-caech); }
+        .acciones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+        #pp-button { margin-top: 16px; min-height: 40px; }
+        .cargando { display: flex; align-items: center; gap: 10px; color: var(--grafito-med); }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="barra">
+        <a href="index.html" title="Volver al sitio del CAE-Ch">
+            <img src="LOGO/logo-caech.png" alt="CAE-Ch" width="520" height="188">
+        </a>
+        <span>Pago de predio</span>
+    </div>
+</header>
+
+<main>
+    <div class="tarjeta" id="contenido">
+        <p class="cargando"><i class="fas fa-circle-notch fa-spin"></i> Comprobando su sesión…</p>
+    </div>
+    <p class="tenue">
+        El pago lo procesa <b>PayPhone</b>; la plataforma no ve ni guarda los datos de su tarjeta.
+        Condiciones del servicio en los <a href="legal.html#terminos">Términos</a> y la
+        <a href="legal.html#privacidad">Política de privacidad</a>.
+        ¿Problemas con un cobro? Escriba a <a href="mailto:caechoficial@gmail.com">caechoficial@gmail.com</a>
+        con el número de transacción.
+    </p>
+</main>
+
+<script src="caech-acceso.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+//  Pago de un predio con la Cajita de PayPhone, en las dos fases que exige:
+//
+//    pago.html?clave=…                      el Worker prepara la transacción y
+//                                           aquí se dibuja la cajita
+//    pago.html?id=…&clientTransactionId=…   PayPhone devuelve aquí (es la URL de
+//                                           respuesta de la aplicación) y el
+//                                           Worker confirma el pago
+//
+//  Lo que habilita el predio es la confirmación en el Worker, que coteja monto,
+//  cuenta y transacción contra lo que preparó. Esta página no decide nada.
+// ─────────────────────────────────────────────────────────────────────────────
+(function () {
+    'use strict';
+    const acceso = window.caechAcceso;
+    const caja = document.getElementById('contenido');
+    const params = new URLSearchParams(location.search);
+
+    const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const usd = c => 'USD ' + (c / 100).toFixed(2).replace('.', ',');
+    const fecha = iso => new Date(iso).toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' });
+    const alVisor = clave => 'geovisor.html?clave=' + encodeURIComponent(clave);
+
+    function pintar(html) { caja.innerHTML = html; }
+
+    function cargando(texto) {
+        pintar('<p class="cargando"><i class="fas fa-circle-notch fa-spin"></i> ' + esc(texto) + '</p>');
+    }
+
+    function desglose(clave, t) {
+        return '<table><tbody>'
+            + '<tr><td>Predio</td><td class="mono">' + esc(clave) + '</td></tr>'
+            + '<tr><td>Incluye</td><td>DICAT en PDF, CSV y DXF<br><span class="tenue">durante '
+            + (t.dias_acceso || 30) + ' días</span></td></tr>'
+            + '<tr><td>Base imponible</td><td>' + usd(t.base) + '</td></tr>'
+            + '<tr><td>IVA ' + t.iva_porcentaje + ' %</td><td>' + usd(t.iva) + '</td></tr>'
+            + '<tr class="total"><td>Total</td><td>' + usd(t.precio) + '</td></tr>'
+            + '</tbody></table>';
+    }
+
+    // La cajita se carga solo cuando hace falta: es código de PayPhone y no
+    // tiene por qué bajar en la vuelta ni en los errores.
+    function cargarCajita() {
+        return new Promise((resolver, rechazar) => {
+            if (window.PPaymentButtonBox) return resolver();
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = 'https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.css';
+            document.head.appendChild(css);
+            const js = document.createElement('script');
+            js.type = 'module';
+            js.src = 'https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.js';
+            js.onload = () => {
+                // El módulo publica la clase al evaluarse; se espera un instante.
+                let n = 0;
+                const t = setInterval(() => {
+                    if (window.PPaymentButtonBox) { clearInterval(t); resolver(); }
+                    else if (++n > 50) { clearInterval(t); rechazar(new Error('sin PPaymentButtonBox')); }
+                }, 100);
+            };
+            js.onerror = () => rechazar(new Error('no cargó la cajita'));
+            document.head.appendChild(js);
+        });
+    }
+
+    // ── Fase 1: preparar y mostrar la cajita ────────────────────────────
+    async function preparar(clave) {
+        cargando('Preparando el pago…');
+        const estado = await acceso.peticion('GET', '/api/predios/estado?clave=' + encodeURIComponent(clave));
+        if (estado.estado === 200 && estado.datos.habilitado) {
+            return pintar('<h1>Este predio ya está habilitado</h1>'
+                + '<div class="aviso exito">Puede descargar el DICAT, el CSV y el DXF'
+                + (estado.datos.vence_en ? ' hasta el ' + fecha(estado.datos.vence_en) : '') + '.</div>'
+                + '<div class="acciones"><a class="btn" href="' + esc(alVisor(estado.datos.clave_catastral)) + '">'
+                + 'Volver al visor con el predio</a></div>');
+        }
+
+        const r = await acceso.peticion('POST', '/api/pagos', { clave_catastral: clave });
+        if (r.estado !== 201) {
+            return pintar('<h1>No se puede pagar ahora</h1>'
+                + '<div class="aviso ' + (r.estado === 503 ? 'info' : 'error') + '">'
+                + esc((r.datos && r.datos.error) || 'No se pudo preparar el pago.') + '</div>'
+                + '<div class="acciones"><a class="btn btn-outline" href="' + esc(alVisor(clave)) + '">Volver al visor</a></div>');
+        }
+
+        const d = r.datos;
+        pintar('<h1>Habilitar el predio</h1>'
+            + '<p class="sub">Un solo pago habilita los tres productos de este predio en su cuenta.</p>'
+            + desglose(d.pago.clave_catastral, d.tarifa)
+            + '<div id="pp-button"><p class="cargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando el formulario de pago…</p></div>'
+            + '<p class="tenue" style="margin-top:12px">El formulario vence a los 10 minutos; si caduca, recargue la página. '
+            + 'Transacción <span class="mono">' + esc(d.pago.id) + '</span>.</p>');
+
+        try {
+            await cargarCajita();
+            document.getElementById('pp-button').innerHTML = '';
+            new window.PPaymentButtonBox(d.cajita).render('pp-button');
+        } catch (e) {
+            document.getElementById('pp-button').innerHTML =
+                '<div class="aviso error">No se pudo cargar el formulario de PayPhone. Revise su conexión y recargue la página.</div>';
+        }
+    }
+
+    // ── Fase 2: confirmar a la vuelta de PayPhone ───────────────────────
+    async function confirmar(id, clientTx) {
+        cargando('Comprobando el pago con PayPhone…');
+        const r = await acceso.peticion('POST', '/api/pagos/confirmar', { id: id, clientTransactionId: clientTx });
+        const d = r.datos || {};
+
+        if (r.estado === 502 && d.reintentar) {
+            return pintar('<h1>Todavía no tenemos respuesta</h1>'
+                + '<div class="aviso info">' + esc(d.error) + '</div>'
+                + '<div class="acciones"><button class="btn" onclick="location.reload()">Volver a comprobar</button></div>');
+        }
+        if (r.estado !== 200 || !d.pago) {
+            return pintar('<h1>No se pudo comprobar el pago</h1>'
+                + '<div class="aviso error">' + esc(d.error || 'Error desconocido.') + '</div>');
+        }
+
+        const p = d.pago;
+        if (p.estado === 'aprobado') {
+            return pintar('<h1>Pago aprobado</h1>'
+                + '<div class="aviso exito">' + esc(d.mensaje)
+                + (d.vence_en ? ' Queda habilitado hasta el ' + fecha(d.vence_en) + '.' : '') + '</div>'
+                + desglose(p.clave_catastral, Object.assign({}, d.tarifa, { base: p.base, iva: p.iva, precio: p.monto }))
+                + '<p class="tenue">Transacción PayPhone <span class="mono">' + esc(p.transaccion || '—') + '</span>'
+                + (p.autorizacion ? ' · autorización <span class="mono">' + esc(p.autorizacion) + '</span>' : '')
+                + '</p>'
+                + '<div class="acciones" style="margin-top:14px"><a class="btn" href="' + esc(alVisor(p.clave_catastral)) + '">'
+                + 'Volver al visor con el predio</a>'
+                + '<a class="btn btn-outline" href="panel.html">Mis pagos</a></div>');
+        }
+        return pintar('<h1>' + (p.estado === 'cancelado' ? 'Pago cancelado' : 'Pago no completado') + '</h1>'
+            + '<div class="aviso ' + (p.estado === 'cancelado' ? 'info' : 'error') + '">' + esc(d.mensaje) + '</div>'
+            + '<div class="acciones"><a class="btn" href="pago.html?clave=' + encodeURIComponent(p.clave_catastral) + '">'
+            + 'Intentar de nuevo</a><a class="btn btn-outline" href="' + esc(alVisor(p.clave_catastral)) + '">Volver al visor</a></div>');
+    }
+
+    async function arrancar() {
+        if (!acceso) return pintar('<div class="aviso error">Falta el control de acceso del sitio. Recargue la página.</div>');
+        await acceso.sesion();
+        if (!acceso.perfil()) {
+            pintar('<h1>Ingrese para continuar</h1>'
+                + '<p class="sub">El pago queda asociado a su cuenta: es la que podrá descargar el predio.</p>'
+                + '<div class="acciones"><button class="btn" id="btn-ingresar">Ingresar</button></div>');
+            document.getElementById('btn-ingresar').addEventListener('click', () => acceso.abrirIngreso(arrancar));
+            return;
+        }
+
+        const id = parseInt(params.get('id') || '', 10);
+        const clientTx = params.get('clientTransactionId');
+        const clave = params.get('clave');
+        if (id && clientTx) return confirmar(id, clientTx);
+        if (clave) return preparar(clave);
+        pintar('<h1>No hay ningún predio que pagar</h1>'
+            + '<p class="sub">Elija un predio en el GeoVisor y pida su DICAT, CSV o DXF: si hace falta pagar, '
+            + 'el visor lo trae hasta aquí.</p>'
+            + '<div class="acciones"><a class="btn" href="geovisor.html">Ir al GeoVisor</a></div>');
+    }
+
+    arrancar();
+}());
+</script>
+</body>
+</html>

@@ -293,6 +293,7 @@
             <button data-hoja="cuenta" class="activa"><i class="fas fa-id-card"></i> Mi cuenta</button>
             <button data-hoja="padron"     data-admin hidden><i class="fas fa-users"></i> Padrón
                 <span class="contador" id="contador-pendientes" hidden>0</span></button>
+            <button data-hoja="pagos"      data-admin hidden><i class="fas fa-credit-card"></i> Pagos</button>
             <button data-hoja="descargas"  data-admin hidden><i class="fas fa-download"></i> Descargas</button>
             <button data-hoja="bitacora"   data-admin hidden><i class="fas fa-clipboard-list"></i> Bitácora</button>
             <button data-hoja="herramientas"><i class="fas fa-toolbox"></i> Herramientas</button>
@@ -303,6 +304,25 @@
             <div class="tarjeta">
                 <h2><i class="fas fa-id-card"></i> Mi cuenta</h2>
                 <div id="mi-cuenta"></div>
+            </div>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-map-marked-alt"></i> Mis predios y pagos</h2>
+                <p class="sub" id="cobro-sub"></p>
+                <div class="cifras" id="mis-cifras"></div>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>Predio</th><th>Cómo</th><th>Habilitado</th><th>Vence</th><th></th></tr></thead>
+                    <tbody id="tabla-mis-predios"></tbody>
+                </table></div>
+                <div id="mis-pagos" style="margin-top:26px"></div>
+            </div>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-satellite-dish"></i> Equipo de levantamiento</h2>
+                <p class="sub">La planimetría es gratuita, pero solo admite datos de equipo de alta precisión.
+                   Este es el equipo que declaró; si cambia de equipo, vuelva a declararlo.</p>
+                <div id="mi-equipo"></div>
+                <button class="btn btn-outline" id="btn-equipo"><i class="fas fa-pen"></i> Declarar equipo</button>
             </div>
 
             <div class="tarjeta">
@@ -328,9 +348,9 @@
             <div class="tarjeta aviso-pendientes" id="caja-pendientes" hidden>
                 <h2><i class="fas fa-user-clock"></i> Registros por cotejar
                     <span class="insignia espera" id="etiqueta-pendientes"></span></h2>
-                <p class="sub">Cuentas creadas desde el registro público. Pueden entrar y consultar el
-                   mapa, pero <b>no descargan nada</b> hasta que su número se coteje contra el padrón
-                   del colegio. Valide solo lo que haya comprobado.</p>
+                <p class="sub">Cuentas del registro público que declararon un número de registro del CAE.
+                   Mientras no se coteje contra el padrón del colegio pagan cada predio como cualquier
+                   cuenta; validado, reciben el cupo mensual del colegiado. Valide solo lo que haya comprobado.</p>
                 <div class="tabla-marco"><table>
                     <thead><tr><th>Solicitante</th><th>Registro declarado</th><th>Correo</th>
                                <th>Se registró</th><th></th></tr></thead>
@@ -341,10 +361,10 @@
             <div class="tarjeta">
                 <h2><i class="fas fa-users"></i> Padrón de cuentas
                     <span class="insignia neutra" id="etiqueta-total"></span></h2>
-                <p class="sub">Todas las cuentas de la plataforma. «Descargas» dice si esa cuenta puede,
-                   hoy y ahora, generar el DICAT, el CSV y el DXF; eso va con el registro cotejado.
-                   Debajo, las herramientas que <b>no</b> se abren por ser colegiado: se conceden una
-                   cuenta a la vez. El administrador las tiene todas por su rol.</p>
+                <p class="sub">Todas las cuentas de la plataforma. «Predios» dice cómo habilita hoy cada
+                   cuenta los productos de un predio: <b>libre</b> (administrador), <b>cupo</b> mensual
+                   (colegiado cotejado) o <b>pago</b>. «Predio» habilita uno a mano, por ejemplo tras un
+                   pago en la sede.</p>
                 <div class="campo buscador">
                     <input id="buscar" type="search" placeholder="Buscar por nombre, usuario, correo o registro" autocomplete="off">
                 </div>
@@ -382,6 +402,21 @@
                         <input id="alta-vigencia" type="date"></div>
                 </div>
                 <button class="btn" id="btn-alta"><i class="fas fa-user-plus"></i> Crear cuenta</button>
+            </div>
+        </section>
+
+        <!-- Pagos -------------------------------------------------- -->
+        <section data-hoja="pagos" hidden>
+            <div class="tarjeta">
+                <h2><i class="fas fa-credit-card"></i> Pagos en línea</h2>
+                <p class="sub">Cada transacción con PayPhone, con su estado. Solo las aprobadas habilitan
+                   el predio. Una «preparada» que no avanza es alguien que abrió la cajita y no pagó:
+                   PayPhone no cobra nada sin la confirmación. Se muestran las 200 más recientes.</p>
+                <div class="cifras" id="cifras-pagos"></div>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>Fecha</th><th>Quién</th><th>Predio</th><th>Monto</th><th>Estado</th><th>Transacción</th></tr></thead>
+                    <tbody id="tabla-pagos"></tbody>
+                </table></div>
             </div>
         </section>
 
@@ -445,11 +480,19 @@
     let misPermisos = {};
     let cuentas = [];
 
-    // Herramientas que se conceden cuenta por cuenta. El identificador tiene
-    // que coincidir con HERRAMIENTAS en api/src/sesiones.js.
-    const HERRAMIENTAS = [
-        { id: 'planimetria', nombre: 'Planimetría' }
-    ];
+    // Herramientas que se conceden cuenta por cuenta: las de HERRAMIENTAS en
+    // api/src/sesiones.js que NO están en HERRAMIENTAS_ABIERTAS. Hoy no hay
+    // ninguna —la planimetría se abrió a toda cuenta el 2026-10-02—; si se
+    // añade una, basta ponerla aquí para que el padrón dibuje su casilla.
+    const HERRAMIENTAS = [];
+
+    const COBRO = {
+        libre: ['admin', 'libre'],
+        cupo:  ['si', 'cupo'],
+        pago:  ['neutra', 'pago']
+    };
+    const VIA = { cupo: 'cupo del mes', pago: 'pago en línea', admin: 'administración' };
+    const usd = c => 'USD ' + (c / 100).toFixed(2).replace('.', ',');
 
     // ── Utilidades de presentación ──────────────────────────────
 
@@ -541,7 +584,78 @@
 
         pintarMiCuenta();
         pintarHerramientas();
+        cargarCobros();
+        cargarEquipo();
     }
+
+    // ── Mis predios, pagos y equipo ─────────────────────────────
+
+    async function cargarCobros() {
+        const r = await pedir('GET', '/api/cuenta/cobros');
+        if (r.estado !== 200) return;
+        const d = r.datos;
+        const t = d.tarifa || {};
+
+        $('cobro-sub').innerHTML = d.cobro === 'libre'
+            ? 'Su cuenta descarga cualquier predio sin cupo ni pago.'
+            : 'Cada predio habilitado abre su DICAT, su CSV y su DXF durante ' + (t.dias_acceso || 30)
+              + ' días. ' + (d.cobro === 'cupo'
+                ? 'Como colegiado tiene ' + d.cupo.total + ' predios gratuitos al mes; los adicionales cuestan '
+                : 'Cada predio cuesta ') + usd(t.precio || 0) + ', IVA incluido.'
+              + (t.cobro_en_linea ? '' : ' <b>El pago en línea aún no está habilitado</b>: puede pagar en la sede.');
+
+        $('mis-cifras').innerHTML = d.cupo
+            ? '<div class="cifra"><b>' + d.cupo.restantes + '</b><span>gratis este mes</span></div>'
+              + '<div class="cifra"><b>' + d.cupo.usados + '</b><span>de ' + d.cupo.total + ' usados</span></div>'
+            : '';
+        $('mis-cifras').hidden = !d.cupo;
+
+        const predios = d.predios || [];
+        $('tabla-mis-predios').innerHTML = predios.length
+            ? predios.map(p => '<tr><td class="mono">' + esc(p.clave_catastral) + '</td>'
+                + '<td>' + esc(VIA[p.via] || p.via) + '</td>'
+                + '<td class="tenue">' + fecha(p.creado_en) + '</td>'
+                + '<td class="tenue">' + fecha(p.vence_en) + '</td>'
+                + '<td>' + (/^GEO-/.test(p.clave_catastral) ? ''
+                    : '<a class="btn btn-outline chico" href="geovisor.html?clave=' + encodeURIComponent(p.clave_catastral)
+                      + '">Abrir</a>') + '</td></tr>').join('')
+            : '<tr><td colspan="5" class="vacio">' + (d.cobro === 'libre'
+                ? 'No hace falta habilitar predios en su cuenta.'
+                : 'Todavía no tiene predios habilitados. Elija uno en el GeoVisor y pida su DICAT.') + '</td></tr>';
+
+        const pagos = d.pagos || [];
+        $('mis-pagos').innerHTML = pagos.length
+            ? '<h2 style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Pagos</h2>'
+              + '<div class="tabla-marco"><table><thead><tr><th>Fecha</th><th>Predio</th><th>Monto</th><th>Estado</th>'
+              + '<th>Transacción</th></tr></thead><tbody>'
+              + pagos.map(p => '<tr><td class="tenue">' + fecha(p.creado_en, true) + '</td>'
+                + '<td class="mono">' + esc(p.clave_catastral) + '</td><td>' + usd(p.monto) + '</td>'
+                + '<td>' + insigniaPago(p.estado) + '</td>'
+                + '<td class="mono">' + esc(p.transaccion || '—') + '</td></tr>').join('')
+              + '</tbody></table></div>'
+            : '';
+    }
+
+    function insigniaPago(estado) {
+        const clases = { aprobado: 'si', cancelado: 'neutra', rechazado: 'no', preparado: 'espera' };
+        return insignia(clases[estado] || 'neutra', estado);
+    }
+
+    async function cargarEquipo() {
+        const r = await pedir('GET', '/api/equipo');
+        if (r.estado !== 200) return;
+        const e = r.datos.declaracion;
+        $('mi-equipo').innerHTML = e
+            ? '<div class="tabla-marco" style="margin-bottom:14px"><table><tbody>'
+              + fila('Equipo', esc(e.tipo_nombre)) + fila('Marca y modelo', esc(e.marca + ' ' + e.modelo))
+              + fila('Serie', '<span class="mono">' + esc(e.serie) + '</span>')
+              + (e.gsd_cm ? fila('Resolución', esc(e.gsd_cm) + ' cm/px') : '')
+              + fila('Declarado', fecha(e.declarado_en, true)) + '</tbody></table></div>'
+            : '<div class="aviso info">Todavía no declaró su equipo. Hace falta para abrir la planimetría.</div>';
+        $('btn-equipo').innerHTML = '<i class="fas fa-pen"></i> ' + (e ? 'Declarar otro equipo' : 'Declarar equipo');
+    }
+
+    $('btn-equipo').addEventListener('click', () => acceso.abrirDeclaracion(() => { cargarEquipo(); pintarHerramientas(); }));
 
     function pintarMiCuenta() {
         const p = perfil;
@@ -557,6 +671,9 @@
                     ? (validado ? insignia('si', 'validado') : insignia('espera', 'por cotejar'))
                     : ''))
             + fila('Rol', esc(p.rol))
+            + fila('Predios', misPermisos.cobro === 'libre' ? 'libres, sin cupo ni pago'
+                : misPermisos.cobro === 'cupo' ? 'cupo mensual de colegiado; los adicionales se pagan'
+                : 'se habilitan con un pago por predio')
             + fila('Estado', esc(p.estado))
             + fila('Vigencia', p.vigencia_hasta ? fecha(p.vigencia_hasta) : 'sin caducidad')
             + fila('Último acceso', fecha(p.ultimo_acceso, true))
@@ -569,7 +686,7 @@
     function pintarHerramientas() {
         // Lo que se muestra aquí no se deduce del perfil: es el veredicto que
         // dio el Worker en `permisos`, el mismo que aplica al pedir de verdad.
-        const colegiado = !!misPermisos.pdf;
+        const cobro = misPermisos.cobro;
         const planimetria = !!misPermisos.planimetria;
 
         const tarjetas = [
@@ -581,23 +698,20 @@
             },
             {
                 icono: 'fa-file-pdf', nombre: 'DICAT, CSV y DXF',
-                texto: 'Las tres descargas del visor. Exigen cuenta de colegiado con el número de '
-                     + 'registro ya cotejado contra el padrón.',
-                estado: colegiado ? insignia('si', 'habilitado') : insignia('espera', 'pendiente'),
+                texto: 'Las tres descargas del visor, que se habilitan por predio: libres para el '
+                     + 'administrador, con cupo mensual para el colegiado y con un pago para el resto.',
+                estado: cobro ? insignia(COBRO[cobro][0], COBRO[cobro][1]) : insignia('espera', 'pendiente'),
                 enlace: '<a class="btn btn-outline chico" href="geovisor.html">Ir al visor</a>'
             },
             {
                 icono: 'fa-drafting-compass', nombre: 'Planimetría',
                 texto: 'Planimetrías de predios no catastrados: DXF georreferenciado e informe de '
-                     + 'linderación en PDF. No se abre por ser colegiado: la concede la '
-                     + 'administración cuenta por cuenta. Todavía corre solo en local.',
-                estado: planimetria
-                    ? insignia('si', 'concedida') + ' ' + insignia('neutra', 'solo en local')
-                    : insignia('no', 'sin acceso'),
+                     + 'linderación en PDF. Gratuita para toda cuenta, con el equipo de levantamiento '
+                     + 'declarado.',
+                estado: planimetria ? insignia('si', 'gratuita') : insignia('no', 'sin acceso'),
                 enlace: planimetria
-                    ? '<span class="tenue">Se arranca con <span class="mono">npm start</span> '
-                      + 'en la carpeta <span class="mono">planimetria/</span>.</span>'
-                    : '<span class="tenue">Pídala a la administración del CAE-Ch.</span>'
+                    ? '<a class="btn btn-outline chico" href="planimetria.html">Abrir</a>'
+                    : '<span class="tenue">Cambie su contraseña temporal para abrirla.</span>'
             }
         ];
 
@@ -625,6 +739,7 @@
     function cargarHoja(hoja) {
         if (!perfil) return;
         if (hoja === 'padron'    && perfil.rol === 'admin') cargarPadron();
+        if (hoja === 'pagos'     && perfil.rol === 'admin') cargarPagos();
         if (hoja === 'descargas' && perfil.rol === 'admin') cargarDescargas();
         if (hoja === 'bitacora'  && perfil.rol === 'admin') cargarEventos();
     }
@@ -648,8 +763,8 @@
      * falta una segunda llamada con ?pendientes=1.
      */
     function pintarPendientes() {
-        const pendientes = cuentas.filter(c =>
-            c.origen === 'registro' && !c.registro_validado && c.estado === 'activo');
+        const pendientes = cuentas.filter(c => c.origen === 'registro' && c.registro_profesional
+            && !c.registro_validado && c.estado === 'activo');
 
         $('caja-pendientes').hidden = pendientes.length === 0;
         const contador = $('contador-pendientes');
@@ -687,7 +802,7 @@
         }
 
         $('tabla-padron').innerHTML = lista.map(c => {
-            const puede = c.permisos && c.permisos.pdf;
+            const cobro = c.permisos && c.permisos.cobro;
             const validado = c.rol === 'afiliado' || c.rol === 'admin' || c.registro_validado;
             // Sobre la propia cuenta no se ofrece ni suspenderse ni degradarse:
             // el Worker lo rechaza —para no dejar el sistema sin administrador—
@@ -702,6 +817,9 @@
                 acciones.push('<button class="btn btn-outline chico" data-invalidar="' + esc(c.id) + '">Quitar validación</button>');
             }
             acciones.push('<button class="btn btn-outline chico" data-clave="' + esc(c.id) + '"><i class="fas fa-key"></i> Clave</button>');
+            if (cobro && cobro !== 'libre') {
+                acciones.push('<button class="btn btn-outline chico" data-predio="' + esc(c.id) + '"><i class="fas fa-plus"></i> Predio</button>');
+            }
             if (!propia) {
                 acciones.push(c.estado === 'activo'
                     ? '<button class="btn btn-outline chico" data-suspender="' + esc(c.id) + '">Suspender</button>'
@@ -731,7 +849,7 @@
                 + (c.vigencia_hasta
                     ? '<br><span class="tenue">' + (vencida ? 'venció ' : 'vence ') + fecha(c.vigencia_hasta) + '</span>'
                     : '') + '</td>'
-                + '<td><div class="tenue">Descargas ' + (puede ? insignia('si', 'sí') : insignia('no', 'no'))
+                + '<td><div class="tenue">Predios ' + (cobro ? insignia(COBRO[cobro][0], COBRO[cobro][1]) : insignia('no', 'no'))
                 + '</div>' + HERRAMIENTAS.map(h => {
                     // El administrador las tiene por su rol: la casilla se
                     // muestra marcada y bloqueada, para que se vea el porque.
@@ -755,13 +873,27 @@
     // enteras en cada cambio y así no quedan oyentes huérfanos.
     document.querySelector('section[data-hoja="padron"]').addEventListener('click', async e => {
         const boton = e.target.closest('button[data-validar], button[data-invalidar], button[data-clave],'
-            + ' button[data-suspender], button[data-activar], button[data-desbloquear]');
+            + ' button[data-suspender], button[data-activar], button[data-desbloquear], button[data-predio]');
         if (!boton) return;
 
         const d = boton.dataset;
-        const id = d.validar || d.invalidar || d.clave || d.suspender || d.activar || d.desbloquear;
+        const id = d.validar || d.invalidar || d.clave || d.suspender || d.activar || d.desbloquear || d.predio;
         const cuenta = cuentas.find(c => c.id === id) || {};
         const quien = cuenta.nombre || cuenta.usuario || 'esta cuenta';
+
+        // Habilitar un predio a mano: pago en la sede o un pago en línea que
+        // PayPhone aprobó pero no llegó a confirmarse aquí.
+        if (d.predio !== undefined) {
+            const clave = (prompt('Clave catastral del predio que se habilita a ' + quien + ':') || '').trim();
+            if (!clave) return;
+            const motivo = (prompt('Motivo (queda en la bitácora):', 'pago en sede') || '').trim();
+            boton.disabled = true;
+            const r = await pedir('POST', '/api/admin/afiliados/' + id + '/predios', { clave_catastral: clave, motivo: motivo });
+            boton.disabled = false;
+            return avisar('aviso-padron', r.estado === 201 ? 'exito' : 'error', esc(r.estado === 201
+                ? quien + ': predio ' + r.datos.clave_catastral + ' habilitado hasta el ' + fecha(r.datos.vence_en) + '.'
+                : (r.datos.error || 'No se pudo habilitar el predio.')));
+        }
 
         if (d.clave !== undefined) {
             if (!confirm('¿Restablecer la contraseña de ' + quien + '?\n\n'
@@ -778,7 +910,7 @@
         let cambios = null;
         if (d.validar    !== undefined) cambios = { registro_validado: true };
         if (d.invalidar  !== undefined) {
-            if (!confirm('¿Quitar la validación a ' + quien + '?\n\nDejará de poder descargar.')) return;
+            if (!confirm('¿Quitar la validación a ' + quien + '?\n\nPerderá el cupo de colegiado y pagará cada predio nuevo.')) return;
             cambios = { registro_validado: false };
         }
         if (d.suspender  !== undefined) {
@@ -875,6 +1007,35 @@
             .forEach(id => { $(id).value = ''; });
         cargarPadron();
     });
+
+    // ── Pagos ───────────────────────────────────────────────────
+
+    async function cargarPagos() {
+        const r = await pedir('GET', '/api/admin/pagos?limite=200');
+        if (r.estado !== 200) return;
+
+        const por = {};
+        (r.datos.resumen || []).forEach(f => { por[f.estado] = f; });
+        const aprobados = por.aprobado || { n: 0, monto: 0 };
+        $('cifras-pagos').innerHTML =
+            '<div class="cifra"><b>' + aprobados.n + '</b><span>aprobados</span></div>'
+            + '<div class="cifra"><b>' + usd(aprobados.monto) + '</b><span>cobrado, IVA incl.</span></div>'
+            + ['cancelado', 'rechazado', 'preparado'].map(e =>
+                '<div class="cifra"><b>' + ((por[e] && por[e].n) || 0) + '</b><span>' + e + 's</span></div>').join('');
+
+        const filas = r.datos.pagos || [];
+        $('tabla-pagos').innerHTML = filas.length
+            ? filas.map(p =>
+                '<tr><td class="tenue">' + fecha(p.creado_en, true) + '</td>'
+                + '<td>' + esc(p.nombre || '—') + (p.usuario ? '<br><span class="tenue mono">' + esc(p.usuario) + '</span>' : '') + '</td>'
+                + '<td class="mono">' + esc(p.clave_catastral) + '</td>'
+                + '<td>' + usd(p.monto) + '<br><span class="tenue">base ' + usd(p.base) + ' + IVA ' + usd(p.iva) + '</span></td>'
+                + '<td>' + insigniaPago(p.estado) + (p.detalle ? '<br><span class="tenue">' + esc(p.detalle) + '</span>' : '') + '</td>'
+                + '<td class="mono">' + esc(p.transaccion || '—')
+                + (p.autorizacion ? '<br><span class="tenue">aut. ' + esc(p.autorizacion) + '</span>' : '')
+                + '<br><span class="tenue">' + esc(p.id) + '</span></td></tr>').join('')
+            : '<tr><td colspan="6" class="vacio">Todavía no hay pagos.</td></tr>';
+    }
 
     // ── Descargas ───────────────────────────────────────────────
 

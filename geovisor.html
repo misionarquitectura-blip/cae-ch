@@ -4982,15 +4982,44 @@
                 return doc;
             }
 
+            // Clave con que se cobra un polígono propio (CSV o coordenadas), que
+            // no tiene clave catastral: centroide UTM al metro y área al m².
+            // El mismo polígono da siempre la misma clave —volver a descargarlo
+            // no se cobra dos veces— y uno distinto, otra.
+            function claveGeometrica(puntos) {
+                const p = (puntos || []).map(q => ({
+                    x: q.x !== undefined ? q.x : q.easting,
+                    y: q.y !== undefined ? q.y : q.northing
+                })).filter(q => isFinite(q.x) && isFinite(q.y));
+                if (!p.length) return null;
+                // Shoelace relativo al primer vértice: en UTM las coordenadas
+                // absolutas son grandes y restar primero evita perder decimales.
+                const x0 = p[0].x, y0 = p[0].y;
+                let a = 0, cx = 0, cy = 0;
+                for (let i = 0; i < p.length; i++) {
+                    const j = (i + 1) % p.length;
+                    const xi = p[i].x - x0, yi = p[i].y - y0, xj = p[j].x - x0, yj = p[j].y - y0;
+                    const f = xi * yj - xj * yi;
+                    a += f; cx += (xi + xj) * f; cy += (yi + yj) * f;
+                }
+                a /= 2;
+                const ex = Math.abs(a) > 1e-6 ? x0 + cx / (6 * a) : p.reduce((s, q) => s + q.x, 0) / p.length;
+                const ny = Math.abs(a) > 1e-6 ? y0 + cy / (6 * a) : p.reduce((s, q) => s + q.y, 0) / p.length;
+                return 'GEO-E' + Math.round(ex) + '-N' + Math.round(ny) + '-A' + Math.round(Math.abs(a));
+            }
+            window.claveGeometrica = claveGeometrica;
+
             async function generarDICAT(props) {
-                // Puerta de acceso: exige cuenta con el numero de registro del
-                // CAE ya validado. El mapa que se ve detras es publico; lo que
-                // se controla es el documento que sale de el.
+                // Puerta de acceso: el predio tiene que estar habilitado en la
+                // cuenta —cupo del colegiado, pago o la administración—. El mapa
+                // que se ve detrás es público; lo que se controla es el
+                // documento que sale de él.
                 // Con caech-acceso.js inactivo esto devuelve true y el visor
                 // se comporta como siempre.
                 if (window.caechAcceso) {
                     window.caechAcceso.registrarAccion('pdf', () => generarDICAT(props));
-                    const clave = props && props.claves ? String(props.claves).trim() : null;
+                    const clave = props && props.claves ? String(props.claves).trim()
+                        : claveGeometrica(csvUTMCoordinates);
                     if (!await window.caechAcceso.autorizar('pdf', clave)) return;
                 }
 
@@ -8675,7 +8704,7 @@
                 if (!d) return;
                 if (window.caechAcceso) {
                     window.caechAcceso.registrarAccion('dxf', window.exportarPredioDXF);
-                    if (!await window.caechAcceso.autorizar('dxf', d.clave)) return;
+                    if (!await window.caechAcceso.autorizar('dxf', (d.props && d.props.claves) ? d.clave : claveGeometrica(d.utm))) return;
                 }
                 let franjas = null;
                 if (geojsonLayers[8]) {
@@ -8699,7 +8728,7 @@
                 if (!d) return;
                 if (window.caechAcceso) {
                     window.caechAcceso.registrarAccion('csv', window.exportarPredioCSV);
-                    if (!await window.caechAcceso.autorizar('csv', d.clave)) return;
+                    if (!await window.caechAcceso.autorizar('csv', (d.props && d.props.claves) ? d.clave : claveGeometrica(d.utm))) return;
                 }
                 const u = d.utm, n = u.length;
                 const filas = ['VERTICE;ESTE_X_m;NORTE_Y_m;LADO;DISTANCIA_m'];

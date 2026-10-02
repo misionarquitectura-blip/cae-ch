@@ -63,8 +63,8 @@
     <h1 id="puerta-titulo">Planimetría automatizada</h1>
     <p id="puerta-texto">
         Levantamientos de campo convertidos en un DXF georreferenciado y un informe
-        de linderación. Es una herramienta interna del CAE-Ch y se concede cuenta
-        por cuenta.
+        de linderación. Es gratuita con una cuenta del CAE-Ch y admite solo datos de
+        equipo de alta precisión.
     </p>
     <button class="btn" id="puerta-boton">Ingresar</button>
     <p style="margin-top:22px;font-size:13px">
@@ -333,15 +333,19 @@
         if (r.estado !== 200) {
             return mostrarPuerta('Planimetría automatizada',
                 'Levantamientos de campo convertidos en un DXF georreferenciado y un informe '
-                + 'de linderación. Es una herramienta interna del CAE-Ch: ingrese para continuar.',
+                + 'de linderación. Es gratuita: ingrese o cree una cuenta para continuar.',
                 'Ingresar', () => acceso.abrirIngreso(comprobar));
         }
 
         // La puerta de verdad: el Worker decide y deja constancia del uso.
+        // Si falta la declaración de equipo, autorizarHerramienta ya abrió el
+        // formulario; la puerta queda detrás por si se cierra sin completarlo.
         if (await acceso.autorizarHerramienta('planimetria', comprobar)) arrancar();
-        else mostrarPuerta('Herramienta no habilitada',
-            'Su cuenta no tiene habilitada la planimetría. La concede la administración '
-            + 'del CAE-Ch, cuenta por cuenta.', 'Reintentar', comprobar);
+        else mostrarPuerta('Falta un paso',
+            'La planimetría solo admite levantamientos de equipo de alta precisión: receptor GNSS RTK, '
+            + 'estación total, escáner LiDAR 3D u ortofoto verificada de 4 cm/px o mejor. '
+            + 'Declare el suyo para continuar.', 'Declarar equipo',
+            () => acceso.abrirDeclaracion(comprobar));
     }
 
     comprobar();

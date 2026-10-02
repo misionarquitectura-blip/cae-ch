@@ -21,7 +21,7 @@ const CLAVE_MIN_LARGO = 12;
  * vigencia que encabeza legal.html. Al cambiar esos textos se sube aqui y
  * cada cuenta vuelve a aceptarlos en su siguiente ingreso.
  */
-export const VERSION_TERMINOS = '2026-10-01';
+export const VERSION_TERMINOS = '2026-10-02';
 
 /** true si la cuenta no acepto todavia la version vigente. */
 export function terminosPendientes(fila) {
@@ -29,11 +29,19 @@ export function terminosPendientes(fila) {
 }
 
 /**
- * Herramientas que se conceden cuenta por cuenta, aparte de las descargas.
- * Anadir una aqui es lo unico que hace falta: el panel dibuja una casilla
- * por cada una y `permisos()` la resuelve sola.
+ * Herramientas aparte de las descargas. Anadir una aqui es lo unico que
+ * hace falta: `permisos()` la resuelve sola y, si no esta en
+ * HERRAMIENTAS_ABIERTAS, el panel dibuja una casilla para concederla
+ * cuenta por cuenta.
  */
 export const HERRAMIENTAS = ['planimetria'];
+
+/**
+ * Herramientas que toda cuenta habilitada abre sin concesion. La
+ * planimetria lo es desde el 2026-10-02 (convenio): gratis para cualquier
+ * cuenta, pero la puerta exige antes la declaracion del equipo.
+ */
+export const HERRAMIENTAS_ABIERTAS = ['planimetria'];
 
 /** Lista de herramientas concedidas a una cuenta (la columna es CSV). */
 export function herramientasDe(fila) {
@@ -85,10 +93,14 @@ export function perfilPublico(fila) {
  * abre sin cuenta. `visor` se conserva por compatibilidad con clientes
  * viejos y vale lo mismo que `base`.
  *
- * Los tres productos -DICAT en PDF, CSV y DXF- van juntos y exigen lo
- * mismo: cuenta con el correo confirmado y numero de registro del CAE ya
- * cotejado contra el padron. Las cuentas que crea la administracion nacen
- * validadas; las del registro publico esperan a que un admin las apruebe.
+ * Los tres productos -DICAT en PDF, CSV y DXF- se piden por PREDIO desde el
+ * 2026-10-02. `pdf`, `dxf` y `csv` dicen si la cuenta puede pedirlos; si un
+ * predio concreto sale gratis o hay que pagarlo lo decide la puerta de
+ * descargas (cobros.js) segun `cobro`:
+ *   libre : el administrador
+ *   cupo  : colegiado (afiliado, o usuario con el registro cotejado);
+ *           unos predios al mes sin pagar y, pasado el cupo, paga
+ *   pago  : cuenta publica, o colegiado con el numero aun por cotejar
  */
 export function permisos(fila) {
     const base = fila.estado === 'activo'
@@ -100,17 +112,21 @@ export function permisos(fila) {
 
     const p = {
         visor: base,
-        pdf: colegiado,
-        dxf: colegiado,
-        csv: colegiado
+        pdf: base,
+        dxf: base,
+        csv: base,
+        colegiado: colegiado,
+        cobro: !base ? null : fila.rol === 'admin' ? 'libre' : colegiado ? 'cupo' : 'pago'
     };
 
-    // Las herramientas exigen lo mismo que una descarga -ser colegiado con
-    // el registro cotejado- y ademas una concesion expresa. El administrador
-    // las tiene todas por su rol: es quien las reparte.
+    // Las abiertas, para toda cuenta habilitada. Las demas exigen ser
+    // colegiado y una concesion expresa. El administrador las tiene todas
+    // por su rol: es quien las reparte.
     const concedidas = herramientasDe(fila);
     for (const h of HERRAMIENTAS) {
-        p[h] = colegiado && (fila.rol === 'admin' || concedidas.includes(h));
+        p[h] = HERRAMIENTAS_ABIERTAS.includes(h)
+            ? base
+            : colegiado && (fila.rol === 'admin' || concedidas.includes(h));
     }
     return p;
 }

@@ -30,8 +30,11 @@ crons = ["0 4 * * *"]
 
 # ── Variables publicas ──────────────────────────────────────────────
 # Los secretos NO van aqui. Se cargan con `npx wrangler secret put`:
-#   PIMIENTA         obligatorio — sal global para hashear IPs
-#   RESEND_API_KEY   solo si MAIL_PROVEEDOR = "resend"
+#   PIMIENTA           obligatorio — sal global para hashear IPs
+#   RESEND_API_KEY     solo si MAIL_PROVEEDOR = "resend"
+#   PAYPHONE_TOKEN     cobro en linea (PayPhone Business, aplicacion WEB)
+#   PAYPHONE_STORE_ID  idem. Sin estos dos el cobro en linea responde 503
+#                      y el resto -cupo, habilitacion desde el panel- sigue.
 [vars]
 # Origenes que pueden llamar al API. Sin coincidencia, no se emite
 # Access-Control-Allow-Origin: se falla cerrado, no abierto.
@@ -68,3 +71,13 @@ REGISTRO_ACTIVO = "si"
 # -PDF, CSV y DXF- pasaron a exigir cuenta de colegiado. No volver a
 # encenderlo sin revisar `permisos()` en src/sesiones.js.
 FREEMIUM_ACTIVO = "no"
+
+# ── Cobro por predio (convenio CAE-CH, 2026-10-02) ──────────────────
+# Precio de un predio -DICAT, CSV y DXF- en centavos, IVA incluido.
+# 2000 = USD 20,00 (base 17,39 + IVA 2,61). Ver src/cobros.js.
+PRECIO_PREDIO_CENTAVOS = "2000"
+IVA_PORCENTAJE = "15"
+# Predios gratuitos al mes para cada colegiado.
+CUPO_MENSUAL = "4"
+# Dias que un predio habilitado sigue abierto para volver a descargarlo.
+DIAS_ACCESO_PREDIO = "30"
