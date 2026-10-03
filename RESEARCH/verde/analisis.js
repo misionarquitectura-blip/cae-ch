@@ -92,6 +92,29 @@ fuentes.forEach((fu, k) => {
   }
 });
 
+// Espacio deportivo publico (canchas, pistas, complejos, estadios, piscinas): no es
+// area verde, pero el estudio general lo suma para la cifra de espacio recreativo,
+// homologable con la que publican otros municipios. Se une sin doble conteo.
+const DEPORTE = /^(pitch|track|sports_centre|stadium|swimming_pool|recreation_ground)$/;
+const rasterDep = new Set(), deportivos = [];
+for (const e of areas) {
+  const t = e.tags || {};
+  if (!DEPORTE.test(t.leisure || '') || privado(t) || esVerde(t)) continue;
+  const rings = e.type === 'way' ? [e.geometry] : (e.members || []).filter(m => m.role === 'outer' && m.geometry).map(m => m.geometry);
+  for (const g of rings) {
+    if (!g || g.length < 4) continue;
+    const ring = g.map(p => G.wgs2utm(p.lon, p.lat));
+    let x0 = 1e12, y0 = 1e12, x1 = -1e12, y1 = -1e12, n = 0, nNuevo = 0;
+    for (const [x, y] of ring) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    for (let i = Math.floor(x0 / PASO); i * PASO < x1; i++) for (let j = Math.floor(y0 / PASO); j * PASO < y1; j++) {
+      const q = [(i + .5) * PASO, (j + .5) * PASO]; if (!G.pointInRing(q, ring) || !dentro(q)) continue;
+      n++; if (!rasterDep.has(i + ':' + j)) { nNuevo++; rasterDep.add(i + ':' + j); }
+    }
+    // Un estadio dibujado como via y como relacion entra una sola vez en la lista.
+    if (n && nNuevo > n / 2) deportivos.push({ nombre: t.name || '(sin nombre)', tag: t.leisure, area: n * PASO * PASO });
+  }
+}
+
 // Componentes conexas (8 vecinos) = piezas verdes
 const piezas = [];
 for (const [key, cel] of raster) {
@@ -355,14 +378,19 @@ const out = {
     rEfectivo: R_EFECTIVO, loteMinParque: LOTE_MIN_PARQUE, loteMinZonal: LOTE_MIN_ZONAL, gananciaMin: GANANCIA_MIN, maxBarrial: MAX_BARRIAL, maxZonal: MAX_ZONAL,
     radioCentro: RADIO_CENTRO, centro: G.utm2wgs(...CENTRO).map(v => +v.toFixed(6)),
     periurbanas: periurbanas.map(p => ({ nombre: p.nombre, ha: +(p.area / 1e4).toFixed(1) })),
+    puntosSinArea: areas.filter(e => e.type === 'node' && (esVerde(e.tags || {}) || (DEPORTE.test((e.tags || {}).leisure || '') && !privado(e.tags || {})))).length,
     poligonosOSM: fuentes.filter(f => f.origen === 'osm').length, prediosMuniVerde: muniVerde.length,
     verdeHa: +(verdeTotal / 1e4).toFixed(1),
+    recreativoHa: +([...new Set([...[...raster].filter(([, c]) => c.dentro).map(([k]) => k), ...rasterDep])].length * PASO * PASO / 1e4).toFixed(1),
     verdeOSMHa: +([...raster.values()].filter(c => c.dentro && c.osm).length * PASO * PASO / 1e4).toFixed(1), m2hab: +(verdeTotal / POB).toFixed(2), efectivo: +efectivoCiudad.toFixed(2),
     brechaOMSHa: Math.round((OMS * POB - verdeTotal) / 1e4), reqED1Ha: +(ED1.m2hab * POB / 1e4).toFixed(1),
     candidatos: cands.length, descartes, areaPropuestaHa: +(areaPropuesta / 1e4).toFixed(2)
   },
   ciudad, sectores,
   escalas: ['bolsillo', 'vecinal', 'barrial', 'zonal', 'ciudad'].map(e => { const L = piezas.filter(p => p.areaDentro && escala(p.areaDentro) === e); return { escala: e, n: L.length, ha: +(suma(L, p => p.areaDentro) / 1e4).toFixed(2) }; }),
+  // Los mayores espacios verdes y deportivos (para el estudio general)
+  mayores: [...piezas.filter(p => p.areaDentro).map(p => ({ nombre: p.nombre || '(sin nombre)', tag: 'área verde', area: p.areaDentro })), ...deportivos]
+    .sort((a, b) => b.area - a.area).slice(0, 20),
   piezas: piezas.filter(p => p.area >= 100 && (p.areaDentro || p.pobAlcance)).sort((a, b) => b.area - a.area).map(p => ({ id: p.id, nombre: p.nombre, area: p.area, areaDentro: p.areaDentro, escala: escala(p.area), origen: p.origen, sector: p.sector,
     c: G.utm2wgs(...p.p).map(v => +v.toFixed(6)), pobAlcance: p.pobAlcance ? Math.round(p.pobAlcance) : null })),
   // Poligonos originales para dibujar, con la pieza a la que pertenecen

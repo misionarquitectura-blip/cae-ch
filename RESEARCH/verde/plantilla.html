@@ -519,9 +519,8 @@ const notas = [
     proximidad simultánea a espacios verdes de Rueda (BCN Ecología), que las mide en línea recta: por calle el resultado es más exigente.`],
   ['Verde al alcance', `Cada pieza de 300 m² o más reparte su superficie entre la población que la tiene a 750 m por calle, y cada habitante suma
     la parte de todas las que alcanza (método de dos pasos de área de captación). Un parque grande rodeado de mucha gente aporta poco a cada uno.`],
-  ['Relación con las otras ramas', `El estudio general estima 1,37 m²/hab con una definición más estrecha (sin juegos infantiles ni jardines
-    comunitarios, por centroide) y el mapa de OSM de agosto de 2026; la rama 2.1 mide la distancia al parque desde un punto del inventario y no
-    desde su borde, por eso registra menos cobertura que esta rama. La población, la rejilla y la red son las mismas en las tres.`],
+  ['Relación con las otras ramas', `El estudio general de la línea toma de esta rama la superficie verde y la deportiva, y la rama 2.1
+    toma la cobertura del parque barrial. La población, la rejilla y la red de calles son las mismas en las tres.`],
   ['Selección de sitios', `Procedimiento voraz, por separado para los lotes de 1 000 a 5 000 m² (radio de 400 m) y para los de
     5 000 m² o más (radio de 750 m): en cada ronda se elige el lote que suma más población nueva al radio, con un máximo de ${MAX_SITIOS()}
     o hasta que la ganancia baja de ${fmt(M.gananciaMin)} habitantes. Optimiza cobertura, no superficie: no reemplaza al estudio de

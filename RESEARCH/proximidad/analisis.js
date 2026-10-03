@@ -348,7 +348,7 @@ for (const f of PM) {
   const pr = f.properties; if ((+pr.sup_cons_c || 0) > 0 || (+pr.gis_pred_5 || 0) > 0) continue;
   const polys = G.toUTM(f.geometry); const a = G.polysArea(polys); if (a < 3000) continue;
   const c = G.polysCentroid(polys); if (!dentro(c)) continue;
-  // Fuera las areas verdes: con 1,37 m2/hab no se propone cambiar un parque por un mercado.
+  // Fuera las areas verdes: con 1,87 m2/hab (rama 2.3) no se propone cambiar un parque por un mercado.
   if (/AREA.?VERDE|PARQUE|RECREAC/i.test((pr.nombre || '') + ' ' + (pr.observacio || '') + ' ' + (pr.observac_1 || ''))) { descartes.verde++; continue; }
   if (enEstancia(polys) > 0.2) { descartes.parqueOSM++; continue; }
   if (iaDentro(polys) > 0.05 * a) { descartes.ocupado++; continue; }

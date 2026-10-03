@@ -1,4 +1,4 @@
-// Descarga de OpenStreetMap (Overpass) de los espacios verdes y plazas, con la
+// Descarga de OpenStreetMap (Overpass) de los espacios verdes, deportivos y plazas, con la
 // misma holgura sobre el limite urbano que la red de calles de la rama 2.1: los
 // parques del borde (Parque Lineal Chibunga, Ricpamba) quedan fuera del limite
 // pero sirven a quien vive dentro. Salida en fuentes/ (no se versiona).
@@ -16,7 +16,7 @@ const ENDPOINTS = [
   'https://overpass.kumi.systems/api/interpreter'
 ];
 const Q = `[out:json][timeout:180];(
-  nwr[leisure~"^(park|garden|playground|recreation_ground|nature_reserve)$"](${BBOX});
+  nwr[leisure~"^(park|garden|playground|recreation_ground|nature_reserve|pitch|track|sports_centre|stadium|swimming_pool)$"](${BBOX});
   nwr[landuse~"^(grass|village_green|recreation_ground|forest)$"](${BBOX});
   nwr[place=square](${BBOX});
 );out body geom;`;
