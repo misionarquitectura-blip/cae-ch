@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAE-CH | Poco verde, y no siempre cerca — Línea 2, rama 2.3: áreas verdes</title>
+<meta name="description" content="Dotación de áreas verdes por habitante, distancia por calle al parque, compacidad referida al verde y lotes municipales para parques nuevos en Riobamba. Línea 2 de investigación del CAE-Ch, rama 2.3.">
+<meta name="theme-color" content="#E31E24">
+<link rel="canonical" href="https://cae-ch.org/RESEARCH/verde.html">
+<meta property="og:title" content="CAE-CH | Poco verde, y no siempre cerca de casa">
+<meta property="og:description" content="Riobamba tiene alrededor de 2 m² de área verde pública por habitante, frente a los 9 de la OMS. Dónde falta, quién la tiene cerca y dónde caben parques nuevos.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://cae-ch.org/RESEARCH/verde.html">
+<meta property="og:locale" content="es_EC">
+<link rel="icon" type="image/png" href="../LOGO/favicon-caech.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="../caech-privacidad.js" defer></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+/* Paleta, Montserrat y botones: caech-ui.css, enganchada al final del <head>.
+   Aqui solo lo propio de esta pagina. */
+:root{
+  --rojo-caech:#E31E24; --grafito:#2E3238; --grafito-med:#565B63;
+  --grafito-sua:#8B9098; --hueso:#F7F7F8; --blanco:#fff;
+  --borde:rgba(46,50,56,.12); --borde-marcado:rgba(46,50,56,.24);
+  --linea-2:#1E8449; --tono:var(--linea-2);
+  --dato-contexto:#C2C6CB; --dato-rejilla:#E7E8EA;
+  /* Lejos / cerca: el par calido/frio de las ramas 2.1 y 2.2. El verde es el
+     de los parques existentes, distinto del tono de la linea. */
+  --lejos:#C05621; --cerca:#2563A8; --parque:#3E9B5F; --propuesta:#7A3E9D;
+}
+body{background:var(--hueso);color:var(--grafito);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{line-height:1.22;text-wrap:balance}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+a{color:var(--rojo-caech)}
+
+header{background:var(--blanco);border-bottom:1px solid var(--borde);position:sticky;top:0;z-index:1000}
+.navbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 0}
+.logo-area{display:flex;align-items:center;text-decoration:none}
+.logo-area img{height:46px;width:auto;display:block}
+.barra-nav{display:flex;gap:8px;flex-wrap:wrap}
+
+.hero{background:linear-gradient(135deg,#17301F 0%,var(--grafito) 58%,#23262B 100%);color:#fff;padding:56px 0 50px}
+.hero .miga{font-size:.62rem;font-weight:300;text-transform:uppercase;letter-spacing:.28em;color:rgba(255,255,255,.72);margin-bottom:14px}
+.hero .miga a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3)}
+.hero .filete-tono{width:64px;height:3px;background:var(--tono);margin:0 0 20px}
+.hero h1{font-size:clamp(1.8rem,4.2vw,2.85rem);font-weight:700;color:#fff;max-width:24ch;margin-bottom:16px}
+.hero p{color:rgba(255,255,255,.82);max-width:74ch;font-size:.99rem}
+
+.titular{background:var(--blanco);border-top:3px solid var(--tono);padding:38px 0 34px;border-bottom:1px solid var(--borde)}
+.titular-caja{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:34px;align-items:center}
+.cifra-heroe{font-size:clamp(3rem,8vw,4.6rem);font-weight:700;color:var(--lejos);letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.cifra-heroe small{display:block;font-size:.72rem;font-weight:600;color:var(--grafito-med);letter-spacing:.12em;text-transform:uppercase;margin-top:12px;line-height:1.6}
+.titular p{color:var(--grafito-med);font-size:1.02rem;max-width:62ch}
+.titular p + p{margin-top:12px}
+.titular p strong{color:var(--grafito);font-weight:600}
+.mosaico{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--borde);border:1px solid var(--borde);margin-top:32px}
+.tarj{background:var(--blanco);padding:18px 20px}
+.tarj .rot{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--grafito-sua);display:block;margin-bottom:9px}
+.tarj b{font-size:1.72rem;font-weight:700;display:block;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tarj em{font-style:normal;font-size:.79rem;color:var(--grafito-med);display:block;margin-top:5px}
+
+section{padding:52px 0}
+section.claro{background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde)}
+.sec-rotulo{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--tono);display:block;margin-bottom:9px}
+section h2{font-size:clamp(1.35rem,2.8vw,1.85rem);font-weight:700;max-width:30ch;margin-bottom:12px}
+section > .wrap > p{color:var(--grafito-med);max-width:76ch;font-size:.96rem}
+section > .wrap > p + p{margin-top:12px}
+section p strong{color:var(--grafito);font-weight:600}
+
+.figura{background:var(--blanco);border:1px solid var(--borde);margin-top:28px}
+section.claro .figura{background:var(--hueso)}
+.figura-cab{padding:18px 22px 0}
+.figura-cab h3{font-size:1.02rem;font-weight:700}
+.figura-cab .sub{font-size:.82rem;color:var(--grafito-med);margin-top:4px;max-width:84ch}
+.figura-cuerpo{padding:12px 12px 6px;position:relative}
+/* Solo las graficas propias: un `.figura svg` a secas tambien agrandaba la
+   banderita SVG que Leaflet pone en la atribucion del mapa. */
+.figura-cuerpo > svg{display:block;width:100%;height:auto}
+.figura-pie{padding:2px 22px 18px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--grafito-med);align-items:center}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:14px;height:14px;display:block;flex-shrink:0;border:1px solid rgba(0,0,0,.08)}
+.leyenda i.pt{border-radius:50%}
+.pestanas button:focus-visible{outline:2px solid var(--tono);outline-offset:2px}
+
+/* Mapa y pestañas de capa */
+.pestanas{display:flex;gap:6px;flex-wrap:wrap;padding:14px 22px 0}
+.pestanas button{font-family:inherit;font-size:.76rem;font-weight:600;padding:.5em .95em;border-radius:4px;cursor:pointer;
+  background:var(--blanco);border:1px solid var(--borde-marcado);color:var(--grafito-med)}
+.pestanas button[aria-pressed="true"]{background:var(--tono);border-color:var(--tono);color:#fff}
+.mapa{height:560px;background:#e9eaec}
+.mapa-nota{font-size:.8rem;color:var(--grafito-med);padding:10px 22px 0;max-width:90ch;min-height:2.6em}
+.leaflet-container{font-family:'Montserrat',system-ui,sans-serif}
+.leaflet-tooltip.globo-mapa{font-size:.76rem;line-height:1.5;padding:8px 11px;border-radius:4px;max-width:300px;white-space:normal}
+
+.rejilla{stroke:var(--dato-rejilla);stroke-width:1}
+.eje-txt{font-size:11px;fill:var(--grafito-sua);font-variant-numeric:tabular-nums}
+.etiq{font-size:11.5px;font-weight:600;fill:var(--grafito-med)}
+.val{font-size:11px;fill:var(--grafito-med);font-variant-numeric:tabular-nums}
+
+.tabla-caja{overflow-x:auto;padding:0 22px 20px}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--borde);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--grafito-sua);font-weight:600;border-bottom:1.5px solid var(--borde-marcado)}
+td{font-variant-numeric:tabular-nums;color:var(--grafito-med)}
+tr.mia td{background:rgba(192,86,33,.08);color:var(--grafito);font-weight:600}
+tr.mia td:first-child{box-shadow:inset 3px 0 0 var(--lejos)}
+td.mal{color:var(--lejos);font-weight:600} td.bien{color:var(--cerca)}
+td.txt{text-align:left;white-space:normal;min-width:180px}
+[hidden]{display:none!important}
+
+.notas{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px;margin-top:28px}
+.nota{background:var(--blanco);border:1px solid var(--borde);border-left:3px solid var(--tono);padding:20px 22px}
+section.claro .nota{background:var(--hueso)}
+.nota.alerta{border-left-color:var(--lejos)}
+.nota h4{font-size:.94rem;font-weight:700;margin-bottom:8px}
+.nota p{font-size:.86rem;color:var(--grafito-med)}
+.nota p + p{margin-top:9px}
+.nota strong{color:var(--grafito);font-weight:600}
+
+.fuente-pie{margin-top:30px;font-size:.8rem;color:var(--grafito-sua);border-top:1px solid var(--borde);padding-top:18px;max-width:92ch}
+.fuente-pie a{color:var(--grafito-med)}
+footer{background:var(--grafito);color:rgba(255,255,255,.62);padding:32px 0;font-size:.82rem;text-align:center}
+footer a{color:rgba(255,255,255,.85)}
+
+@media (max-width:760px){
+  .wrap{padding:0 16px}
+  section{padding:40px 0}
+  .figura-pie{padding:2px 16px 16px}
+  .figura-cab{padding:16px 16px 0}
+  .pestanas{padding:12px 16px 0}
+  .mapa-nota{padding:10px 16px 0}
+  .tabla-caja{padding:0 16px 16px}
+  .mapa{height:440px}
+  .figura-cuerpo.ancha{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .figura-cuerpo.ancha > svg{min-width:640px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="stylesheet" href="../caech-ui.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap navbar">
+    <a href="../index.html" class="logo-area">
+      <img src="../LOGO/logo-caech.png" width="520" height="188"
+           alt="CAE-Ch · Colegio de Arquitectos del Ecuador, Provincial de Chimborazo">
+    </a>
+    <nav class="barra-nav" aria-label="Navegación de la investigación">
+      <a href="index.html" class="btn btn-sm"><i class="fa-solid fa-arrow-left"></i> Investigación</a>
+      <a href="equipamiento.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-city"></i> Línea 2 · Estudio general</a>
+      <a href="proximidad.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-route"></i> Rama 2.1 · Mercados</a>
+      <a href="educacion.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-school"></i> Rama 2.2 · Educación</a>
+      <a href="../index.html" class="btn btn-sm btn-linea"><i class="fa-solid fa-house"></i> Inicio</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="miga"><a href="index.html">Investigación territorial</a> &nbsp;·&nbsp; Línea 2 &nbsp;·&nbsp; Equipamiento e infraestructura urbana &nbsp;·&nbsp; Rama 2.3 · Áreas verdes</div>
+    <div class="filete-tono"></div>
+    <h1>Poco verde, y no siempre cerca de casa</h1>
+    <p>Esta es una <strong>rama subalterna</strong> de la línea de investigación de equipamiento e
+       infraestructura urbana, como las de <a href="proximidad.html" style="color:#fff">mercados y abasto</a> y de
+       <a href="educacion.html" style="color:#fff">instituciones educativas</a>. Se ocupa del área verde pública, el
+       componente del equipamiento urbano con el mayor déficit relativo en Riobamba. Mide cuánta hay, a qué distancia
+       por calle queda de cada vivienda, cuánta masa edificada le corresponde y en qué lotes municipales caben
+       parques nuevos. La población y la red vial son las de la rama 2.1.</p>
+  </div>
+</div>
+
+<div class="titular">
+  <div class="wrap">
+    <div class="titular-caja">
+      <div class="cifra-heroe" id="heroe">—<small>de área verde pública por habitante<br>en el área urbana</small></div>
+      <div id="titular-texto"></div>
+    </div>
+    <div class="mosaico" id="mosaico"></div>
+  </div>
+</div>
+
+<!-- ── 1 · Dotacion ───────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">01 · Dotación</span>
+    <h2>Mucho jardín de bolsillo y pocos parques de barrio</h2>
+    <p id="txt-dotacion"></p>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Área verde por habitante, sector por sector</h3>
+        <p class="sub">Superficie de las piezas verdes públicas dentro del límite urbano dividida por la población residente
+           del sector. La línea marca el mínimo de 9 m²/hab de la OMS.</p>
+      </div>
+      <div class="figura-cuerpo ancha" id="svg-sectores"></div>
+      <div class="figura-pie"><div class="leyenda">
+        <span><i style="background:var(--parque)"></i> m² de área verde por habitante</span>
+        <span><i style="background:var(--lejos)"></i> Referencia OMS</span></div></div>
+    </div>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Piezas verdes por tamaño</h3>
+        <p class="sub">Una pieza es la superficie verde continua, aunque esté dibujada en varios polígonos. Las escalas siguen a
+           Rueda: la de 1 000 m² sirve a la manzana, la de 5 000 m² al barrio, la de 1 ha al distrito y la de 10 ha a la ciudad.</p>
+      </div>
+      <div class="tabla-caja" id="tabla-escalas" style="padding-top:14px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 2 · Proximidad ─────────────────────────────────────────── -->
+<section class="claro">
+  <div class="wrap">
+    <span class="sec-rotulo">02 · Proximidad</span>
+    <h2>El jardín cercano existe; el parque grande, no</h2>
+    <p id="txt-proximidad"></p>
+    <div class="figura" id="fig-mapa1">
+      <div class="figura-cab">
+        <h3>Distancia por calle al área verde</h3>
+        <p class="sub">Celdas de 200 m con población residente. En verde, las piezas verdes públicas. Pase el cursor o toque para
+           ver los valores de cada celda.</p>
+      </div>
+      <div class="pestanas" role="group" aria-label="Capa del mapa">
+        <button type="button" data-capa="dV" aria-pressed="true">Parque barrial más cercano</button>
+        <button type="button" data-capa="ef" aria-pressed="false">Verde al alcance por habitante</button>
+        <button type="button" data-capa="sim" aria-pressed="false">Escalas de Rueda alcanzadas</button>
+        <button type="button" data-capa="ccv" aria-pressed="false">Volumen edificado por m² de verde</button>
+      </div>
+      <p class="mapa-nota" id="e1-nota"></p>
+      <div class="figura-cuerpo"><div class="mapa" id="mapa1" role="img" aria-label="Mapa de distancia al área verde"></div></div>
+      <div class="figura-pie"><div class="leyenda" id="e1-leyenda"></div></div>
+    </div>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Proximidad simultánea, sector por sector</h3>
+        <p class="sub">Porcentaje de la población que alcanza por calle cada escala de pieza verde. La última columna exige las
+           tres primeras a la vez; la escala de ciudad (10 ha a 4 km) se informa aparte en el texto.</p>
+      </div>
+      <div class="tabla-caja" id="tabla-sectores" style="padding-top:14px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 3 · Compacidad ─────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">03 · Compacidad</span>
+    <h2>Donde más se construye, menos verde le toca</h2>
+    <p id="txt-compacidad"></p>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Densidad y verde por habitante</h3>
+        <p class="sub">Cada círculo es un sector; su área es proporcional a la población. Arriba a la izquierda, los sectores
+           densos con poco verde.</p>
+      </div>
+      <div class="figura-cuerpo ancha" id="svg-dispersion"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4 · Nuevas ubicaciones ─────────────────────────────────── -->
+<section class="claro">
+  <div class="wrap">
+    <span class="sec-rotulo">04 · Nuevas ubicaciones</span>
+    <h2>Dónde caben parques nuevos en suelo municipal</h2>
+    <p id="txt-propuesta"></p>
+    <div class="figura" id="fig-mapa2">
+      <div class="figura-cab">
+        <h3>Lotes municipales vacantes y sitios seleccionados</h3>
+        <p class="sub">Numerados, los lotes que el procedimiento selecciona, en el orden en que suman más población nueva al
+           radio. En gris, el resto de lotes municipales aptos. Con trazo discontinuo, las zonas que el PUGS destina a
+           recreación y deporte.</p>
+      </div>
+      <div class="pestanas" role="group" aria-label="Fondo del mapa">
+        <button type="button" data-fondo="gris" aria-pressed="true">Mapa</button>
+        <button type="button" data-fondo="sat" aria-pressed="false">Imagen satelital</button>
+      </div>
+      <p class="mapa-nota" id="e2-nota">Fondo coloreado: distancia por calle al parque barrial más cercano, con la misma escala que el mapa de la sección 02.</p>
+      <div class="figura-cuerpo"><div class="mapa" id="mapa2" role="img" aria-label="Mapa de sitios propuestos para parques nuevos"></div></div>
+      <div class="figura-pie"><div class="leyenda" id="e2-leyenda"></div></div>
+    </div>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>Sitios seleccionados</h3>
+        <p class="sub">Escala barrial: lotes de 1 000 a 5 000 m², radio de 400 m por calle (ED1). Escala zonal: lotes de 5 000 m² o
+           más, radio de 750 m (escala de barrio de Rueda). Cada escala se evalúa por separado. «Población nueva» es la que entra al radio con ese sitio y no
+           estaba cubierta por un parque existente ni por un sitio elegido antes.</p>
+      </div>
+      <div class="tabla-caja" id="tabla-sitios" style="padding-top:14px"></div>
+    </div>
+    <div class="figura">
+      <div class="figura-cab">
+        <h3>El suelo que el PUGS ya destina a recreación</h3>
+        <p class="sub">Zonas del Plan de Uso y Gestión del Suelo con uso principal «Equipamiento de recreación y deporte», su tenencia
+           según el catastro y la parte que hoy es área verde.</p>
+      </div>
+      <div class="tabla-caja" id="tabla-pugs" style="padding-top:14px"></div>
+    </div>
+    <div class="notas" id="notas-propuesta"></div>
+  </div>
+</section>
+
+<!-- ── 5 · Metodo ─────────────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <span class="sec-rotulo">05 · Método y límites</span>
+    <h2>Cómo se hizo, y dónde puede fallar</h2>
+    <div class="notas" id="notas-metodo"></div>
+    <p class="fuente-pie" id="fuentes"></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Colegio de Arquitectos del Ecuador — Provincial de Chimborazo · Investigación territorial ·
+    Línea 2 · Rama 2.3 · Áreas verdes · <span id="pie-fecha"></span><br>
+    <a href="index.html">Volver al eje de investigación</a> · <a href="equipamiento.html">Estudio general de la línea</a> ·
+    <a href="proximidad.html">Rama 2.1: mercados y abasto</a> · <a href="educacion.html">Rama 2.2: instituciones educativas</a>
+  </div>
+</footer>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('datos').textContent);
+const M = D.meta, C = D.ciudad;
+const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString('es-EC', { minimumFractionDigits: d, maximumFractionDigits: d });
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const S = Object.fromEntries(D.sectores.map(s => [s.id, s]));
+const NOMBRE_SECTOR = { Centro: 'Centro', N: 'Norte', NE: 'Noreste', E: 'Este', SE: 'Sureste', S: 'Sur', SO: 'Suroeste', O: 'Oeste', NO: 'Noroeste' };
+const ORDEN = ['Centro', 'N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+const listaY = L => L.length > 1 ? L.slice(0, -1).join(', ') + ' y ' + L[L.length - 1] : L.join('');
+const nomS = id => NOMBRE_SECTOR[id].toLowerCase();
+const ES = Object.fromEntries(D.escalas.map(e => [e.escala, e]));
+const P = D.propuesta, sitios = [...P.barrial.sitios, ...P.zonal.sitios];
+const pctTrasBarrial = P.barrial.sitios.length ? P.barrial.sitios[P.barrial.sitios.length - 1].pctTras : P.barrial.base;
+const pctTrasZonal = P.zonal.sitios.length ? P.zonal.sitios[P.zonal.sitios.length - 1].pctTras : P.zonal.base;
+const m2Tras = (M.verdeHa + M.areaPropuestaHa) * 1e4 / M.poblacion;
+const pobSinVerde = D.celdas.filter(c => c.ccv == null).reduce((a, c) => a + c.pob, 0);
+const porM2 = D.sectores.slice().sort((a, b) => a.m2hab - b.m2hab);
+
+/* ── Titular ─────────────────────────────────────────── */
+document.getElementById('heroe').firstChild.textContent = fmt(M.m2hab, 2) + ' m²';
+document.getElementById('titular-texto').innerHTML = `
+  <p>El área urbana suma <strong>${fmt(M.verdeHa, 1)} ha</strong> de parques, jardines públicos y juegos infantiles para
+     ${fmt(M.poblacion)} habitantes: ${fmt(M.m2hab / M.oms * 100, 0)} % del mínimo de ${M.oms} m²/hab que recomienda la OMS. Cerrar esa
+     brecha exigiría <strong>${fmt(M.brechaOMSHa)} ha</strong> más, casi cuatro veces lo que hoy existe.</p>
+  <p>La escasez no se reparte por igual. El centro, con ${fmt(S.Centro.pob)} habitantes y la mayor densidad, tiene
+     ${fmt(S.Centro.m2hab, 2)} m²/hab; el noreste, ${fmt(S.NE.m2hab, 2)}. El parque barrial a 400 m por calle que pide el Código Urbano
+     llega al <strong>${fmt(C.pctED1, 0)} %</strong> de la población.</p>`;
+const tarj = [
+  ['Área verde pública', fmt(M.verdeHa, 1) + ' ha', `en ${fmt(D.escalas.reduce((a, e) => a + e.n, 0))} piezas; ${fmt(ES.bolsillo.n)} de ellas de menos de 1 000 m²`],
+  ['Brecha frente a la OMS', fmt(M.brechaOMSHa) + ' ha', `para llegar a ${M.oms} m²/hab con la población de 2022`],
+  ['Parque barrial a 400 m', fmt(C.pctED1, 0) + ' %', 'de la población, por calle (radio ED1 del Código Urbano)'],
+  ['Las tres escalas de Rueda', fmt(C.pctSimult3, 0) + ' %', 'de la población alcanza a la vez 1 000 m² a 200 m, 0,5 ha a 750 m y 1 ha a 2 km'],
+  ['Menos de 1 m² al alcance', fmt(C.pctEfectivoBajo, 0) + ' %', `de la población: verde a 750 m compartido con sus vecinos`],
+  ['Sitios propuestos', fmt(sitios.length), `${fmt(M.areaPropuestaHa, 1)} ha municipales; el parque barrial llegaría al ${fmt(pctTrasBarrial, 0)} %`]
+];
+document.getElementById('mosaico').innerHTML = tarj.map(([r, b, e]) => `<div class="tarj"><span class="rot">${r}</span><b>${b}</b><em>${e}</em></div>`).join('');
+
+/* ── 1 · Dotacion ───────────────────────────────────── */
+const fuera = D.piezas.filter(p => p.areaDentro < p.area / 2 && p.area >= 30000);
+const piezasN = D.escalas.reduce((a, e) => a + e.n, 0);
+const mayores = D.piezas.filter(p => p.areaDentro >= 10000 && p.nombre).slice(0, 4).map(p => `${p.nombre.replace(/^PARQUE /, 'Parque ').replace(/LAS ACACIAS/, 'Las Acacias')} (${fmt(p.areaDentro / 1e4, 1)} ha)`);
+document.getElementById('txt-dotacion').innerHTML = `Las ${fmt(piezasN)} piezas verdes del área urbana suman ${fmt(M.verdeHa, 1)} ha. El Código Urbano de
+  Riobamba (art. 178) fija para el parque barrial (ED1) 0,30 m²/hab, que la ciudad cumple con holgura: exigiría
+  ${fmt(M.reqED1Ha, 1)} ha. La referencia pertinente es otra: el mínimo de ${M.oms} m²/hab de la OMS, del que la ciudad tiene el
+  ${fmt(M.m2hab / M.oms * 100, 0)} %. La superficie, además, está fragmentada: ${fmt(ES.bolsillo.n)} piezas de menos de 1 000 m² suman
+  ${fmt(ES.bolsillo.ha, 1)} ha, y ${fmt(ES.zonal.n + ES.ciudad.n)} parques de más de una hectárea concentran ${fmt((ES.zonal.ha + ES.ciudad.ha) / M.verdeHa * 100, 0)} %
+  del total; entre ellos, ${listaY(mayores)}. Ninguna pieza dentro del límite alcanza las 10 ha: los dos parques mayores de la ciudad, ${listaY(fuera.map(p => `${p.nombre} (${fmt(p.area / 1e4, 1)} ha)`))},
+  quedan del otro lado. El noroeste concentra los parques mayores y llega a ${fmt(S.NO.m2hab, 2)} m²/hab;
+  el ${nomS(porM2[0].id)}, el ${nomS(porM2[1].id)} y el ${nomS(porM2[2].id)} no pasan de ${fmt(porM2[2].m2hab, 2)}.`;
+
+const NS = 'http://www.w3.org/2000/svg';
+function svg(w, h, label) { const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('role', 'img'); s.setAttribute('aria-label', label); return s; }
+function el(tag, at, txt) { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; return e; }
+
+(function sectores() {
+  const L = D.sectores.slice().sort((a, b) => b.m2hab - a.m2hab), W = 900, fila = 30, H = L.length * fila + 30, x0 = 170, x1 = W - 40, max = 10;
+  const s = svg(W, H, 'Área verde por habitante por sector');
+  const X = v => x0 + v / max * (x1 - x0);
+  for (let v = 0; v <= max; v += 1) s.append(el('line', { x1: X(v), x2: X(v), y1: 4, y2: H - 22, class: 'rejilla' }), el('text', { x: X(v), y: H - 6, 'text-anchor': 'middle', class: 'eje-txt' }, fmt(v)));
+  L.forEach((d, i) => {
+    const y = 6 + i * fila;
+    s.append(el('text', { x: x0 - 10, y: y + 14, 'text-anchor': 'end', class: 'etiq' }, `${NOMBRE_SECTOR[d.id]} · ${fmt(d.pob)} hab`));
+    s.append(el('rect', { x: x0, y, width: Math.max(1, X(d.m2hab) - x0), height: 20, fill: css('--parque') }));
+    s.append(el('text', { x: X(d.m2hab) + 6, y: y + 14, class: 'val' }, fmt(d.m2hab, 2)));
+  });
+  s.append(el('line', { x1: X(M.oms), x2: X(M.oms), y1: 0, y2: H - 22, stroke: css('--lejos'), 'stroke-width': 2, 'stroke-dasharray': '5 4' }));
+  s.append(el('text', { x: X(M.oms) - 6, y: 14, 'text-anchor': 'end', class: 'val', fill: css('--lejos') }, `OMS ${M.oms} m²/hab`));
+  document.getElementById('svg-sectores').append(s);
+})();
+const NOM_ESC = { bolsillo: ['Jardín de bolsillo', 'menos de 1 000 m²'], vecinal: ['Pieza vecinal', '1 000 a 5 000 m²'], barrial: ['Parque de barrio', '0,5 a 1 ha'],
+  zonal: ['Parque de distrito', '1 a 10 ha'], ciudad: ['Parque de ciudad', '10 ha o más'] };
+document.getElementById('tabla-escalas').innerHTML = `<table><thead><tr><th>Escala</th><th style="text-align:left">Tamaño</th><th>Piezas</th><th>Superficie (ha)</th><th>Parte del total</th><th>m²/hab</th></tr></thead><tbody>
+  ${D.escalas.map(e => `<tr><td>${NOM_ESC[e.escala][0]}</td><td style="text-align:left">${NOM_ESC[e.escala][1]}</td><td>${fmt(e.n)}</td><td>${fmt(e.ha, 1)}</td>
+    <td>${fmt(e.ha / M.verdeHa * 100, 0)} %</td><td>${fmt(e.ha * 1e4 / M.poblacion, 2)}</td></tr>`).join('')}
+  <tr class="mia"><td>Total área urbana</td><td></td><td>${fmt(piezasN)}</td><td>${fmt(M.verdeHa, 1)}</td><td>100 %</td><td class="mal">${fmt(M.m2hab, 2)}</td></tr></tbody></table>`;
+
+/* ── 2 · Proximidad ─────────────────────────────────── */
+const peorED1 = D.sectores.slice().sort((a, b) => a.pctED1 - b.pctED1);
+document.getElementById('txt-proximidad').innerHTML = `Medida por calle desde el borde del parque, la distancia media al área verde de
+  300 m² o más (el lote mínimo del ED1) es de ${fmt(C.dED1)} m, y el <strong>${fmt(C.pctED1, 0)} %</strong> de la población la tiene a
+  400 m o menos. En el ${nomS(peorED1[0].id)} y el ${nomS(peorED1[1].id)} la proporción baja a ${fmt(peorED1[0].pctED1, 0)} y ${fmt(peorED1[1].pctED1, 0)} %. La
+  cercanía de un jardín pequeño no sustituye al parque. Con las escalas de Rueda, el ${fmt(C.pct_r1, 0)} % tiene una pieza de 1 000 m²
+  a 200 m, el ${fmt(C.pct_r2, 0)} % un parque de 0,5 ha a 750 m y el ${fmt(C.pct_r3, 0)} % uno de 1 ha a 2 km; las tres a la vez, solo el
+  <strong>${fmt(C.pctSimult3, 0)} %</strong>. La escala de ciudad, 10 ha a 4 km, depende del Parque Lineal Chibunga y alcanza al
+  ${fmt(C.pct_r4, 0)} %. Al repartir cada parque entre quienes lo tienen a 750 m, el verde al alcance es de ${fmt(C.efectivo, 2)} m² por
+  habitante, y el ${fmt(C.pctEfectivoBajo, 0)} % de la población dispone de menos de 1 m².`;
+document.getElementById('tabla-sectores').innerHTML = `<table><thead><tr><th>Sector</th><th>Población</th><th>Verde (m²/hab)</th><th>Al alcance a 750 m (m²/hab)</th>
+  <th>Parque a 400 m (ED1)</th><th>1 000 m² a 200 m</th><th>0,5 ha a 750 m</th><th>1 ha a 2 km</th><th>Las tres</th></tr></thead><tbody>
+  ${ORDEN.map(id => { const d = S[id]; return `<tr class="${id === 'NE' ? 'mia' : ''}"><td>${NOMBRE_SECTOR[id]}</td><td>${fmt(d.pob)}</td><td class="${d.m2hab < 1 ? 'mal' : ''}">${fmt(d.m2hab, 2)}</td>
+    <td>${fmt(d.efectivo, 2)}</td><td class="${d.pctED1 < 50 ? 'mal' : ''}">${fmt(d.pctED1, 0)} %</td><td>${fmt(d.pct_r1, 0)} %</td><td>${fmt(d.pct_r2, 0)} %</td><td>${fmt(d.pct_r3, 0)} %</td>
+    <td class="${d.pctSimult3 < 5 ? 'mal' : ''}">${fmt(d.pctSimult3, 0)} %</td></tr>`; }).join('')}
+  <tr><td><strong>Ciudad</strong></td><td>${fmt(C.pob)}</td><td>${fmt(M.m2hab, 2)}</td><td>${fmt(C.efectivo, 2)}</td><td>${fmt(C.pctED1, 0)} %</td><td>${fmt(C.pct_r1, 0)} %</td><td>${fmt(C.pct_r2, 0)} %</td><td>${fmt(C.pct_r3, 0)} %</td><td>${fmt(C.pctSimult3, 0)} %</td></tr>
+  </tbody></table>`;
+
+/* ── 3 · Compacidad ─────────────────────────────────── */
+const ccvOrden = D.sectores.filter(s => s.ccv != null).sort((a, b) => b.ccv - a.ccv);
+document.getElementById('txt-compacidad').innerHTML = `La compacidad corregida de Rueda divide el volumen edificado por el espacio público
+  de estancia; su intervalo de referencia está entre 10 y 50 m. Referida solo al área verde, mide cuántos metros cúbicos construidos
+  le corresponden a cada metro cuadrado de parque. En el centro son <strong>${fmt(S.Centro.ccv)} m</strong> y en el noreste
+  ${fmt(S.NE.ccv)} m; el noroeste (${fmt(S.NO.ccv)} m) y el suroeste (${fmt(S.SO.ccv)} m) quedan dentro del intervalo gracias a sus parques
+  grandes. En la ventana de 600 × 600 m que rodea a cada celda, <strong>${fmt(Math.round(pobSinVerde / 1000) * 1000)} habitantes</strong> no
+  tienen ni 100 m² de área verde. El centro reúne la mayor densidad (${fmt(S.Centro.densidad)} hab/ha), la mayor compacidad absoluta
+  (${fmt(S.Centro.ca, 2)} m) y el déficit absoluto más grande: ${fmt(S.Centro.deficitOMS, 1)} ha frente a la referencia de la OMS. Es también
+  donde menos suelo vacante queda, de modo que su déficit no se resuelve con lotes nuevos sino con la conversión de espacio vial y de
+  patios institucionales en espacio verde.`;
+(function dispersion() {
+  const W = 900, H = 380, x0 = 70, x1 = W - 30, y0 = 20, y1 = H - 50;
+  const maxD = 160, maxV = 4.5;
+  const s = svg(W, H, 'Densidad y área verde por habitante por sector');
+  const X = v => x0 + v / maxD * (x1 - x0), Y = v => y1 - v / maxV * (y1 - y0);
+  for (let v = 0; v <= maxD; v += 20) s.append(el('line', { x1: X(v), x2: X(v), y1: y0, y2: y1, class: 'rejilla' }), el('text', { x: X(v), y: y1 + 18, 'text-anchor': 'middle', class: 'eje-txt' }, fmt(v)));
+  for (let v = 0; v <= maxV; v += 1) s.append(el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), class: 'rejilla' }), el('text', { x: x0 - 8, y: Y(v) + 4, 'text-anchor': 'end', class: 'eje-txt' }, fmt(v)));
+  s.append(el('text', { x: (x0 + x1) / 2, y: H - 8, 'text-anchor': 'middle', class: 'eje-txt' }, 'Densidad (hab/ha)'));
+  s.append(el('text', { x: 16, y: (y0 + y1) / 2, 'text-anchor': 'middle', class: 'eje-txt', transform: `rotate(-90 16 ${(y0 + y1) / 2})` }, 'Área verde (m²/hab)'));
+  const maxP = Math.max(...D.sectores.map(d => d.pob));
+  D.sectores.slice().sort((a, b) => b.pob - a.pob).forEach(d => {
+    const r = 6 + 30 * Math.sqrt(d.pob / maxP), malo = d.m2hab < 1;
+    s.append(el('circle', { cx: X(d.densidad), cy: Y(d.m2hab), r, fill: malo ? css('--lejos') : css('--parque'), 'fill-opacity': .55, stroke: '#fff', 'stroke-width': 1.5 }));
+    s.append(el('text', { x: X(d.densidad) + r + 4, y: Y(d.m2hab) + 4, class: 'val' }, `${NOMBRE_SECTOR[d.id]} · ${fmt(d.m2hab, 2)}`));
+  });
+  document.getElementById('svg-dispersion').append(s);
+})();
+
+/* ── 4 · Propuesta ─────────────────────────────────── */
+const pz = D.pugs, pu = pz.find(z => /PARQUE URBANO/i.test(z.nom)), rec = pz.find(z => /^RECREACION$/i.test(z.nom));
+const pugsHa = pz.reduce((a, z) => a + z.ha, 0), pugsMuni = pz.reduce((a, z) => a + z.ten.municipal, 0);
+const ds = M.descartes;
+const MAX_B = M.maxBarrial, MAX_Z = M.maxZonal;
+const NOM_PUGS = { 'PARQUE URBANO': 'Parque urbano', 'RECREACION': 'Recreación', 'Recreación y Deporte': 'Recreación y deporte', 'Maldonado': 'Maldonado (campus educativo)' };
+const NUM = ['Ningún', 'Un', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve', 'Diez', 'Once', 'Doce', 'Trece', 'Catorce', 'Quince'];
+const zonalPrimero = P.zonal.sitios[0];
+document.getElementById('txt-propuesta').innerHTML = `Del suelo municipal de 1 000 m² o más dentro del límite urbano y sin construcción en el
+  catastro se excluyen ${fmt(ds.verde)} lotes que ya son o se declaran área verde, ${fmt(ds.ocupado)} que aparecen edificados en la imagen
+  satelital (detección por IA de la Línea 1), ${fmt(ds.franja)} franjas residuales de vía y los ${fmt(ds.mercado)} que la
+  <a href="proximidad.html">rama 2.1</a> reserva para mercados. Quedan <strong>${fmt(M.candidatos)} lotes aptos</strong>, con calle a menos de
+  150 m. Sobre ese conjunto se eligen, uno a uno y por separado para cada escala, los lotes que más población sin parque suman al radio. ${NUM[P.barrial.sitios.length] || fmt(P.barrial.sitios.length)} sitios de escala barrial elevan la cobertura del parque a 400 m del
+  ${fmt(P.barrial.base, 1)} al <strong>${fmt(pctTrasBarrial, 1)} %</strong>; ${(NUM[P.zonal.sitios.length] || fmt(P.zonal.sitios.length)).toLowerCase()} de escala zonal elevan la del parque de 0,5 ha a 750 m del
+  ${fmt(P.zonal.base, 1)} al ${fmt(pctTrasZonal, 1)} %. Entre todos suman ${fmt(M.areaPropuestaHa, 1)} ha y llevarían la dotación a
+  <strong>${fmt(m2Tras, 2)} m²/hab</strong>. El de mayor efecto es un lote de ${fmt(zonalPrimero.area / 1e4, 1)} ha en el ${nomS(zonalPrimero.sector)} (sitio Z1).
+  Las ganancias por sitio son modestas, entre ${fmt(Math.min(...P.barrial.sitios.map(s => s.pobNueva)))} y
+  ${fmt(Math.max(...sitios.map(s => s.pobNueva)))} habitantes: el suelo municipal vacante no está donde falta el verde. El suelo que el PUGS
+  destina a recreación suma ${fmt(pugsHa, 1)} ha, de las que solo ${fmt(pugsMuni, 1)} son municipales. La mayor de esas zonas, un parque urbano
+  de ${fmt(pu.ha)} ha en el noroeste, ${pu.pctVerde ? 'apenas está habilitada' : 'no tiene hoy área verde'} y descansa sobre
+  ${fmt(pu.ten.privado, 1)} ha de predios privados.`;
+const NOM_PARR = { '01': 'Lizarzaburu', '02': 'Maldonado', '03': 'Velasco', '04': 'Veloz', '05': 'Yaruquíes' };
+const fila = s => `<tr><td>${s.escala === 'barrial' ? 'B' : 'Z'}${s.orden}</td><td style="text-align:left">${NOMBRE_SECTOR[s.sector]}</td><td style="text-align:left">${NOM_PARR[s.parroquia] || s.parroquia}</td>
+  <td style="text-align:left;font-size:.76rem">${s.clave.slice(0, 18)}</td><td>${fmt(s.area)}</td><td>${fmt(s.pobNueva)}</td><td>${fmt(s.pctTras, 1)} %</td>
+  <td class="txt" style="font-size:.76rem">${[s.dir, s.obs].filter(Boolean).join(' · ') || '—'}${s.pugs ? ' · PUGS: ' + s.pugs : ''}</td></tr>`;
+document.getElementById('tabla-sitios').innerHTML = `<table><thead><tr><th>Sitio</th><th style="text-align:left">Sector</th><th style="text-align:left">Parroquia</th><th style="text-align:left">Clave catastral</th>
+  <th>Lote (m²)</th><th>Población nueva</th><th>Cobertura acumulada</th><th style="text-align:left">Dirección y observación del catastro</th></tr></thead><tbody>
+  <tr><td colspan="8" style="text-align:left;font-weight:600;color:var(--grafito)">Escala barrial: parque a 400 m por calle (cobertura actual ${fmt(P.barrial.base, 1)} %)</td></tr>
+  ${P.barrial.sitios.map(fila).join('')}
+  <tr><td colspan="8" style="text-align:left;font-weight:600;color:var(--grafito)">Escala zonal: parque de 0,5 ha o más a 750 m (cobertura actual ${fmt(P.zonal.base, 1)} %)</td></tr>
+  ${P.zonal.sitios.map(fila).join('')}</tbody></table>`;
+document.getElementById('tabla-pugs').innerHTML = `<table><thead><tr><th>Zona del PUGS</th><th style="text-align:left">Sector</th><th>Superficie (ha)</th><th>Municipal (ha)</th>
+  <th>Otra entidad pública (ha)</th><th>Privada o sin titular (ha)</th><th>Ya es área verde</th></tr></thead><tbody>
+  ${pz.slice().sort((a, b) => b.ha - a.ha).map(z => `<tr class="${z === pu ? 'mia' : ''}"><td>${NOM_PUGS[z.nom] || z.nom}</td><td style="text-align:left">${NOMBRE_SECTOR[z.sector]}</td><td>${fmt(z.ha, 1)}</td>
+    <td>${fmt(z.ten.municipal, 1)}</td><td>${fmt(z.ten.publico, 1)}</td><td>${fmt(z.ten.privado, 1)}</td><td class="${z.pctVerde < 10 ? 'mal' : ''}">${fmt(z.pctVerde)} %</td></tr>`).join('')}
+  </tbody></table>
+  <p style="font-size:.8rem;color:var(--grafito-med);margin-top:10px">La suma por tenencia es menor que la superficie de la zona cuando parte de ella
+    no tiene predio catastral (vías, quebradas). «Otra entidad pública» incluye la Federación Deportiva y el Ministerio de Educación.</p>`;
+const notasProp = [
+  ['Antes de proponer un lote', `El procedimiento identifica suelo apto, no suelo disponible. Cada sitio exige verificar en el GAD su destino legal
+    (puede estar comprometido para otro equipamiento, en comodato o en litigio), su pendiente y su estado real. Las observaciones del catastro
+    ya advierten algunos casos: excedentes, bienes mostrencos o superficies que no coinciden con el certificado de gravámenes.`],
+  ['El parque urbano del noroeste', `La zona que el PUGS destina a parque urbano (${fmt(pu.ha)} ha) está sobre predios privados sin construcción. Habilitarla
+    requiere adquirir el suelo; la LOOTUGS ofrece para ello el anuncio del proyecto, que congela el avalúo, y el derecho de adquisición
+    preferente. La zona de recreación del norte (${fmt(rec.ha, 1)} ha) tiene ${fmt(rec.ten.municipal, 1)} ha municipales sin construir que
+    pueden habilitarse sin adquisición.`],
+  ['Las cesiones de las urbanizaciones', `El art. 424 del COOTAD obliga a entregar al GAD entre el 15 y el 25 % del área útil de cada urbanización
+    o fraccionamiento, la mitad de ello como área verde. Es la vía principal de crecimiento del verde en la periferia, y su eficacia depende de
+    que la cesión se ubique en una pieza continua y accesible, y no en franjas residuales. ${fmt(ds.ocupado)} lotes municipales de 1 000 m² o
+    más sin construcción en el catastro aparecen edificados en la imagen satelital: parte de ese suelo ya está ocupado.`]
+];
+document.getElementById('notas-propuesta').innerHTML = notasProp.map(([h, p], i) => `<div class="nota${i === 0 ? ' alerta' : ''}"><h4>${h}</h4><p>${p}</p></div>`).join('');
+
+/* ── 5 · Metodo ─────────────────────────────────────── */
+const notas = [
+  ['Qué se cuenta como área verde', `Parques, juegos infantiles, céspedes y áreas verdes comunales de OpenStreetMap; los jardines solo cuando están
+    marcados de uso público o comunitario, porque buena parte de los dibujados en Riobamba son jardines de casa y patios. Se excluye lo marcado
+    como privado, las canchas y los estadios (equipamiento deportivo, ED2) y las plazas duras. Se añaden ${fmt(M.prediosMuniVerde)} predios
+    municipales que el catastro declara área verde, parque o área comunal, sin construcción. Del total, ${fmt(M.verdeOSMHa, 1)} ha proceden de OSM.`],
+  ['Piezas y límite urbano', `Todos los polígonos se rasterizan a 5 m y se unen en piezas continuas: un juego infantil dentro de un parque no se cuenta
+    dos veces. La dotación solo cuenta la superficie dentro del límite urbano. Los parques del borde exterior, como el Parque Lineal Chibunga
+    y Ricpamba, sí cuentan para la distancia, porque los usa quien vive dentro.`],
+  ['Distancia y escalas', `Por la red de calles de OSM, desde la vivienda hasta el borde de la pieza verde (un punto de acceso cada 20 m de
+    perímetro). El radio de 400 m y el lote de 300 m² son los del ED1 del Código Urbano (Ord. 016-2023, art. 178). Las cuatro escalas son las de
+    proximidad simultánea a espacios verdes de Rueda (BCN Ecología), que las mide en línea recta: por calle el resultado es más exigente.`],
+  ['Verde al alcance', `Cada pieza de 300 m² o más reparte su superficie entre la población que la tiene a 750 m por calle, y cada habitante suma
+    la parte de todas las que alcanza (método de dos pasos de área de captación). Un parque grande rodeado de mucha gente aporta poco a cada uno.`],
+  ['Relación con las otras ramas', `El estudio general estima 1,37 m²/hab con una definición más estrecha (sin juegos infantiles ni jardines
+    comunitarios, por centroide) y el mapa de OSM de agosto de 2026; la rama 2.1 mide la distancia al parque desde un punto del inventario y no
+    desde su borde, por eso registra menos cobertura que esta rama. La población, la rejilla y la red son las mismas en las tres.`],
+  ['Selección de sitios', `Procedimiento voraz, por separado para los lotes de 1 000 a 5 000 m² (radio de 400 m) y para los de
+    5 000 m² o más (radio de 750 m): en cada ronda se elige el lote que suma más población nueva al radio, con un máximo de ${MAX_SITIOS()}
+    o hasta que la ganancia baja de ${fmt(M.gananciaMin)} habitantes. Optimiza cobertura, no superficie: no reemplaza al estudio de
+    cada lote ni al plan de áreas verdes que debe acompañar al PUGS.`]
+];
+function MAX_SITIOS() { return `${MAX_B} sitios barriales y ${MAX_Z} zonales`; }
+document.getElementById('notas-metodo').innerHTML = notas.map(([h, p]) => `<div class="nota"><h4>${h}</h4><p>${p}</p></div>`).join('');
+document.getElementById('fuentes').innerHTML = `Fuentes: GAD Municipal de Riobamba, catastro y predios municipales (1 sep y 1 oct 2026), Plan de Uso y Gestión del
+  Suelo y Código Urbano, Ordenanza 016-2023 (Registro Oficial Edición Especial 885, 23-05-2023); INEC, Censo de Población y Vivienda 2022;
+  parques y red de calles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a> (ODbL),
+  descarga del ${M.generado.split('-').reverse().join('-')}; construcción no registrada de la Línea 1. Escalas de proximidad según S. Rueda,
+  <em>Sistema de indicadores y condicionantes para ciudades grandes y medianas</em> (BCN Ecología). Análisis reproducible en <code>RESEARCH/verde/</code>.`;
+document.getElementById('pie-fecha').textContent = 'datos al ' + M.generado.split('-').reverse().join('-');
+
+/* ── Mapas ──────────────────────────────────────────── */
+const RAMPA = ['#2563A8', '#7FA6D1', '#E8E2DA', '#E0A07A', '#C05621', '#7A2E0E'];
+const CAPAS = {
+  dV: { cortes: [200, 400, 600, 800, 1200], rampa: RAMPA, nom: 'Parque barrial más cercano', u: 'm por calle', dec: 0,
+    nota: 'Distancia por calle desde las viviendas de la celda hasta el borde del área verde de 300 m² o más más cercana. Radio ED1: 400 m.' },
+  ef: { cortes: [0.5, 1, 2, 4, 9], rampa: RAMPA.slice().reverse(), nom: 'Verde al alcance', u: 'm²/hab', dec: 1,
+    nota: 'Área verde a 750 m por calle, repartida entre todos los que la tienen a esa distancia. Referencia OMS: 9 m²/hab.' },
+  sim: { cortes: [0.5, 1.5, 2.5], rampa: [RAMPA[5], RAMPA[4], RAMPA[1], RAMPA[0]], nom: 'Escalas de Rueda alcanzadas', u: 'de 3', dec: 0, etiquetas: ['Ninguna', 'Una', 'Dos', 'Las tres'],
+    nota: 'Cuántas de las tres escalas (1 000 m² a 200 m, 0,5 ha a 750 m, 1 ha a 2 km) alcanza por calle la población de la celda, en promedio.' },
+  ccv: { cortes: [10, 50, 150, 400, 1000], rampa: RAMPA, nom: 'Volumen edificado por m² de verde', u: 'm', dec: 0,
+    nota: 'Compacidad corregida referida al área verde, en la ventana de 600 × 600 m alrededor de la celda. Intervalo de Rueda: 10 a 50 m. En gris oscuro: ventana sin área verde.' }
+};
+const colorDe = (v, c) => { if (v == null) return '#5b5f66'; let i = 0; while (i < c.cortes.length && v >= c.cortes[i]) i++; return c.rampa[i]; };
+const globoCelda = c => `<b>${NOMBRE_SECTOR[c.s]}</b><br>${fmt(c.pob)} hab · ${fmt(c.den)} hab/ha<br>Parque barrial más cercano: ${fmt(c.dV)} m<br>
+  Verde al alcance: ${fmt(c.ef, 1)} m²/hab<br>Escalas de Rueda: ${fmt(c.sim, 1)} de 3<br>Volumen por m² de verde: ${c.ccv == null ? 'sin verde en la ventana' : fmt(c.ccv) + ' m'}`;
+const BASE_GRIS = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+const BASE_SAT = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const ATRIB = 'Base © Esri · Datos © OpenStreetMap, GADM Riobamba, INEC';
+const limiteB = L.geoJSON(D.limite).getBounds();
+function nuevoMapa(id) {
+  const m = L.map(id, { preferCanvas: true, scrollWheelZoom: false });
+  const encuadrar = () => { m.invalidateSize(); m.fitBounds(limiteB, { padding: [10, 10], maxZoom: 14 }); };
+  encuadrar();
+  if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { encuadrar(); io.disconnect(); } }); io.observe(document.getElementById(id)); }
+  return m;
+}
+function capaVerde(m) {
+  return L.layerGroup(D.poligonos.map(p => L.polygon(p.r.map(([lo, la]) => [la, lo]), { color: css('--parque'), weight: 0.6, fillColor: css('--parque'), fillOpacity: 0.85 })
+    .bindTooltip(`<b>${p.n || 'Área verde'}</b><br>${p.o === 'muni' ? 'Predio municipal declarado área verde' : 'OpenStreetMap'}`, { className: 'globo-mapa', sticky: true }))).addTo(m);
+}
+
+const mapa1 = nuevoMapa('mapa1');
+L.tileLayer(BASE_GRIS, { maxZoom: 19, maxNativeZoom: 16, attribution: ATRIB }).addTo(mapa1);
+const rect1 = D.celdas.map(c => L.rectangle([[c.b[1], c.b[0]], [c.b[3], c.b[2]]], { weight: 0.3, color: '#fff', fillOpacity: 0.72 }).bindTooltip(globoCelda(c), { className: 'globo-mapa', sticky: true }));
+L.layerGroup(rect1).addTo(mapa1);
+L.geoJSON(D.limite, { style: { color: css('--grafito'), weight: 1.5, fill: false }, interactive: false }).addTo(mapa1);
+capaVerde(mapa1);
+function pintar(capa) {
+  const c = CAPAS[capa];
+  D.celdas.forEach((d, i) => rect1[i].setStyle({ fillColor: colorDe(d[capa], c) }));
+  document.getElementById('e1-nota').textContent = c.nota;
+  const t = c.etiquetas || [`< ${fmt(c.cortes[0], c.dec)}`, ...c.cortes.slice(0, -1).map((v, i) => `${fmt(v, c.dec)} – ${fmt(c.cortes[i + 1], c.dec)}`), `≥ ${fmt(c.cortes[c.cortes.length - 1], c.dec)}`];
+  document.getElementById('e1-leyenda').innerHTML = `<strong style="font-weight:600;color:var(--grafito)">${c.nom} (${c.u})</strong>` + t.map((x, i) => `<span><i style="background:${c.rampa[i]}"></i>${x}</span>`).join('')
+    + (capa === 'ccv' ? `<span><i style="background:#5b5f66"></i>Sin verde</span>` : '') + `<span><i style="background:${css('--parque')}"></i>Área verde pública</span>`;
+}
+const bs1 = document.querySelectorAll('#fig-mapa1 .pestanas button');
+bs1.forEach(b => b.addEventListener('click', () => { bs1.forEach(x => x.setAttribute('aria-pressed', x === b)); pintar(b.dataset.capa); }));
+pintar('dV');
+
+const mapa2 = nuevoMapa('mapa2');
+const fondoGris = L.tileLayer(BASE_GRIS, { maxZoom: 19, maxNativeZoom: 16, attribution: ATRIB }).addTo(mapa2);
+const fondoSat = L.tileLayer(BASE_SAT, { maxZoom: 19, maxNativeZoom: 18, attribution: 'Imagen © Esri, Maxar, Earthstar Geographics · Datos © OpenStreetMap, GADM Riobamba' });
+const rect2 = L.layerGroup(D.celdas.map(c => L.rectangle([[c.b[1], c.b[0]], [c.b[3], c.b[2]]], { weight: 0, fillOpacity: 0.35, fillColor: colorDe(c.dV, CAPAS.dV), interactive: false }))).addTo(mapa2);
+L.geoJSON(D.limite, { style: { color: css('--grafito'), weight: 1.5, fill: false }, interactive: false }).addTo(mapa2);
+L.layerGroup(D.pugs.map(z => L.geoJSON(z.geom, { style: { color: css('--propuesta'), weight: 2, dashArray: '6 5', fillOpacity: 0.06, fillColor: css('--propuesta') } })
+  .bindTooltip(`<b>PUGS · ${NOM_PUGS[z.nom] || z.nom}</b><br>${fmt(z.ha, 1)} ha; municipal ${fmt(z.ten.municipal, 1)} ha; privada o sin titular ${fmt(z.ten.privado, 1)} ha<br>Ya es área verde: ${z.pctVerde} %`, { className: 'globo-mapa', sticky: true }))).addTo(mapa2);
+capaVerde(mapa2);
+L.layerGroup(D.candidatos.map(k => L.circleMarker([k.c[1], k.c[0]], { radius: 3 + 5 * Math.sqrt(k.area / 10000), color: '#fff', weight: 1, fillColor: '#6b7079', fillOpacity: 0.9 })
+  .bindTooltip(`Lote municipal apto, no seleccionado<br>${fmt(k.area)} m² · ${NOMBRE_SECTOR[k.sector]}<br>${[k.dir, k.obs].filter(Boolean).join(' · ')}`, { className: 'globo-mapa' }))).addTo(mapa2);
+for (const s of sitios) {
+  const col = s.escala === 'barrial' ? css('--cerca') : css('--propuesta');
+  L.polygon(s.rings.map(r => r.map(([lo, la]) => [la, lo])), { color: col, weight: 2.5, fillColor: col, fillOpacity: 0.35 }).addTo(mapa2);
+  L.marker([s.c[1], s.c[0]], { icon: L.divIcon({ className: '', iconSize: [26, 20], iconAnchor: [13, 10],
+    html: `<div style="background:${col};color:#fff;font:700 10px Montserrat,sans-serif;border:1.5px solid #fff;border-radius:3px;width:26px;height:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.35)">${s.escala === 'barrial' ? 'B' : 'Z'}${s.orden}</div>` }) })
+    .bindTooltip(`<b>Sitio ${s.escala === 'barrial' ? 'B' : 'Z'}${s.orden} · escala ${s.escala}</b><br>Lote municipal de ${fmt(s.area)} m² · ${NOMBRE_SECTOR[s.sector]}<br>
+      +${fmt(s.pobNueva)} hab dentro de ${fmt(s.radio)} m<br>${[s.dir, s.obs].filter(Boolean).join(' · ')}`, { className: 'globo-mapa' }).addTo(mapa2);
+}
+document.getElementById('e2-leyenda').innerHTML = `<span><i style="background:${css('--cerca')}"></i>Sitio barrial (B)</span><span><i style="background:${css('--propuesta')}"></i>Sitio zonal (Z)</span>
+  <span><i class="pt" style="background:#6b7079"></i>Otro lote municipal apto</span><span><i style="background:${css('--parque')}"></i>Área verde existente</span>
+  <span><i style="background:none;border:2px dashed ${css('--propuesta')}"></i>Zona de recreación del PUGS</span>`;
+const NOTA2 = document.getElementById('e2-nota').textContent;
+const bs2 = document.querySelectorAll('#fig-mapa2 .pestanas button');
+bs2.forEach(b => b.addEventListener('click', () => {
+  bs2.forEach(x => x.setAttribute('aria-pressed', x === b));
+  const sat = b.dataset.fondo === 'sat';
+  if (sat) { mapa2.removeLayer(fondoGris); fondoSat.addTo(mapa2); fondoSat.bringToBack(); mapa2.removeLayer(rect2); }
+  else { mapa2.removeLayer(fondoSat); fondoGris.addTo(mapa2); fondoGris.bringToBack(); rect2.addTo(mapa2); }
+  document.getElementById('e2-nota').textContent = sat ? 'Imagen satelital de Esri: acerque el mapa para revisar el estado de cada lote.' : NOTA2;
+}));
+</script>
+</body>
+</html>
