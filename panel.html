@@ -250,6 +250,148 @@
             color: var(--grafito-sua); font-size: 12px;
         }
 
+        /* ── Solicitudes presenciales ───────────────────────────── */
+        /* La hoja del mostrador. Reutiliza .campos y .campo; esto es solo
+           lo que el panel no tenía: área de texto, grupos de opción y las
+           dos casillas de constancia. */
+
+        .campo textarea {
+            width: 100%; padding: 9px 11px; font-family: inherit; font-size: 14px;
+            border: 1px solid var(--borde-marcado); border-radius: var(--radio);
+            color: var(--grafito); background: var(--blanco);
+            resize: vertical; min-height: 64px; line-height: 1.5;
+        }
+        .campo textarea:focus {
+            outline: none; border-color: var(--rojo-caech);
+            box-shadow: 0 0 0 3px rgba(227, 30, 36, .12);
+        }
+
+        /* Un campo que ocupa toda la rejilla, para la dirección y el
+           cuadro de observaciones. */
+        .campo.ancho { grid-column: 1 / -1; }
+
+        /* Doble ancho para la clave catastral: 27 cifras en monoespaciada
+           entran justas en una columna. A partir de 760 px la rejilla tiene
+           al menos tres columnas, así que ocupar dos es seguro; por debajo
+           colapsa sola y el `span 2` sobraría. */
+        @media (min-width: 760px) { .campo.doble { grid-column: span 2; } }
+
+        .grupo-tit {
+            font-size: 10px; font-weight: 700; letter-spacing: .09em;
+            text-transform: uppercase; color: var(--grafito-sua);
+            border-bottom: 1px solid var(--borde); padding-bottom: 6px;
+            margin: 22px 0 14px;
+        }
+        .grupo-tit:first-of-type { margin-top: 4px; }
+
+        /* Opciones en fichas: a un clic de distancia y legibles de un
+           vistazo, que es lo que hace falta con alguien esperando. */
+        .opciones { display: flex; flex-wrap: wrap; gap: 8px; }
+        .opciones label {
+            display: inline-flex; align-items: center; gap: 7px;
+            border: 1px solid var(--borde-marcado); border-radius: var(--radio);
+            padding: 7px 12px; font-size: 13px; cursor: pointer;
+            background: var(--blanco);
+        }
+        .opciones label:hover { border-color: var(--grafito-sua); }
+        .opciones input { accent-color: var(--rojo-caech); margin: 0; }
+        .opciones label:has(input:checked) {
+            border-color: var(--rojo-caech); background: var(--rojo-humo);
+            font-weight: 600; color: var(--rojo-brasa);
+        }
+
+        .casilla {
+            display: flex; gap: 10px; align-items: flex-start;
+            font-size: 12.5px; color: var(--grafito-med); line-height: 1.5;
+            padding: 11px 13px; border: 1px solid var(--borde);
+            border-radius: var(--radio); background: var(--hueso);
+            cursor: pointer; margin-bottom: 10px;
+        }
+        .casilla input { accent-color: var(--rojo-caech); margin-top: 3px; flex: 0 0 auto; }
+        .casilla.mal { border-color: var(--rojo-caech); background: var(--rojo-humo); }
+
+        .pista { font-size: 11.5px; color: var(--grafito-sua); margin-top: 4px; min-height: 1.1em; }
+        .pista.mal  { color: var(--rojo-brasa); font-weight: 600; }
+        .pista.bien { color: #166B3A; font-weight: 600; }
+        .campo input.mal, .campo select.mal { border-color: var(--rojo-caech); }
+
+        .barra-filtros { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+        .barra-filtros .buscador { margin-bottom: 0; flex: 1 1 240px; }
+        .barra-filtros select {
+            font-family: inherit; font-size: 13px; padding: 8px 10px;
+            border: 1px solid var(--borde-marcado); border-radius: var(--radio);
+            background: var(--blanco); color: var(--grafito);
+        }
+
+        /* ══ La constancia que se imprime ═════════════════════════════
+           No se imprime el formulario con sus recuadros: es un documento
+           aparte, oculto en pantalla, que se rellena justo antes de
+           imprimir. Así la hoja firmable cabe siempre en una A4 y no
+           depende de cómo dibuje cada navegador un <input>. */
+        #hoja { display: none; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 12mm 14mm; }
+            header, main, footer { display: none !important; }
+            body { background: #fff; font-size: 10pt; line-height: 1.38; color: #2E3238; }
+
+            /* La hoja ocupa el alto útil de la A4 (297 menos los márgenes) y
+               empuja firmas y pie al fondo: el cuerpo arriba, la rúbrica
+               abajo, como cualquier constancia de mostrador. */
+            #hoja { display: flex !important; flex-direction: column; min-height: 273mm; }
+
+            .h-cab { display: flex; align-items: center; justify-content: space-between; gap: 10mm; }
+            .h-cab img { height: 16mm; width: auto; }
+            .h-cab-tx { text-align: right; }
+            .h-cab-tx h1 { font-size: 12pt; font-weight: 700; letter-spacing: -.01em; }
+            .h-cab-tx p {
+                font-size: 6.6pt; font-weight: 300; text-transform: uppercase;
+                letter-spacing: .2em; color: #565B63; margin-top: 1mm;
+            }
+            .h-filete { height: 1.2pt; background: #E31E24; margin: 3mm 0 4mm; }
+
+            .h-ident { display: flex; justify-content: space-between; gap: 6mm; }
+            .h-ident div { font-size: 8pt; }
+            .h-ident strong { font-size: 11pt; letter-spacing: .02em; }
+
+            .h-sec {
+                font-size: 7pt; font-weight: 700; text-transform: uppercase;
+                letter-spacing: .18em; color: #E31E24;
+                border-bottom: .6pt solid #E31E24; padding-bottom: 1mm; margin: 4mm 0 2.5mm;
+            }
+            .h-rej { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2mm 4mm; }
+            .h-d { grid-column: span 4; }
+            .h-d.ancho { grid-column: span 8; }
+            .h-d.todo  { grid-column: span 12; }
+            .h-d dt {
+                font-size: 6.2pt; text-transform: uppercase; letter-spacing: .1em;
+                color: #8B9098; font-weight: 600;
+            }
+            .h-d dd {
+                font-size: 9pt; border-bottom: .4pt solid #C9CBCE;
+                padding-bottom: .6mm; min-height: 4.6mm; word-break: break-word;
+            }
+            .h-d dd.mono { font-family: Consolas, monospace; letter-spacing: .06em; font-size: 8.4pt; }
+
+            .h-legal {
+                font-size: 6.6pt; color: #565B63; line-height: 1.42; text-align: justify;
+                border: .4pt solid #C9CBCE; border-radius: 1mm; padding: 2mm 2.5mm; margin-top: 4mm;
+            }
+            .h-legal b { color: #2E3238; }
+
+            .h-firmas { display: flex; gap: 12mm; margin-top: auto; padding-top: 16mm; }
+            .h-firmas div { flex: 1; text-align: center; }
+            .h-firmas .linea { border-top: .6pt solid #2E3238; margin-bottom: 1.5mm; }
+            .h-firmas p { font-size: 7pt; color: #565B63; }
+            .h-firmas p b { display: block; font-size: 7.6pt; color: #2E3238; }
+
+            .h-pie {
+                margin-top: 6mm; padding-top: 2mm; border-top: .4pt solid #C9CBCE;
+                display: flex; justify-content: space-between;
+                font-size: 6.2pt; color: #8B9098; text-transform: uppercase; letter-spacing: .1em;
+            }
+        }
+
         [hidden] { display: none !important; }
 
         @media (max-width: 720px) {
@@ -296,6 +438,7 @@
             <button data-hoja="pagos"      data-admin hidden><i class="fas fa-credit-card"></i> Pagos</button>
             <button data-hoja="descargas"  data-admin hidden><i class="fas fa-download"></i> Descargas</button>
             <button data-hoja="bitacora"   data-admin hidden><i class="fas fa-clipboard-list"></i> Bitácora</button>
+            <button data-hoja="solicitudes" data-admin hidden><i class="fas fa-file-signature"></i> Solicitudes</button>
             <button data-hoja="herramientas"><i class="fas fa-toolbox"></i> Herramientas</button>
         </nav>
 
@@ -447,6 +590,186 @@
             </div>
         </section>
 
+        <!-- Solicitudes presenciales --------------------------------- -->
+        <section data-hoja="solicitudes" hidden>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-file-signature"></i> Solicitud presencial
+                    <span class="insignia neutra mono" id="sol-numero">—</span>
+                    <span class="insignia espera" id="sol-editando" hidden></span></h2>
+                <p class="sub">La hoja que se llena con quien se acerca a la sede. Al registrarla recibe
+                   un número correlativo del año e imprime una constancia en A4 para la firma. El DICAT
+                   se genera después en el GeoVisor con la clave catastral anotada.</p>
+                <div id="aviso-solicitud"></div>
+
+                <h3 class="grupo-tit">1 · Solicitante</h3>
+                <div class="campos">
+                    <div class="campo ancho"><label for="sol-solicitante">Nombres y apellidos completos</label>
+                        <input id="sol-solicitante" type="text" autocomplete="off"
+                               placeholder="Como consta en el documento de identidad">
+                        <div class="pista" id="pista-sol-solicitante"></div></div>
+                    <div class="campo"><label for="sol-doctipo">Documento</label>
+                        <select id="sol-doctipo">
+                            <option value="cedula">Cédula</option>
+                            <option value="ruc">RUC</option>
+                            <option value="pasaporte">Pasaporte</option>
+                        </select></div>
+                    <div class="campo"><label for="sol-documento">Número</label>
+                        <input id="sol-documento" type="text" inputmode="numeric" autocomplete="off"
+                               spellcheck="false" placeholder="0601234567">
+                        <div class="pista" id="pista-sol-documento"></div></div>
+                    <div class="campo"><label for="sol-telefono">Teléfono de contacto</label>
+                        <input id="sol-telefono" type="tel" inputmode="tel" autocomplete="off"
+                               placeholder="0991234567">
+                        <div class="pista" id="pista-sol-telefono"></div></div>
+                    <div class="campo"><label for="sol-correo">Correo electrónico</label>
+                        <input id="sol-correo" type="email" autocapitalize="off" spellcheck="false"
+                               autocomplete="off" placeholder="Para enviar el PDF, si así lo pide">
+                        <div class="pista" id="pista-sol-correo"></div></div>
+                    <div class="campo"><label for="sol-registro">Registro CAE (si es colegiado)</label>
+                        <input id="sol-registro" type="text" autocapitalize="characters"
+                               spellcheck="false" autocomplete="off" placeholder="—"></div>
+                    <div class="campo ancho"><label>Calidad en la que solicita</label>
+                        <div class="opciones" id="sol-calidad"></div>
+                        <div class="pista" id="pista-sol-calidad"></div></div>
+                </div>
+
+                <h3 class="grupo-tit">2 · Predio consultado</h3>
+                <div class="campos">
+                    <div class="campo doble"><label for="sol-clave">Clave catastral</label>
+                        <input id="sol-clave" type="text" inputmode="numeric" autocomplete="off"
+                               spellcheck="false" class="mono" placeholder="27 dígitos">
+                        <div class="pista" id="pista-sol-clave"></div></div>
+                    <div class="campo"><label for="sol-auxiliar">Clave auxiliar (opcional)</label>
+                        <input id="sol-auxiliar" type="text" inputmode="numeric" autocomplete="off"
+                               spellcheck="false" class="mono" placeholder="18 dígitos">
+                        <div class="pista" id="pista-sol-auxiliar"></div></div>
+                    <div class="campo"><label>&nbsp;</label>
+                        <button class="btn btn-linea" id="btn-sol-visor" style="width:100%"
+                                title="Abre el GeoVisor centrado en esta clave, en otra pestaña">
+                            <i class="fas fa-map-location-dot"></i> Ver el predio</button></div>
+                    <div class="campo ancho"><label for="sol-direccion">Dirección o referencia del predio</label>
+                        <input id="sol-direccion" type="text" autocomplete="off"
+                               placeholder="Calle principal, número e intersección">
+                        <div class="pista" id="pista-sol-direccion"></div></div>
+                    <div class="campo"><label for="sol-parroquia">Parroquia</label>
+                        <select id="sol-parroquia">
+                            <option value="">— Sin especificar —</option>
+                            <optgroup label="Urbanas">
+                                <option>Lizarzaburu</option><option>Maldonado</option>
+                                <option>Velasco</option><option>Veloz</option><option>Yaruquíes</option>
+                            </optgroup>
+                            <optgroup label="Rurales">
+                                <option>Cacha</option><option>Calpi</option><option>Cubijíes</option>
+                                <option>Flores</option><option>Licán</option><option>Licto</option>
+                                <option>Pungalá</option><option>Punín</option><option>Quimiag</option>
+                                <option>San Juan</option><option>San Luis</option>
+                            </optgroup>
+                        </select></div>
+                    <div class="campo"><label for="sol-barrio">Barrio o sector</label>
+                        <input id="sol-barrio" type="text" autocomplete="off" placeholder="—"></div>
+                    <div class="campo"><label for="sol-propietario">Propietario según catastro</label>
+                        <input id="sol-propietario" type="text" autocomplete="off"
+                               placeholder="Si difiere del solicitante"></div>
+                </div>
+
+                <h3 class="grupo-tit">3 · Reporte solicitado</h3>
+                <div class="campos">
+                    <div class="campo ancho"><label>Forma de entrega</label>
+                        <div class="opciones" id="sol-entrega"></div>
+                        <div class="pista" id="pista-sol-entrega"></div></div>
+                    <div class="campo"><label for="sol-ejemplares">Ejemplares</label>
+                        <input id="sol-ejemplares" type="number" min="1" max="20" step="1" value="1"></div>
+                    <div class="campo"><label for="sol-finalidad">Finalidad del reporte</label>
+                        <select id="sol-finalidad">
+                            <option value="">— Sin especificar —</option>
+                            <option>Trámite municipal</option>
+                            <option>Compraventa</option>
+                            <option>Diseño o planificación</option>
+                            <option>Partición o revisión de linderos</option>
+                            <option>Avalúo</option>
+                            <option>Trámite judicial</option>
+                            <option>Uso académico</option>
+                            <option>Otra</option>
+                        </select></div>
+                    <div class="campo"><label for="sol-ofrecida">Fecha ofrecida de entrega</label>
+                        <input id="sol-ofrecida" type="date"></div>
+                    <div class="campo ancho"><label for="sol-observaciones">Observaciones</label>
+                        <textarea id="sol-observaciones"
+                                  placeholder="Lo que el solicitante quiere que el informe atienda: afectación vial, servicios básicos, uso de suelo, un lindero en duda…"></textarea></div>
+                </div>
+
+                <h3 class="grupo-tit">4 · Constancia del solicitante</h3>
+                <label class="casilla" id="caja-sol-datos">
+                    <input type="checkbox" id="sol-c-datos">
+                    <span><b>Autoriza el tratamiento de sus datos personales</b> por el CAE-CH con el
+                    único fin de atender esta solicitud y dejar constancia de la entrega, conforme a la
+                    Ley Orgánica de Protección de Datos Personales. Puede pedir acceso, rectificación o
+                    eliminación escribiendo a caechoficial@gmail.com.
+                    Ver la <a href="legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</span>
+                </label>
+                <label class="casilla" id="caja-sol-alcance">
+                    <input type="checkbox" id="sol-c-alcance">
+                    <span><b>Conoce el alcance del DICAT.</b> Es un documento técnico-informativo del
+                    CAE-CH, elaborado con datos públicos del GADMR y de las empresas de servicios, y
+                    <b>no reemplaza los certificados, líneas de fábrica ni informes oficiales del
+                    GADMR</b> ni constituye título de propiedad. La información refleja el corte de las
+                    capas a la fecha de emisión.</span>
+                </label>
+                <div class="pista" id="pista-sol-constancia"></div>
+
+                <h3 class="grupo-tit">5 · Control interno</h3>
+                <div class="campos">
+                    <div class="campo"><label for="sol-atendido">Atendido por</label>
+                        <input id="sol-atendido" type="text" autocomplete="off"
+                               placeholder="Nombre de quien recibe">
+                        <div class="pista" id="pista-sol-atendido"></div></div>
+                    <div class="campo"><label for="sol-estado">Estado</label>
+                        <select id="sol-estado">
+                            <option value="recibida">Recibida</option>
+                            <option value="entregada">Entregada</option>
+                            <option value="anulada">Anulada</option>
+                        </select></div>
+                </div>
+
+                <div class="acciones">
+                    <button class="btn" id="btn-sol-imprimir"><i class="fas fa-print"></i> Registrar e imprimir</button>
+                    <button class="btn btn-outline" id="btn-sol-guardar"><i class="fas fa-floppy-disk"></i> Solo registrar</button>
+                    <button class="btn btn-linea chico" id="btn-sol-nueva"><i class="fas fa-file-circle-plus"></i> Solicitud nueva</button>
+                </div>
+            </div>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-clipboard-check"></i> Solicitudes registradas
+                    <span class="insignia neutra" id="sol-total"></span></h2>
+                <p class="sub">Todas las solicitudes presenciales de la institución, no las de este
+                   equipo: el correlativo y la lista son los mismos desde cualquier computadora de la
+                   sede. «Borrar» elimina la fila de verdad, para poder atender el derecho de
+                   eliminación de la LOPDP; en la bitácora de seguridad queda el número, sin datos
+                   personales.</p>
+                <div class="cifras" id="cifras-solicitudes"></div>
+                <div class="barra-filtros">
+                    <div class="campo buscador">
+                        <input id="sol-buscar" type="search" autocomplete="off"
+                               placeholder="Buscar por número, nombre, documento, clave o dirección">
+                    </div>
+                    <select id="sol-filtro">
+                        <option value="">Todas</option>
+                        <option value="recibida">Recibidas</option>
+                        <option value="entregada">Entregadas</option>
+                        <option value="anulada">Anuladas</option>
+                    </select>
+                    <button class="btn btn-linea chico" id="btn-sol-csv"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+                </div>
+                <div id="aviso-solicitudes"></div>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>N.º</th><th>Recibida</th><th>Solicitante</th><th>Clave catastral</th>
+                               <th>Entrega</th><th>Atendió</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="tabla-solicitudes"></tbody>
+                </table></div>
+            </div>
+        </section>
+
         <!-- Herramientas -------------------------------------------- -->
         <section data-hoja="herramientas" hidden>
             <div class="tarjeta">
@@ -463,6 +786,82 @@
     CAE-Ch Provincial de Chimborazo · Panel de control ·
     <a href="legal.html#privacidad">Política de privacidad</a>
 </footer>
+
+<!-- ══ La constancia A4 que firma el solicitante ═════════════════════
+     Oculta en pantalla; se rellena desde el formulario al imprimir. -->
+<div id="hoja">
+    <div class="h-cab">
+        <img src="LOGO/logo-caech.png" alt="CAE-Ch">
+        <div class="h-cab-tx">
+            <h1>Solicitud de Reporte DICAT</h1>
+            <p>Colegio de Arquitectos del Ecuador · Provincial de Chimborazo</p>
+        </div>
+    </div>
+    <div class="h-filete"></div>
+
+    <div class="h-ident">
+        <div>Solicitud n.º <strong id="h-numero">—</strong></div>
+        <div>Recibida el <strong id="h-fecha">—</strong></div>
+    </div>
+
+    <div class="h-sec">1 · Solicitante</div>
+    <div class="h-rej">
+        <dl class="h-d ancho"><dt>Nombres y apellidos</dt><dd id="h-solicitante">—</dd></dl>
+        <dl class="h-d"><dt id="h-doctipo">Documento</dt><dd class="mono" id="h-documento">—</dd></dl>
+        <dl class="h-d"><dt>Teléfono</dt><dd class="mono" id="h-telefono">—</dd></dl>
+        <dl class="h-d"><dt>Correo electrónico</dt><dd id="h-correo">—</dd></dl>
+        <dl class="h-d"><dt>Calidad en que solicita</dt><dd id="h-calidad">—</dd></dl>
+        <dl class="h-d todo" id="h-caja-registro"><dt>Registro profesional CAE</dt><dd class="mono" id="h-registro">—</dd></dl>
+    </div>
+
+    <div class="h-sec">2 · Predio consultado</div>
+    <div class="h-rej">
+        <dl class="h-d ancho"><dt>Clave catastral</dt><dd class="mono" id="h-clave">—</dd></dl>
+        <dl class="h-d"><dt>Clave auxiliar</dt><dd class="mono" id="h-auxiliar">—</dd></dl>
+        <dl class="h-d ancho"><dt>Dirección o referencia</dt><dd id="h-direccion">—</dd></dl>
+        <dl class="h-d"><dt>Parroquia</dt><dd id="h-parroquia">—</dd></dl>
+        <dl class="h-d"><dt>Barrio o sector</dt><dd id="h-barrio">—</dd></dl>
+        <dl class="h-d ancho"><dt>Propietario según catastro</dt><dd id="h-propietario">—</dd></dl>
+    </div>
+
+    <div class="h-sec">3 · Reporte solicitado</div>
+    <div class="h-rej">
+        <dl class="h-d ancho"><dt>Forma de entrega</dt><dd id="h-entrega">—</dd></dl>
+        <dl class="h-d"><dt>Ejemplares</dt><dd id="h-ejemplares">—</dd></dl>
+        <dl class="h-d"><dt>Finalidad</dt><dd id="h-finalidad">—</dd></dl>
+        <dl class="h-d ancho"><dt>Fecha ofrecida de entrega</dt><dd id="h-ofrecida">—</dd></dl>
+        <dl class="h-d todo"><dt>Observaciones</dt><dd id="h-observaciones">—</dd></dl>
+    </div>
+
+    <div class="h-legal">
+        <p><b>Alcance del documento.</b> El DICAT es un documento técnico-informativo elaborado por el
+        CAE-CH a partir de datos públicos del GADMR y de las empresas prestadoras de servicios. No
+        reemplaza los certificados, líneas de fábrica ni informes oficiales del GADMR, y no constituye
+        título de propiedad ni prueba de linderos. La información corresponde al corte de las capas
+        vigente a la fecha de emisión.</p>
+        <p style="margin-top:1.5mm"><b>Datos personales.</b> Al firmar, el solicitante autoriza al
+        CAE-CH el tratamiento de los datos consignados en esta hoja con el único fin de atender la
+        solicitud y dejar constancia de la entrega, conforme a la Ley Orgánica de Protección de Datos
+        Personales. Puede ejercer sus derechos de acceso, rectificación, eliminación y oposición
+        escribiendo a caechoficial@gmail.com.</p>
+    </div>
+
+    <div class="h-firmas">
+        <div>
+            <div class="linea"></div>
+            <p><b id="h-firma-nombre">Firma del solicitante</b><span id="h-firma-doc"></span></p>
+        </div>
+        <div>
+            <div class="linea"></div>
+            <p><b id="h-firma-atendio">Recibido por</b>CAE-CH Provincial de Chimborazo</p>
+        </div>
+    </div>
+
+    <div class="h-pie">
+        <span>CAE-CH · Av. Daniel León Borja, Pasaje Centro de Arte y Cultura · Riobamba</span>
+        <span>cae-ch.org</span>
+    </div>
+</div>
 
 <script src="caech-acceso.js"></script>
 <script>
@@ -742,6 +1141,7 @@
         if (hoja === 'pagos'     && perfil.rol === 'admin') cargarPagos();
         if (hoja === 'descargas' && perfil.rol === 'admin') cargarDescargas();
         if (hoja === 'bitacora'  && perfil.rol === 'admin') cargarEventos();
+        if (hoja === 'solicitudes' && perfil.rol === 'admin') cargarSolicitudes();
     }
 
     // ── Padrón ──────────────────────────────────────────────────
@@ -1078,6 +1478,554 @@
             : '<tr><td colspan="4" class="vacio">Sin eventos registrados.</td></tr>';
     }
 
+    // ── Solicitudes presenciales ────────────────────────────────
+    //
+    // La hoja del mostrador de la sede. A diferencia de la versión que
+    // vivía en un solo navegador, esto habla con el Worker: el número es
+    // institucional y la lista es la misma desde cualquier equipo.
+    //
+    // La validación de aquí es cortesía para quien escribe con alguien
+    // esperando delante. La que decide qué entra en la base está en
+    // api/src/solicitudes.js, y es la misma.
+
+    const CALIDADES = [
+        'Propietario/a', 'Copropietario/a', 'Apoderado/a o autorizado/a',
+        'Profesional a cargo', 'Posible comprador/a', 'Otra'
+    ];
+    const ENTREGAS = [
+        'PDF al correo', 'Impreso', 'Impreso con firma y sello',
+        'PDF firmado electronicamente', 'En memoria USB'
+    ];
+    const DOCTIPO = { cedula: 'Cédula', ruc: 'RUC', pasaporte: 'Pasaporte' };
+    const ESTADO_SOL = {
+        recibida:  ['espera', 'Recibida'],
+        entregada: ['si', 'Entregada'],
+        anulada:   ['no', 'Anulada']
+    };
+
+    let solicitudes = [];
+    let solEditando = null;      // id de la solicitud abierta, si se corrige una
+    let solSiguiente = '—';      // número que el Worker dice que tocará
+
+    const digitos = t => String(t || '').replace(/\D+/g, '');
+
+    /** La clave se lee por grupos, no como un chorro de 27 cifras. */
+    function claveLegible(c) {
+        if (!/^\d{27}$/.test(c)) return c || '';
+        return c.slice(0, 2) + '-' + c.slice(2, 4) + '-' + c.slice(4, 6) + '-' + c.slice(6, 9)
+             + '-' + c.slice(9, 12) + '-' + c.slice(12, 15) + '-' + c.slice(15, 18) + '-' + c.slice(18);
+    }
+
+    function cedulaValida(c) {
+        if (!/^\d{10}$/.test(c)) return false;
+        const prov = parseInt(c.slice(0, 2), 10);
+        if ((prov < 1 || prov > 24) && prov !== 30) return false;
+        if (parseInt(c[2], 10) > 5) return false;
+        let suma = 0;
+        for (let i = 0; i < 9; i++) {
+            const v = parseInt(c[i], 10) * (i % 2 === 0 ? 2 : 1);
+            suma += v > 9 ? v - 9 : v;
+        }
+        return (10 - (suma % 10)) % 10 === parseInt(c[9], 10);
+    }
+
+    function rucValido(r) {
+        if (!/^\d{13}$/.test(r) || r.slice(10) === '000') return false;
+        const tercero = parseInt(r[2], 10);
+        if (tercero < 6) return cedulaValida(r.slice(0, 10));
+        let coef, corte;
+        if (tercero === 6)      { coef = [3, 2, 7, 6, 5, 4, 3, 2];    corte = 8; }
+        else if (tercero === 9) { coef = [4, 3, 2, 7, 6, 5, 4, 3, 2]; corte = 9; }
+        else return false;
+        let suma = 0;
+        for (let i = 0; i < corte; i++) suma += parseInt(r[i], 10) * coef[i];
+        const resto = suma % 11;
+        return (resto === 0 ? 0 : 11 - resto) === parseInt(r[corte], 10);
+    }
+
+    function telefonoValido(t) {
+        let d = digitos(t);
+        if (d.indexOf('593') === 0) d = '0' + d.slice(3);
+        return /^09\d{8}$/.test(d) || /^0[2-7]\d{7}$/.test(d);
+    }
+
+    const correoValido = c => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(c);
+
+    function pista(id, texto, clase) {
+        const p = $('pista-' + id);
+        if (!p) return;
+        p.textContent = texto || '';
+        p.className = 'pista' + (clase ? ' ' + clase : '');
+    }
+    function marcar(id, mal) {
+        const e = $(id);
+        if (e) e.classList.toggle('mal', !!mal);
+    }
+
+    /** Dibuja un grupo de opciones en fichas. */
+    function pintarOpciones(contenedor, nombre, opciones) {
+        $(contenedor).innerHTML = opciones.map(o =>
+            '<label><input type="radio" name="' + nombre + '" value="' + esc(o) + '">'
+            + '<span>' + esc(o) + '</span></label>').join('');
+    }
+
+    const elegido = nombre => {
+        const r = document.querySelector('input[name="' + nombre + '"]:checked');
+        return r ? r.value : '';
+    };
+    function elegir(nombre, valor) {
+        document.querySelectorAll('input[name="' + nombre + '"]').forEach(r => {
+            r.checked = r.value === valor;
+        });
+    }
+
+    // ── Validación de cortesía ──────────────────────────────────
+
+    function revisarDocumento() {
+        const tipo = $('sol-doctipo').value;
+        const v = $('sol-documento').value.trim();
+        if (!v) { pista('sol-documento', ''); marcar('sol-documento', false); return; }
+        if (tipo === 'cedula') {
+            const ok = cedulaValida(digitos(v));
+            pista('sol-documento', ok ? 'Cédula válida' : 'El dígito verificador no cuadra.', ok ? 'bien' : 'mal');
+            return marcar('sol-documento', !ok);
+        }
+        if (tipo === 'ruc') {
+            const ok = rucValido(digitos(v));
+            pista('sol-documento', ok ? 'RUC válido' : 'No parece un RUC válido.', ok ? 'bien' : 'mal');
+            return marcar('sol-documento', !ok);
+        }
+        pista('sol-documento', '');
+        marcar('sol-documento', false);
+    }
+
+    function revisarClave() {
+        const v = digitos($('sol-clave').value);
+        if (!v) { pista('sol-clave', '27 dígitos; los separadores se descartan.'); return marcar('sol-clave', false); }
+        if (v.length !== 27) {
+            pista('sol-clave', 'Van ' + v.length + ' de 27 dígitos.', v.length > 27 ? 'mal' : '');
+            return marcar('sol-clave', v.length > 27);
+        }
+        // 0601 = provincia 06 Chimborazo, cantón 01 Riobamba. Fuera de ahí el
+        // predio no está en la capa del visor, pero no se bloquea: el caso
+        // puede ser legítimo y el mostrador no se puede trabar.
+        if (v.slice(0, 4) !== '0601') {
+            pista('sol-clave', claveLegible(v) + ' · ojo: no empieza en 0601 (Riobamba).', 'mal');
+            return marcar('sol-clave', true);
+        }
+        pista('sol-clave', claveLegible(v), 'bien');
+        marcar('sol-clave', false);
+    }
+
+    function revisarSolicitud() {
+        const faltas = [];
+        const campo = (id, malo, mensaje, etiqueta) => {
+            if (malo) { faltas.push(etiqueta); pista(id, mensaje, 'mal'); marcar(id, true); }
+            else { pista(id, ''); marcar(id, false); }
+        };
+
+        campo('sol-solicitante', $('sol-solicitante').value.trim().length < 5,
+              'Escriba nombres y apellidos.', 'el nombre del solicitante');
+
+        const doc = $('sol-documento').value.trim(), tipo = $('sol-doctipo').value;
+        if (!doc) campo('sol-documento', true, 'Obligatorio.', 'el documento');
+        else if (tipo === 'cedula' && !cedulaValida(digitos(doc))) campo('sol-documento', true, 'El dígito verificador no cuadra.', 'una cédula válida');
+        else if (tipo === 'ruc' && !rucValido(digitos(doc))) campo('sol-documento', true, 'No parece un RUC válido.', 'un RUC válido');
+        else revisarDocumento();
+
+        const tel = $('sol-telefono').value.trim();
+        campo('sol-telefono', !tel || !telefonoValido(tel),
+              tel ? 'No parece un celular ni un fijo del país.' : 'Obligatorio.', 'el teléfono');
+
+        const entrega = elegido('sol-entrega');
+        const correo = $('sol-correo').value.trim();
+        if (correo && !correoValido(correo)) campo('sol-correo', true, 'La dirección no está bien formada.', 'un correo bien escrito');
+        else if (!correo && entrega.indexOf('PDF') === 0) campo('sol-correo', true, 'Hace falta para enviar el PDF.', 'el correo (la entrega es en PDF)');
+        else campo('sol-correo', false);
+
+        if (!elegido('sol-calidad')) { faltas.push('la calidad en que solicita'); pista('sol-calidad', 'Elija una opción.', 'mal'); }
+        else pista('sol-calidad', '');
+
+        if (digitos($('sol-clave').value).length !== 27) faltas.push('la clave catastral completa');
+        revisarClave();
+
+        const aux = digitos($('sol-auxiliar').value);
+        if (aux && aux.length !== 18) { faltas.push('la clave auxiliar completa'); pista('sol-auxiliar', 'Van ' + aux.length + ' de 18 dígitos.', 'mal'); }
+        else pista('sol-auxiliar', '');
+
+        campo('sol-direccion', $('sol-direccion').value.trim().length < 5, 'Obligatoria.', 'la dirección del predio');
+
+        if (!entrega) { faltas.push('la forma de entrega'); pista('sol-entrega', 'Elija una opción.', 'mal'); }
+        else pista('sol-entrega', '');
+
+        // Las constancias solo se exigen al dar de alta: una solicitud ya
+        // registrada se firmó en su momento, y corregir un teléfono no
+        // vuelve a pedir la firma. El Worker aplica la misma regla.
+        if (!solEditando) {
+            const c1 = $('sol-c-datos').checked, c2 = $('sol-c-alcance').checked;
+            $('caja-sol-datos').classList.toggle('mal', !c1);
+            $('caja-sol-alcance').classList.toggle('mal', !c2);
+            if (!c1 || !c2) { faltas.push('las dos constancias'); pista('sol-constancia', 'El solicitante debe aceptar ambas antes de firmar.', 'mal'); }
+            else pista('sol-constancia', '');
+        }
+
+        campo('sol-atendido', !$('sol-atendido').value.trim(), 'Obligatorio.', 'quién atiende');
+        return faltas;
+    }
+
+    // ── Formulario ↔ registro ───────────────────────────────────
+
+    function recogerSolicitud() {
+        return {
+            solicitante: $('sol-solicitante').value.trim(),
+            documento_tipo: $('sol-doctipo').value,
+            documento: $('sol-documento').value.trim(),
+            telefono: $('sol-telefono').value.trim(),
+            correo: $('sol-correo').value.trim(),
+            registro_profesional: $('sol-registro').value.trim(),
+            calidad: elegido('sol-calidad'),
+            clave_catastral: digitos($('sol-clave').value),
+            clave_auxiliar: digitos($('sol-auxiliar').value),
+            direccion: $('sol-direccion').value.trim(),
+            parroquia: $('sol-parroquia').value,
+            barrio: $('sol-barrio').value.trim(),
+            propietario_catastro: $('sol-propietario').value.trim(),
+            entrega: elegido('sol-entrega'),
+            ejemplares: parseInt($('sol-ejemplares').value, 10) || 1,
+            finalidad: $('sol-finalidad').value,
+            entrega_ofrecida: $('sol-ofrecida').value,
+            observaciones: $('sol-observaciones').value.trim(),
+            atendido_por: $('sol-atendido').value.trim(),
+            estado: $('sol-estado').value,
+            consentimiento_datos: $('sol-c-datos').checked,
+            consentimiento_alcance: $('sol-c-alcance').checked
+        };
+    }
+
+    function volcarSolicitud(s) {
+        solEditando = s.id;
+        $('sol-solicitante').value = s.solicitante || '';
+        $('sol-doctipo').value = s.documento_tipo || 'cedula';
+        $('sol-documento').value = s.documento || '';
+        $('sol-telefono').value = s.telefono || '';
+        $('sol-correo').value = s.correo || '';
+        $('sol-registro').value = s.registro_profesional || '';
+        elegir('sol-calidad', s.calidad);
+        $('sol-clave').value = s.clave_catastral || '';
+        $('sol-auxiliar').value = s.clave_auxiliar || '';
+        $('sol-direccion').value = s.direccion || '';
+        $('sol-parroquia').value = s.parroquia || '';
+        $('sol-barrio').value = s.barrio || '';
+        $('sol-propietario').value = s.propietario_catastro || '';
+        elegir('sol-entrega', s.entrega);
+        $('sol-ejemplares').value = s.ejemplares || 1;
+        $('sol-finalidad').value = s.finalidad || '';
+        $('sol-ofrecida').value = s.entrega_ofrecida || '';
+        $('sol-observaciones').value = s.observaciones || '';
+        $('sol-atendido').value = s.atendido_por || '';
+        $('sol-estado').value = s.estado || 'recibida';
+        $('sol-c-datos').checked = true;
+        $('sol-c-alcance').checked = true;
+        $('caja-sol-datos').classList.remove('mal');
+        $('caja-sol-alcance').classList.remove('mal');
+        $('sol-numero').textContent = s.numero;
+        marcarEdicionSolicitud();
+        revisarClave();
+        revisarDocumento();
+        $('sol-solicitante').scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    /** Avisa de si lo que hay en pantalla es una hoja nueva o una ya guardada. */
+    function marcarEdicionSolicitud() {
+        const m = $('sol-editando');
+        m.hidden = !solEditando;
+        m.textContent = solEditando ? 'Corrigiendo' : '';
+        $('btn-sol-guardar').lastChild.textContent = solEditando ? ' Guardar cambios' : ' Solo registrar';
+        $('btn-sol-imprimir').lastChild.textContent = solEditando ? ' Guardar e imprimir' : ' Registrar e imprimir';
+    }
+
+    function limpiarSolicitud() {
+        solEditando = null;
+        ['sol-solicitante', 'sol-documento', 'sol-telefono', 'sol-correo', 'sol-registro',
+         'sol-clave', 'sol-auxiliar', 'sol-direccion', 'sol-barrio', 'sol-propietario',
+         'sol-observaciones', 'sol-ofrecida'].forEach(id => { $(id).value = ''; });
+        $('sol-doctipo').value = 'cedula';
+        $('sol-parroquia').value = '';
+        $('sol-finalidad').value = '';
+        $('sol-ejemplares').value = 1;
+        $('sol-estado').value = 'recibida';
+        elegir('sol-calidad', '');
+        elegir('sol-entrega', '');
+        $('sol-c-datos').checked = false;
+        $('sol-c-alcance').checked = false;
+        $('caja-sol-datos').classList.remove('mal');
+        $('caja-sol-alcance').classList.remove('mal');
+        // Quien atiende suele ser el mismo durante todo el turno.
+        $('sol-atendido').value = (perfil && (perfil.nombre || perfil.usuario)) || '';
+        ['sol-solicitante', 'sol-documento', 'sol-telefono', 'sol-correo', 'sol-clave',
+         'sol-auxiliar', 'sol-direccion', 'sol-atendido'].forEach(id => { pista(id, ''); marcar(id, false); });
+        pista('sol-calidad', ''); pista('sol-entrega', ''); pista('sol-constancia', '');
+        pista('sol-clave', '27 dígitos; los separadores se descartan.');
+        $('sol-numero').textContent = solSiguiente;
+        avisar('aviso-solicitud', '', '');
+        marcarEdicionSolicitud();
+    }
+
+    async function guardarSolicitud() {
+        const faltas = revisarSolicitud();
+        if (faltas.length) {
+            avisar('aviso-solicitud', 'error', 'Falta ' + esc(faltas.slice(0, 3).join(', '))
+                + (faltas.length > 3 ? ' y ' + (faltas.length - 3) + ' más' : '') + '.');
+            const primero = document.querySelector('#aviso-solicitud ~ .campos .mal, .casilla.mal');
+            if (primero) primero.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            return null;
+        }
+
+        const cuerpo = recogerSolicitud();
+        const r = solEditando
+            ? await pedir('PATCH', '/api/admin/solicitudes/' + encodeURIComponent(solEditando), cuerpo)
+            : await pedir('POST', '/api/admin/solicitudes', cuerpo);
+
+        if (r.estado !== 200 && r.estado !== 201) {
+            avisar('aviso-solicitud', 'error', esc((r.datos && r.datos.error) || 'No se pudo registrar la solicitud.'));
+            return null;
+        }
+
+        const s = r.datos.solicitud;
+        solEditando = s.id;
+        $('sol-numero').textContent = s.numero;
+        marcarEdicionSolicitud();
+        avisar('aviso-solicitud', 'exito', 'Solicitud <b>' + esc(s.numero) + '</b> guardada.');
+        await cargarSolicitudes();
+        return s;
+    }
+
+    // ── La constancia impresa ───────────────────────────────────
+
+    function llenarHoja(s) {
+        const o = (id, v) => { $(id).textContent = (v === '' || v == null) ? '—' : v; };
+        o('h-numero', s.numero);
+        o('h-fecha', fecha(s.recibida_en, true));
+        o('h-solicitante', s.solicitante);
+        $('h-doctipo').textContent = DOCTIPO[s.documento_tipo] || 'Documento';
+        o('h-documento', s.documento);
+        o('h-telefono', s.telefono);
+        o('h-correo', s.correo);
+        o('h-calidad', s.calidad);
+        $('h-caja-registro').style.display = s.registro_profesional ? '' : 'none';
+        o('h-registro', s.registro_profesional);
+        o('h-clave', claveLegible(s.clave_catastral) || s.clave_catastral);
+        o('h-auxiliar', s.clave_auxiliar);
+        o('h-direccion', s.direccion);
+        o('h-parroquia', s.parroquia);
+        o('h-barrio', s.barrio);
+        o('h-propietario', s.propietario_catastro);
+        o('h-entrega', s.entrega);
+        o('h-ejemplares', s.ejemplares);
+        o('h-finalidad', s.finalidad);
+        o('h-ofrecida', s.entrega_ofrecida ? fecha(s.entrega_ofrecida + 'T00:00:00') : '');
+        o('h-observaciones', s.observaciones);
+        $('h-firma-nombre').textContent = s.solicitante || 'Firma del solicitante';
+        $('h-firma-doc').textContent = s.documento ? ((DOCTIPO[s.documento_tipo] || '') + ' ' + s.documento) : '';
+        $('h-firma-atendio').textContent = s.atendido_por || 'Recibido por';
+    }
+
+    // ── Lista ───────────────────────────────────────────────────
+
+    async function cargarSolicitudes() {
+        // El formulario se deja listo antes de que haya sesión, así que el
+        // nombre de quien atiende no se puede poner entonces: se rellena
+        // aquí, la primera vez que se abre la pestaña con sesión abierta.
+        if (!solEditando && !$('sol-atendido').value && perfil) {
+            $('sol-atendido').value = perfil.nombre || perfil.usuario;
+        }
+
+        const parametros = new URLSearchParams();
+        const filtro = $('sol-filtro').value;
+        const busca = $('sol-buscar').value.trim();
+        if (filtro) parametros.set('estado', filtro);
+        if (busca) parametros.set('q', busca);
+        const cola = parametros.toString();
+
+        const r = await pedir('GET', '/api/admin/solicitudes' + (cola ? '?' + cola : ''));
+        if (r.estado !== 200) {
+            return avisar('aviso-solicitudes', 'error',
+                esc((r.datos && r.datos.error) || 'No se pudieron leer las solicitudes.'));
+        }
+        avisar('aviso-solicitudes', '', '');
+        solicitudes = r.datos.solicitudes || [];
+        solSiguiente = r.datos.siguiente_numero || '—';
+        if (!solEditando) $('sol-numero').textContent = solSiguiente;
+
+        const resumen = {};
+        (r.datos.resumen || []).forEach(f => { resumen[f.estado] = f.n; });
+        const total = Object.values(resumen).reduce((a, b) => a + b, 0);
+        $('sol-total').textContent = total + (total === 1 ? ' solicitud' : ' solicitudes');
+        $('cifras-solicitudes').innerHTML = ['recibida', 'entregada', 'anulada'].map(e =>
+            '<div class="cifra"><b>' + (resumen[e] || 0) + '</b><span>'
+            + esc(ESTADO_SOL[e][1] + 's') + '</span></div>').join('');
+
+        pintarSolicitudes();
+    }
+
+    function pintarSolicitudes() {
+        const cuerpo = $('tabla-solicitudes');
+        if (!solicitudes.length) {
+            cuerpo.innerHTML = '<tr><td colspan="8" class="vacio">'
+                + 'No hay solicitudes que coincidan.</td></tr>';
+            return;
+        }
+        cuerpo.innerHTML = solicitudes.map(s => {
+            const est = ESTADO_SOL[s.estado] || ESTADO_SOL.recibida;
+            return '<tr>'
+                + '<td class="mono" style="white-space:nowrap">' + esc(s.numero) + '</td>'
+                + '<td style="white-space:nowrap">' + fecha(s.recibida_en) + '</td>'
+                + '<td><div class="nombre">' + esc(s.solicitante) + '</div>'
+                +     '<div class="tenue">' + esc(DOCTIPO[s.documento_tipo] || '') + ' ' + esc(s.documento)
+                +     ' · ' + esc(s.telefono) + '</div>'
+                +     '<div class="tenue">' + esc(s.direccion) + '</div></td>'
+                + '<td class="mono">' + esc(claveLegible(s.clave_catastral) || s.clave_catastral) + '</td>'
+                + '<td>' + esc(s.entrega) + (Number(s.ejemplares) > 1 ? ' <span class="tenue">×' + esc(s.ejemplares) + '</span>' : '') + '</td>'
+                + '<td>' + esc(s.atendido_por) + '</td>'
+                + '<td>' + insignia(est[0], est[1]) + '</td>'
+                + '<td><div class="acciones">'
+                +     '<button class="btn btn-linea chico" data-sol="abrir"    data-id="' + esc(s.id) + '" title="Abrir para corregir o reimprimir"><i class="fas fa-pen-to-square"></i></button>'
+                +     '<button class="btn btn-linea chico" data-sol="visor"    data-id="' + esc(s.id) + '" title="Ver el predio en el GeoVisor"><i class="fas fa-map-location-dot"></i></button>'
+                +     '<button class="btn btn-linea chico" data-sol="imprimir" data-id="' + esc(s.id) + '" title="Reimprimir la constancia"><i class="fas fa-print"></i></button>'
+                +     '<button class="btn btn-linea chico" data-sol="estado"   data-id="' + esc(s.id) + '" title="Marcar como entregada o recibida"><i class="fas fa-circle-check"></i></button>'
+                +     '<button class="btn btn-linea chico" data-sol="borrar"   data-id="' + esc(s.id) + '" title="Borrar (derecho de eliminación)"><i class="fas fa-trash"></i></button>'
+                + '</div></td></tr>';
+        }).join('');
+    }
+
+    /**
+     * CSV con BOM y punto y coma: es lo que abre Excel en español sin pedir
+     * nada. Con coma, un Excel con la configuración regional del país mete
+     * la fila entera en la primera columna. El apóstrofo delante de las
+     * claves evita que las convierta en notación científica.
+     */
+    function exportarSolicitudesCSV() {
+        if (!solicitudes.length) {
+            return avisar('aviso-solicitudes', 'info', 'No hay nada que exportar con este filtro.');
+        }
+        const cols = [
+            ['numero', 'N. de solicitud'], ['recibida_en', 'Recibida'],
+            ['solicitante', 'Solicitante'], ['documento_tipo', 'Tipo de documento'],
+            ['documento', 'Documento'], ['telefono', 'Telefono'], ['correo', 'Correo'],
+            ['registro_profesional', 'Registro CAE'], ['calidad', 'Calidad'],
+            ['clave_catastral', 'Clave catastral'], ['clave_auxiliar', 'Clave auxiliar'],
+            ['direccion', 'Direccion'], ['parroquia', 'Parroquia'], ['barrio', 'Barrio'],
+            ['propietario_catastro', 'Propietario segun catastro'], ['entrega', 'Forma de entrega'],
+            ['ejemplares', 'Ejemplares'], ['finalidad', 'Finalidad'],
+            ['entrega_ofrecida', 'Fecha ofrecida'], ['observaciones', 'Observaciones'],
+            ['atendido_por', 'Atendio'], ['estado', 'Estado'], ['entregada_en', 'Entregada']
+        ];
+        const campo = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const filas = [cols.map(c => campo(c[1])).join(';')];
+        solicitudes.forEach(s => {
+            filas.push(cols.map(c => {
+                let v = s[c[0]];
+                if (c[0] === 'recibida_en' || c[0] === 'entregada_en') v = v ? fecha(v, true) : '';
+                if (c[0] === 'clave_catastral' || c[0] === 'clave_auxiliar' || c[0] === 'documento') v = "'" + (v || '');
+                return campo(v);
+            }).join(';'));
+        });
+
+        const blob = new Blob(['﻿' + filas.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'solicitudes-dicat-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function abrirVisorPredio(clave) {
+        if (!/^\d{27}$/.test(clave || '')) {
+            return avisar('aviso-solicitud', 'info', 'Escriba primero los 27 dígitos de la clave catastral.');
+        }
+        window.open('geovisor.html?clave=' + encodeURIComponent(clave), '_blank', 'noopener');
+    }
+
+    function engancharSolicitudes() {
+        pintarOpciones('sol-calidad', 'sol-calidad', CALIDADES);
+        pintarOpciones('sol-entrega', 'sol-entrega', ENTREGAS);
+
+        $('sol-clave').addEventListener('input', revisarClave);
+        $('sol-auxiliar').addEventListener('input', function () {
+            const v = digitos(this.value);
+            pista('sol-auxiliar', v && v.length !== 18 ? 'Van ' + v.length + ' de 18 dígitos.' : '');
+        });
+        $('sol-documento').addEventListener('blur', revisarDocumento);
+        $('sol-doctipo').addEventListener('change', revisarDocumento);
+
+        $('btn-sol-visor').addEventListener('click', () => abrirVisorPredio(digitos($('sol-clave').value)));
+        $('btn-sol-guardar').addEventListener('click', () => guardarSolicitud());
+        $('btn-sol-imprimir').addEventListener('click', async () => {
+            const s = await guardarSolicitud();
+            if (!s) return;
+            llenarHoja(s);
+            setTimeout(() => window.print(), 80);
+        });
+        $('btn-sol-nueva').addEventListener('click', () => {
+            if (solEditando && !confirm('¿Empezar una solicitud nueva? Lo que no se haya guardado se pierde.')) return;
+            limpiarSolicitud();
+        });
+
+        let temporizador;
+        $('sol-buscar').addEventListener('input', () => {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(cargarSolicitudes, 300);
+        });
+        $('sol-filtro').addEventListener('change', cargarSolicitudes);
+        $('btn-sol-csv').addEventListener('click', exportarSolicitudesCSV);
+
+        $('tabla-solicitudes').addEventListener('click', async e => {
+            const b = e.target.closest('button[data-sol]');
+            if (!b) return;
+            const s = solicitudes.find(x => x.id === b.dataset.id);
+            if (!s) return;
+
+            if (b.dataset.sol === 'abrir') return volcarSolicitud(s);
+            if (b.dataset.sol === 'visor') return abrirVisorPredio(s.clave_catastral);
+            if (b.dataset.sol === 'imprimir') { llenarHoja(s); return setTimeout(() => window.print(), 80); }
+
+            if (b.dataset.sol === 'estado') {
+                const nuevo = s.estado === 'entregada' ? 'recibida' : 'entregada';
+                const r = await pedir('PATCH', '/api/admin/solicitudes/' + encodeURIComponent(s.id), { estado: nuevo });
+                if (r.estado !== 200) {
+                    return avisar('aviso-solicitudes', 'error', esc((r.datos && r.datos.error) || 'No se pudo cambiar el estado.'));
+                }
+                if (solEditando === s.id) $('sol-estado').value = nuevo;
+                return cargarSolicitudes();
+            }
+
+            if (b.dataset.sol === 'borrar') {
+                if (!confirm('¿Borrar ' + s.numero + ' (' + s.solicitante + ')?\n\n'
+                    + 'La fila se elimina de verdad de la base, con sus datos personales. '
+                    + 'En la bitácora queda solo el número. No se puede deshacer.')) return;
+                const r = await pedir('DELETE', '/api/admin/solicitudes/' + encodeURIComponent(s.id));
+                if (r.estado !== 200) {
+                    return avisar('aviso-solicitudes', 'error', esc((r.datos && r.datos.error) || 'No se pudo borrar.'));
+                }
+                if (solEditando === s.id) limpiarSolicitud();
+                avisar('aviso-solicitudes', 'exito', 'Solicitud <b>' + esc(s.numero) + '</b> borrada.');
+                return cargarSolicitudes();
+            }
+        });
+
+        // Ctrl+P imprime lo que haya en pantalla, guardado o no: se rellena
+        // la hoja con el estado actual para que nunca salga en blanco.
+        window.addEventListener('beforeprint', () => {
+            const s = recogerSolicitud();
+            s.numero = $('sol-numero').textContent;
+            s.recibida_en = new Date().toISOString();
+            llenarHoja(s);
+        });
+    }
+
     // ── Cambio de contraseña propia ─────────────────────────────
 
     $('btn-clave').addEventListener('click', async () => {
@@ -1108,6 +2056,11 @@
     // ── Arranque ────────────────────────────────────────────────
 
     $('btn-ingresar').addEventListener('click', () => acceso.abrirIngreso(cargarSesion));
+
+    // Las fichas de opciones se dibujan una sola vez, antes de que haya
+    // sesión: limpiarSolicitud() cuenta con que ya existen.
+    engancharSolicitudes();
+    limpiarSolicitud();
 
     cargarSesion();
 })();

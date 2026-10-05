@@ -32,6 +32,9 @@ import {
     listarPagos, habilitarPredioAdmin
 } from './cobros.js';
 import { declaracionVigente, leerDeclaracion, declararEquipo } from './equipo.js';
+import {
+    listarSolicitudes, crearSolicitud, actualizarSolicitud, eliminarSolicitud
+} from './solicitudes.js';
 
 const FORMATOS = ['pdf', 'dxf', 'csv'];
 
@@ -309,6 +312,28 @@ async function enrutar(request, env, url, ruta, metodo) {
             const datos = await cuerpoJSON(request);
             if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
             return responder(await habilitarPredioAdmin(env, request, sesion, mPredio[1], datos));
+        }
+
+        // Solicitudes presenciales del DICAT: la hoja del mostrador de la sede.
+        if (ruta === '/api/admin/solicitudes') {
+            // ?estado=recibida|entregada|anulada, ?q=<texto>, ?limite=
+            if (metodo === 'GET') return responder(await listarSolicitudes(env, url));
+            if (metodo === 'POST') {
+                const datos = await cuerpoJSON(request);
+                if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+                return responder(await crearSolicitud(env, request, sesion, datos));
+            }
+        }
+
+        const mSolicitud = /^\/api\/admin\/solicitudes\/([A-Za-z0-9_-]+)$/.exec(ruta);
+        if (mSolicitud && metodo === 'PATCH') {
+            const datos = await cuerpoJSON(request);
+            if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+            return responder(await actualizarSolicitud(env, request, sesion, mSolicitud[1], datos));
+        }
+        // Borrado real, no marcado: es el derecho de eliminacion de la LOPDP.
+        if (mSolicitud && metodo === 'DELETE') {
+            return responder(await eliminarSolicitud(env, request, sesion, mSolicitud[1]));
         }
 
         if (ruta === '/api/admin/pagos'     && metodo === 'GET') return responder(await listarPagos(env, url));

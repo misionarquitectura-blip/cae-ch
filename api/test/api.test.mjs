@@ -763,6 +763,178 @@ seccion('Cuenta publica y pago por predio');
     simulador.close();
 }
 
+// ── 10d. Solicitudes presenciales del DICAT ─────────────────────────
+// La hoja del mostrador de la sede. Es la unica tabla con datos de alguien
+// que no tiene cuenta, asi que se comprueba con lupa: quien puede escribir
+// en ella, que valida, y que el borrado se lleva de verdad los datos.
+seccion('Solicitudes presenciales del DICAT');
+{
+    const base = {
+        solicitante: 'Maria Fernanda Lema Guaraca',
+        documento_tipo: 'cedula',
+        documento: '0603456781',
+        telefono: '0991865890',
+        correo: 'mf.lema@ejemplo.ec',
+        calidad: 'Propietario/a',
+        clave_catastral: '060103005007031015000000000',
+        clave_auxiliar: '060103005007031015',
+        direccion: 'Av. Daniel Leon Borja 32-45 y Carabobo',
+        parroquia: 'Lizarzaburu',
+        entrega: 'Impreso con firma y sello',
+        ejemplares: 2,
+        finalidad: 'Compraventa',
+        atendido_por: 'Arq. Juan Pablo Cargua',
+        consentimiento_datos: true,
+        consentimiento_alcance: true
+    };
+    const con = extra => Object.assign({}, base, extra);
+
+    const sinSesion = await llamar('POST', '/api/admin/solicitudes', { cuerpo: base });
+    comprobar('registrar una solicitud sin sesion responde 401', sinSesion.estado === 401);
+
+    // Se usa la cuenta publica del registro, no la del afiliado: a esta
+    // altura del guion aquella ya quedo suspendida, y un 401 por sesion
+    // muerta pasaria por "sin permisos" sin comprobar nada.
+    const vivo = tokenUsuario && (await llamar('GET', '/api/sesion', { token: tokenUsuario })).estado === 200;
+    comprobar('la cuenta publica sigue con sesion para poder probar el corte', vivo);
+    if (vivo) {
+        const ajeno = await llamar('POST', '/api/admin/solicitudes', { token: tokenUsuario, cuerpo: base });
+        comprobar('una cuenta que no es admin recibe 403', ajeno.estado === 403, ajeno.datos);
+        const leerAjeno = await llamar('GET', '/api/admin/solicitudes', { token: tokenUsuario });
+        comprobar('y tampoco puede leer el listado', leerAjeno.estado === 403, leerAjeno.datos);
+    }
+
+    // ── Lo que el servidor NO deja pasar ────────────────────────────
+    const sinFirma = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ consentimiento_datos: false })
+    });
+    comprobar('sin las dos constancias responde 400', sinFirma.estado === 400, sinFirma.datos);
+
+    const cedulaMala = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ documento: '0603456789' })
+    });
+    comprobar('rechaza una cedula con el verificador cambiado', cedulaMala.estado === 400, cedulaMala.datos);
+
+    const rucMalo = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ documento_tipo: 'ruc', documento: '1234567890001' })
+    });
+    comprobar('rechaza un RUC invalido', rucMalo.estado === 400, rucMalo.datos);
+
+    const claveCorta = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ clave_catastral: '06010300500703101500000000' })
+    });
+    comprobar('rechaza una clave catastral de 26 digitos', claveCorta.estado === 400, claveCorta.datos);
+
+    const telMalo = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ telefono: '12345' })
+    });
+    comprobar('rechaza un telefono que no es de Ecuador', telMalo.estado === 400, telMalo.datos);
+
+    const pdfSinCorreo = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ entrega: 'PDF al correo', correo: '' })
+    });
+    comprobar('la entrega en PDF sin correo se rechaza', pdfSinCorreo.estado === 400, pdfSinCorreo.datos);
+
+    // ── El alta buena ───────────────────────────────────────────────
+    const anio = new Date().getFullYear();
+    const alta = await llamar('POST', '/api/admin/solicitudes', { token: tokenAdmin, cuerpo: base });
+    comprobar('registra la solicitud y responde 201', alta.estado === 201, alta.datos);
+    comprobar('el numero es el primero del ano',
+        alta.datos?.solicitud?.numero === 'DICAT-' + anio + '-0001', alta.datos?.solicitud?.numero);
+    comprobar('nace en estado «recibida»', alta.datos?.solicitud?.estado === 'recibida');
+    comprobar('guarda la version del texto que se leyo al solicitante',
+        typeof alta.datos?.solicitud?.texto_version === 'string' && alta.datos.solicitud.texto_version.length >= 10);
+    comprobar('deja constancia de las dos aceptaciones',
+        alta.datos?.solicitud?.consentimiento_datos === 1 && alta.datos?.solicitud?.consentimiento_alcance === 1);
+    comprobar('la clave catastral se guarda sin separadores',
+        alta.datos?.solicitud?.clave_catastral === '060103005007031015000000000');
+
+    const idSolicitud = alta.datos?.solicitud?.id;
+    comprobar('el id lleva el prefijo «sol_» de su tabla',
+        /^sol_[A-Za-z0-9_-]+$/.test(idSolicitud || ''), idSolicitud);
+
+    const segunda = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin,
+        cuerpo: con({ solicitante: 'Pedro Antonio Guaman Cepeda', documento: '0601234560',
+                      clave_catastral: '060101016001017032000000000', entrega: 'Impreso' })
+    });
+    comprobar('la segunda solicitud toma el numero siguiente',
+        segunda.datos?.solicitud?.numero === 'DICAT-' + anio + '-0002', segunda.datos?.solicitud?.numero);
+
+    // ── Listado, filtros y busqueda ─────────────────────────────────
+    const lista = await llamar('GET', '/api/admin/solicitudes', { token: tokenAdmin });
+    comprobar('el listado devuelve las dos solicitudes', lista.datos?.solicitudes?.length === 2, lista.datos);
+    comprobar('anuncia el numero que tocara a la siguiente',
+        lista.datos?.siguiente_numero === 'DICAT-' + anio + '-0003', lista.datos?.siguiente_numero);
+    comprobar('el resumen cuenta dos recibidas',
+        lista.datos?.resumen?.some(f => f.estado === 'recibida' && f.n === 2), lista.datos?.resumen);
+
+    const busca = await llamar('GET', '/api/admin/solicitudes?q=Guaman', { token: tokenAdmin });
+    comprobar('la busqueda por nombre encuentra una sola', busca.datos?.solicitudes?.length === 1, busca.datos);
+
+    const porClave = await llamar('GET', '/api/admin/solicitudes?q=060103005007031015', { token: tokenAdmin });
+    comprobar('la busqueda tambien funciona por clave catastral',
+        porClave.datos?.solicitudes?.length === 1, porClave.datos);
+
+    const entregadas = await llamar('GET', '/api/admin/solicitudes?estado=entregada', { token: tokenAdmin });
+    comprobar('el filtro por estado no devuelve nada todavia', entregadas.datos?.solicitudes?.length === 0);
+
+    // ── Seguimiento ─────────────────────────────────────────────────
+    const marcar = await llamar('PATCH', '/api/admin/solicitudes/' + idSolicitud, {
+        token: tokenAdmin, cuerpo: { estado: 'entregada' }
+    });
+    comprobar('marcar como entregada responde 200', marcar.estado === 200, marcar.datos);
+    comprobar('anota cuando se entrego', !!marcar.datos?.solicitud?.entregada_en);
+
+    const volver = await llamar('PATCH', '/api/admin/solicitudes/' + idSolicitud, {
+        token: tokenAdmin, cuerpo: { estado: 'recibida' }
+    });
+    comprobar('volver a «recibida» limpia la fecha de entrega',
+        volver.datos?.solicitud?.entregada_en === null, volver.datos?.solicitud?.entregada_en);
+
+    // Corregir una hoja ya firmada no vuelve a pedir las constancias: se
+    // firmaron en su momento y cambiar un telefono no es una firma nueva.
+    const correccion = await llamar('PATCH', '/api/admin/solicitudes/' + idSolicitud, {
+        token: tokenAdmin,
+        cuerpo: con({ telefono: '032960123', consentimiento_datos: false, consentimiento_alcance: false })
+    });
+    comprobar('corregir una solicitud ya firmada no vuelve a pedir las constancias',
+        correccion.estado === 200, correccion.datos);
+    comprobar('el telefono queda corregido', correccion.datos?.solicitud?.telefono === '032960123');
+    comprobar('la correccion no borra el consentimiento original',
+        correccion.datos?.solicitud?.consentimiento_datos === 1);
+
+    const fantasma = await llamar('PATCH', '/api/admin/solicitudes/noexiste', {
+        token: tokenAdmin, cuerpo: { estado: 'entregada' }
+    });
+    comprobar('corregir una solicitud inexistente responde 404', fantasma.estado === 404);
+
+    // ── Borrado real (derecho de eliminacion) ───────────────────────
+    const borrado = await llamar('DELETE', '/api/admin/solicitudes/' + idSolicitud, { token: tokenAdmin });
+    comprobar('el borrado responde 200', borrado.estado === 200, borrado.datos);
+
+    const tras = await llamar('GET', '/api/admin/solicitudes', { token: tokenAdmin });
+    comprobar('la solicitud borrada ya no aparece', tras.datos?.solicitudes?.length === 1);
+    comprobar('no queda ni rastro del nombre del solicitante en el listado',
+        !JSON.stringify(tras.datos).includes('Maria Fernanda'));
+
+    const eventosSol = await llamar('GET', '/api/admin/eventos?limite=200', { token: tokenAdmin });
+    const textoEventos = JSON.stringify(eventosSol.datos);
+    comprobar('la bitacora anota el alta con el numero de solicitud',
+        textoEventos.includes('solicitud_dicat_creada') && textoEventos.includes('DICAT-' + anio + '-0001'));
+    comprobar('la bitacora anota el borrado', textoEventos.includes('solicitud_dicat_borrada'));
+    comprobar('la bitacora NO arrastra el nombre ni el documento del ciudadano',
+        !textoEventos.includes('Maria Fernanda') && !textoEventos.includes('0603456781'));
+
+    // El numero no se reutiliza aunque la fila se haya borrado: una
+    // constancia impresa con ese numero sigue existiendo en papel.
+    const tercera = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ solicitante: 'Rosa Elena Yupangui Chavez' })
+    });
+    comprobar('el numero de una solicitud borrada no se reutiliza',
+        tercera.datos?.solicitud?.numero === 'DICAT-' + anio + '-0003', tercera.datos?.solicitud?.numero);
+}
+
 // ── 11. Bitacora ────────────────────────────────────────────────────
 seccion('Bitacora y auditoria');
 {

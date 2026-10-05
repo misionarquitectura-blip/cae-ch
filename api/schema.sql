@@ -3,9 +3,16 @@
 --  Cloudflare D1 (SQLite).  Aplicar con:
 --    npx wrangler d1 execute caech-afiliados --remote --file=schema.sql
 --
---  Principio de minimizacion: aqui NO se guardan cedulas ni RUC, en
---  coherencia con el saneo del catastro y con la politica de privacidad
---  publicada en legal.html#privacidad.
+--  Principio de minimizacion: de los TITULARES DE CUENTA no se guardan
+--  cedulas ni RUC, en coherencia con el saneo del catastro y con la
+--  politica de privacidad publicada en legal.html#privacidad.
+--
+--  La unica excepcion, consciente y acotada, es `solicitudes_dicat`
+--  (migracion 006): la hoja que firma en el mostrador quien pide un DICAT
+--  en persona. Sin documento, esa constancia no identifica a nadie y el
+--  tramite pierde su objeto. Va acompanada del consentimiento expreso y
+--  de la version del texto aceptado, y se borra de verdad a peticion del
+--  interesado. No ampliar la excepcion a otras tablas.
 -- ════════════════════════════════════════════════════════════════════
 
 PRAGMA foreign_keys = ON;
@@ -219,3 +226,59 @@ CREATE TABLE IF NOT EXISTS eventos (
 
 CREATE INDEX IF NOT EXISTS idx_eventos_fecha ON eventos (creado_en);
 CREATE INDEX IF NOT EXISTS idx_eventos_tipo  ON eventos (tipo);
+
+-- ── Solicitudes presenciales del DICAT ──────────────────────────────
+-- La hoja que se llena en el mostrador de la sede. Es la unica tabla con
+-- datos de una persona que no es titular de una cuenta: lleva por eso el
+-- consentimiento expreso y la version del texto que se le leyo, y el
+-- borrado real para atender el derecho de eliminacion. Ver la migracion
+-- 006 para el razonamiento completo.
+CREATE TABLE IF NOT EXISTS solicitudes_dicat (
+    id                      TEXT    PRIMARY KEY,
+    numero                  TEXT    NOT NULL UNIQUE,        -- DICAT-AAAA-NNNN, correlativo por ano
+    creado_en               TEXT    NOT NULL,
+    actualizado_en          TEXT,
+    recibida_en             TEXT    NOT NULL,               -- cuando se atendio en el mostrador
+
+    -- Solicitante
+    solicitante             TEXT    NOT NULL,
+    documento_tipo          TEXT    NOT NULL
+                                    CHECK (documento_tipo IN ('cedula', 'ruc', 'pasaporte')),
+    documento               TEXT    NOT NULL,
+    telefono                TEXT    NOT NULL,
+    correo                  TEXT,
+    registro_profesional    TEXT,                           -- si es colegiado del CAE
+    calidad                 TEXT    NOT NULL,               -- propietario, apoderado, profesional a cargo...
+
+    -- Predio
+    clave_catastral         TEXT    NOT NULL,               -- 27 digitos, sin separadores
+    clave_auxiliar          TEXT,
+    direccion               TEXT    NOT NULL,
+    parroquia               TEXT,
+    barrio                  TEXT,
+    propietario_catastro    TEXT,
+
+    -- Reporte pedido
+    entrega                 TEXT    NOT NULL,
+    ejemplares              INTEGER NOT NULL DEFAULT 1,
+    finalidad               TEXT,
+    entrega_ofrecida        TEXT,                           -- AAAA-MM-DD
+    observaciones           TEXT,
+
+    -- Constancia (LOPDP)
+    consentimiento_datos    INTEGER NOT NULL DEFAULT 0,
+    consentimiento_alcance  INTEGER NOT NULL DEFAULT 0,
+    texto_version           TEXT    NOT NULL,
+
+    -- Seguimiento
+    estado                  TEXT    NOT NULL DEFAULT 'recibida'
+                                    CHECK (estado IN ('recibida', 'entregada', 'anulada')),
+    entregada_en            TEXT,
+    atendido_por            TEXT    NOT NULL,               -- quien recibio, en el mostrador
+    registrada_por          TEXT    REFERENCES afiliados(id) ON DELETE SET NULL,
+    ip_hash                 TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_solicitudes_fecha  ON solicitudes_dicat (creado_en);
+CREATE INDEX IF NOT EXISTS idx_solicitudes_estado ON solicitudes_dicat (estado, creado_en);
+CREATE INDEX IF NOT EXISTS idx_solicitudes_clave  ON solicitudes_dicat (clave_catastral);
