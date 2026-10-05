@@ -79,7 +79,7 @@ FREEMIUM_ACTIVO = "no"
 # 2000 = USD 20,00 (base 17,39 + IVA 2,61). Ver src/cobros.js.
 PRECIO_PREDIO_CENTAVOS = "2000"
 IVA_PORCENTAJE = "15"
-# Predios gratuitos al mes para cada colegiado.
-CUPO_MENSUAL = "4"
+# Predios gratuitos al mes para cada colegiado (1 desde el 2026-10-05).
+CUPO_MENSUAL = "1"
 # Dias que un predio habilitado sigue abierto para volver a descargarlo.
 DIAS_ACCESO_PREDIO = "30"

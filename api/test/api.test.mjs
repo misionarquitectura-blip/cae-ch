@@ -344,12 +344,12 @@ seccion('Planimetria y declaracion de equipo');
 // ── 7c. Cupo mensual del colegiado ──────────────────────────────────
 seccion('Cupo mensual del colegiado');
 {
-    const predios = ['0601500101', '0601500102', '0601500103', '0601500104'];
+    const predios = ['0601500101'];
     for (let i = 0; i < predios.length; i++) {
         const r = await llamar('POST', '/api/descargas', {
             token: tokenAfiliado, cuerpo: { formato: 'pdf', clave_catastral: predios[i] }
         });
-        comprobar('predio ' + (i + 1) + ' de 4 entra por el cupo',
+        comprobar('predio ' + (i + 1) + ' de 1 entra por el cupo',
             r.estado === 200 && r.datos?.via === 'cupo' && r.datos?.cupo?.usados === i + 1, r.datos);
     }
 
@@ -362,21 +362,21 @@ seccion('Cupo mensual del colegiado');
     const sinClave = await llamar('POST', '/api/descargas', { token: tokenAfiliado, cuerpo: { formato: 'csv' } });
     comprobar('sin clave del predio no se autoriza nada', sinClave.estado === 400, sinClave.datos);
 
-    const quinto = await llamar('POST', '/api/descargas', {
+    const segundo = await llamar('POST', '/api/descargas', {
         token: tokenAfiliado, cuerpo: { formato: 'pdf', clave_catastral: '0601500105' }
     });
-    comprobar('el quinto predio del mes pide pago (402)',
-        quinto.estado === 402 && quinto.datos?.requiere_pago === true, quinto.datos);
+    comprobar('el segundo predio del mes pide pago (402)',
+        segundo.estado === 402 && segundo.datos?.requiere_pago === true, segundo.datos);
     comprobar('y dice el precio y el cupo agotado',
-        quinto.datos?.tarifa?.precio === 2000 && quinto.datos?.cupo?.restantes === 0, quinto.datos);
+        segundo.datos?.tarifa?.precio === 2000 && segundo.datos?.cupo?.restantes === 0, segundo.datos);
 
-    const estado = await llamar('GET', '/api/predios/estado?clave=' + predios[1], { token: tokenAfiliado });
+    const estado = await llamar('GET', '/api/predios/estado?clave=' + predios[0], { token: tokenAfiliado });
     comprobar('el estado del predio lo da por habilitado via cupo',
         estado.datos?.habilitado === true && estado.datos?.via === 'cupo' && !!estado.datos?.vence_en, estado.datos);
 
     const resumen = await llamar('GET', '/api/cuenta/cobros', { token: tokenAfiliado });
-    comprobar('el resumen de la cuenta lista los 4 predios',
-        resumen.estado === 200 && resumen.datos?.predios?.length === 4 && resumen.datos?.cupo?.usados === 4, resumen.datos);
+    comprobar('el resumen de la cuenta lista el predio del cupo',
+        resumen.estado === 200 && resumen.datos?.predios?.length === 1 && resumen.datos?.cupo?.usados === 1, resumen.datos);
 }
 
 // ── 8. Suspension y vigencia ────────────────────────────────────────
@@ -585,7 +585,7 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
             const pdfOtro = await llamar('POST', '/api/descargas', {
                 token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010102' }
             });
-            comprobar('el segundo predio tambien', pdfOtro.estado === 200, pdfOtro.datos);
+            comprobar('el segundo predio del mes ya pide pago', pdfOtro.estado === 402 && pdfOtro.datos?.requiere_pago === true, pdfOtro.datos);
 
             const invalidar = await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
                 token: tokenAdmin, cuerpo: { registro_validado: false }

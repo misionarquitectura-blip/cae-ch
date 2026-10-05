@@ -370,7 +370,7 @@
             '  <label><input type="radio" name="caech-reg-tipo" value="publica" checked>' +
             '    <span><b>No soy colegiado</b><br>Pago cada predio</span></label>' +
             '  <label><input type="radio" name="caech-reg-tipo" value="colegiado">' +
-            '    <span><b>Soy colegiado del CAE</b><br>Predios gratis al mes</span></label>' +
+            '    <span><b>Soy colegiado del CAE</b><br>1 predio gratis al mes</span></label>' +
             '</div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-nombre">Nombre completo</label>' +
             '  <input id="caech-reg-nombre" type="text" autocomplete="name"></div>' +

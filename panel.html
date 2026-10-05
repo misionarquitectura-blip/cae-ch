@@ -999,7 +999,8 @@
             ? 'Su cuenta descarga cualquier predio sin cupo ni pago.'
             : 'Cada predio habilitado abre su DICAT, su CSV y su DXF durante ' + (t.dias_acceso || 30)
               + ' días. ' + (d.cobro === 'cupo'
-                ? 'Como colegiado tiene ' + d.cupo.total + ' predios gratuitos al mes; los adicionales cuestan '
+                ? 'Como colegiado tiene ' + (d.cupo.total === 1 ? '1 predio gratuito' : d.cupo.total + ' predios gratuitos')
+                  + ' al mes; los adicionales cuestan '
                 : 'Cada predio cuesta ') + usd(t.precio || 0) + ', IVA incluido.'
               + (t.cobro_en_linea ? '' : ' <b>El pago en línea aún no está habilitado</b>: puede pagar en la sede.');
 

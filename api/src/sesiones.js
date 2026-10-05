@@ -21,7 +21,7 @@ const CLAVE_MIN_LARGO = 12;
  * vigencia que encabeza legal.html. Al cambiar esos textos se sube aqui y
  * cada cuenta vuelve a aceptarlos en su siguiente ingreso.
  */
-export const VERSION_TERMINOS = '2026-10-02';
+export const VERSION_TERMINOS = '2026-10-05';
 
 /** true si la cuenta no acepto todavia la version vigente. */
 export function terminosPendientes(fila) {

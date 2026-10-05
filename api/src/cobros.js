@@ -58,7 +58,7 @@ export function tarifa(env) {
         base: base,
         iva: precio - base,
         iva_porcentaje: ivaPct,
-        cupo_mensual: parseInt(env.CUPO_MENSUAL, 10) >= 0 ? parseInt(env.CUPO_MENSUAL, 10) : 4,
+        cupo_mensual: parseInt(env.CUPO_MENSUAL, 10) >= 0 ? parseInt(env.CUPO_MENSUAL, 10) : 1,
         dias_acceso: parseInt(env.DIAS_ACCESO_PREDIO, 10) || 30,
         cobro_en_linea: !!(credenciales(env).token && credenciales(env).storeId)
     };
@@ -187,7 +187,8 @@ export async function autorizarPredio(env, fila, claveCruda) {
     const pendiente = fila.rol === 'usuario' && !!fila.registro_profesional && !fila.registro_validado;
     let motivo;
     if (p.cobro === 'cupo') {
-        motivo = 'Ya uso los ' + t.cupo_mensual + ' predios gratuitos de este mes. '
+        motivo = (t.cupo_mensual === 1 ? 'Ya uso el predio gratuito de este mes. '
+                                    : 'Ya uso los ' + t.cupo_mensual + ' predios gratuitos de este mes. ')
                + 'Este predio puede habilitarlo con un pago.';
     } else if (pendiente) {
         motivo = 'Su numero de registro del CAE todavia no ha sido cotejado, asi que por ahora '
