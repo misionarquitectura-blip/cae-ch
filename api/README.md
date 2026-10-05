@@ -19,7 +19,7 @@ crear cuenta**: el número de registro del CAE es opcional.
 | | cuenta pública (o colegiado por cotejar) | colegiado (`afiliado`, o `usuario` validado) | `admin` |
 |---|---|---|---|
 | Abrir el GeoVisor | sí (no hace falta cuenta) | sí | sí |
-| **DICAT, CSV y DXF** | pagando el predio | **1 predio al mes** sin pagar; después, pagando | libre |
+| **DICAT, CSV y DXF** | pagando el predio | **1 predio al mes** sin pagar; después, USD 10 (50 % de descuento) | libre |
 | **Planimetría** | gratis, con el equipo declarado | gratis, con el equipo declarado | con el equipo declarado |
 
 ### Cobro por predio (`src/cobros.js`)
@@ -27,7 +27,9 @@ crear cuenta**: el número de registro del CAE es opcional.
 - Un predio habilitado abre **los tres formatos** durante `DIAS_ACCESO_PREDIO`
   días (30). Repetir la descarga dentro del plazo no gasta cupo ni cobra otra vez.
 - Precio: `PRECIO_PREDIO_CENTAVOS` (2000 = USD 20,00 IVA incluido; base 17,39 +
-  IVA 2,61). El cupo del colegiado es `CUPO_MENSUAL` (1), por mes calendario de
+  IVA 2,61). El colegiado, pasado su cupo, paga `PRECIO_COLEGIADO_CENTAVOS`
+  (1000 = USD 10,00; base 8,70 + IVA 1,30): `tarifa(env, fila)` elige el precio.
+  El cupo del colegiado es `CUPO_MENSUAL` (1), por mes calendario de
   Ecuador (UTC-5).
 - Sin cupo ni habilitación, `POST /api/descargas` responde **402** con
   `requiere_pago`, la tarifa y el cupo. El visor lleva entonces a `pago.html`.

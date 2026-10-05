@@ -6,7 +6,8 @@
 //
 //    · admin      libre, sin anotar nada
 //    · colegiado  CUPO_MENSUAL predios al mes sin pagar; pasado el cupo,
-//                 paga como cualquiera
+//                 paga PRECIO_COLEGIADO_CENTAVOS (50 % de descuento,
+//                 desde el 2026-10-05)
 //    · el resto   paga PRECIO_PREDIO_CENTAVOS por predio
 //
 //  Un predio habilitado -por cupo, por pago o por la administracion- abre
@@ -46,15 +47,23 @@ function credenciales(env) {
     return { token: limpiar(env.PAYPHONE_TOKEN), storeId: limpiar(env.PAYPHONE_STORE_ID) };
 }
 
-/** Parametros de cobro leidos del entorno, con los valores del convenio. */
-export function tarifa(env) {
-    const precio = parseInt(env.PRECIO_PREDIO_CENTAVOS, 10) || 2000;
+/**
+ * Parametros de cobro leidos del entorno, con los valores del convenio.
+ * Con la cuenta, el precio es el suyo: el colegiado (cobro 'cupo') paga
+ * PRECIO_COLEGIADO_CENTAVOS; sin cuenta, o cualquier otra, el publico.
+ */
+export function tarifa(env, fila) {
+    const publico = parseInt(env.PRECIO_PREDIO_CENTAVOS, 10) || 2000;
+    const colegiado = !!fila && permisos(fila).cobro === 'cupo';
+    const precio = colegiado ? (parseInt(env.PRECIO_COLEGIADO_CENTAVOS, 10) || 1000) : publico;
     const ivaPct = Number.isFinite(parseFloat(env.IVA_PORCENTAJE)) ? parseFloat(env.IVA_PORCENTAJE) : 15;
     // PayPhone exige amount = amountWithTax + tax exacto, en centavos: se
     // redondea la base y el IVA es lo que falta. USD 20 → 1739 + 261.
     const base = Math.round(precio / (1 + ivaPct / 100));
     return {
         precio: precio,
+        precio_publico: publico,
+        descuento_colegiado: colegiado,
         base: base,
         iva: precio - base,
         iva_porcentaje: ivaPct,
@@ -67,7 +76,8 @@ export function tarifa(env) {
 /** Lo que el cliente necesita para explicar el precio. Sin secretos. */
 function tarifaPublica(t) {
     return {
-        precio: t.precio, base: t.base, iva: t.iva, iva_porcentaje: t.iva_porcentaje,
+        precio: t.precio, precio_publico: t.precio_publico, descuento_colegiado: t.descuento_colegiado,
+        base: t.base, iva: t.iva, iva_porcentaje: t.iva_porcentaje,
         moneda: 'USD', dias_acceso: t.dias_acceso, cobro_en_linea: t.cobro_en_linea
     };
 }
@@ -126,7 +136,7 @@ async function resumenCupo(env, fila, t) {
 
 export async function estadoPredio(env, sesion, clave) {
     const fila = sesion.afiliado;
-    const t = tarifa(env);
+    const t = tarifa(env, fila);
     const c = normalizarClave(clave);
     if (!claveValida(c)) return { estado: 400, cuerpo: { ok: false, error: 'Clave del predio no valida.' } };
 
@@ -157,7 +167,7 @@ export async function autorizarPredio(env, fila, claveCruda) {
     const p = permisos(fila);
     if (p.cobro === 'libre') return { ok: true, via: 'libre' };
 
-    const t = tarifa(env);
+    const t = tarifa(env, fila);
     const clave = normalizarClave(claveCruda);
     if (!claveValida(clave)) {
         return { ok: false, estado: 400, cuerpo: { ok: false, error: 'Falta la clave del predio.' } };
@@ -189,7 +199,7 @@ export async function autorizarPredio(env, fila, claveCruda) {
     if (p.cobro === 'cupo') {
         motivo = (t.cupo_mensual === 1 ? 'Ya uso el predio gratuito de este mes. '
                                     : 'Ya uso los ' + t.cupo_mensual + ' predios gratuitos de este mes. ')
-               + 'Este predio puede habilitarlo con un pago.';
+               + 'Este predio puede habilitarlo con un pago, con el precio de colegiado.';
     } else if (pendiente) {
         motivo = 'Su numero de registro del CAE todavia no ha sido cotejado, asi que por ahora '
                + 'los predios se habilitan con un pago. Cuando lo validemos tendra su cupo de colegiado.';
@@ -216,7 +226,7 @@ export async function autorizarPredio(env, fila, claveCruda) {
 export async function prepararPago(env, request, sesion, datos) {
     const fila = sesion.afiliado;
     const p = permisos(fila);
-    const t = tarifa(env);
+    const t = tarifa(env, fila);
 
     if (!p.pdf) {
         return { estado: 403, cuerpo: { ok: false, error: 'Su cuenta no esta habilitada para pedir productos.' } };
@@ -292,7 +302,8 @@ export async function prepararPago(env, request, sesion, datos) {
 
 export async function confirmarPago(env, request, sesion, datos) {
     const fila = sesion.afiliado;
-    const t = tarifa(env);
+    // El monto se coteja contra el de la fila del pago, no contra esta tarifa.
+    const t = tarifa(env, fila);
     const idPayphone = parseInt(datos.id, 10);
     const clientTx = texto(String(datos.clientTransactionId || ''), 60);
 
@@ -416,7 +427,7 @@ function vistaPago(f) {
 
 export async function resumenCuenta(env, sesion) {
     const fila = sesion.afiliado;
-    const t = tarifa(env);
+    const t = tarifa(env, fila);
     const { results: predios } = await env.DB.prepare(
         'SELECT clave_catastral, via, creado_en, vence_en FROM predios_habilitados '
         + 'WHERE afiliado_id = ? AND vence_en > ? ORDER BY creado_en DESC LIMIT 100'

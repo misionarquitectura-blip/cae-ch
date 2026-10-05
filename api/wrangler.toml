@@ -78,6 +78,9 @@ FREEMIUM_ACTIVO = "no"
 # Precio de un predio -DICAT, CSV y DXF- en centavos, IVA incluido.
 # 2000 = USD 20,00 (base 17,39 + IVA 2,61). Ver src/cobros.js.
 PRECIO_PREDIO_CENTAVOS = "2000"
+# Precio para el colegiado (50 % de descuento desde el 2026-10-05), una vez
+# usado su cupo. 1000 = USD 10,00 (base 8,70 + IVA 1,30).
+PRECIO_COLEGIADO_CENTAVOS = "1000"
 IVA_PORCENTAJE = "15"
 # Predios gratuitos al mes para cada colegiado (1 desde el 2026-10-05).
 CUPO_MENSUAL = "1"

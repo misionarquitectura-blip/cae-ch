@@ -123,6 +123,10 @@
             + '<tr><td>Predio</td><td class="mono">' + esc(clave) + '</td></tr>'
             + '<tr><td>Incluye</td><td>DICAT en PDF, CSV y DXF<br><span class="tenue">durante '
             + (t.dias_acceso || 30) + ' días</span></td></tr>'
+            + (t.descuento_colegiado
+                ? '<tr><td>Precio de colegiado</td><td>50 % de descuento<br><span class="tenue">precio público '
+                  + usd(t.precio_publico) + '</span></td></tr>'
+                : '')
             + '<tr><td>Base imponible</td><td>' + usd(t.base) + '</td></tr>'
             + '<tr><td>IVA ' + t.iva_porcentaje + ' %</td><td>' + usd(t.iva) + '</td></tr>'
             + '<tr class="total"><td>Total</td><td>' + usd(t.precio) + '</td></tr>'

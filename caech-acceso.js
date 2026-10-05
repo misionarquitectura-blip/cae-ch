@@ -766,7 +766,9 @@
         modal('caech-modal-pago', 'Habilitar este predio',
             '<div class="caech-acc-aviso info">' + esc(datos.error || '') + '</div>' +
             '<div class="caech-acc-precio"><b>' + usd(t.precio || 0) + '</b>' +
-            '<span>IVA incluido<br>base ' + usd(t.base || 0) + ' + IVA ' + usd(t.iva || 0) + '</span></div>' +
+            '<span>IVA incluido<br>base ' + usd(t.base || 0) + ' + IVA ' + usd(t.iva || 0) +
+            (t.descuento_colegiado ? '<br>precio de colegiado: 50 % menos que ' + usd(t.precio_publico || 0) : '') +
+            '</span></div>' +
             '<p>Incluye el <b>DICAT en PDF, el CSV y el DXF</b> de este predio, que podr&aacute; volver ' +
             'a descargar durante <b>' + (t.dias_acceso || 30) + ' d&iacute;as</b>.<br>' +
             'Predio: <span class="caech-acc-mono">' + esc(clave) + '</span></p>' +

@@ -367,8 +367,16 @@ seccion('Cupo mensual del colegiado');
     });
     comprobar('el segundo predio del mes pide pago (402)',
         segundo.estado === 402 && segundo.datos?.requiere_pago === true, segundo.datos);
-    comprobar('y dice el precio y el cupo agotado',
-        segundo.datos?.tarifa?.precio === 2000 && segundo.datos?.cupo?.restantes === 0, segundo.datos);
+    comprobar('y dice el precio de colegiado (50 %) y el cupo agotado',
+        segundo.datos?.tarifa?.precio === 1000 && segundo.datos?.tarifa?.precio_publico === 2000
+        && segundo.datos?.tarifa?.descuento_colegiado === true && segundo.datos?.cupo?.restantes === 0, segundo.datos);
+
+    const pagoColegiado = await llamar('POST', '/api/pagos', {
+        token: tokenAfiliado, cuerpo: { clave_catastral: '0601500105' }
+    });
+    comprobar('el pago del colegiado se prepara por USD 10 (870 + 130)',
+        pagoColegiado.estado === 201 && pagoColegiado.datos?.cajita?.amount === 1000
+        && pagoColegiado.datos?.cajita?.amountWithTax === 870 && pagoColegiado.datos?.cajita?.tax === 130, pagoColegiado.datos);
 
     const estado = await llamar('GET', '/api/predios/estado?clave=' + predios[0], { token: tokenAfiliado });
     comprobar('el estado del predio lo da por habilitado via cupo',
@@ -670,6 +678,8 @@ seccion('Cuenta publica y pago por predio');
         comprobar('sin pagar el predio responde 402', sinPagar.estado === 402 && sinPagar.datos?.requiere_pago === true, sinPagar.datos);
         comprobar('una cuenta publica no tiene cupo', sinPagar.datos?.cupo === null, sinPagar.datos);
         comprobar('el cobro en linea figura disponible', sinPagar.datos?.tarifa?.cobro_en_linea === true, sinPagar.datos?.tarifa);
+        comprobar('la cuenta publica paga el precio completo, sin descuento',
+            sinPagar.datos?.tarifa?.precio === 2000 && sinPagar.datos?.tarifa?.descuento_colegiado === false, sinPagar.datos?.tarifa);
 
         async function preparar() {
             const r = await llamar('POST', '/api/pagos', { token: tokenPub, cuerpo: { clave_catastral: PREDIO } });
