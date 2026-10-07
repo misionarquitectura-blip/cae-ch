@@ -96,9 +96,13 @@ const FUNCIONES = [
     'afNucleo', 'afRingUTM', 'afAreaPredio', 'afExtender', 'afCruzaAnillo', 'afCadenasLF',
     'calcularFranjasAfectacion', 'afCallesQueCruzan', 'afFranjasBorde', 'afDesfase', 'afMuestras',
     'lindAnilloValido', 'lindAnillosExteriores', 'lindProyeccion', 'lindLongitudIntervalos',
-    'lindLadosPredio', 'lindMarcarVecino'
+    'lindLadosPredio', 'lindMarcarVecino',
+    // ancho de via por frente, medido entre lineas de fabrica (DICAT 4C)
+    'afCajaGrados', 'afCajaPredio', 'afSegmentosLF', 'afCortesRayo', 'afAnchoDesde', 'afUnitario',
+    'afLotesCercanos', 'afHayPredioEn', 'calcularAnchosVia'
 ];
-const CONSTANTES = ['AF_MAX_RETIRO', 'AF_NODE_SNAP', 'LIND_TOL_M', 'LIND_MIN_M'];
+const CONSTANTES = ['AF_MAX_RETIRO', 'AF_NODE_SNAP', 'LIND_TOL_M', 'LIND_MIN_M',
+    'VIA_ANCHO_MIN', 'VIA_ANCHO_LF', 'VIA_PARALELA_SEN', 'LF_NO_LINDERO'];
 
 function extraerFuncion(src, nombre) {
     const i = src.indexOf('function ' + nombre + '(');
@@ -149,6 +153,15 @@ function cargarNucleo(constantes) {
         geojsonLayers[8] = { eachLayer: cb => { for (const f of featuresLF) cb({ feature: f }); } };
         try { return api.calcularFranjasAfectacion(predioGeoJSON); }
         finally { delete geojsonLayers[8]; }
+    };
+    // Ancho de via por frente (entre la LF del frente y la de enfrente o, sin
+    // ella, hasta los lotes de la otra acera). Lee las capas 8 y 6 del visor.
+    const capaDe = lista => ({ eachLayer: cb => { for (const f of lista) cb({ feature: f }); } });
+    api.anchosVia = function (predioGeoJSON, featuresLF, featuresCatastro) {
+        geojsonLayers[8] = capaDe(featuresLF);
+        geojsonLayers[6] = capaDe(featuresCatastro || []);
+        try { return api.calcularAnchosVia(predioGeoJSON); }
+        finally { delete geojsonLayers[8]; delete geojsonLayers[6]; }
     };
     _cache.set(clave, api);
     return api;
@@ -959,6 +972,28 @@ function poligonosCatastro(partes, o) {
     return out;
 }
 
+// Paralela a una polilinea a distancia d (positiva = a la izquierda del
+// avance), con inglete en los quiebres. El inglete se topa en 3 veces d para
+// que un quiebre muy cerrado no lance el borde lejos del eje.
+function desplazar(l, d) {
+    const q = l.filter((p, i) => !i || Math.hypot(p[0] - l[i - 1][0], p[1] - l[i - 1][1]) > 1e-6);
+    if (q.length < 2) return [];
+    const nor = [];
+    for (let i = 1; i < q.length; i++) {
+        const dx = q[i][0] - q[i - 1][0], dy = q[i][1] - q[i - 1][1], L = Math.hypot(dx, dy);
+        nor.push([-dy / L, dx / L]);
+    }
+    return q.map((p, i) => {
+        const a = nor[Math.max(0, i - 1)], b = nor[Math.min(nor.length - 1, i)];
+        let mx = a[0] + b[0], my = a[1] + b[1];
+        const ml = Math.hypot(mx, my);
+        if (ml < 1e-9) return [p[0] + a[0] * d, p[1] + a[1] * d];
+        mx /= ml; my /= ml;
+        const k = d / Math.max(mx * a[0] + my * a[1], 1 / 3);
+        return [p[0] + mx * k, p[1] + my * k];
+    });
+}
+
 const cerrar = r => (r.length && (r[0][0] !== r[r.length - 1][0] || r[0][1] !== r[r.length - 1][1])) ? r.concat([r[0]]) : r;
 
 function rumbo(az) {
@@ -1351,8 +1386,19 @@ async function analizar(vertices, opciones, capas, config) {
     // 4 ── Afectaciones ──────────────────────────────────────────────────────
     const piezasAfectadas = [];
     let lineaFabrica = null;
+    const lfGeo = lfFeatures.map(f => ({ type: 'Feature', properties: f.props, geometry: geojsonWGS84(f) }));
+    // Ancho total de la via en cada frente, medido como en el DICAT: de la LF
+    // del frente a la de enfrente o, si no la hay, hasta los lotes de la otra
+    // acera (referencial). Solo donde hay lineas de fabrica.
+    let anchosVia = [];
+    if (lfGeo.length) try {
+        const catGeo = capas.catastro.consultar(bbox, 50).map(f => ({ type: 'Feature', properties: f.props, geometry: geojsonWGS84(f) }));
+        anchosVia = nucleo.anchosVia(predioGeoJSON, lfGeo, catGeo).filter(x => x.ancho != null && x.cota).map(x => {
+            const li = linderos.filter(l => l.dir === x.dir && l.fuente === 'via').sort((u, v) => v.longitud - u.longitud)[0];
+            return { dir: x.dir, frente: x.frente, ancho: x.ancho, fuente: x.fuente, cota: x.cota, via: li ? li.colindante : '' };
+        });
+    } catch (e) { avisos.push('No se pudo medir el ancho de vía entre líneas de fábrica: ' + e.message); }
     try {
-        const lfGeo = lfFeatures.map(f => ({ type: 'Feature', properties: f.props, geometry: geojsonWGS84(f) }));
         const r = nucleo.afectacionLF(predioGeoJSON, lfGeo);
         if (r) {
             lineaFabrica = {
@@ -1374,6 +1420,12 @@ async function analizar(vertices, opciones, capas, config) {
         const cercanos = [];
         const capsulas = [];
         const dibujo = [];
+        // Trazado de la via: sus dos bordes paralelos al eje a la distancia
+        // del margen (semiseccion o derecho de via) y, si la capa trae el
+        // ancho de calzada (MTOP), los bordes de la calzada.
+        const esVia = e.grupo === 'vialidad' && e.geometria === 'linea';
+        const bordes = [], calzada = [];
+        const ventanaAmplia = [ventana[0] - (margen || 0) - 5, ventana[1] - (margen || 0) - 5, ventana[2] + (margen || 0) + 5, ventana[3] + (margen || 0) + 5];
         for (const f of capa.consultar(bbox, radio)) {
             const pu = partesUTM(f);
             const lineasF = e.geometria === 'poligono' ? pu.flatMap(anillos => anillos) : pu.map(p => p[0]);
@@ -1381,8 +1433,15 @@ async function analizar(vertices, opciones, capas, config) {
             for (const l of lineasF) d = Math.min(d, distAnilloLinea(P, l));
             if (e.geometria === 'poligono' && pu.some(anillos => P.some(p => puntoEnAnillo(p, anillos[0])))) d = 0;
             if (d > radio) continue;
-            cercanos.push({ nombre: nombreDe(f.props, e.nombre_campo || 'nam') || '', distancia: r2(d), capa: f.origen });
+            const anchoCalzada = e.campo_ancho_calzada ? num(f.props[e.campo_ancho_calzada]) : null;
+            cercanos.push({ nombre: nombreDe(f.props, e.nombre_campo || 'nam') || '', distancia: r2(d), capa: f.origen, anchoCalzada: anchoCalzada > 0 ? anchoCalzada : null });
             lineasF.forEach(l => recortarLinea(l, ventana).forEach(s => dibujo.push(s)));
+            if (esVia) for (const l of lineasF) for (const s of recortarLinea(l, ventanaAmplia)) {
+                for (const sg of [1, -1]) {
+                    if (margen > 0) recortarLinea(desplazar(s, sg * margen), ventana).forEach(x => bordes.push(x));
+                    if (anchoCalzada > 0) recortarLinea(desplazar(s, sg * anchoCalzada / 2), ventana).forEach(x => calzada.push(x));
+                }
+            }
             if (margen > 0 && d <= margen) {
                 const alcance = [x0 - margen - 1, y0 - margen - 1, x1 + margen + 1, y1 + margen + 1];
                 for (const l of lineasF) for (const s of recortarLinea(l, alcance)) {
@@ -1408,12 +1467,18 @@ async function analizar(vertices, opciones, capas, config) {
             } catch (err) { avisos.push(`No se pudo calcular el margen de ${e.nombre}: ${err.message}`); }
         }
         cercanos.sort((a, b) => a.distancia - b.distancia);
+        const conCalzada = cercanos.find(c => c.anchoCalzada);
         elementos.push({
             id: e.id, nombre: e.nombre, grupo: e.grupo, capaDXF: e.capa_dxf, colorDXF: e.color_dxf,
             margen, margenEditado: sobre !== null, verificado: !!e.verificado && sobre === null,
             baseLegal: sobre !== null ? 'Valor ingresado por el profesional responsable' : e.base_legal,
             distancia: cercanos[0].distancia, cercanos: cercanos.slice(0, 5),
-            afecta: areaAf >= 0.01, area: r2(areaAf), poligonos, dibujo
+            afecta: areaAf >= 0.01, area: r2(areaAf), poligonos, dibujo,
+            // ancho total = dos veces el margen medido desde el eje
+            anchoTotal: esVia && margen > 0 ? r2(2 * margen) : null,
+            rotuloAncho: e.rotulo_ancho || 'Derecho de vía',
+            anchoCalzada: conCalzada ? conCalzada.anchoCalzada : null,
+            bordes, calzada
         });
         if (margen === null && cercanos[0].distancia <= 50) avisos.push(`${e.nombre} a ${cercanos[0].distancia} m del predio sin margen definido: ingrese el ancho para calcular la afectación.`);
         if (e.grupo === 'hidrografia' && !e.verificado && sobre === null && areaAf > 0) avisos.push(`El margen de ${e.nombre} (${margen} m) es un valor por verificar en la ordenanza.`);
@@ -1474,7 +1539,7 @@ async function analizar(vertices, opciones, capas, config) {
         linderos,
         resumenLinderos: DIRS.map(d => ({ dir: d, longitud: r2(linderos.filter(l => l.dir === d).reduce((s, l) => s + l.longitud, 0)) })),
         afectaciones: {
-            lineaFabrica, elementos,
+            lineaFabrica, elementos, anchosVia,
             areaAfectada: r2(areaAfectada), areaUtil: r2(area - areaAfectada)
         },
         ubicacion: {
@@ -1486,7 +1551,7 @@ async function analizar(vertices, opciones, capas, config) {
     };
 }
 
-module.exports = { analizar, entornoUbicacion, rumbo, shoelace, capsula, areaMulti, recortarLinea, distAnilloLinea, num };
+module.exports = { analizar, entornoUbicacion, rumbo, shoelace, capsula, areaMulti, recortarLinea, distAnilloLinea, num, desplazar };
 
 };
 
@@ -2138,12 +2203,18 @@ const CAPAS = {
     ELEMENTOS_HIDRO: { aci: 4, rgb: [14, 116, 144], lw: 0.35 },
     ELEMENTOS_HIDRO_TXT: { aci: 4, rgb: [14, 116, 144] },
     MARGEN_VIA: { aci: 6, rgb: [122, 62, 157], lw: 0.2, relleno: [233, 222, 240] },
-    ELEMENTOS_VIA: { aci: 6, rgb: [122, 62, 157], lw: 0.35 },
+    ELEMENTOS_VIA: { aci: 6, rgb: [122, 62, 157], lw: 0.2, trazo: 'DASHED' },   // eje
     ELEMENTOS_VIA_TXT: { aci: 6, rgb: [122, 62, 157] },
+    BORDE_VIA: { aci: 6, rgb: [122, 62, 157], lw: 0.4 },      // ancho total / derecho de via
+    CALZADA_VIA: { aci: 6, rgb: [122, 62, 157], lw: 0.15 },
     PREDIO: { aci: 1, rgb: [227, 30, 36], lw: 0.6 },
     VERTICES: { aci: 3, rgb: [227, 30, 36], lw: 0.2 },
     VERTICES_TXT: { aci: 7, rgb: [46, 50, 56] },
-    COTAS: { aci: 2, rgb: [46, 50, 56] },
+    // Cotas en azul (ACI 5): el amarillo de antes desaparecia al imprimir en
+    // blanco y negro.
+    COTAS: { aci: 5, rgb: [30, 80, 170] },
+    COTAS_VIA: { aci: 5, rgb: [30, 80, 170], lw: 0.18 },
+    COTAS_VIA_TXT: { aci: 5, rgb: [30, 80, 170] },
     LINDEROS_TXT: { aci: 6, rgb: [86, 91, 99] },
     LINDEROS_REGISTRAL_TXT: { aci: 8, rgb: [139, 144, 152] },
     UBICACION: { aci: 8, rgb: [150, 150, 150], lw: 0.1 },
@@ -2252,6 +2323,43 @@ function construirLamina(proyecto) {
         try { return pc.intersection([[anillo.concat([anillo[0]])]], [rectVentana]); } catch (e) { return []; }
     };
 
+    // Cota de un ancho de via: linea entre los dos bordes, con trazos oblicuos
+    // en los extremos (cota de arquitectura) y el valor junto a ella.
+    const enVentana = p => p[0] >= ventana[0] && p[0] <= ventana[2] && p[1] >= ventana[1] && p[1] <= ventana[3];
+    // Si la seccion no entra en el dibujo (una calle ancha a escala grande)
+    // la cota se corta en el borde del dibujo y solo lleva trazo en el
+    // extremo que se ve: el valor es el de la seccion entera.
+    const cotaAncho = (p1, p2, texto, dxfCapa) => {
+        const borde = 1.5 / f;                            // 1,5 mm dentro del marco del dibujo
+        const vis = recortarLinea([p1, p2], [ventana[0] + borde, ventana[1] + borde, ventana[2] - borde, ventana[3] - borde])[0];
+        if (!vis || vis.length < 2) return;
+        const [q1, q2] = [vis[0], vis[vis.length - 1]];
+        const L = Math.hypot(q2[0] - q1[0], q2[1] - q1[1]);
+        if (L * f < 3) return;                            // menos de 3 mm visibles: no se acota
+        const u = [(q2[0] - q1[0]) / L, (q2[1] - q1[1]) / L];
+        const ex = { dxfCapa: dxfCapa || 'COTAS_VIA' };
+        pl('COTAS_VIA', [q1, q2], 'm', false, ex);
+        const t = 1.1 * k / f;                            // medio trazo oblicuo, en metros
+        const o = [(u[0] - u[1]) * Math.SQRT1_2 * t, (u[1] + u[0]) * Math.SQRT1_2 * t];
+        for (const p of [p1, p2]) {
+            const visto = [q1, q2].some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 1e-6);
+            if (visto) pl('COTAS_VIA', [[p[0] - o[0], p[1] - o[1]], [p[0] + o[0], p[1] + o[1]]], 'm', false, ex);
+        }
+        let ang = Math.atan2(u[1], u[0]) * 180 / Math.PI;
+        if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+        // El texto se apoya en la linea por su base: se aparta hacia "arriba"
+        // del propio texto, que tras enderezar el angulo puede ser cualquiera
+        // de los dos lados de la cota.
+        const ar = ang * Math.PI / 180, arriba = [-Math.sin(ar), Math.cos(ar)], off = 1.0 * k / f;
+        const w = anchoTexto(texto, hPeq) / f, m = [(q1[0] + q2[0]) / 2, (q1[1] + q2[1]) / 2];
+        const ancla = d => ({ x: m[0] + u[0] * d + arriba[0] * off, y: m[1] + u[1] * d + arriba[1] * off, rot: ang, empuje: arriba });
+        // Va despues de vertices y cotas del predio (prioridad 2,5): busca
+        // hueco junto a la linea y, si no lo hay, a continuacion de sus extremos.
+        tx('COTAS_VIA_TXT', m[0] + arriba[0] * off, m[1] + arriba[1] * off, hPeq, texto, 'm',
+            { rot: ang, al: 'c', va: 'b', prioridad: 2.5, empuje: arriba, dxfCapa: (dxfCapa || 'COTAS_VIA') + '_TXT',
+              alternativas: [ancla(L / 2 + w / 2 + 1 / f), ancla(-L / 2 - w / 2 - 1 / f), ancla(L / 2 + w), ancla(-L / 2 - w)] });
+    };
+
     // ── Marco ────────────────────────────────────────────────────────────────
     pl('MARCO', [[M, M], [W - M, M], [W - M, H - M], [M, H - M]], 'p', true);
     pl('MARCO', [[vp.x1 + 2, M], [vp.x1 + 2, H - M]], 'p');
@@ -2283,6 +2391,47 @@ function construirLamina(proyecto) {
     for (const e of (a.afectaciones && a.afectaciones.elementos) || []) {
         const g = e.grupo === 'hidrografia' ? 'HIDRO' : 'VIA';
         for (const pol of e.poligonos || []) for (const r of pol) pl('MARGEN_' + g, r, 'm', true, { relleno: true, dxfCapa: (e.capaDXF || 'ELEMENTO') + '_MARGEN' });
+        // Trazado de la via: no solo el eje, tambien sus bordes (ancho total o
+        // derecho de via) y, si se conoce, la calzada; con su cota.
+        if (g === 'VIA') {
+            const capa = e.capaDXF || 'ELEMENTO';
+            for (const l of e.bordes || []) for (const s of recortarLinea(l, ventana)) pl('BORDE_VIA', s, 'm', false, { dxfCapa: capa + '_BORDE' });
+            for (const l of e.calzada || []) for (const s of recortarLinea(l, ventana)) pl('CALZADA_VIA', s, 'm', false, { dxfCapa: capa + '_CALZADA' });
+            // La cota va en el punto del eje mas cercano al predio en que la
+            // seccion entera (y la de la calzada, corrida 9 mm) cabe en el dibujo
+            const mitad = Math.max(e.anchoTotal || 0, e.anchoCalzada || 0) / 2;
+            const cP = [(bx0 + bx1) / 2, (by0 + by1) / 2];
+            let ej = null, dMin = Infinity;
+            for (const l of e.dibujo || []) for (let i = 1; i < l.length; i++) {
+                const p0 = l[i - 1], p1 = l[i], Ls = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+                if (Ls < 1e-6) continue;
+                const uu = [(p1[0] - p0[0]) / Ls, (p1[1] - p0[1]) / Ls], nn = [-uu[1], uu[0]];
+                for (let s = 0; s <= Ls; s += Math.max(0.5, Ls / 40)) {
+                    const q = [p0[0] + uu[0] * s, p0[1] + uu[1] * s];
+                    const q2 = [q[0] + uu[0] * 9 * k / f, q[1] + uu[1] * 9 * k / f];
+                    const cabe = [q, e.anchoCalzada ? q2 : q].every(z => enVentana([z[0] - nn[0] * mitad, z[1] - nn[1] * mitad]) && enVentana([z[0] + nn[0] * mitad, z[1] + nn[1] * mitad]));
+                    const d = Math.hypot(q[0] - cP[0], q[1] - cP[1]);
+                    // se prefiere donde la seccion entra entera; si no entra en ningun
+                    // punto, el mas cercano, y la cota se corta en el borde
+                    const pena = cabe ? 0 : 1e6;
+                    if (d + pena < dMin) { dMin = d + pena; ej = { p: q, u: uu }; }
+                }
+            }
+            if (ej && mitad > 0) {
+                const nn = [-ej.u[1], ej.u[0]];
+                const corre = (p, d) => [p[0] + ej.u[0] * d, p[1] + ej.u[1] * d];
+                if (e.anchoTotal) {
+                    const h = e.anchoTotal / 2;
+                    cotaAncho([ej.p[0] - nn[0] * h, ej.p[1] - nn[1] * h], [ej.p[0] + nn[0] * h, ej.p[1] + nn[1] * h],
+                        `${String(e.rotuloAncho || 'Derecho de vía').toUpperCase()} ${fmt(e.anchoTotal, 2)} m`, capa + '_COTA');
+                }
+                if (e.anchoCalzada) {
+                    const h = e.anchoCalzada / 2, q = corre(ej.p, 9 * k / f);
+                    cotaAncho([q[0] - nn[0] * h, q[1] - nn[1] * h], [q[0] + nn[0] * h, q[1] + nn[1] * h],
+                        `CALZADA ${fmt(e.anchoCalzada, 2)} m`, capa + '_COTA');
+                }
+            }
+        }
         // El nombre se ofrece en varios puntos del trazado: si en el primero no
         // cabe (el rotulo se omitia y la via quedaba sin nombre), se prueba en
         // los siguientes tramos visibles, de mayor a menor longitud.
@@ -2302,6 +2451,11 @@ function construirLamina(proyecto) {
             tx('ELEMENTOS_' + g + '_TXT', anclas[0].x, anclas[0].y, hPeq, nom, 'm',
                 { rot: anclas[0].rot, al: 'c', va: 'b', dxfCapa: (e.capaDXF || 'ELEMENTO') + '_TXT', prioridad: 5, empuje: anclas[0].empuje, alternativas: anclas.slice(1) });
         }
+    }
+
+    // Ancho total de la via en cada frente urbano, entre lineas de fabrica
+    for (const av of (a.afectaciones && a.afectaciones.anchosVia) || []) {
+        cotaAncho(av.cota[0], av.cota[1], `ANCHO DE VÍA ${fmt(av.ancho, 2)} m` + (av.fuente === 'lf' ? '' : ' (REFERENCIAL)'), 'COTAS_VIA');
     }
 
     // ── Predio, vertices, cotas y linderos ───────────────────────────────────
@@ -2449,9 +2603,10 @@ function construirLamina(proyecto) {
         ? d.propietarios.filter(p => String(p.nombre || '').trim())
         : d.propietario ? [{ nombre: d.propietario, documento: d.documento || '', calidad: '', participacion: '' }] : []);
     const conCuota = p => p.nombre + (p.participacion ? ' (' + p.participacion + ')' : '');
-    const camposCaj = titulares.length > 1
-        ? [['PROPIETARIOS', conCuota(titulares[0])], ['', titulares.slice(1).map(conCuota).join('  ·  ')]]
-        : [['PROPIETARIO', titulares.length ? conCuota(titulares[0]) : 'POR COMPLETAR']];
+    const nombrePredio = String(d.nombrePredio || '').trim();
+    const camposCaj = nombrePredio ? [['NOMBRE DEL PREDIO', nombrePredio.toUpperCase()]] : [];
+    if (titulares.length > 1) camposCaj.push(['PROPIETARIOS', conCuota(titulares[0])], ['', titulares.slice(1).map(conCuota).join('  ·  ')]);
+    else camposCaj.push(['PROPIETARIO', titulares.length ? conCuota(titulares[0]) : 'POR COMPLETAR']);
     camposCaj.push(
         ['UBICACIÓN', [d.direccion, d.sector, a.ubicacion.parroquia ? 'Parroquia ' + a.ubicacion.parroquia : ''].filter(Boolean).join(' - ') || 'POR COMPLETAR'],
         ['CLAVE CATASTRAL', d.claveCatastral || 'Predio no catastrado'],
@@ -2752,7 +2907,8 @@ const Buffer = __Buffer;
 //  Mismas reglas que construirDXF del visor (ver memoria del proyecto): R12
 //  es el unico dialecto que AutoCAD, BricsCAD, ZWCAD y QGIS abren con un
 //  esqueleto minimo; nada de LWPOLYLINE ni variables de cabecera posteriores;
-//  capa 0 y estilo STANDARD declarados; contenido en ASCII.
+//  capa 0 y estilo STANDARD declarados. Los textos van en Windows-1252 con
+//  $DWGCODEPAGE ANSI_1252 (ver textoDXF y bytesDXF).
 //
 //  Las entidades del predio y del contexto van en coordenadas UTM reales. El
 //  marco, los cuadros y el cajetin van a escala en el espacio modelo, en capas
@@ -2761,11 +2917,40 @@ const Buffer = __Buffer;
 'use strict';
 const { construirLamina, CAPAS } = require('./lamina');
 
+// Nombres de capa: solo ASCII, sin tildes (asi los espera cualquier CAD)
 function ascii(t) {
     return String(t == null ? '' : t)
         .replace(/°/g, '%%d').replace(/²/g, '2').replace(/[·•]/g, '-').replace(/[ñ]/g, 'n').replace(/[Ñ]/g, 'N')
         .normalize('NFD').replace(/[̀-ͯ]/g, '')
         .replace(/[^\x20-\x7E]/g, '').trim();
+}
+
+// Contenido de los textos: tildes, ñ y ² se escriben tal cual, como bytes de
+// Windows-1252, y la cabecera declara $DWGCODEPAGE ANSI_1252 (variable que ya
+// existe en R12). Asi los leen AutoCAD, BricsCAD, ZWCAD y QGIS/GDAL; antes se
+// transliteraban y "Pública" llegaba como "Publica". Se probo \U+XXXX en un
+// archivo ASCII: GDAL no lo decodifica en un TEXT de R12 y quedaba a la vista.
+// Lo que no cabe en Latin-1 (raro en un plano) si va como \U+XXXX.
+function textoDXF(t) {
+    let s = String(t == null ? '' : t).normalize('NFC')
+        .replace(/°/g, '%%d').replace(/[·•]/g, '-').replace(/[–—]/g, '-').replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    let out = '';
+    for (const c of s) {
+        const cp = c.codePointAt(0);
+        if (cp >= 0x20 && cp <= 0x7E) out += c;
+        else if (cp >= 0xA0 && cp <= 0xFF) out += c;
+        else if (cp > 0x7E && cp <= 0xFFFF) out += '\\U+' + cp.toString(16).toUpperCase().padStart(4, '0');
+    }
+    return out.trim();
+}
+
+// El DXF como bytes Windows-1252: todo caracter del texto es <= 0xFF y en
+// ese rango Latin-1 y Windows-1252 coinciden. Sirve igual en Node y en el
+// navegador. Mandar el texto tal cual (UTF-8) romperia los acentos.
+function bytesDXF(texto) {
+    const b = new Uint8Array(texto.length);
+    for (let i = 0; i < texto.length; i++) b[i] = texto.charCodeAt(i) & 0xFF;
+    return b;
 }
 
 function construirDXFPlanimetria(proyecto) {
@@ -2780,8 +2965,11 @@ function construirDXFPlanimetria(proyecto) {
     };
     const aMundo = (p, esp) => esp === 'm' ? p : lam.papelAMundo(p);
 
-    // Capas usadas y su color
+    // Capas usadas, su color y su tipo de linea (el de la capa de estilo de
+    // la que sale: la calzada de una via va en trazos aunque su capa CAD se
+    // llame como la via)
     const capas = new Map([['0', 7]]);
+    const trazos = new Map();
     const nombreCapa = pr => ascii(pr.dxfCapa || pr.capa).toUpperCase().replace(/[^A-Z0-9_\-]/g, '_');
     for (const pr of lam.primitivas) {
         if (pr.soloPDF) continue;
@@ -2789,12 +2977,13 @@ function construirDXFPlanimetria(proyecto) {
         if (!capas.has(nom)) {
             const base = CAPAS[pr.capa] || {};
             capas.set(nom, base.aci || 7);
+            if (base.trazo === 'DASHED') trazos.set(nom, 'DASHED');
         }
     }
     // Color propio de cada elemento certificado (config.color_dxf)
     for (const e of (proyecto.analisis.afectaciones && proyecto.analisis.afectaciones.elementos) || []) {
         const c = ascii(e.capaDXF || 'ELEMENTO').toUpperCase();
-        for (const suf of ['', '_MARGEN', '_TXT']) if (capas.has(c + suf) && e.colorDXF) capas.set(c + suf, e.colorDXF);
+        for (const suf of ['', '_MARGEN', '_TXT', '_BORDE', '_CALZADA']) if (capas.has(c + suf) && e.colorDXF) capas.set(c + suf, e.colorDXF);
     }
 
     // Extension del dibujo
@@ -2809,6 +2998,7 @@ function construirDXFPlanimetria(proyecto) {
     // ── HEADER ───────────────────────────────────────────────────────────────
     g(0, 'SECTION'); g(2, 'HEADER');
     g(9, '$ACADVER'); g(1, 'AC1009');
+    g(9, '$DWGCODEPAGE'); g(3, 'ANSI_1252');
     g(9, '$INSBASE'); g(10, '0.0'); g(20, '0.0'); g(30, '0.0');
     g(9, '$EXTMIN'); g(10, num(x0)); g(20, num(y0)); g(30, '0.0');
     g(9, '$EXTMAX'); g(10, num(x1)); g(20, num(y1)); g(30, '0.0');
@@ -2826,8 +3016,7 @@ function construirDXFPlanimetria(proyecto) {
 
     g(0, 'TABLE'); g(2, 'LAYER'); g(70, capas.size);
     for (const [nom, color] of capas) {
-        const est = Object.entries(CAPAS).find(([k]) => k === nom);
-        const trazo = est && est[1].trazo === 'DASHED' ? 'DASHED' : 'CONTINUOUS';
+        const trazo = trazos.get(nom) || 'CONTINUOUS';
         g(0, 'LAYER'); g(2, nom); g(70, 0); g(62, color); g(6, trazo);
     }
     g(0, 'ENDTAB');
@@ -2861,7 +3050,7 @@ function construirDXFPlanimetria(proyecto) {
             for (const p of pts) { g(0, 'VERTEX'); g(8, capa); g(10, num(p[0])); g(20, num(p[1])); g(30, '0.0'); g(70, 0); }
             g(0, 'SEQEND'); g(8, capa);
         } else if (pr.t === 'tx') {
-            const txt = ascii(pr.txt);
+            const txt = textoDXF(pr.txt);
             if (!txt) continue;
             const p = aMundo([pr.x, pr.y], pr.esp);
             const h = pr.h / f;
@@ -2885,7 +3074,7 @@ function construirDXFPlanimetria(proyecto) {
     return L.join('\r\n') + '\r\n';
 }
 
-module.exports = { construirDXFPlanimetria, ascii };
+module.exports = { construirDXFPlanimetria, ascii, textoDXF, bytesDXF };
 
 };
 
@@ -3069,6 +3258,7 @@ function construirPDF(proyecto) {
     seccion('Datos generales');
     const u = a.ubicacion || {};
     tabla(null, [
+        String(d.nombrePredio || '').trim() ? ['Nombre del predio', String(d.nombrePredio).trim()] : null,
         [titulares.length > 1 ? 'Propietarios / posesionarios' : 'Propietario / posesionario',
             titulares.length ? titulares.map(p => [p.nombre,
                 p.documento ? 'C.I./RUC ' + p.documento : '',
@@ -3083,7 +3273,7 @@ function construirPDF(proyecto) {
         ['Profesional responsable', [d.profesional, d.registro ? 'Registro ' + d.registro : ''].filter(Boolean).join(' - ') || 'POR COMPLETAR'],
         ['Fecha y método de levantamiento', [d.fechaLevantamiento, d.equipo, d.precision ? 'precisión ' + d.precision : ''].filter(Boolean).join(' - ') || '-'],
         ['Centro del predio', `${fmt(a.centroide[0], 4)} E, ${fmt(a.centroide[1], 4)} N  (${a.centro.lat.toFixed(6)}, ${a.centro.lon.toFixed(6)})`]
-    ], { columnStyles: { 0: { fontStyle: 'bold', cellWidth: 58 * k } }, alternateRowStyles: {} });
+    ].filter(Boolean), { columnStyles: { 0: { fontStyle: 'bold', cellWidth: 58 * k } }, alternateRowStyles: {} });
 
     // 2. Superficie y diagnostico catastral
     seccion('Superficie y situación catastral');
@@ -3198,6 +3388,21 @@ function construirPDF(proyecto) {
         columnStyles: { 2: { halign: 'right', cellWidth: 26 * k } },
         didParseCell: c => { if (c.section === 'body' && c.row.index === filas.length - 1) c.cell.styles.fontStyle = 'bold'; }
     });
+    // Ancho de las vias que dan al predio: entre lineas de fabrica en los
+    // frentes urbanos y, en las vias certificadas, dos veces el margen desde
+    // el eje (y la calzada cuando la capa la trae).
+    const filasVia = [];
+    for (const av of af.anchosVia || []) filasVia.push([av.via || 'Vía pública', `Frente ${av.dir} (${fmt(av.frente, 2)} m)`,
+        av.fuente === 'lf' ? 'Entre líneas de fábrica GADMR' : 'Hasta los lotes de enfrente (referencial)', fmt(av.ancho, 2)]);
+    for (const e of af.elementos || []) {
+        const nom = e.nombre + (e.cercanos[0] && e.cercanos[0].nombre ? ' - ' + e.cercanos[0].nombre : '');
+        if (e.anchoTotal) filasVia.push([nom, e.rotuloAncho || 'Derecho de vía', `Dos veces el margen de ${fmt(e.margen, 2)} m desde el eje`, fmt(e.anchoTotal, 2)]);
+        if (e.anchoCalzada) filasVia.push([nom, 'Ancho de calzada', 'Inventario vial del MTOP', fmt(e.anchoCalzada, 2)]);
+    }
+    if (filasVia.length) {
+        parrafo('Ancho de las vías', { negrita: true });
+        tabla(['Vía', 'Medida', 'Fuente', 'm'], filasVia, { columnStyles: { 3: { halign: 'right', cellWidth: 20 * k } } });
+    }
     const bases = (af.elementos || []).filter(e => e.margen !== null).map(e => `${e.nombre}: ${e.baseLegal || '-'}`);
     if (bases.length) parrafo('Base de los márgenes aplicados: ' + bases.join(' | '), { size: peq, color: MEDIO });
     if (!(af.elementos || []).length) parrafo('No se identificaron ríos, quebradas, vías certificadas ni líneas férreas a menos de 50 m del predio en las capas certificadas cargadas.', { size: peq, color: MEDIO });

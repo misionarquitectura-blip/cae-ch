@@ -82,7 +82,9 @@
       "verificado": false,
       "base_legal": "POR VERIFICAR - derecho de vía medido desde el eje (LOSNIVTT y su reglamento)",
       "color_dxf": 1,
-      "capa_dxf": "VIA_ESTATAL"
+      "capa_dxf": "VIA_ESTATAL",
+      "campo_ancho_calzada": "ANCHO_DE_C",
+      "_campo_ancho_calzada": "Ancho de calzada en metros segun el inventario del MTOP; con el se dibujan los bordes de la calzada."
     },
     {
       "id": "via_provincial",
@@ -108,7 +110,9 @@
       "verificado": false,
       "base_legal": "Ingrese la semisección vial (eje a línea de fábrica) de la resolución administrativa",
       "color_dxf": 6,
-      "capa_dxf": "EJE_CERTIFICADO"
+      "capa_dxf": "EJE_CERTIFICADO",
+      "rotulo_ancho": "Ancho total de vía",
+      "_rotulo_ancho": "La semiseccion se mide del eje a la linea de fabrica: el doble es el ancho total de la via. En las demas vias el margen es derecho de via."
     },
     {
       "id": "ferrocarril",

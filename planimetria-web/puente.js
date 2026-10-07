@@ -233,7 +233,7 @@
         await validarProyecto(proyecto);
         if (tipo === 'dxf') {
             return {
-                cuerpo: new Blob([P.dxf.construirDXFPlanimetria(proyecto)], { type: 'application/dxf' }),
+                cuerpo: new Blob([P.dxf.bytesDXF(P.dxf.construirDXFPlanimetria(proyecto))], { type: 'application/dxf' }),
                 nombre: nombreArchivo(proyecto.datos, 'dxf')
             };
         }
