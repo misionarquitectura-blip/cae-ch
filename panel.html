@@ -315,6 +315,35 @@
         .pista.bien { color: #166B3A; font-weight: 600; }
         .campo input.mal, .campo select.mal { border-color: var(--rojo-caech); }
 
+        /* Buscador por propietario: la lista cuelga del campo, como la del
+           GeoVisor, para que no empuje el resto del formulario cada vez que
+           se escribe una letra. */
+        .buscador-predio { position: relative; }
+
+        .resultados-predio {
+            position: absolute; z-index: 30; left: 0; right: 0; top: 100%;
+            background: var(--blanco); border: 1px solid var(--borde-marcado);
+            border-radius: var(--radio); box-shadow: var(--sombra-2);
+            max-height: 320px; overflow-y: auto;
+        }
+        .resultados-predio button {
+            display: block; width: 100%; text-align: left; background: none;
+            border: 0; border-bottom: 1px solid var(--borde); cursor: pointer;
+            font-family: inherit; font-size: 13px; color: var(--grafito);
+            padding: 9px 12px; line-height: 1.45;
+        }
+        .resultados-predio button:last-child { border-bottom: 0; }
+        .resultados-predio button:hover,
+        .resultados-predio button:focus-visible { background: var(--rojo-humo); outline: none; }
+        .resultados-predio .titular { font-weight: 600; }
+        .resultados-predio .titular mark { background: #FFE8A3; color: inherit; padding: 0 1px; }
+        .resultados-predio .detalle {
+            font-family: var(--fuente-mono); font-size: 11.5px; color: var(--grafito-med);
+        }
+        .resultados-predio .nota {
+            padding: 9px 12px; font-size: 12px; color: var(--grafito-sua); font-style: italic;
+        }
+
         .barra-filtros { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
         .barra-filtros .buscador { margin-bottom: 0; flex: 1 1 240px; }
         .barra-filtros select {
@@ -636,13 +665,20 @@
 
                 <h3 class="grupo-tit">2 · Predio consultado</h3>
                 <div class="campos">
+                    <div class="campo ancho buscador-predio">
+                        <label for="sol-buscar-prop">Buscar por apellidos y nombres del propietario</label>
+                        <input id="sol-buscar-prop" type="search" autocomplete="off" spellcheck="false"
+                               placeholder="Empiece por los apellidos: LEMA GUARACA MARIA…">
+                        <div class="pista" id="pista-sol-buscar-prop">Para cuando llega sin la clave a mano. Al elegir un predio se rellenan la clave, la auxiliar y el propietario.</div>
+                        <div class="resultados-predio" id="sol-resultados" hidden></div>
+                    </div>
                     <div class="campo doble"><label for="sol-clave">Clave catastral</label>
                         <input id="sol-clave" type="text" inputmode="numeric" autocomplete="off"
-                               spellcheck="false" class="mono" placeholder="27 dígitos">
+                               spellcheck="false" class="mono" placeholder="Normalmente 27 dígitos">
                         <div class="pista" id="pista-sol-clave"></div></div>
                     <div class="campo"><label for="sol-auxiliar">Clave auxiliar (opcional)</label>
                         <input id="sol-auxiliar" type="text" inputmode="numeric" autocomplete="off"
-                               spellcheck="false" class="mono" placeholder="18 dígitos">
+                               spellcheck="false" class="mono" placeholder="Identificador histórico del GADMR">
                         <div class="pista" id="pista-sol-auxiliar"></div></div>
                     <div class="campo"><label>&nbsp;</label>
                         <button class="btn btn-linea" id="btn-sol-visor" style="width:100%"
@@ -1602,10 +1638,16 @@
 
     function revisarClave() {
         const v = digitos($('sol-clave').value);
-        if (!v) { pista('sol-clave', '27 dígitos; los separadores se descartan.'); return marcar('sol-clave', false); }
+        if (!v) { pista('sol-clave', 'Normalmente 27 dígitos; los separadores se descartan.'); return marcar('sol-clave', false); }
+        if (v.length < 10 || v.length > 30) {
+            pista('sol-clave', 'Van ' + v.length + ' dígitos: la clave tiene entre 10 y 30.', 'mal');
+            return marcar('sol-clave', true);
+        }
+        // El 2 % de los predios del catastro no tiene 27 dígitos —1.314 los
+        // tienen de 15—, así que un largo distinto se comenta, no se bloquea.
         if (v.length !== 27) {
-            pista('sol-clave', 'Van ' + v.length + ' de 27 dígitos.', v.length > 27 ? 'mal' : '');
-            return marcar('sol-clave', v.length > 27);
+            pista('sol-clave', v + ' · ' + v.length + ' dígitos, no los 27 habituales. Compruébelo en el visor.');
+            return marcar('sol-clave', false);
         }
         // 0601 = provincia 06 Chimborazo, cantón 01 Riobamba. Fuera de ahí el
         // predio no está en la capa del visor, pero no se bloquea: el caso
@@ -1647,11 +1689,12 @@
         if (!elegido('sol-calidad')) { faltas.push('la calidad en que solicita'); pista('sol-calidad', 'Elija una opción.', 'mal'); }
         else pista('sol-calidad', '');
 
-        if (digitos($('sol-clave').value).length !== 27) faltas.push('la clave catastral completa');
+        const claveDigitos = digitos($('sol-clave').value).length;
+        if (claveDigitos < 10 || claveDigitos > 30) faltas.push('la clave catastral');
         revisarClave();
 
         const aux = digitos($('sol-auxiliar').value);
-        if (aux && aux.length !== 18) { faltas.push('la clave auxiliar completa'); pista('sol-auxiliar', 'Van ' + aux.length + ' de 18 dígitos.', 'mal'); }
+        if (aux.length > 27) { faltas.push('una clave auxiliar de 27 dígitos o menos'); pista('sol-auxiliar', 'No puede pasar de 27 dígitos.', 'mal'); }
         else pista('sol-auxiliar', '');
 
         campo('sol-direccion', $('sol-direccion').value.trim().length < 5, 'Obligatoria.', 'la dirección del predio');
@@ -1672,6 +1715,176 @@
 
         campo('sol-atendido', !$('sol-atendido').value.trim(), 'Obligatorio.', 'quién atiende');
         return faltas;
+    }
+
+    // ── Búsqueda por propietario ────────────────────────────────
+    //
+    // Quien llega al mostrador suele traer el nombre y no la clave. El
+    // GeoVisor ya resuelve eso, pero lo hace recorriendo la capa de catastro
+    // que tiene cargada: 43 MB de geometría que aquí no pintan nada. El panel
+    // usa un extracto sin coordenadas —nombre, clave, auxiliar y superficie—
+    // que genera DATA SET/build_indice_propietarios.js, y lo trae una sola
+    // vez, la primera vez que alguien escribe en la caja.
+
+    const INDICE_URL = 'DATA SET/capas/indice_propietarios.json';
+    const TOPE_RESULTADOS = 12;   // titulares distintos que se listan
+    const TOPE_PREDIOS = 8;       // predios que se muestran de un mismo titular
+
+    let indice = null;          // [[nombre, [[clave, area, aux?], …]], …]
+    let indiceCargando = null;  // la promesa en vuelo, para no pedirlo dos veces
+
+    /** Sin tildes y en mayúsculas: se teclea «lema» y encuentra «LEMÁ». */
+    function plano(t) {
+        return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+    }
+
+    async function cargarIndice() {
+        if (indice) return indice;
+        if (indiceCargando) return indiceCargando;
+
+        pista('sol-buscar-prop', 'Cargando el padrón de propietarios…');
+        indiceCargando = fetch(INDICE_URL)
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(d => {
+                indice = (d.datos || []).map(([nombre, predios]) => [nombre, plano(nombre), predios]);
+                pista('sol-buscar-prop', indice.length.toLocaleString('es-EC') + ' propietarios · catastro al '
+                    + (d.generado || '—'));
+                return indice;
+            })
+            .catch(e => {
+                indiceCargando = null;
+                pista('sol-buscar-prop', 'No se pudo cargar el padrón de propietarios: escriba la clave a mano.', 'mal');
+                console.warn('índice de propietarios:', e);
+                return null;
+            });
+        return indiceCargando;
+    }
+
+    /**
+     * Todas las palabras tecleadas tienen que aparecer, en cualquier orden:
+     * «lema maria» encuentra a «LEMA GUARACA MARIA FERNANDA» tanto si el
+     * mostrador escribe primero el apellido como si empieza por el nombre.
+     */
+    function buscarPropietarios(texto) {
+        const palabras = plano(texto).split(/\s+/).filter(Boolean);
+        if (!palabras.length) return [];
+        const hallados = [];
+        for (const fila of indice) {
+            if (palabras.every(p => fila[1].includes(p))) {
+                hallados.push(fila);
+                if (hallados.length > TOPE_RESULTADOS) break;
+            }
+        }
+        return hallados;
+    }
+
+    function resaltar(nombre, texto) {
+        const palabras = plano(texto).split(/\s+/).filter(Boolean);
+        const llano = plano(nombre);
+        // Se marcan posiciones sobre la versión sin tildes y se recortan
+        // sobre la original: ambas tienen el mismo número de caracteres
+        // porque NFD solo separa los diacríticos, que se eliminan.
+        const marcas = new Array(nombre.length).fill(false);
+        palabras.forEach(p => {
+            let desde = 0, i;
+            while ((i = llano.indexOf(p, desde)) !== -1) {
+                for (let k = i; k < i + p.length; k++) marcas[k] = true;
+                desde = i + p.length;
+            }
+        });
+        let html = '', abierta = false;
+        for (let i = 0; i < nombre.length; i++) {
+            if (marcas[i] && !abierta) { html += '<mark>'; abierta = true; }
+            if (!marcas[i] && abierta) { html += '</mark>'; abierta = false; }
+            html += esc(nombre[i]);
+        }
+        return html + (abierta ? '</mark>' : '');
+    }
+
+    function cerrarResultados() {
+        $('sol-resultados').hidden = true;
+        $('sol-resultados').innerHTML = '';
+    }
+
+    function pintarResultados(texto, hallados) {
+        const caja = $('sol-resultados');
+        if (!hallados.length) {
+            caja.innerHTML = '<div class="nota">Ningún propietario coincide. '
+                + 'Pruebe solo con el primer apellido, o escriba la clave a mano.</div>';
+            caja.hidden = false;
+            return;
+        }
+
+        const sobran = hallados.length > TOPE_RESULTADOS;
+        const filas = sobran ? hallados.slice(0, TOPE_RESULTADOS) : hallados;
+
+        caja.innerHTML = filas.map(([nombre, , predios]) => {
+            const muestra = predios.slice(0, TOPE_PREDIOS);
+            return muestra.map((pr, i) => {
+                const [clave, area, aux] = pr;
+                return '<button type="button" data-clave="' + esc(clave) + '"'
+                     + ' data-aux="' + esc(aux || clave.slice(0, 18)) + '"'
+                     + ' data-nombre="' + esc(nombre) + '">'
+                     + '<span class="titular">' + resaltar(nombre, texto)
+                     + (predios.length > 1 ? ' <span class="tenue">· predio ' + (i + 1) + ' de ' + predios.length + '</span>' : '')
+                     + '</span><br>'
+                     + '<span class="detalle">' + esc(claveLegible(clave) || clave)
+                     + (area ? '  ·  ' + area.toLocaleString('es-EC') + ' m²' : '') + '</span></button>';
+            }).join('')
+            + (predios.length > TOPE_PREDIOS
+                ? '<div class="nota">' + esc(nombre) + ' tiene ' + predios.length
+                  + ' predios registrados; se muestran los ' + TOPE_PREDIOS
+                  + ' primeros. Si no está el que busca, escriba la clave a mano.</div>'
+                : '');
+        }).join('')
+        + (sobran ? '<div class="nota">Hay más coincidencias. Añada el segundo apellido o el nombre.</div>' : '');
+        caja.hidden = false;
+    }
+
+    function tomarPredio(boton) {
+        $('sol-clave').value = boton.dataset.clave;
+        // La auxiliar solo se escribe si difiere de la clave: el campo es
+        // opcional y repetir el prefijo no informa de nada.
+        const aux = boton.dataset.aux;
+        $('sol-auxiliar').value = (aux && aux !== boton.dataset.clave.slice(0, 18)) ? aux : '';
+        $('sol-propietario').value = boton.dataset.nombre;
+        $('sol-buscar-prop').value = '';
+        cerrarResultados();
+        revisarClave();
+        pista('sol-auxiliar', '');
+        // La dirección no está en el catastro y sigue siendo obligatoria: se
+        // lleva el foco ahí, que es lo único que queda por preguntar.
+        $('sol-direccion').focus();
+    }
+
+    function engancharBusquedaPropietario() {
+        const caja = $('sol-buscar-prop');
+        let temporizador;
+
+        caja.addEventListener('input', () => {
+            clearTimeout(temporizador);
+            const texto = caja.value.trim();
+            if (texto.length < 3) { cerrarResultados(); return; }
+            temporizador = setTimeout(async () => {
+                if (!await cargarIndice()) return;
+                if (caja.value.trim().length < 3) return;   // se vació mientras cargaba
+                pintarResultados(caja.value.trim(), buscarPropietarios(caja.value.trim()));
+            }, 220);
+        });
+
+        // Se precarga al enfocar: mientras el mostrador teclea el primer
+        // apellido, el padrón ya viene en camino.
+        caja.addEventListener('focus', () => { cargarIndice(); });
+
+        $('sol-resultados').addEventListener('click', e => {
+            const b = e.target.closest('button[data-clave]');
+            if (b) tomarPredio(b);
+        });
+
+        caja.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarResultados(); });
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.buscador-predio')) cerrarResultados();
+        });
     }
 
     // ── Formulario ↔ registro ───────────────────────────────────
@@ -1730,6 +1943,8 @@
         $('caja-sol-datos').classList.remove('mal');
         $('caja-sol-alcance').classList.remove('mal');
         $('sol-numero').textContent = s.numero;
+        $('sol-buscar-prop').value = '';
+        cerrarResultados();
         marcarEdicionSolicitud();
         revisarClave();
         revisarDocumento();
@@ -1749,7 +1964,8 @@
         solEditando = null;
         ['sol-solicitante', 'sol-documento', 'sol-telefono', 'sol-correo', 'sol-registro',
          'sol-clave', 'sol-auxiliar', 'sol-direccion', 'sol-barrio', 'sol-propietario',
-         'sol-observaciones', 'sol-ofrecida'].forEach(id => { $(id).value = ''; });
+         'sol-observaciones', 'sol-ofrecida', 'sol-buscar-prop'].forEach(id => { $(id).value = ''; });
+        cerrarResultados();
         $('sol-doctipo').value = 'cedula';
         $('sol-parroquia').value = '';
         $('sol-finalidad').value = '';
@@ -1766,7 +1982,7 @@
         ['sol-solicitante', 'sol-documento', 'sol-telefono', 'sol-correo', 'sol-clave',
          'sol-auxiliar', 'sol-direccion', 'sol-atendido'].forEach(id => { pista(id, ''); marcar(id, false); });
         pista('sol-calidad', ''); pista('sol-entrega', ''); pista('sol-constancia', '');
-        pista('sol-clave', '27 dígitos; los separadores se descartan.');
+        pista('sol-clave', 'Normalmente 27 dígitos; los separadores se descartan.');
         $('sol-numero').textContent = solSiguiente;
         avisar('aviso-solicitud', '', '');
         marcarEdicionSolicitud();
@@ -1944,8 +2160,8 @@
     }
 
     function abrirVisorPredio(clave) {
-        if (!/^\d{27}$/.test(clave || '')) {
-            return avisar('aviso-solicitud', 'info', 'Escriba primero los 27 dígitos de la clave catastral.');
+        if (!/^\d{10,30}$/.test(clave || '')) {
+            return avisar('aviso-solicitud', 'info', 'Escriba primero la clave catastral del predio.');
         }
         window.open('geovisor.html?clave=' + encodeURIComponent(clave), '_blank', 'noopener');
     }
@@ -1956,11 +2172,14 @@
 
         $('sol-clave').addEventListener('input', revisarClave);
         $('sol-auxiliar').addEventListener('input', function () {
+            // Sin largo fijo a proposito: ver el comentario de revisar() en
+            // api/src/solicitudes.js. Solo se avisa del tope.
             const v = digitos(this.value);
-            pista('sol-auxiliar', v && v.length !== 18 ? 'Van ' + v.length + ' de 18 dígitos.' : '');
+            pista('sol-auxiliar', v.length > 27 ? 'No puede pasar de 27 dígitos.' : '', v.length > 27 ? 'mal' : '');
         });
         $('sol-documento').addEventListener('blur', revisarDocumento);
         $('sol-doctipo').addEventListener('change', revisarDocumento);
+        engancharBusquedaPropietario();
 
         $('btn-sol-visor').addEventListener('click', () => abrirVisorPredio(digitos($('sol-clave').value)));
         $('btn-sol-guardar').addEventListener('click', () => guardarSolicitud());

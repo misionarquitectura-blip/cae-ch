@@ -830,15 +830,66 @@ seccion('Solicitudes presenciales del DICAT');
     });
     comprobar('rechaza un RUC invalido', rucMalo.estado === 400, rucMalo.datos);
 
+    // La clave catastral NO tiene largo fijo: 66.571 predios del catastro de
+    // octubre de 2026 la tienen de 27 digitos y 1.363 no -1.314 de 15-. Lo
+    // que se rechaza es lo que no puede ser una clave, no lo que no mide 27.
     const claveCorta = await llamar('POST', '/api/admin/solicitudes', {
-        token: tokenAdmin, cuerpo: con({ clave_catastral: '06010300500703101500000000' })
+        token: tokenAdmin, cuerpo: con({ clave_catastral: '060103' })
     });
-    comprobar('rechaza una clave catastral de 26 digitos', claveCorta.estado === 400, claveCorta.datos);
+    comprobar('rechaza una clave catastral demasiado corta', claveCorta.estado === 400, claveCorta.datos);
+
+    // Lo que no son digitos NO se rechaza: se descarta. El mostrador escribe
+    // la clave con puntos o guiones tal como viene en el papel, y lo que se
+    // guarda es el numero limpio.
+    const conSeparadores = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin,
+        cuerpo: con({ clave_catastral: '06-01-03-005-007-031-015-000000000',
+                      solicitante: 'Clave Con Separadores' })
+    });
+    comprobar('acepta la clave escrita con separadores', conSeparadores.estado === 201, conSeparadores.datos);
+    comprobar('y la guarda solo con los digitos',
+        conSeparadores.datos?.solicitud?.clave_catastral === '060103005007031015000000000',
+        conSeparadores.datos?.solicitud?.clave_catastral);
+    if (conSeparadores.estado === 201) {
+        await llamar('DELETE', '/api/admin/solicitudes/' + conSeparadores.datos.solicitud.id, { token: tokenAdmin });
+    }
+
+    const claveQuince = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin,
+        cuerpo: con({ clave_catastral: '060101004013060', solicitante: 'Clave De Quince Digitos' })
+    });
+    comprobar('acepta una clave catastral de 15 digitos, como las hay en el catastro',
+        claveQuince.estado === 201, claveQuince.datos);
+    if (claveQuince.estado === 201) {
+        await llamar('DELETE', '/api/admin/solicitudes/' + claveQuince.datos.solicitud.id, { token: tokenAdmin });
+    }
 
     const telMalo = await llamar('POST', '/api/admin/solicitudes', {
         token: tokenAdmin, cuerpo: con({ telefono: '12345' })
     });
     comprobar('rechaza un telefono que no es de Ecuador', telMalo.estado === 400, telMalo.datos);
+
+    // La clave auxiliar es un identificador historico del GADMR sin largo
+    // fijo: en el catastro de octubre de 2026 conviven largos de 1 a 27
+    // digitos. Exigir 18 rechazaba predios reales, asi que solo hay tope.
+    const auxCorta = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ clave_auxiliar: '060161001000000485000000000', solicitante: 'Aux De Veintisiete Digitos' })
+    });
+    comprobar('acepta una clave auxiliar de 27 digitos', auxCorta.estado === 201, auxCorta.datos);
+    if (auxCorta.estado === 201) {
+        await llamar('DELETE', '/api/admin/solicitudes/' + auxCorta.datos.solicitud.id, { token: tokenAdmin });
+    }
+    const auxQuince = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ clave_auxiliar: '060161001000000', solicitante: 'Aux De Quince Digitos' })
+    });
+    comprobar('acepta una clave auxiliar de 15 digitos', auxQuince.estado === 201, auxQuince.datos);
+    if (auxQuince.estado === 201) {
+        await llamar('DELETE', '/api/admin/solicitudes/' + auxQuince.datos.solicitud.id, { token: tokenAdmin });
+    }
+    const auxLarga = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ clave_auxiliar: '0601610010000004850000000001234' })
+    });
+    comprobar('rechaza una clave auxiliar de mas de 27 digitos', auxLarga.estado === 400, auxLarga.datos);
 
     const pdfSinCorreo = await llamar('POST', '/api/admin/solicitudes', {
         token: tokenAdmin, cuerpo: con({ entrega: 'PDF al correo', correo: '' })
@@ -846,11 +897,22 @@ seccion('Solicitudes presenciales del DICAT');
     comprobar('la entrega en PDF sin correo se rechaza', pdfSinCorreo.estado === 400, pdfSinCorreo.datos);
 
     // ── El alta buena ───────────────────────────────────────────────
+    // Los numeros no se comparan contra 0001: las pruebas de la clave
+    // auxiliar de aqui arriba ya consumieron los primeros, y consumirlos es
+    // justo lo que se espera. Se parte del que anuncia el propio servicio.
     const anio = new Date().getFullYear();
+    const siguiente = n => 'DICAT-' + anio + '-' + String(n).padStart(4, '0');
+    const nDe = numero => parseInt(String(numero || '').slice(-4), 10);
+
+    const previo = await llamar('GET', '/api/admin/solicitudes', { token: tokenAdmin });
+    const n0 = nDe(previo.datos?.siguiente_numero);
+    comprobar('el servicio anuncia un numero de solicitud con forma valida',
+        Number.isFinite(n0) && n0 > 0, previo.datos?.siguiente_numero);
+
     const alta = await llamar('POST', '/api/admin/solicitudes', { token: tokenAdmin, cuerpo: base });
     comprobar('registra la solicitud y responde 201', alta.estado === 201, alta.datos);
-    comprobar('el numero es el primero del ano',
-        alta.datos?.solicitud?.numero === 'DICAT-' + anio + '-0001', alta.datos?.solicitud?.numero);
+    comprobar('toma exactamente el numero que se habia anunciado',
+        alta.datos?.solicitud?.numero === siguiente(n0), alta.datos?.solicitud?.numero);
     comprobar('nace en estado «recibida»', alta.datos?.solicitud?.estado === 'recibida');
     comprobar('guarda la version del texto que se leyo al solicitante',
         typeof alta.datos?.solicitud?.texto_version === 'string' && alta.datos.solicitud.texto_version.length >= 10);
@@ -869,13 +931,13 @@ seccion('Solicitudes presenciales del DICAT');
                       clave_catastral: '060101016001017032000000000', entrega: 'Impreso' })
     });
     comprobar('la segunda solicitud toma el numero siguiente',
-        segunda.datos?.solicitud?.numero === 'DICAT-' + anio + '-0002', segunda.datos?.solicitud?.numero);
+        segunda.datos?.solicitud?.numero === siguiente(n0 + 1), segunda.datos?.solicitud?.numero);
 
     // ── Listado, filtros y busqueda ─────────────────────────────────
     const lista = await llamar('GET', '/api/admin/solicitudes', { token: tokenAdmin });
     comprobar('el listado devuelve las dos solicitudes', lista.datos?.solicitudes?.length === 2, lista.datos);
     comprobar('anuncia el numero que tocara a la siguiente',
-        lista.datos?.siguiente_numero === 'DICAT-' + anio + '-0003', lista.datos?.siguiente_numero);
+        lista.datos?.siguiente_numero === siguiente(n0 + 2), lista.datos?.siguiente_numero);
     comprobar('el resumen cuenta dos recibidas',
         lista.datos?.resumen?.some(f => f.estado === 'recibida' && f.n === 2), lista.datos?.resumen);
 
@@ -931,18 +993,32 @@ seccion('Solicitudes presenciales del DICAT');
     const eventosSol = await llamar('GET', '/api/admin/eventos?limite=200', { token: tokenAdmin });
     const textoEventos = JSON.stringify(eventosSol.datos);
     comprobar('la bitacora anota el alta con el numero de solicitud',
-        textoEventos.includes('solicitud_dicat_creada') && textoEventos.includes('DICAT-' + anio + '-0001'));
+        textoEventos.includes('solicitud_dicat_creada') && textoEventos.includes(siguiente(n0)));
     comprobar('la bitacora anota el borrado', textoEventos.includes('solicitud_dicat_borrada'));
     comprobar('la bitacora NO arrastra el nombre ni el documento del ciudadano',
         !textoEventos.includes('Maria Fernanda') && !textoEventos.includes('0603456781'));
 
     // El numero no se reutiliza aunque la fila se haya borrado: una
-    // constancia impresa con ese numero sigue existiendo en papel.
+    // constancia impresa con ese numero sigue existiendo en papel. La marca
+    // de agua esta en `eventos`, que no se borra.
     const tercera = await llamar('POST', '/api/admin/solicitudes', {
         token: tokenAdmin, cuerpo: con({ solicitante: 'Rosa Elena Yupangui Chavez' })
     });
     comprobar('el numero de una solicitud borrada no se reutiliza',
-        tercera.datos?.solicitud?.numero === 'DICAT-' + anio + '-0003', tercera.datos?.solicitud?.numero);
+        tercera.datos?.solicitud?.numero === siguiente(n0 + 2), tercera.datos?.solicitud?.numero);
+
+    // El caso dificil: borrar la ULTIMA. Con el maximo leido solo de la
+    // tabla, su numero habria vuelto a salir.
+    const borrarUltima = await llamar('DELETE', '/api/admin/solicitudes/' + tercera.datos.solicitud.id, { token: tokenAdmin });
+    comprobar('se borra la ultima solicitud', borrarUltima.estado === 200);
+    const cuarta = await llamar('POST', '/api/admin/solicitudes', {
+        token: tokenAdmin, cuerpo: con({ solicitante: 'Luis Alberto Paucar Tenesaca' })
+    });
+    comprobar('borrar la ULTIMA tampoco libera su numero',
+        cuarta.datos?.solicitud?.numero === siguiente(n0 + 3), cuarta.datos?.solicitud?.numero);
+    const anuncio = await llamar('GET', '/api/admin/solicitudes', { token: tokenAdmin });
+    comprobar('el numero anunciado tiene en cuenta la bitacora',
+        anuncio.datos?.siguiente_numero === siguiente(n0 + 4), anuncio.datos?.siguiente_numero);
 }
 
 // ── 11. Bitacora ────────────────────────────────────────────────────

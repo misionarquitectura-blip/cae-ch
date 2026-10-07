@@ -85,17 +85,37 @@ const fechaCortaValida = f => /^\d{4}-\d{2}-\d{2}$/.test(f) && !Number.isNaN(Dat
 /**
  * DICAT-AAAA-NNNN, correlativo por ano sobre toda la institucion.
  *
- * Dos altas simultaneas podrian calcular el mismo numero; el UNIQUE de
- * `numero` lo impide y `crearSolicitud` reintenta. Es mas honesto que
- * una secuencia aparte que se desincronice si una fila se borra.
+ * El mayor se busca en DOS sitios: la tabla y la bitacora de seguridad.
+ * La tabla sola no basta, porque una solicitud se puede borrar -el derecho
+ * de eliminacion de la LOPDP- y entonces su numero volveria a salir; si ese
+ * numero ya se habia impreso y firmado, dos papeles distintos dirian lo
+ * mismo. `eventos` no se borra nunca y guarda el numero de cada alta, asi
+ * que hace de marca de agua: un numero usado no vuelve, haya o no fila.
+ *
+ * Dos altas simultaneas si podrian calcular el mismo numero; el UNIQUE de
+ * `numero` lo impide y `crearSolicitud` reintenta una vez.
  */
 async function siguienteNumero(env) {
     const prefijo = 'DICAT-' + new Date().getFullYear() + '-';
-    const fila = await env.DB.prepare(
+
+    const enTabla = await env.DB.prepare(
         'SELECT numero FROM solicitudes_dicat WHERE numero LIKE ? ORDER BY numero DESC LIMIT 1'
     ).bind(prefijo + '%').first();
-    const ultimo = fila ? parseInt(String(fila.numero).slice(prefijo.length), 10) : 0;
-    return prefijo + String((Number.isFinite(ultimo) ? ultimo : 0) + 1).padStart(4, '0');
+
+    // El detalle del evento de alta empieza por el numero: «DICAT-2026-0001 · predio …».
+    const enBitacora = await env.DB.prepare(
+        "SELECT MAX(substr(detalle, 1, ?)) AS numero FROM eventos " +
+        " WHERE tipo = 'solicitud_dicat_creada' AND detalle LIKE ?"
+    ).bind(prefijo.length + 4, prefijo + '%').first();
+
+    const leer = fila => {
+        if (!fila || !fila.numero) return 0;
+        const n = parseInt(String(fila.numero).slice(prefijo.length), 10);
+        return Number.isFinite(n) ? n : 0;
+    };
+
+    const ultimo = Math.max(leer(enTabla), leer(enBitacora));
+    return prefijo + String(ultimo + 1).padStart(4, '0');
 }
 
 // ── Lectura ─────────────────────────────────────────────────────────
@@ -191,8 +211,21 @@ function revisar(c, datos, esAlta) {
     if (!c.calidad) return 'Indique en que calidad solicita.';
     if (!c.entrega) return 'Indique la forma de entrega.';
 
-    if (!/^\d{27}$/.test(c.clave_catastral)) return 'La clave catastral debe tener 27 digitos.';
-    if (c.clave_auxiliar && c.clave_auxiliar.length !== 18) return 'La clave auxiliar debe tener 18 digitos.';
+    // La clave catastral del GADMR es casi siempre de 27 digitos, pero no
+    // siempre: en el catastro de octubre de 2026, 66.571 predios la tienen de
+    // 27 y 1.363 no -1.314 de ellos de 15 digitos-, un 2 % del padron. Exigir
+    // 27 dejaba fuera a uno de cada cincuenta predios reales, asi que aqui
+    // solo se comprueba que sean digitos y que el largo sea plausible; que
+    // sea LA clave del predio se ve en el visor, no contandole las cifras.
+    if (!/^\d{10,30}$/.test(c.clave_catastral)) {
+        return 'La clave catastral debe ser un numero de entre 10 y 30 digitos.';
+    }
+    // La auxiliar NO tiene largo fijo. Es un identificador historico del
+    // GADMR que la vista de publicacion ya no expone y que se arrastra de la
+    // capa anterior: en el catastro de octubre de 2026 hay 32.431 de 18
+    // digitos, 1.949 de 27, 537 de 15 y colas de casi todos los largos entre
+    // 1 y 27. Exigir 18 rechazaba predios legitimos.
+    if (c.clave_auxiliar && c.clave_auxiliar.length > 27) return 'La clave auxiliar no puede pasar de 27 digitos.';
     if (c.direccion.length < 5) return 'Indique la direccion o una referencia del predio.';
     if (c.entrega_ofrecida && !fechaCortaValida(c.entrega_ofrecida)) return 'La fecha ofrecida no es valida (use AAAA-MM-DD).';
 
