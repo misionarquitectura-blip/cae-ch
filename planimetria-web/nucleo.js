@@ -2329,6 +2329,9 @@ function construirLamina(proyecto) {
     // Si la seccion no entra en el dibujo (una calle ancha a escala grande)
     // la cota se corta en el borde del dibujo y solo lleva trazo en el
     // extremo que se ve: el valor es el de la seccion entera.
+    // Un ancho de via rotulado dentro del lote se leeria como una medida del
+    // predio: el texto de estas cotas nunca se coloca dentro de el.
+    const anilloPredio = a.vertices.map(v => [v.x, v.y]);
     const cotaAncho = (p1, p2, texto, dxfCapa) => {
         const borde = 1.5 / f;                            // 1,5 mm dentro del marco del dibujo
         const vis = recortarLinea([p1, p2], [ventana[0] + borde, ventana[1] + borde, ventana[2] - borde, ventana[3] - borde])[0];
@@ -2356,7 +2359,7 @@ function construirLamina(proyecto) {
         // Va despues de vertices y cotas del predio (prioridad 2,5): busca
         // hueco junto a la linea y, si no lo hay, a continuacion de sus extremos.
         tx('COTAS_VIA_TXT', m[0] + arriba[0] * off, m[1] + arriba[1] * off, hPeq, texto, 'm',
-            { rot: ang, al: 'c', va: 'b', prioridad: 2.5, empuje: arriba, dxfCapa: (dxfCapa || 'COTAS_VIA') + '_TXT',
+            { rot: ang, al: 'c', va: 'b', prioridad: 2.5, empuje: arriba, dxfCapa: (dxfCapa || 'COTAS_VIA') + '_TXT', fueraDe: anilloPredio,
               alternativas: [ancla(L / 2 + w / 2 + 1 / f), ancla(-L / 2 - w / 2 - 1 / f), ancla(L / 2 + w), ancla(-L / 2 - w)] });
     };
 
@@ -2857,6 +2860,8 @@ function repartirTextos(prim, mundoAPapel, papelAMundo, vp) {
                 const caja = cajaTexto(Object.assign({}, pr, { rot: anc.rot }), px, py);
                 if (caja[0] < vp.x0 || caja[2] > vp.x1 || caja[1] < vp.y0 || caja[3] > vp.y1) continue;
                 if (puestos.some(c => solapan(caja, c, holgura))) continue;
+                if (pr.fueraDe && [[caja[0], caja[1]], [caja[2], caja[1]], [caja[2], caja[3]], [caja[0], caja[3]], [(caja[0] + caja[2]) / 2, (caja[1] + caja[3]) / 2]]
+                    .some(q => puntoEnAnillo(papelAMundo(q), pr.fueraDe))) continue;
                 return { px, py, caja, anc };
             }
             return null;
@@ -2880,6 +2885,7 @@ function repartirTextos(prim, mundoAPapel, papelAMundo, vp) {
         const m = papelAMundo([puesto.px, puesto.py]);
         pr.x = m[0]; pr.y = m[1];
         delete pr.alternativas;
+        delete pr.fueraDe;
     }
     return quitar.size ? prim.filter(p => !quitar.has(p)) : prim;
 }
