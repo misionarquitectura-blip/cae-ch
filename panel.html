@@ -492,9 +492,15 @@
             <div class="tarjeta">
                 <h2><i class="fas fa-satellite-dish"></i> Equipo de levantamiento</h2>
                 <p class="sub">La planimetría es gratuita, pero solo admite datos de equipo de alta precisión.
-                   Este es el equipo que declaró; si cambia de equipo, vuelva a declararlo.</p>
+                   Este es el equipo que declaró. <b>Corregir</b> abre el formulario con estos datos, para
+                   arreglar una serie mal tecleada o afinar la resolución; <b>declarar otro</b> lo abre en
+                   blanco. En los dos casos se guarda una declaración nueva con la fecha de hoy: las
+                   anteriores se conservan como constancia de con qué equipo trabajó en cada momento.</p>
                 <div id="mi-equipo"></div>
-                <button class="btn btn-outline" id="btn-equipo"><i class="fas fa-pen"></i> Declarar equipo</button>
+                <div class="acciones">
+                    <button class="btn btn-outline" id="btn-equipo-corregir" hidden><i class="fas fa-pen"></i> Corregir los datos</button>
+                    <button class="btn btn-linea" id="btn-equipo"><i class="fas fa-pen"></i> Declarar equipo</button>
+                </div>
             </div>
 
             <div class="tarjeta">
@@ -583,10 +589,20 @@
                 <h2><i class="fas fa-credit-card"></i> Pagos en línea</h2>
                 <p class="sub">Cada transacción con PayPhone, con su estado. Solo las aprobadas habilitan
                    el predio. Una «preparada» que no avanza es alguien que abrió la cajita y no pagó:
-                   PayPhone no cobra nada sin la confirmación. Se muestran las 200 más recientes.</p>
+                   PayPhone no cobra nada sin la confirmación. Esas se pueden borrar —no son constancia
+                   de nada—, salvo las de los últimos 30 minutos, que todavía podrían estar
+                   confirmándose. Las aprobadas, canceladas y rechazadas no se borran desde aquí.
+                   Se muestran las 200 más recientes.</p>
                 <div class="cifras" id="cifras-pagos"></div>
+                <div id="aviso-pagos"></div>
+                <div class="barra-filtros">
+                    <button class="btn btn-linea chico" id="btn-pagos-limpiar" hidden>
+                        <i class="fas fa-broom"></i> Limpiar preparados sin ejecutar
+                    </button>
+                </div>
                 <div class="tabla-marco"><table>
-                    <thead><tr><th>Fecha</th><th>Quién</th><th>Predio</th><th>Monto</th><th>Estado</th><th>Transacción</th></tr></thead>
+                    <thead><tr><th>Fecha</th><th>Quién</th><th>Predio</th><th>Monto</th><th>Estado</th>
+                               <th>Transacción</th><th></th></tr></thead>
                     <tbody id="tabla-pagos"></tbody>
                 </table></div>
             </div>
@@ -1077,10 +1093,14 @@
         return insignia(clases[estado] || 'neutra', estado);
     }
 
+    // La declaración vigente, para poder abrir el formulario relleno cuando
+    // lo que hace falta no es cambiar de equipo sino corregir un dato.
+    let miEquipo = null;
+
     async function cargarEquipo() {
         const r = await pedir('GET', '/api/equipo');
         if (r.estado !== 200) return;
-        const e = r.datos.declaracion;
+        const e = miEquipo = r.datos.declaracion;
         $('mi-equipo').innerHTML = e
             ? '<div class="tabla-marco" style="margin-bottom:14px"><table><tbody>'
               + fila('Equipo', esc(e.tipo_nombre)) + fila('Marca y modelo', esc(e.marca + ' ' + e.modelo))
@@ -1088,10 +1108,21 @@
               + (e.gsd_cm ? fila('Resolución', esc(e.gsd_cm) + ' cm/px') : '')
               + fila('Declarado', fecha(e.declarado_en, true)) + '</tbody></table></div>'
             : '<div class="aviso info">Todavía no declaró su equipo. Hace falta para abrir la planimetría.</div>';
-        $('btn-equipo').innerHTML = '<i class="fas fa-pen"></i> ' + (e ? 'Declarar otro equipo' : 'Declarar equipo');
+
+        // «Corregir» solo tiene sentido si hay algo que corregir.
+        $('btn-equipo-corregir').hidden = !e;
+        $('btn-equipo').innerHTML = '<i class="fas fa-' + (e ? 'satellite-dish' : 'pen') + '"></i> '
+            + (e ? 'Declarar otro equipo' : 'Declarar equipo');
     }
 
-    $('btn-equipo').addEventListener('click', () => acceso.abrirDeclaracion(() => { cargarEquipo(); pintarHerramientas(); }));
+    const trasDeclarar = () => { cargarEquipo(); pintarHerramientas(); };
+
+    // Dos puertas a la misma declaración: en blanco cuando se cambia de
+    // equipo, y rellena cuando solo hay que arreglar un dato. En los dos
+    // casos se guarda una fila nueva —ver abrirDeclaracion()—, porque las
+    // anteriores son la constancia de con qué equipo se trabajó.
+    $('btn-equipo').addEventListener('click', () => acceso.abrirDeclaracion(trasDeclarar));
+    $('btn-equipo-corregir').addEventListener('click', () => acceso.abrirDeclaracion(trasDeclarar, miEquipo));
 
     function pintarMiCuenta() {
         const p = perfil;
@@ -1460,6 +1491,9 @@
             + ['cancelado', 'rechazado', 'preparado'].map(e =>
                 '<div class="cifra"><b>' + ((por[e] && por[e].n) || 0) + '</b><span>' + e + 's</span></div>').join('');
 
+        // La escoba solo se ofrece si hay algo que barrer.
+        $('btn-pagos-limpiar').hidden = !((por.preparado && por.preparado.n) > 0);
+
         const filas = r.datos.pagos || [];
         $('tabla-pagos').innerHTML = filas.length
             ? filas.map(p =>
@@ -1470,9 +1504,44 @@
                 + '<td>' + insigniaPago(p.estado) + (p.detalle ? '<br><span class="tenue">' + esc(p.detalle) + '</span>' : '') + '</td>'
                 + '<td class="mono">' + esc(p.transaccion || '—')
                 + (p.autorizacion ? '<br><span class="tenue">aut. ' + esc(p.autorizacion) + '</span>' : '')
-                + '<br><span class="tenue">' + esc(p.id) + '</span></td></tr>').join('')
-            : '<tr><td colspan="6" class="vacio">Todavía no hay pagos.</td></tr>';
+                + '<br><span class="tenue">' + esc(p.id) + '</span></td>'
+                // El borrado solo aparece en los 'preparados': los demas son
+                // constancia de que algo paso con el dinero de alguien.
+                + '<td>' + (p.estado === 'preparado'
+                    ? '<button class="btn btn-linea chico" data-pago="' + esc(p.id) + '"'
+                      + ' title="Borrar este pago preparado"><i class="fas fa-trash"></i></button>'
+                    : '') + '</td></tr>').join('')
+            : '<tr><td colspan="7" class="vacio">Todavía no hay pagos.</td></tr>';
     }
+
+    /** Borra un preparado suelto o todos los que pasaron la ventana de gracia. */
+    async function borrarPreparados(id) {
+        const r = id
+            ? await pedir('DELETE', '/api/admin/pagos/' + encodeURIComponent(id))
+            : await pedir('DELETE', '/api/admin/pagos/preparados');
+
+        if (r.estado !== 200) {
+            return avisar('aviso-pagos', 'error', esc((r.datos && r.datos.error) || 'No se pudo borrar.'));
+        }
+        const n = r.datos.borrados || 0;
+        avisar('aviso-pagos', n ? 'exito' : 'info',
+            esc(r.datos.aviso || (n === 1 ? 'Pago preparado borrado.' : n + ' pagos preparados borrados.')));
+        cargarPagos();
+    }
+
+    $('btn-pagos-limpiar').addEventListener('click', () => {
+        if (!confirm('¿Borrar todos los pagos en «preparado» sin ejecutar?\n\n'
+            + 'Son intentos que nunca llegaron a cobrarse. Los de los últimos 30 minutos no se '
+            + 'tocan: todavía podrían estar confirmándose en PayPhone.')) return;
+        borrarPreparados(null);
+    });
+
+    $('tabla-pagos').addEventListener('click', e => {
+        const b = e.target.closest('button[data-pago]');
+        if (!b) return;
+        if (!confirm('¿Borrar el pago preparado ' + b.dataset.pago + '?\n\nNo hubo cobro: es un intento que no se completó.')) return;
+        borrarPreparados(b.dataset.pago);
+    });
 
     // ── Descargas ───────────────────────────────────────────────
 

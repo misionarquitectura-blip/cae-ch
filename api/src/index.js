@@ -29,7 +29,7 @@ import { solicitarPase, verificarPase, consumirPase, estadoPase } from './freemi
 import { registrar, verificarCorreo, reenviarVerificacion } from './registro.js';
 import {
     autorizarPredio, estadoPredio, prepararPago, confirmarPago, resumenCuenta,
-    listarPagos, habilitarPredioAdmin
+    listarPagos, habilitarPredioAdmin, eliminarPagosPreparados
 } from './cobros.js';
 import { declaracionVigente, leerDeclaracion, declararEquipo } from './equipo.js';
 import {
@@ -337,6 +337,17 @@ async function enrutar(request, env, url, ruta, metodo) {
         }
 
         if (ruta === '/api/admin/pagos'     && metodo === 'GET') return responder(await listarPagos(env, url));
+
+        // Escoba de pagos 'preparados' que nunca se ejecutaron. La ruta en
+        // plural va ANTES que la de un id suelto, que si no se la comeria.
+        if (ruta === '/api/admin/pagos/preparados' && metodo === 'DELETE') {
+            return responder(await eliminarPagosPreparados(env, request, sesion, null));
+        }
+        const mPago = /^\/api\/admin\/pagos\/([A-Za-z0-9_-]+)$/.exec(ruta);
+        if (mPago && metodo === 'DELETE') {
+            return responder(await eliminarPagosPreparados(env, request, sesion, mPago[1]));
+        }
+
         if (ruta === '/api/admin/descargas' && metodo === 'GET') return responder(await listarDescargas(env, url));
         if (ruta === '/api/admin/eventos'   && metodo === 'GET') return responder(await listarEventos(env, url));
         if (ruta === '/api/admin/pases'     && metodo === 'GET') return responder(await listarPases(env, url));

@@ -768,6 +768,56 @@ seccion('Cuenta publica y pago por predio');
             pagosAdmin.datos?.resumen);
         const pagosAjeno = await llamar('GET', '/api/admin/pagos', { token: tokenPub });
         comprobar('y una cuenta publica no', pagosAjeno.estado === 403);
+
+        // ── Escoba de pagos 'preparados' ────────────────────────────
+        // Un 'preparado' no movio dinero, pero borrarlo mientras el usuario
+        // teclea su tarjeta dejaria el cobro hecho y el predio cerrado: por
+        // eso hay ventana de gracia, y por eso los demas estados no se tocan.
+        const recien = await llamar('POST', '/api/pagos', {
+            token: tokenPub, cuerpo: { clave_catastral: '0601500777' }
+        });
+        comprobar('se prepara un pago para la prueba de la escoba', recien.estado === 201, recien.datos);
+        const idRecien = recien.datos?.pago?.id;
+
+        const borrarAjeno = await llamar('DELETE', '/api/admin/pagos/' + idRecien, { token: tokenPub });
+        comprobar('una cuenta publica no borra pagos', borrarAjeno.estado === 403);
+
+        const borrarRecien = await llamar('DELETE', '/api/admin/pagos/' + idRecien, { token: tokenAdmin });
+        comprobar('no se borra un preparado recien hecho: aun podria confirmarse',
+            borrarRecien.estado === 409, borrarRecien.datos);
+
+        const yaCobrado = (await llamar('GET', '/api/admin/pagos', { token: tokenAdmin }))
+            .datos?.pagos?.find(p => p.estado === 'aprobado');
+        const borrarAprobado = await llamar('DELETE', '/api/admin/pagos/' + yaCobrado?.id, { token: tokenAdmin });
+        comprobar('un pago aprobado no se borra desde el panel',
+            borrarAprobado.estado === 409, borrarAprobado.datos);
+
+        const borrarFantasma = await llamar('DELETE', '/api/admin/pagos/noexiste', { token: tokenAdmin });
+        comprobar('borrar un pago inexistente responde 404', borrarFantasma.estado === 404);
+
+        // La escoba masiva respeta la misma ventana: con todo recien hecho,
+        // no se lleva nada por delante.
+        //
+        // EL CASO QUE SI BORRA NO SE PRUEBA AQUI: este arnes solo habla HTTP
+        // y no hay forma de envejecer una fila por el API -tampoco deberia
+        // haberla-. Se comprueba a mano contra la base local:
+        //
+        //   npx wrangler d1 execute caech-afiliados --local \
+        //     --command "UPDATE pagos SET creado_en = datetime('now','-90 minutes') || 'Z' WHERE estado='preparado';"
+        //   curl -X DELETE .../api/admin/pagos/preparados -H "Authorization: Bearer <token>"
+        //
+        // El 2026-10-07 devolvio {"borrados":2} y dejo intactos el aprobado,
+        // el cancelado y el rechazado.
+        const escoba = await llamar('DELETE', '/api/admin/pagos/preparados', { token: tokenAdmin });
+        comprobar('la escoba masiva responde 200', escoba.estado === 200, escoba.datos);
+        comprobar('y no barre nada si todos los preparados son recientes',
+            escoba.datos?.borrados === 0, escoba.datos);
+
+        const siguen = await llamar('GET', '/api/admin/pagos', { token: tokenAdmin });
+        comprobar('el preparado reciente sigue ahi',
+            siguen.datos?.pagos?.some(p => p.id === idRecien));
+        comprobar('y el aprobado tambien',
+            siguen.datos?.pagos?.some(p => p.id === yaCobrado?.id && p.estado === 'aprobado'));
     }
 
     simulador.close();

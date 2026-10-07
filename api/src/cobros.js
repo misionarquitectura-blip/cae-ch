@@ -472,6 +472,86 @@ export async function listarPagos(env, url) {
 }
 
 /**
+ * Minutos que un pago 'preparado' esta a salvo de la escoba.
+ *
+ * Un 'preparado' es alguien que abrio la Cajita y no termino: no hubo cobro
+ * y la fila no sirve de nada... salvo que el cobro SI este ocurriendo ahora
+ * mismo. El Confirm de PayPhone se coteja contra esta fila -monto, cuenta y
+ * predio-; si la borramos mientras el usuario esta tecleando su tarjeta, el
+ * Confirm no encuentra nada, el predio no se habilita y el cobro ya se hizo.
+ *
+ * PayPhone reversa sola a los 5 minutos sin confirmacion. Treinta deja un
+ * margen holgado sobre eso sin volver inutil la limpieza.
+ */
+const MINUTOS_GRACIA_PREPARADO = 30;
+
+/**
+ * Borra pagos 'preparados' que nunca se ejecutaron. Con `id`, solo ese; sin
+ * el, todos los que hayan pasado la ventana de gracia.
+ *
+ * Solo toca 'preparado'. Un pago aprobado, cancelado o rechazado es la
+ * constancia de que algo paso con el dinero de alguien y no se borra desde
+ * el panel: eso se arregla con la pasarela, no escondiendo la fila.
+ */
+export async function eliminarPagosPreparados(env, request, sesion, id) {
+    const corte = new Date(Date.now() - MINUTOS_GRACIA_PREPARADO * 60000).toISOString();
+
+    if (id) {
+        const pago = await env.DB.prepare('SELECT * FROM pagos WHERE id = ? LIMIT 1').bind(id).first();
+        if (!pago) return { estado: 404, cuerpo: { ok: false, error: 'Pago no encontrado.' } };
+        if (pago.estado !== 'preparado') {
+            return { estado: 409, cuerpo: { ok: false, error:
+                'Solo se borran los pagos en «preparado». Este esta ' + pago.estado + ': es constancia de una transaccion.' } };
+        }
+        // Se comparan TIEMPOS, no cadenas. El resto del codigo compara fechas
+        // ISO como texto -`vence_en > ?`- y funciona porque todas las escribe
+        // ahora(); pero aqui basta una fila con el separador en espacio en vez
+        // de 'T' para que el orden lexicografico la de por vieja y se borre un
+        // pago que todavia podia confirmarse. Date.parse digiere las dos.
+        const preparadoEn = Date.parse(pago.creado_en);
+        if (!Number.isFinite(preparadoEn) || preparadoEn > Date.parse(corte)) {
+            return { estado: 409, cuerpo: { ok: false, error:
+                'Este pago se preparo hace menos de ' + MINUTOS_GRACIA_PREPARADO
+                + ' minutos y todavia podria confirmarse. Espere e intentelo otra vez.' } };
+        }
+        await env.DB.prepare('DELETE FROM pagos WHERE id = ?').bind(id).run();
+        await registrarEvento(env, {
+            tipo: 'pago_preparado_borrado', afiliado_id: sesion.afiliado.id, usuario: sesion.afiliado.usuario,
+            detalle: id + ' predio ' + pago.clave_catastral,
+            ip_hash: await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
+        });
+        return { estado: 200, cuerpo: { ok: true, borrados: 1 } };
+    }
+
+    // Se eligen en JS por el mismo motivo que arriba: un `creado_en <= ?` en
+    // SQL compara cadenas, y una fila con el separador raro se daria por
+    // vieja. Los 'preparados' son pocos -los que no cuajaron-, asi que leerlos
+    // para filtrarlos no cuesta nada.
+    const { results } = await env.DB.prepare(
+        "SELECT id, creado_en FROM pagos WHERE estado = 'preparado'"
+    ).all();
+    const limite = Date.parse(corte);
+    const ids = (results || [])
+        .filter(f => { const t = Date.parse(f.creado_en); return Number.isFinite(t) && t <= limite; })
+        .map(f => f.id);
+    const borrados = ids.length;
+
+    if (!borrados) {
+        return { estado: 200, cuerpo: { ok: true, borrados: 0,
+            aviso: 'No hay pagos en «preparado» con mas de ' + MINUTOS_GRACIA_PREPARADO + ' minutos.' } };
+    }
+
+    await env.DB.batch(ids.map(id =>
+        env.DB.prepare("DELETE FROM pagos WHERE id = ? AND estado = 'preparado'").bind(id)));
+    await registrarEvento(env, {
+        tipo: 'pagos_preparados_borrados', afiliado_id: sesion.afiliado.id, usuario: sesion.afiliado.usuario,
+        detalle: borrados + ' pagos preparados sin ejecutar',
+        ip_hash: await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
+    });
+    return { estado: 200, cuerpo: { ok: true, borrados: borrados } };
+}
+
+/**
  * Habilita un predio a mano: pago en la sede, cortesia institucional o un
  * pago en linea que se aprobo en PayPhone pero no llego a confirmarse aqui.
  * Queda con via 'admin' y el usuario de quien lo concedio.

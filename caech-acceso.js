@@ -799,12 +799,30 @@
      * de abrirla, la cuenta declara el equipo -marca, modelo, serie- y asume
      * la responsabilidad por los datos. Queda en el Worker con fecha; se
      * puede volver a declarar si cambia de equipo.
+     *
+     * @param {object} [actual] declaracion vigente, tal como la devuelve
+     *        GET /api/equipo. Si se pasa, el formulario sale relleno con esos
+     *        datos: es el modo "corregir", para arreglar una serie mal
+     *        tecleada o afinar la resolucion sin volver a escribirlo todo.
+     *
+     * CORREGIR NO ES REESCRIBIR. La tabla guarda una fila por declaracion y
+     * las anteriores no se tocan: son la constancia de con que equipo dijo
+     * trabajar cada cuenta en cada momento. Por eso la casilla de
+     * responsabilidad NUNCA sale marcada, ni siquiera corrigiendo una coma:
+     * cada fila es una declaracion nueva y se asume de nuevo.
      */
-    function abrirDeclaracion(alTerminar) {
-        modal('caech-modal-equipo', 'Declaraci&oacute;n de equipo',
+    function abrirDeclaracion(alTerminar, actual) {
+        const corrige = !!(actual && actual.tipo);
+
+        modal('caech-modal-equipo',
+            corrige ? 'Corregir el equipo declarado' : 'Declaraci&oacute;n de equipo',
             '<div class="caech-acc-aviso"></div>' +
-            '<p>La planimetr&iacute;a es gratuita, pero solo admite levantamientos tomados con ' +
-            '<b>equipo de alta precisi&oacute;n</b>. Indique el equipo con que trabaja.</p>' +
+            (corrige
+                ? '<p>Ajuste lo que haga falta. Se guarda como una <b>declaraci&oacute;n nueva</b> con ' +
+                  'la fecha de hoy; la anterior se conserva como constancia de con qu&eacute; equipo ' +
+                  'trabaj&oacute; hasta ahora.</p>'
+                : '<p>La planimetr&iacute;a es gratuita, pero solo admite levantamientos tomados con ' +
+                  '<b>equipo de alta precisi&oacute;n</b>. Indique el equipo con que trabaja.</p>') +
             '<div class="caech-acc-campo"><label for="caech-eq-tipo">Tipo de equipo</label>' +
             '  <select id="caech-eq-tipo">' + TIPOS_EQUIPO.map(t =>
                 '<option value="' + t[0] + '">' + t[1] + '</option>').join('') + '</select></div>' +
@@ -822,10 +840,22 @@
             'fueron tomados con este equipo, en buen estado y calibrado; que <b>no provienen</b> de Google Earth ' +
             'o Google Maps, de GPS recreativos ni de tel&eacute;fonos m&oacute;viles; y que respondo por su ' +
             'exactitud y por el uso de los planos e informes que genere.</span></label>' +
-            '<button class="caech-acc-btn" id="caech-eq-guardar">Declarar y continuar</button>',
+            '<button class="caech-acc-btn" id="caech-eq-guardar">' +
+            (corrige ? 'Guardar los cambios' : 'Declarar y continuar') + '</button>',
             (overlay, cerrar) => {
                 const tipo = el('caech-eq-tipo');
                 const boton = el('caech-eq-guardar');
+                const etiqueta = boton.textContent;
+
+                if (corrige) {
+                    tipo.value = actual.tipo;
+                    el('caech-eq-marca').value = actual.marca || '';
+                    el('caech-eq-modelo').value = actual.modelo || '';
+                    el('caech-eq-serie').value = actual.serie || '';
+                    if (actual.gsd_cm != null) el('caech-eq-gsd').value = actual.gsd_cm;
+                }
+                el('caech-eq-gsd-caja').hidden = tipo.value !== 'ortofoto';
+
                 tipo.addEventListener('change', () => { el('caech-eq-gsd-caja').hidden = tipo.value !== 'ortofoto'; });
                 el('caech-eq-marca').focus();
 
@@ -844,7 +874,7 @@
                         acepta_responsabilidad: true
                     });
                     boton.disabled = false;
-                    boton.textContent = 'Declarar y continuar';
+                    boton.textContent = etiqueta;
                     if (r.estado !== 201) {
                         return avisar(overlay, 'error', (r.datos && r.datos.error) || 'No se pudo guardar la declaración.');
                     }
