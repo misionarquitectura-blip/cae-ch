@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
+    <!-- Politica de contenido: de donde puede cargar esta pagina. Ver la auditoria de seguridad (2026-10-21) antes de anadir un dominio. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/ https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/ https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/ https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.8/ https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://server.arcgisonline.com https://*.tile.openstreetmap.org https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/; connect-src 'self' https://api.cae-ch.org https://nominatim.openstreetmap.org https://server.arcgisonline.com https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/; worker-src 'self' blob: https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/; form-action 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Planimetría | CAE-CH</title>
     <meta name="description" content="Planimetrías automatizadas de predios: DXF georreferenciado en UTM WGS84 17S e informe de linderación en PDF.">
@@ -13,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="caech-ui.css">
     <link rel="stylesheet" href="planimetria-web/estilos.css">
     <style>
@@ -258,13 +260,18 @@
 </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.js" integrity="sha384-1rzjf0+iuELMhFIrp9iYaamoIVLnUjHj93MbKlIsn5PnIJDXT7ynaE0i6IhYsOOV" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js" integrity="sha384-qovJwSBbRDPP5cEjCp8S0UP66wrvnjaa60XMOGzTNanrThcrGfXfnZkvgY8N1KT3" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.8/jspdf.plugin.autotable.min.js" integrity="sha384-5jk55M0XWoAw7LyhlXJe19ErOr3doBAPzxw9vahPFbvolqWa2yDk4fhHa2zuYeOa" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="caech-acceso.js"></script>
 <script src="planimetria-web/nucleo.js"></script>
 <script src="planimetria-web/puente.js"></script>
+<!-- Integridad del módulo pdf.js: un import no admite integrity=, el mapa sí.
+     Si se cambia la versión de pdf.js, hay que recalcular este hash. -->
+<script type="importmap">
+{ "integrity": { "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs": "sha384-+0ti2moQlmLN7WZHE2RHIf5lV8hHxhxEalN0il3YZceG26fUPyOkR0hp9daxk1i7" } }
+</script>
 <script type="module">
     // pdf.js ya solo se publica como módulo ES. Se carga aparte porque llega
     // después que el resto, y solo hace falta al leer un certificado.

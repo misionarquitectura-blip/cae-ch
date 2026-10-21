@@ -3,12 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- Politica de contenido: de donde puede cargar esta pagina. Ver la auditoria de seguridad (2026-10-21) antes de anadir un dominio. 'unsafe-eval': Turf.js compila funciones con new Function. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com/leaflet@1.7.1/ https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/ https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/ https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/ https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.8/ https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/ https://unpkg.com/leaflet@1.7.1/; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/; img-src 'self' data: blob: https://*.google.com https://unpkg.com/leaflet@1.7.1/; connect-src 'self' https://api.cae-ch.org https://nominatim.openstreetmap.org; worker-src 'self' blob:; form-action 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAE-CH | Geovisor</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha384-VzLXTJGPSyTLX6d96AxgkKvE/LRb7ECGyTxuwtpjHnVWVZs2gp5RDjeM/tgBnVdM" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="caech-privacidad.js" defer></script>
     <script src="caech-acceso.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1772,10 +1774,10 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha384-RFZC58YeKApoNsIbBxf4z6JJXmh+geBSgkCQXFyh+4tiFSJmJBt+2FbjxW7Ar16M" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js" integrity="sha384-qovJwSBbRDPP5cEjCp8S0UP66wrvnjaa60XMOGzTNanrThcrGfXfnZkvgY8N1KT3" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.8/jspdf.plugin.autotable.min.js" integrity="sha384-5jk55M0XWoAw7LyhlXJe19ErOr3doBAPzxw9vahPFbvolqWa2yDk4fhHa2zuYeOa" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js" integrity="sha384-82q0nm29xZzIo5BMtDYnh2/NxeO6FoaK1S/0nF84w3cEsqbBfun3JdMyDVYWfVY5" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -1870,6 +1872,66 @@
                         console.warn('QR: el catastro no terminó de cargar a tiempo');
                     }
                 }, 500);
+            });
+
+            // ── Verificación del folio del QR (?verify=DICAT-AAAA-XXXX-XXXX) ──
+            // El Worker registra el folio de cada descarga autorizada. Quien
+            // escanea el QR ve si el documento salió de la plataforma y de qué
+            // predio es; nunca quién lo descargó. Los DICAT anteriores al
+            // registro de folios (número DICAT-AAAA-NNNN) no se pueden cotejar.
+            window.addEventListener('load', async function () {
+                const folio = (new URLSearchParams(window.location.search).get('verify') || '').trim().toUpperCase();
+                if (!folio) return;
+
+                const aviso = document.createElement('div');
+                aviso.setAttribute('role', 'status');
+                aviso.style.cssText = 'position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:3000;'
+                    + 'max-width:min(560px,calc(100vw - 32px));padding:12px 40px 12px 16px;border-radius:8px;'
+                    + 'font:13px/1.45 Montserrat,Arial,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.25);'
+                    + 'background:#fff;color:#222;border-left:5px solid #888';
+                const titulo = document.createElement('strong');
+                const cuerpo = document.createElement('div');
+                const cerrar = document.createElement('button');
+                cerrar.type = 'button';
+                cerrar.textContent = '×';
+                cerrar.setAttribute('aria-label', 'Cerrar');
+                cerrar.style.cssText = 'position:absolute;right:8px;top:6px;border:0;background:none;font-size:20px;cursor:pointer;color:#666';
+                cerrar.addEventListener('click', () => aviso.remove());
+                aviso.append(titulo, cuerpo, cerrar);
+                const pintar = (color, t, c) => {
+                    aviso.style.borderLeftColor = color;
+                    titulo.textContent = t;
+                    cuerpo.textContent = c;
+                    if (!aviso.isConnected) document.body.appendChild(aviso);
+                };
+
+                if (/^DICAT-\d{4}-\d{4}$/.test(folio)) {
+                    return pintar('#b26a00', 'Informe ' + folio,
+                        'Este DICAT es anterior al registro de folios en línea (octubre de 2026) y no puede verificarse aquí. '
+                        + 'Para confirmarlo, consulte en la sede del CAE-CH.');
+                }
+                const api = (window.caechAcceso && window.caechAcceso.config && window.caechAcceso.config.api)
+                    || 'https://api.cae-ch.org';
+                pintar('#888', 'Verificando ' + folio + '…', '');
+                try {
+                    const r = await fetch(api + '/api/verificar?folio=' + encodeURIComponent(folio));
+                    const d = await r.json();
+                    if (d && d.valido) {
+                        const fecha = new Date(d.emitido_en).toLocaleString('es-EC',
+                            { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        pintar('#2e7d32', 'Documento auténtico · ' + d.folio,
+                            'Emitido por la plataforma del CAE-CH el ' + fecha + ' (' + String(d.formato).toUpperCase()
+                            + ') para el predio ' + (d.clave_catastral || 'sin clave') + '. '
+                            + 'Compare estos datos con los del documento impreso.');
+                    } else {
+                        pintar('#c62828', 'Folio no registrado · ' + folio,
+                            'Este número no figura entre los documentos emitidos por la plataforma del CAE-CH. '
+                            + 'Si lo recibió como un DICAT, no lo dé por válido y consulte en la sede.');
+                    }
+                } catch (e) {
+                    pintar('#b26a00', 'No se pudo verificar ' + folio,
+                        'El servicio de verificación no respondió. Inténtelo de nuevo en unos minutos.');
+                }
             });
 
             // ── Apertura de capas desde la portada (?capa=6, ?capa=9,10) ──
@@ -4160,7 +4222,7 @@
                     telecomunicaciones = null, intersectionData = [], utmCoords = [],
                     normativaPUGS = null, qrDataUrl = null,
                     mapImage, activeLayers = [], planoVectorial = null,
-                    nroInforme = '', fechaStr = '', vigenciaStr = ''
+                    nroInforme = '', fechaStr = '', vigenciaStr = '', conFolio = false
                 } = d;
 
                 const sectionHeader = (title, yy) => {
@@ -4976,7 +5038,9 @@
                         pw / 2, ph - 8, { align: 'center', maxWidth: pw - mg * 2 }
                     );
                     doc.setTextColor(150, 150, 150);
-                    doc.text(`Pag. ${pg} / ${totalPages}  -  ${nroInforme}  -  CAE-CH Plataforma Digital`, pw / 2, ph - 3, { align: 'center' });
+                    doc.text(`Pag. ${pg} / ${totalPages}  -  ${nroInforme}  -  ` +
+                        (conFolio ? 'Verifique la autenticidad con el codigo QR' : 'Sin folio registrado: documento no verificable') +
+                        '  -  CAE-CH Plataforma Digital', pw / 2, ph - 3, { align: 'center' });
                 }
 
                 return doc;
@@ -5016,11 +5080,18 @@
                 // documento que sale de él.
                 // Con caech-acceso.js inactivo esto devuelve true y el visor
                 // se comporta como siempre.
+                // La autorizacion trae el folio que el Worker registro para este
+                // documento: es su numero de informe y viaja en el QR, de modo
+                // que /api/verificar lo reconoce. Sin el, el DICAT sale con un
+                // numero local y el pie dice que no es verificable.
+                let folio = null;
                 if (window.caechAcceso) {
                     window.caechAcceso.registrarAccion('pdf', () => generarDICAT(props));
                     const clave = props && props.claves ? String(props.claves).trim()
                         : claveGeometrica(csvUTMCoordinates);
-                    if (!await window.caechAcceso.autorizar('pdf', clave)) return;
+                    const permiso = await window.caechAcceso.autorizar('pdf', clave);
+                    if (!permiso) return;
+                    folio = (permiso && permiso.folio) || null;
                 }
 
                 showProgressBar('Preparando DICAT...');
@@ -5038,7 +5109,7 @@
                     const vigencia    = new Date(fechaHoy);
                     vigencia.setFullYear(vigencia.getFullYear() + 2);
                     const vigenciaStr = vigencia.toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' });
-                    const nroInforme  = `DICAT-${fechaHoy.getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+                    const nroInforme  = folio || `DICAT-${fechaHoy.getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
                     const csvPoints     = csvPolygon.getLatLngs()[0];
                     const polygonPoints = csvPoints.map(ll => ({ lat: ll.lat, lng: ll.lng }));
@@ -5183,6 +5254,7 @@
                     const reportData = {
                         filePrefix,
                         nroInforme,
+                        conFolio: !!folio,
                         fechaStr,
                         vigenciaStr,
                         meta: {
@@ -8456,7 +8528,7 @@
             // color, poligonos: [anillo...], lineas: [[[x,y]...]...],
             // puntos: [[x,y]...] }] }. Cada una va en su propia capa del CAD.
             // ─────────────────────────────────────────────────────────────────
-            function construirDXF(utm, franjas, clave, contexto) {
+            function construirDXF(utm, franjas, clave, contexto, folio) {
                 const L = [];
                 const g = function (c, v) { L.push(String(c)); L.push(String(v)); };
                 const num = function (v) {
@@ -8536,7 +8608,12 @@
                 // R12 no declara página de códigos: la etiqueta va en ASCII puro
                 const etiqueta = String(clave || '').replace(/[^\x20-\x7E]/g, '').trim();
                 const yEtiqueta = bp[1] - alturaTexto * 3;
-                const extY0 = etiqueta ? Math.min(bt[1], yEtiqueta - alturaTexto) : bt[1];
+                // El folio de la descarga, en una segunda linea bajo la clave.
+                const lineaFolio = folio ? ('FOLIO ' + String(folio).replace(/[^\x20-\x7E]/g, '')) : '';
+                const yFolio = yEtiqueta - alturaTexto * 2.4;
+                const extY0 = etiqueta
+                    ? Math.min(bt[1], (lineaFolio ? yFolio : yEtiqueta) - alturaTexto)
+                    : bt[1];
 
                 // ── HEADER ───────────────────────────────────────────────────
                 g(0, 'SECTION'); g(2, 'HEADER');
@@ -8622,6 +8699,7 @@
                     texto(p[0] + alturaTexto * 0.6, p[1] + alturaTexto * 0.6, alturaTexto, 'V' + (i + 1));
                 });
                 if (etiqueta) texto(x0, yEtiqueta, alturaTexto * 1.4, etiqueta);
+                if (etiqueta && lineaFolio) texto(x0, yFolio, alturaTexto, lineaFolio);
 
                 g(0, 'ENDSEC'); g(0, 'EOF');
                 return L.join('\r\n') + '\r\n';
@@ -8702,9 +8780,12 @@
             window.exportarPredioDXF = async function () {
                 const d = geometriaPredioSeleccionado();
                 if (!d) return;
+                let folio = null;
                 if (window.caechAcceso) {
                     window.caechAcceso.registrarAccion('dxf', window.exportarPredioDXF);
-                    if (!await window.caechAcceso.autorizar('dxf', (d.props && d.props.claves) ? d.clave : claveGeometrica(d.utm))) return;
+                    const permiso = await window.caechAcceso.autorizar('dxf', (d.props && d.props.claves) ? d.clave : claveGeometrica(d.utm));
+                    if (!permiso) return;
+                    folio = (permiso && permiso.folio) || null;
                 }
                 let franjas = null;
                 if (geojsonLayers[8]) {
@@ -8716,7 +8797,7 @@
                 let contexto = null;
                 try { contexto = capasActivasParaDXF(d.geoJSON, d.clave); }
                 catch (e) { console.warn('Capas activas para DXF:', e); }
-                const dxf = construirDXF(d.utm, franjas, d.clave, contexto);
+                const dxf = construirDXF(d.utm, franjas, d.clave, contexto, folio);
                 descargarArchivo(`PREDIO_${d.clave.substring(0, 18)}_UTM17S.dxf`, dxf, 'application/dxf');
             };
 
@@ -8726,9 +8807,12 @@
             window.exportarPredioCSV = async function () {
                 const d = geometriaPredioSeleccionado();
                 if (!d) return;
+                let folio = null;
                 if (window.caechAcceso) {
                     window.caechAcceso.registrarAccion('csv', window.exportarPredioCSV);
-                    if (!await window.caechAcceso.autorizar('csv', (d.props && d.props.claves) ? d.clave : claveGeometrica(d.utm))) return;
+                    const permiso = await window.caechAcceso.autorizar('csv', (d.props && d.props.claves) ? d.clave : claveGeometrica(d.utm));
+                    if (!permiso) return;
+                    folio = (permiso && permiso.folio) || null;
                 }
                 const u = d.utm, n = u.length;
                 const filas = ['VERTICE;ESTE_X_m;NORTE_Y_m;LADO;DISTANCIA_m'];
@@ -8748,6 +8832,7 @@
                 filas.push(`# Perimetro medido (m);${calculatePolygonPerimeter(pts)}`);
                 if (d.props && d.props.sup_pred_c) filas.push(`# Superficie declarada catastro (m2);${d.props.sup_pred_c}`);
                 filas.push(`# Generado;${new Date().toLocaleString('es-EC')} - CAE-CH GeoVisor`);
+                filas.push(`# Folio de verificacion;${folio || 'sin folio registrado (no verificable)'}`);
                 // BOM para que Excel respete los acentos
                 descargarArchivo(`PREDIO_${d.clave.substring(0, 18)}_vertices.csv`, '﻿' + filas.join('\r\n'), 'text/csv;charset=utf-8');
             };

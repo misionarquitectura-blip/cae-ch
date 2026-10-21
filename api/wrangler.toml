@@ -31,6 +31,11 @@ crons = ["0 4 * * *"]
 # ── Variables publicas ──────────────────────────────────────────────
 # Los secretos NO van aqui. Se cargan con `npx wrangler secret put`:
 #   PIMIENTA           obligatorio — sal global para hashear IPs
+#   PIMIENTA_CLAVES    recomendado — secreto con que se sazonan las claves
+#                      antes de PBKDF2 (ver src/cripto.js). Cargado, cada
+#                      cuenta se rehace sola en su siguiente ingreso. NO se
+#                      cambia ni se borra despues: hacerlo invalida todas las
+#                      claves ya rehechas. Guarde una copia fuera de Cloudflare.
 #   RESEND_API_KEY     solo si MAIL_PROVEEDOR = "resend"
 #   PAYPHONE_TOKEN     cobro en linea (PayPhone Business, aplicacion WEB)
 #   PAYPHONE_STORE_ID  idem. Sin estos dos el cobro en linea responde 503

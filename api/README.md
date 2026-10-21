@@ -73,6 +73,13 @@ exportación y deja auditoría de cada descarga; **no vuelve secreta la geometr�
 que además es información municipal pública. Quien sepa manejar QGIS puede
 descargar ese GeoJSON y armarse su propio DXF sin pasar por aquí.
 
+Lo que el API sí controla es la **validez** del producto: cada descarga
+autorizada recibe un folio `DICAT-AAAA-XXXX-XXXX` que el DICAT lleva como número
+de informe y en su QR (el CSV y el DXF también lo llevan). `GET /api/verificar`
+lo reconoce y dice de qué predio es y cuándo se emitió, nunca quién lo
+descargó. Un PDF armado desde la consola del navegador sin pasar por la puerta
+de descargas sale sin folio registrado, y el QR lo dice.
+
 Para 10 afiliados institucionales eso es suficiente: el objetivo es ordenar y
 registrar el acceso, no impedir la copia. Si algún día hiciera falta control
 real sobre el dato, habría que sacar el catastro del repositorio y servirlo
@@ -115,6 +122,14 @@ npx wrangler d1 execute caech-afiliados --remote --file=migraciones/002-numero-d
 npx wrangler d1 execute caech-afiliados --remote --file=migraciones/003-herramientas-por-cuenta.sql
 ```
 
+La `007` (auditoría de seguridad del 2026-10-21) añade el folio de las
+descargas, el número de registro pendiente de las cuentas sin confirmar y los
+índices del freno de fuerza bruta. **Va antes de desplegar el Worker** que la usa:
+
+```bash
+npx wrangler d1 execute caech-afiliados --remote --file=migraciones/007-endurecimiento.sql
+```
+
 `ALTER TABLE ADD COLUMN` **no es idempotente**: si la migración ya se aplicó,
 vuelve a fallar con «duplicate column». Compruebe antes con
 `SELECT name FROM pragma_table_info('afiliados')`.
@@ -128,6 +143,20 @@ limitar sin guardar ninguna dirección en claro.
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 npx wrangler secret put PIMIENTA
 ```
+
+`PIMIENTA_CLAVES` (recomendado) es otro secreto, distinto del anterior, con el
+que se sazonan las contraseñas antes de PBKDF2. Con él, una copia filtrada de
+D1 no sirve para adivinar claves fuera de línea, aunque el plan gratuito obligue
+a pocas iteraciones. Cada cuenta se rehace sola en su siguiente ingreso.
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+npx wrangler secret put PIMIENTA_CLAVES
+```
+
+**Guarde una copia de `PIMIENTA_CLAVES` fuera de Cloudflare y no la cambie
+nunca**: si se pierde o se reemplaza, ninguna clave ya rehecha vuelve a
+verificar y la administración tendría que restablecerlas una por una.
 
 ### 4. Desplegar
 
@@ -282,28 +311,43 @@ curl -X POST https://caech-afiliados.SU-CUENTA.workers.dev/api/admin/afiliados \
 
 ## Decisiones de seguridad
 
-- **Contraseñas**: PBKDF2-SHA256 con sal por usuario, formato
-  `pbkdf2-sha256$iter$salt$hash`. Comparación en tiempo constante.
+- **Contraseñas**: PBKDF2-SHA256 con sal por usuario. Con `PIMIENTA_CLAVES`
+  cargada, la clave pasa antes por un HMAC con ese secreto (formato
+  `pbkdf2p-sha256$iter$salt$hash`); sin ella, el formato histórico
+  `pbkdf2-sha256$...`. Los dos verifican y el ingreso migra el viejo al nuevo.
+  Comparación en tiempo constante.
 - **Clave temporal**: 20 caracteres de un alfabeto sin ambigüedades (~103 bits),
   en grupos de 4 para poder dictarla. `requiere_cambio_clave` bloquea toda
   descarga hasta que el afiliado ponga la suya.
 - **Sesiones**: token opaco de 32 bytes; en la base se guarda solo su SHA-256.
   Una filtración de la base no entrega sesiones utilizables. Caducan a las 8 h.
-- **Token en cabecera, no en cookie**: el visor está en GitHub Pages y el API en
-  `workers.dev` — dominios distintos, donde una cookie sería de terceros y
-  Safari y Chrome la bloquean. Cuando el API pase a `api.cae-ch.org.ec` conviene
-  migrar a cookie `HttpOnly; Secure; SameSite=Lax`, que resiste mejor un XSS.
+- **Token en cabecera, no en cookie**: el token vive en `localStorage`. Lo que
+  lo protege de un script ajeno es la CSP de cada página (de dónde se puede
+  cargar código y a dónde se puede conectar) y la integridad SRI de cada
+  librería de CDN. El panel de administración no admite ningún script en línea:
+  su código está en `panel.js`.
 - **Enumeración de cuentas**: usuario inexistente y clave incorrecta devuelven
-  el mismo mensaje y gastan el mismo tiempo de CPU.
-- **Fuerza bruta**: 5 intentos fallidos bloquean la cuenta 15 minutos. El bloqueo
-  es por cuenta, no global.
+  el mismo mensaje y gastan el mismo tiempo de CPU. Cuenta suspendida o sin
+  confirmar solo se dice después de acertar la clave.
+- **Fuerza bruta**, en tres niveles y con el mismo 429 para todos:
+  30 fallos por conexión en 15 min (contra cualquier usuario); 5 fallos de una
+  conexión contra un mismo usuario (frena a esa conexión, no al titular, que
+  entra desde otra); y 20 fallos contra una cuenta desde cualquier conexión,
+  que la bloquean 15 min. Un usuario inexistente se frena igual, así que el
+  429 no delata cuentas.
+- **Registro y confirmación**: el enlace del correo no confirma por sí solo;
+  lleva al sitio, que pide la contraseña (`POST /api/registro/confirmar`).
+  Volver a registrar un correo sin confirmar reemplaza la clave y anula el
+  enlace anterior. Así nadie se queda con la cuenta de otra persona
+  registrando su correo antes que ella.
 - **Cambio de clave**: cierra todas las demás sesiones del afiliado.
 - **Suspensión**: borra las sesiones abiertas en el acto.
 - **Último administrador**: no se puede suspender ni degradar al único admin
   activo, ni puede uno hacérselo a sí mismo.
 - **IP**: nunca se guarda en claro, solo `SHA-256(PIMIENTA + ip)`.
 - **Número de registro**: índice único parcial en `afiliados`, de modo que un
-  mismo número no puede tener dos cuentas. Declararlo no habilita nada: hasta
+  mismo número no puede tener dos cuentas. Mientras el correo no se confirma,
+  el número espera en `registro_pendiente` y no reserva nada. Declararlo no habilita nada: hasta
   que un administrador lo valide, `permisos()` devuelve `false` en los tres
   formatos.
 - **Pase de cortesía** (retirado): el endpoint sigue en pie para no romper

@@ -261,4 +261,19 @@ H.chequear('el contexto no agranda los rotulos del predio', alto(pc) === alto(pa
 H.chequear('sin capas de contexto no se dibuja el marco',
     !construirDXF(utm, null, 'x', { marco: contexto.marco, capas: [] }).includes('MARCO'));
 
+// ── Folio de la descarga ─────────────────────────────────────────────────────
+// El Worker emite un folio por descarga; va en una linea de texto bajo la clave.
+const conFolio = construirDXF(utm, null, patron.clave, null, 'DICAT-2026-ABCD-EF23');
+const pf = [];
+{ const l = conFolio.split('\r\n'); l.pop(); for (let i = 0; i < l.length; i += 2) pf.push([l[i].trim(), l[i + 1]]); }
+const textosFolio = pf.filter((p, i) => p[0] === '1' && pf.slice(0, i).reverse().find(q => q[0] === '0')[1] === 'TEXT').map(p => p[1]);
+H.chequear('con folio, el DXF rotula FOLIO DICAT-... como texto', textosFolio.includes('FOLIO DICAT-2026-ABCD-EF23'), textosFolio);
+H.chequear('con folio, sigue siendo ASCII y con pares completos',
+    !/[^\x09\x0a\x0d\x20-\x7e]/.test(conFolio) && conFolio.split('\r\n').length % 2 === 1);
+const yMin = txt => { const l = txt.split('\r\n'); const i = l.findIndex(v => v === '$EXTMIN'); return Number(l[i + 4]); };
+H.chequear('las extensiones bajan para abarcar la linea del folio',
+    yMin(conFolio) < yMin(construirDXF(utm, null, patron.clave)), [yMin(conFolio), yMin(construirDXF(utm, null, patron.clave))]);
+H.chequear('sin folio el DXF no cambia', construirDXF(utm, null, patron.clave) === construirDXF(utm, null, patron.clave, null, null)
+    && !construirDXF(utm, null, patron.clave).includes('FOLIO'));
+
 H.resumen('DXF para AutoCAD');

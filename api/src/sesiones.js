@@ -2,17 +2,26 @@
 //  Autenticacion de afiliados.
 //
 //  El token de sesion viaja en `Authorization: Bearer <token>`, no en
-//  cookie. Motivo: el sitio vive en GitHub Pages y el API en workers.dev,
-//  o sea dominios distintos; una cookie ahi es de terceros y Safari y
-//  Chrome la bloquean. Cuando el API pase a api.cae-ch.org conviene
-//  migrar a cookie HttpOnly + SameSite=Lax (ver README).
+//  cookie, y el sitio lo guarda en localStorage. Lo que lo resguarda de un
+//  script ajeno es la CSP de cada pagina y la integridad SRI de las
+//  librerias de CDN (ver README, "Decisiones de seguridad").
 // ════════════════════════════════════════════════════════════════════
 
 import { generarToken, sha256, hashearClave, verificarClave, requiereRehash, hashIP } from './cripto.js';
 import { ahora, vencido, texto } from './http.js';
 
-const MAX_INTENTOS    = 5;
-const BLOQUEO_MIN     = 15;
+// Freno de fuerza bruta, en tres niveles. Los dos primeros cuentan filas
+// de la bitacora en una ventana de BLOQUEO_MIN y frenan solo a la conexion
+// que falla: quien adivina claves desde un equipo no bloquea al titular,
+// que entra desde otro. El tercero bloquea la cuenta entera y es la
+// defensa contra un ataque repartido entre muchas conexiones; por eso su
+// umbral es alto. Los tres responden el mismo 429, y para un usuario
+// inexistente se imita el tercero con la bitacora: el 429 no delata que
+// cuentas existen.
+const MAX_FALLOS_IP         = 30;   // por conexion, contra cualquier usuario (una oficina comparte IP)
+const MAX_FALLOS_USUARIO_IP = 5;    // por conexion, contra un mismo usuario
+const MAX_INTENTOS          = 20;   // por cuenta, desde cualquier conexion
+const BLOQUEO_MIN           = 15;
 const HORAS_SESION    = 8;
 const CLAVE_MIN_LARGO = 12;
 
@@ -53,6 +62,50 @@ export function iteraciones(env) {
     return parseInt(env.HASH_ITERACIONES, 10) || 210000;
 }
 
+/**
+ * Secreto con que se sazonan las claves antes de PBKDF2 (ver cripto.js).
+ * Sin el secreto cargado todo sigue como antes, en el formato historico.
+ * OJO: cargado una vez, perderlo o cambiarlo invalida todas las claves
+ * rehechas con el; la administracion tendria que restablecerlas una a una.
+ */
+export function pimientaClaves(env) {
+    return String(env.PIMIENTA_CLAVES || '').trim() || null;
+}
+
+/** Hash de una clave nueva con la configuracion vigente. */
+export function hashear(env, clave) {
+    return hashearClave(clave, iteraciones(env), pimientaClaves(env));
+}
+
+/** Verifica una clave contra el hash guardado, sea del formato que sea. */
+export function verificar(env, clave, almacenado) {
+    return verificarClave(clave, almacenado, pimientaClaves(env));
+}
+
+// Hash de mentira para el usuario inexistente. Se calcula una vez por
+// instancia: si se hasheara en cada intento, ese camino costaria dos
+// derivaciones y el real una, y la diferencia de tiempo delataria la cuenta.
+let SENUELO = null;
+async function senuelo(env) {
+    if (!SENUELO) SENUELO = await hashear(env, 'senuelo-' + generarToken(8));
+    return SENUELO;
+}
+
+const DEMASIADOS = {
+    estado: 429,
+    cuerpo: { ok: false, error: 'Demasiados intentos fallidos. Espere unos minutos antes de reintentar.' }
+};
+
+async function fallosRecientes(env, { ip_hash, usuario }) {
+    const desde = new Date(Date.now() - BLOQUEO_MIN * 60000).toISOString();
+    let sql = "SELECT COUNT(*) AS n FROM eventos WHERE tipo = 'ingreso_fallido' AND creado_en > ?";
+    const args = [desde];
+    if (ip_hash) { sql += ' AND ip_hash = ?'; args.push(ip_hash); }
+    if (usuario) { sql += ' AND usuario = ?'; args.push(usuario); }
+    const fila = await env.DB.prepare(sql).bind(...args).first();
+    return fila ? fila.n : 0;
+}
+
 export async function registrarEvento(env, { tipo, afiliado_id, usuario, detalle, ip_hash }) {
     try {
         await env.DB.prepare(
@@ -76,6 +129,7 @@ export function perfilPublico(fila) {
         correo_verificado: !!fila.correo_verificado,
         nucleo: fila.nucleo,
         registro_profesional: fila.registro_profesional,
+        registro_pendiente: fila.registro_pendiente || null,
         registro_validado: !!fila.registro_validado,
         herramientas: herramientasDe(fila),
         vigencia_hasta: fila.vigencia_hasta,
@@ -165,35 +219,38 @@ export async function iniciarSesion(env, request, { usuario, clave }) {
 
     if (!login || typeof clave !== 'string' || !clave) return generico;
 
+    // Niveles 1 y 2: esta conexion ya fallo demasiado. Se mira antes de
+    // buscar la cuenta, asi que no dice nada de ella.
+    if (ip_hash && (await fallosRecientes(env, { ip_hash }) >= MAX_FALLOS_IP
+                 || await fallosRecientes(env, { ip_hash, usuario: login }) >= MAX_FALLOS_USUARIO_IP)) {
+        await registrarEvento(env, { tipo: 'ingreso_frenado', usuario: login, detalle: 'conexion', ip_hash });
+        return DEMASIADOS;
+    }
+
     const fila = await env.DB.prepare(
         'SELECT * FROM afiliados WHERE usuario = ? OR correo = ? LIMIT 1'
     ).bind(login, login).first();
 
     if (!fila) {
+        // Nivel 3 imitado: una cuenta real se bloquea a los MAX_INTENTOS
+        // fallos; un usuario inexistente responde igual a los mismos fallos.
+        if (await fallosRecientes(env, { usuario: login }) >= MAX_INTENTOS) {
+            await registrarEvento(env, { tipo: 'ingreso_bloqueado', usuario: login, ip_hash });
+            return DEMASIADOS;
+        }
         await registrarEvento(env, { tipo: 'ingreso_fallido', usuario: login, detalle: 'usuario inexistente', ip_hash });
         // Se gasta el mismo tiempo que en una verificacion real para no
         // delatar por temporizacion que la cuenta no existe.
-        await verificarClave(clave, await hashearClave('senuelo', iteraciones(env)));
+        await verificar(env, clave, await senuelo(env));
         return generico;
     }
 
     if (fila.bloqueado_hasta && !vencido(fila.bloqueado_hasta)) {
         await registrarEvento(env, { tipo: 'ingreso_bloqueado', afiliado_id: fila.id, usuario: login, ip_hash });
-        return {
-            estado: 429,
-            cuerpo: { ok: false, error: 'Cuenta bloqueada temporalmente por intentos fallidos. Reintente en unos minutos.' }
-        };
+        return DEMASIADOS;
     }
 
-    if (fila.estado !== 'activo') {
-        await registrarEvento(env, { tipo: 'ingreso_rechazado', afiliado_id: fila.id, usuario: login, detalle: fila.estado, ip_hash });
-        return {
-            estado: 403,
-            cuerpo: { ok: false, error: 'Su cuenta no esta activa. Comuniquese con la sede del CAE-CH.' }
-        };
-    }
-
-    if (!await verificarClave(clave, fila.hash_clave)) {
+    if (!await verificar(env, clave, fila.hash_clave)) {
         const intentos = (fila.intentos_fallidos || 0) + 1;
         const bloqueo = intentos >= MAX_INTENTOS
             ? new Date(Date.now() + BLOQUEO_MIN * 60000).toISOString()
@@ -208,8 +265,17 @@ export async function iniciarSesion(env, request, { usuario, clave }) {
         return generico;
     }
 
-    // Se comprueba DESPUES de validar la clave: de lo contrario cualquiera
-    // podria averiguar que direcciones estan registradas.
+    // El estado y la confirmacion se comprueban DESPUES de validar la
+    // clave: de lo contrario cualquiera podria averiguar que direcciones
+    // estan registradas, o cuales estan suspendidas.
+    if (fila.estado !== 'activo') {
+        await registrarEvento(env, { tipo: 'ingreso_rechazado', afiliado_id: fila.id, usuario: login, detalle: fila.estado, ip_hash });
+        return {
+            estado: 403,
+            cuerpo: { ok: false, error: 'Su cuenta no esta activa. Comuniquese con la sede del CAE-CH.' }
+        };
+    }
+
     if (!fila.correo_verificado) {
         await registrarEvento(env, { tipo: 'ingreso_sin_verificar', afiliado_id: fila.id, usuario: login, ip_hash });
         return {
@@ -231,11 +297,19 @@ export async function iniciarSesion(env, request, { usuario, clave }) {
     }
 
     // Credenciales correctas: se rehashea si el coste vigente subio.
-    if (requiereRehash(fila.hash_clave, iteraciones(env))) {
-        const nuevo = await hashearClave(clave, iteraciones(env));
+    if (requiereRehash(fila.hash_clave, iteraciones(env), pimientaClaves(env))) {
+        const nuevo = await hashear(env, clave);
         await env.DB.prepare('UPDATE afiliados SET hash_clave = ? WHERE id = ?').bind(nuevo, fila.id).run();
     }
 
+    return abrirSesion(env, request, fila, ip_hash);
+}
+
+/**
+ * Emite el token de una cuenta ya autenticada y deja constancia. La usan
+ * el ingreso y la confirmacion del correo, que tambien comprueba la clave.
+ */
+export async function abrirSesion(env, request, fila, ip_hash) {
     const token = generarToken(32);
     const expira = new Date(Date.now() + HORAS_SESION * 3600000).toISOString();
     await env.DB.prepare(
@@ -310,7 +384,7 @@ export async function cerrarSesion(env, request) {
 export async function cambiarClave(env, request, sesion, { clave_actual, clave_nueva }) {
     const fila = sesion.afiliado;
 
-    if (!await verificarClave(String(clave_actual || ''), fila.hash_clave)) {
+    if (!await verificar(env, String(clave_actual || ''), fila.hash_clave)) {
         return { estado: 401, cuerpo: { ok: false, error: 'La contrasena actual no es correcta.' } };
     }
     const motivo = validarClave(clave_nueva, fila);
@@ -319,7 +393,7 @@ export async function cambiarClave(env, request, sesion, { clave_actual, clave_n
         return { estado: 400, cuerpo: { ok: false, error: 'La contrasena nueva debe ser distinta de la actual.' } };
     }
 
-    const hash = await hashearClave(clave_nueva, iteraciones(env));
+    const hash = await hashear(env, clave_nueva);
     await env.DB.prepare(
         'UPDATE afiliados SET hash_clave = ?, requiere_cambio_clave = 0, clave_cambiada_en = ?, actualizado_en = ? WHERE id = ?'
     ).bind(hash, ahora(), ahora(), fila.id).run();

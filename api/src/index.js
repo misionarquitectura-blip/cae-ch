@@ -13,10 +13,15 @@
 //  vuelve secreto el dato subyacente, que es informacion municipal
 //  publica. Para eso habria que sacar el catastro del repositorio, lo
 //  que dejaria sin mapa al sitio publico.
+//
+//  Lo que si controla es la VALIDEZ: cada descarga autorizada recibe un
+//  folio (DICAT-AAAA-XXXX-XXXX) que el documento lleva impreso y en su QR,
+//  y GET /api/verificar lo reconoce. Quien arme el PDF desde la consola sin
+//  pasar por aqui obtiene un documento sin folio registrado: el QR lo dice.
 // ════════════════════════════════════════════════════════════════════
 
 import { json, ok, error, preflight, cuerpoJSON, texto, ahora } from './http.js';
-import { hashIP } from './cripto.js';
+import { hashIP, generarFolio } from './cripto.js';
 import {
     iniciarSesion, cerrarSesion, sesionActual, cambiarClave, aceptarTerminos,
     perfilPublico, permisos, registrarEvento, HERRAMIENTAS
@@ -26,7 +31,7 @@ import {
     listarDescargas, listarEventos, listarPases
 } from './admin.js';
 import { solicitarPase, verificarPase, consumirPase, estadoPase } from './freemium.js';
-import { registrar, verificarCorreo, reenviarVerificacion } from './registro.js';
+import { registrar, verificarCorreo, confirmarCorreo, reenviarVerificacion } from './registro.js';
 import {
     autorizarPredio, estadoPredio, prepararPago, confirmarPago, resumenCuenta,
     listarPagos, habilitarPredioAdmin, eliminarPagosPreparados
@@ -140,15 +145,28 @@ async function enrutar(request, env, url, ruta, metodo) {
         if (!predio.ok) return json(predio.cuerpo, predio.estado, request, env);
 
         const clave = predio.clave || texto(datos.clave_catastral, 60) || null;
-        await env.DB.prepare(
-            "INSERT INTO descargas (creado_en, formato, origen, afiliado_id, clave_catastral, ip_hash) VALUES (?, ?, 'afiliado', ?, ?, ?)"
-        ).bind(
-            ahora(), formato, sesion.afiliado.id, clave,
-            await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
-        ).run();
+        // El folio es lo que el producto lleva impreso y lo que
+        // /api/verificar reconoce. Un documento que no paso por aqui -armado
+        // desde la consola del navegador con el catastro publico- no lo tiene.
+        const ip_hash = await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA);
+        let folio = null;
+        for (let intento = 0; intento < 3 && !folio; intento++) {
+            const candidato = generarFolio();
+            try {
+                await env.DB.prepare(
+                    "INSERT INTO descargas (creado_en, formato, origen, afiliado_id, clave_catastral, ip_hash, folio) "
+                    + "VALUES (?, ?, 'afiliado', ?, ?, ?, ?)"
+                ).bind(ahora(), formato, sesion.afiliado.id, clave, ip_hash, candidato).run();
+                folio = candidato;
+            } catch (e) {
+                // Choque del indice unico (40 bits: rarisimo). Otro folio.
+                if (!/UNIQUE/i.test(String(e && e.message))) throw e;
+            }
+        }
+        if (!folio) return error('No se pudo emitir el folio del documento. Reintente.', 500, request, env);
 
         return ok({
-            formato: formato, autorizado: true, via: predio.via,
+            formato: formato, autorizado: true, via: predio.via, folio: folio,
             vence_en: predio.vence_en || null, cupo: predio.cupo || null, predio_nuevo: !!predio.nuevo
         }, request, env);
     }
@@ -244,10 +262,33 @@ async function enrutar(request, env, url, ruta, metodo) {
         return verificarCorreo(env, request, url);   // devuelve una redireccion
     }
 
+    if (ruta === '/api/registro/confirmar' && metodo === 'POST') {
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+        return responder(await confirmarCorreo(env, request, datos));
+    }
+
     if (ruta === '/api/registro/reenviar' && metodo === 'POST') {
         const datos = await cuerpoJSON(request);
         if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
         return responder(await reenviarVerificacion(env, request, datos));
+    }
+
+    // ── Verificacion publica de un documento ────────────────────────
+    // Lo consulta el QR del DICAT. Dice si el folio salio de la plataforma
+    // y de que predio es; nunca quien lo descargo (LOPDP).
+    if (ruta === '/api/verificar' && metodo === 'GET') {
+        const folio = texto(url.searchParams.get('folio') || '', 40).toUpperCase();
+        if (!/^DICAT-\d{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(folio)) {
+            return ok({ valido: false, formato_folio: false }, request, env);
+        }
+        const fila = await env.DB.prepare(
+            'SELECT formato, clave_catastral, creado_en FROM descargas WHERE folio = ? LIMIT 1'
+        ).bind(folio).first();
+        return ok(fila
+            ? { valido: true, folio: folio, formato: fila.formato, clave_catastral: fila.clave_catastral,
+                emitido_en: fila.creado_en }
+            : { valido: false, formato_folio: true, folio: folio }, request, env);
     }
 
     // ── Freemium ────────────────────────────────────────────────────

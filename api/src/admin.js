@@ -6,9 +6,9 @@
 //  en claro en ningun lado: si se pierde, se restablece.
 // ════════════════════════════════════════════════════════════════════
 
-import { generarId, generarClaveTemporal, hashearClave, hashIP } from './cripto.js';
+import { generarId, generarClaveTemporal, hashIP } from './cripto.js';
 import { ahora, texto, correoValido } from './http.js';
-import { iteraciones, registrarEvento, perfilPublico, permisos, HERRAMIENTAS } from './sesiones.js';
+import { hashear, registrarEvento, perfilPublico, permisos, HERRAMIENTAS } from './sesiones.js';
 
 const ESTADOS = ['activo', 'suspendido', 'baja'];
 const ROLES   = ['usuario', 'afiliado', 'admin'];
@@ -85,7 +85,7 @@ export async function crearAfiliado(env, request, sesion, datos) {
 
     const id = generarId('afi');
     const claveTemporal = generarClaveTemporal();
-    const hash = await hashearClave(claveTemporal, iteraciones(env));
+    const hash = await hashear(env, claveTemporal);
     const t = ahora();
 
     // El alta la hace la administracion con el padron delante, asi que el
@@ -231,7 +231,7 @@ export async function restablecerClave(env, request, sesion, id) {
     if (!fila) return malo('Afiliado no encontrado.', 404);
 
     const claveTemporal = generarClaveTemporal();
-    const hash = await hashearClave(claveTemporal, iteraciones(env));
+    const hash = await hashear(env, claveTemporal);
 
     await env.DB.prepare(
         'UPDATE afiliados SET hash_clave = ?, requiere_cambio_clave = 1, intentos_fallidos = 0, ' +

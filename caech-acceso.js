@@ -668,7 +668,9 @@
     /**
      * Punto unico por el que pasan PDF, CSV y DXF antes de generarse. El
      * mapa NO pasa por aqui: se consulta sin cuenta.
-     * @returns {Promise<boolean>} true si se puede continuar.
+     * @returns {Promise<false|true|{folio:string}>} falso si no se puede
+     *          continuar. Con sesion devuelve la respuesta del Worker, que
+     *          trae el `folio` que el documento debe llevar impreso.
      */
     async function autorizar(formato, claveCatastral) {
         if (!CONFIG.activo) return true;   // interruptor de despliegue
@@ -681,7 +683,7 @@
                 formato: formato,
                 clave_catastral: claveCatastral || null
             });
-            if (r.estado === 200) return true;
+            if (r.estado === 200) return r.datos || true;
             if (r.datos && r.datos.requiere_cambio_clave) {
                 abrirCambioClave(null, () => reintentar(formato, claveCatastral));
                 return false;
@@ -900,6 +902,66 @@
         enlace_invalido: ['error', 'El enlace de confirmación no es válido.']
     };
 
+    /**
+     * El enlace del correo llega como index.html#confirmar=<token>. Confirmar
+     * exige escribir la contrasena de la cuenta: solo quien tiene el correo
+     * Y la clave la activa (ver api/src/registro.js). Al confirmar queda la
+     * sesion abierta.
+     */
+    function procesarConfirmacion() {
+        const m = /(?:^#|&)confirmar=([^&]+)/.exec(location.hash || '');
+        if (!m) return;
+        const t = decodeURIComponent(m[1]);
+        // Fuera de la barra de direcciones y del historial cuanto antes.
+        history.replaceState(null, '', location.pathname + location.search);
+
+        modal('caech-modal-confirmar', 'Confirmar su cuenta',
+            '<div class="caech-acc-aviso info">Para terminar de activar la cuenta, escriba la contrase&ntilde;a ' +
+            'que eligi&oacute; al crearla.</div>' +
+            '<div class="caech-acc-campo"><label for="caech-conf-clave">Contrase&ntilde;a</label>' +
+            '  <input id="caech-conf-clave" type="password" autocomplete="current-password"></div>' +
+            '<button class="caech-acc-btn" id="caech-confirmar">Confirmar y entrar</button>' +
+            '<p class="caech-acc-pie">&iquest;No cre&oacute; usted esta cuenta? Cierre esta ventana: sin la ' +
+            'contrase&ntilde;a nadie puede activarla con su correo.</p>',
+            (overlay, cerrar) => {
+                const clave = el('caech-conf-clave');
+                const boton = el('caech-confirmar');
+                clave.focus();
+
+                async function confirmar() {
+                    if (!clave.value) return avisar(overlay, 'error', 'Escriba su contraseña.');
+                    boton.disabled = true;
+                    boton.textContent = 'Confirmando...';
+                    const r = await api('POST', '/api/registro/confirmar', { t: t, clave: clave.value });
+                    boton.disabled = false;
+                    boton.textContent = 'Confirmar y entrar';
+
+                    if (r.estado !== 200) {
+                        const motivo = r.datos && r.datos.motivo;
+                        // Enlace que ya no sirve: no tiene sentido seguir pidiendo la clave.
+                        if (motivo === 'ya_verificada' || motivo === 'enlace_caducado' || motivo === 'enlace_invalido') {
+                            cerrar();
+                            alert((r.datos && r.datos.error) || 'El enlace no es valido.');
+                            abrirIngreso();
+                            return;
+                        }
+                        return avisar(overlay, 'error', (r.datos && r.datos.error) || 'No se pudo confirmar la cuenta.');
+                    }
+
+                    guardarToken(r.datos.token);
+                    perfil = r.datos.afiliado;
+                    permisos = r.datos.permisos;
+                    cerrar();
+                    pintarBarra();
+                    alert(r.datos.mensaje || 'Correo confirmado.');
+                    conTerminos()();
+                }
+
+                boton.addEventListener('click', confirmar);
+                clave.addEventListener('keydown', e => { if (e.key === 'Enter') confirmar(); });
+            });
+    }
+
     /** Vuelta desde el enlace de confirmacion del registro. */
     function procesarRetornoCuenta() {
         const params = new URLSearchParams(location.search);
@@ -924,6 +986,7 @@
         if (!CONFIG.activo) return;
         pintarBarra();
         procesarRetornoCuenta();
+        procesarConfirmacion();
         asegurarSesion();
         mostrarClaves(document);
     }

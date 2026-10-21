@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <!-- Politica de contenido: de donde puede cargar esta pagina. Ver la auditoria de seguridad (2026-10-21) antes de anadir un dominio. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/; img-src 'self' data: blob:; connect-src 'self' https://api.cae-ch.org; form-action 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAE-CH | Colegio de Arquitectos del Ecuador - Provincial de Chimborazo</title>
     <meta name="description" content="CAE-CH Provincial de Chimborazo: plataforma de interoperabilidad territorial que unifica datos de instituciones públicas de Riobamba y ofrece el GeoVisor con el reporte DICAT, la planimetría automatizada de predios y tres líneas de investigación territorial.">
@@ -27,7 +29,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="caech-privacidad.js" defer></script>
     <script src="caech-acceso.js"></script>
     <style>
@@ -2357,6 +2359,61 @@
             .nav-buttons, #caech-acc-barra { flex-wrap: nowrap; gap: 8px; }
             .caech-acc-quien b { display: none; }
         }
+
+        /* ── 8 · Canto en vez de sombra (2026-10-10) ──────────── */
+        /* La tarjeta ya no se despega con una sombra larga: se apoya
+           con la «tecla» de caech-ui.css. Al pasar el cursor se marca
+           el filete y sube dos pixeles, sin nube debajo. */
+        .herramienta, .linea-tarjeta, .about-card, .integration-item,
+        .contact-form, .plani-entrega {
+            box-shadow: var(--tecla-clara);
+        }
+        .plani-entrega {
+            border: 1px solid var(--borde);
+            border-top: 3px solid var(--rojo-caech);
+        }
+        .about-card:hover, .feature-card:hover, .integration-item:hover,
+        .herramienta:hover, .linea-tarjeta:hover {
+            transform: translateY(-2px);
+            border-color: var(--borde-marcado);
+            box-shadow: var(--tecla-clara);
+        }
+        .herramienta:hover { border-top-color: var(--grafito); }
+        .herramienta-nueva:hover { border-top-color: var(--rojo-caech); }
+        .linea-tarjeta:hover { border-top-color: var(--tono); }
+        /* Tarjeta clara sobre grafito: el contraste ya la separa. */
+        .section-dark .linea-tarjeta, .section-dark .plani-entrega,
+        .section-dark .linea-tarjeta:hover { box-shadow: none; }
+
+        /* Tarjeta oscura sobre grafito: anillo, brillo y peso. */
+        .transparencia-card {
+            background: rgba(255, 255, 255, .04);
+            border: 0;
+            box-shadow: var(--tecla-oscura);
+            transition: background-color .3s, box-shadow .3s, transform .3s cubic-bezier(.4, 0, .2, 1);
+        }
+        .transparencia-card:hover {
+            background: rgba(255, 255, 255, .06);
+            box-shadow: var(--tecla-oscura-viva);
+            transform: translateY(-2px);
+        }
+
+        /* Hero: un escalon mas hondo y un resplandor del rojo de la casa
+           detras del titular. Es el unico sitio donde el color hace de
+           atmosfera; el resto de la pagina lo raciona. */
+        .hero {
+            background:
+                radial-gradient(56% 46% at 50% 0%, rgba(227, 30, 36, .15), transparent 72%),
+                linear-gradient(178deg, var(--grafito-hondo) 0%, #2A2D33 58%, #34383F 100%);
+        }
+
+        /* Pie: un paso por debajo del grafito y metadatos en mono. */
+        footer { background-color: var(--grafito-hondo); }
+        /* Los titulos del pie son <h3> y la regla vieja nombraba <h4>:
+           heredaban el grafito del cuerpo y no se leian sobre el fondo. */
+        .footer-column h3 { color: #FFFFFF; font-size: 15px; margin-bottom: 16px; }
+        .copyright { border-top-color: var(--filete-oscuro); }
+        .copyright .meta-tecnica { margin-top: 10px; color: rgba(255, 255, 255, .5); }
     </style>
     <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
          Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
@@ -3362,6 +3419,7 @@
             </div>
             <div class="copyright">
                 <p>&copy; 2026 CAE-CH Provincial de Chimborazo. Todos los derechos reservados.</p>
+                <p class="meta-tecnica">Riobamba, Chimborazo<span>|</span>UTM 17S · EPSG:32717<span>|</span>cae-ch.org</p>
             </div>
         </div>
     </footer>

@@ -2,12 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <!-- Politica de contenido: de donde puede cargar esta pagina. Ver la auditoria de seguridad (2026-10-21) antes de anadir un dominio. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com/leaflet@1.9.4/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/ https://unpkg.com/leaflet@1.9.4/; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/; img-src 'self' data: blob: https://server.arcgisonline.com https://*.tile.openstreetmap.org https://*.google.com https://unpkg.com/leaflet@1.9.4/; connect-src 'self' https://api.cae-ch.org; form-action 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAE-CH | Investigación — Construcciones No Registradas</title>
     <meta name="description" content="Análisis territorial de construcciones no declaradas en el catastro de Riobamba mediante detección por inteligencia artificial.">
     <link rel="icon" type="image/png" href="../LOGO/favicon-caech.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="../caech-privacidad.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -487,7 +489,7 @@
     <p><i class="fas fa-exclamation-triangle"></i> <strong>Nota:</strong> Este análisis es de carácter investigativo y no constituye un acto administrativo. Los resultados deben ser verificados en campo y contrastados con la documentación legal de cada predio. La detección por IA puede presentar falsos positivos especialmente en zonas de vegetación densa o estructuras no habitacionales.</p>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 // ── Estado global ────────────────────────────────────────────────────────────
 let noRegistradasData = null;

@@ -46,8 +46,11 @@ function seccion(titulo) {
     console.log('\n── ' + titulo + ' ' + '─'.repeat(Math.max(0, 58 - titulo.length)));
 }
 
-async function llamar(metodo, ruta, { cuerpo, token, origen } = {}) {
+async function llamar(metodo, ruta, { cuerpo, token, origen, ip } = {}) {
     const cabeceras = { 'Origin': origen === undefined ? ORIGEN : origen };
+    // En `wrangler dev` la cabecera llega tal cual: sirve para simular
+    // conexiones distintas en el freno de fuerza bruta.
+    if (ip) cabeceras['CF-Connecting-IP'] = ip;
     if (cuerpo) cabeceras['Content-Type'] = 'application/json';
     if (token) cabeceras['Authorization'] = 'Bearer ' + token;
     const r = await fetch(API + ruta, {
@@ -188,10 +191,28 @@ seccion('Aceptacion de Terminos y Privacidad');
 // ── 5. Descargas autorizadas y auditadas ────────────────────────────
 seccion('Descargas de afiliado');
 {
+    const folios = [];
     for (const formato of ['dxf', 'csv', 'pdf']) {
         const r = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato, clave_catastral: '060150010101' } });
         comprobar(formato.toUpperCase() + ' autorizado', r.estado === 200 && r.datos.autorizado === true, r.datos);
+        folios.push(r.datos?.folio);
     }
+    comprobar('cada descarga trae su propio folio DICAT-AAAA-XXXX-XXXX',
+        folios.every(f => /^DICAT-\d{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(f || '')) && new Set(folios).size === 3, folios);
+
+    // Verificacion publica: sin sesion, y sin decir quien descargo.
+    const ver = await llamar('GET', '/api/verificar?folio=' + encodeURIComponent(folios[2]));
+    comprobar('el folio emitido se verifica sin sesion',
+        ver.estado === 200 && ver.datos.valido === true && ver.datos.formato === 'pdf'
+        && ver.datos.clave_catastral === '060150010101', ver.datos);
+    comprobar('la verificacion no expone datos de la cuenta',
+        !JSON.stringify(ver.datos).includes('admin') && !('afiliado_id' in ver.datos) && !('usuario' in ver.datos), ver.datos);
+    const verMin = await llamar('GET', '/api/verificar?folio=' + encodeURIComponent(folios[2].toLowerCase()));
+    comprobar('acepta el folio escrito en minusculas', verMin.datos?.valido === true, verMin.datos);
+    const inventado = await llamar('GET', '/api/verificar?folio=DICAT-2026-ZZZZ-ZZZZ');
+    comprobar('un folio inventado no es valido', inventado.estado === 200 && inventado.datos.valido === false, inventado.datos);
+    const basura = await llamar('GET', '/api/verificar?folio=' + encodeURIComponent("' OR 1=1 --"));
+    comprobar('un folio con forma rara no es valido', basura.datos?.valido === false && basura.datos?.formato_folio === false, basura.datos);
     const libre = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato: 'pdf' } });
     comprobar('el admin descarga libre, sin cupo ni pago', libre.estado === 200 && libre.datos.via === 'libre', libre.datos);
     const invalido = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato: 'shp' } });
@@ -435,14 +456,42 @@ seccion('Suspension, vigencia y bajas');
 // ── 9. Freno de fuerza bruta ────────────────────────────────────────
 seccion('Freno de fuerza bruta');
 {
+    // Nivel 2: una conexion que falla 5 veces contra un usuario queda frenada
+    // para ese usuario... pero el titular, desde otra conexion, entra.
+    const IP_ATACANTE = '203.0.113.7';
     let ultimo = null;
     for (let i = 0; i < 6; i++) {
-        ultimo = await llamar('POST', '/api/sesion', { cuerpo: { usuario: 'mparedes', clave: 'intento-fallido-' + i } });
+        ultimo = await llamar('POST', '/api/sesion', { ip: IP_ATACANTE, cuerpo: { usuario: 'admin', clave: 'intento-fallido-' + i } });
     }
-    comprobar('tras 5 intentos fallidos la cuenta se bloquea', ultimo.estado === 429, ultimo.datos);
+    comprobar('tras 5 fallos esa conexion queda frenada (429)', ultimo.estado === 429, ultimo.datos);
+    const conClave = await llamar('POST', '/api/sesion', { ip: IP_ATACANTE, cuerpo: { usuario: 'admin', clave: CLAVE_ADMIN } });
+    comprobar('frenada, ni con la clave correcta entra: no se puede seguir adivinando', conClave.estado === 429);
 
-    const admin = await llamar('POST', '/api/sesion', { cuerpo: { usuario: 'admin', clave: CLAVE_ADMIN } });
-    comprobar('el bloqueo es por cuenta, no global', admin.estado === 200);
+    const titular = await llamar('POST', '/api/sesion', { ip: '198.51.100.20', cuerpo: { usuario: 'admin', clave: CLAVE_ADMIN } });
+    comprobar('el titular entra desde otra conexion: no se le puede bloquear a distancia', titular.estado === 200, titular.datos);
+
+    // El 429 no delata cuentas: un usuario inexistente se frena igual.
+    let fantasma = null;
+    for (let i = 0; i < 6; i++) {
+        fantasma = await llamar('POST', '/api/sesion', { ip: IP_ATACANTE, cuerpo: { usuario: 'no-existe-zz9', clave: 'x' + i } });
+    }
+    comprobar('un usuario inexistente responde el mismo 429', fantasma.estado === 429 && fantasma.datos.error === ultimo.datos.error,
+        fantasma.datos);
+
+    // Nivel 3: un ataque repartido entre muchas conexiones bloquea la
+    // cuenta entera, exista o no. 20 fallos, 4 por conexion.
+    const repartido = async usuario => {
+        let r = null;
+        for (let i = 0; i < 21; i++) {
+            r = await llamar('POST', '/api/sesion', { ip: '192.0.2.' + (10 + Math.floor(i / 4)), cuerpo: { usuario, clave: 'r' + i } });
+        }
+        return r;
+    };
+    const real = await repartido('mparedes');
+    const inexistente = await repartido('nadie-repartido');
+    comprobar('20 fallos desde muchas conexiones bloquean la cuenta', real.estado === 429, real.datos);
+    comprobar('y un usuario inexistente responde exactamente igual',
+        inexistente.estado === 429 && inexistente.datos.error === real.datos.error, inexistente.datos);
 
     const desbloquear = await llamar('PATCH', '/api/admin/afiliados/' + idAfiliado, {
         token: tokenAdmin, cuerpo: { desbloquear: true }
@@ -507,7 +556,7 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
         cuerpo: { nombre: 'Otra Persona', registro_profesional: REGISTRO_USR,
                   correo: 'otra' + Date.now() + '@example.com', clave: CLAVE_USR, acepta_terminos: true }
     });
-    comprobar('un numero de registro ya usado responde 409', registroTomado.estado === 409, registroTomado.datos);
+    comprobar('una cuenta SIN confirmar no reserva el numero de registro', registroTomado.estado === 201, registroTomado.datos);
     comprobar('no entrega token: la cuenta aun no sirve', !alta.datos.token);
 
     const sinConfirmar = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_USR, clave: CLAVE_USR } });
@@ -521,21 +570,38 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
         repetido.estado === 201, repetido.datos);
 
     if (LOG) {
-        let m = null;
-        for (let i = 0; i < 20 && !m; i++) {
+        let enlaces = [];
+        for (let i = 0; i < 20 && enlaces.length < 3; i++) {
             await new Promise(r => setTimeout(r, 250));
-            m = [...readFileSync(LOG, 'utf8').matchAll(/registro\/verificar\?t=([A-Za-z0-9_-]+)/g)].pop();
+            enlaces = [...readFileSync(LOG, 'utf8').matchAll(/registro\/verificar\?t=([A-Za-z0-9_-]+)/g)].map(x => x[1]);
         }
+        const m = enlaces.length ? [null, enlaces[enlaces.length - 1]] : null;
         comprobar('el enlace de confirmacion aparece en el log', !!m);
 
         if (m) {
             const r = await fetch(API + '/api/registro/verificar?t=' + m[1], { redirect: 'manual' });
             const destino = r.headers.get('location') || '';
-            comprobar('confirmar redirige al sitio', r.status === 302 && destino.includes('cuenta=verificada'), destino);
+            comprobar('el enlace lleva al sitio a escribir la clave, sin confirmar nada',
+                r.status === 302 && destino.includes('#confirmar='), destino);
 
-            const repite = await fetch(API + '/api/registro/verificar?t=' + m[1], { redirect: 'manual' });
-            comprobar('el enlace muere tras usarse',
-                (repite.headers.get('location') || '').includes('enlace_invalido'));
+            // Orden en el log: alta de Juan, alta de "Otra Persona", re-registro de Juan.
+            const viejo = enlaces.length >= 3 ? enlaces[enlaces.length - 3] : null;
+            if (viejo) {
+                const rv = await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: viejo, clave: CLAVE_USR } });
+                comprobar('el enlace anterior al re-registro ya no sirve', rv.estado === 400, rv.datos);
+            }
+
+            const sinClave = await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: m[1], clave: 'OtraClaveAjena2026' } });
+            comprobar('con el enlace pero sin la clave NO se confirma', sinClave.estado === 401, sinClave.datos);
+
+            const conf = await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: m[1], clave: CLAVE_USR } });
+            comprobar('con el enlace y la clave se confirma y abre sesion', conf.estado === 200 && !!conf.datos?.token, conf.datos);
+
+            const repite = await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: m[1], clave: CLAVE_USR } });
+            comprobar('el enlace muere tras usarse', repite.estado === 400, repite.datos);
+            const repiteGet = await fetch(API + '/api/registro/verificar?t=' + m[1], { redirect: 'manual' });
+            comprobar('y el GET del enlace usado lo dice',
+                (repiteGet.headers.get('location') || '').includes('enlace_invalido'));
 
             const ingreso = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_USR, clave: CLAVE_USR } });
             comprobar('ya confirmado, puede ingresar', ingreso.estado === 200, ingreso.datos);
@@ -550,6 +616,12 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
                 ingreso.datos?.afiliado?.registro_profesional === REGISTRO_USR, ingreso.datos?.afiliado);
             comprobar('el numero nace SIN validar',
                 ingreso.datos?.afiliado?.registro_validado === false, ingreso.datos?.afiliado);
+
+            const yaConfirmado = await llamar('POST', '/api/registro', {
+                cuerpo: { nombre: 'Tercera Persona', registro_profesional: REGISTRO_USR,
+                          correo: 'tercera' + Date.now() + '@example.com', clave: CLAVE_USR, acepta_terminos: true }
+            });
+            comprobar('confirmada la cuenta, su numero ya no se puede repetir (409)', yaConfirmado.estado === 409, yaConfirmado.datos);
 
             // Mientras el numero no se coteje contra el padron la cuenta
             // funciona como publica: pide productos, pero paga cada predio.
@@ -612,6 +684,36 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
                 token: tokenAdmin, cuerpo: { registro_validado: true }
             });
         }
+
+        // ── Pre-secuestro: alguien registra el correo de otra persona con una
+        // clave suya. Despues la titular se registra con la suya.
+        const VICTIMA = 'titular' + Date.now() + '@example.com';
+        const CLAVE_INTRUSO = 'ClaveDelIntruso2026';
+        const CLAVE_TITULAR = 'ClaveDeLaTitular2026';
+        const enlacesAntes = [...readFileSync(LOG, 'utf8').matchAll(/registro\/verificar\?t=([A-Za-z0-9_-]+)/g)].length;
+        await llamar('POST', '/api/registro', { ip: '198.51.100.77',
+            cuerpo: { nombre: 'Intruso', correo: VICTIMA, clave: CLAVE_INTRUSO, acepta_terminos: true } });
+        await llamar('POST', '/api/registro', { ip: '198.51.100.77',
+            cuerpo: { nombre: 'Titular Legitima', correo: VICTIMA, clave: CLAVE_TITULAR, acepta_terminos: true } });
+        let nuevos = [];
+        for (let i = 0; i < 20 && nuevos.length < 2; i++) {
+            await new Promise(r => setTimeout(r, 250));
+            nuevos = [...readFileSync(LOG, 'utf8').matchAll(/registro\/verificar\?t=([A-Za-z0-9_-]+)/g)]
+                .map(x => x[1]).slice(enlacesAntes);
+        }
+        if (nuevos.length >= 2) {
+            const [delIntruso, deLaTitular] = nuevos;
+            const r1 = await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: deLaTitular, clave: CLAVE_INTRUSO } });
+            comprobar('pre-secuestro: la clave del intruso no confirma la cuenta de la titular', r1.estado === 401, r1.datos);
+            const r2 = await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: delIntruso, clave: CLAVE_INTRUSO } });
+            comprobar('pre-secuestro: el enlace que genero el intruso quedo anulado', r2.estado === 400, r2.datos);
+            const r3 = await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: deLaTitular, clave: CLAVE_TITULAR } });
+            comprobar('pre-secuestro: la titular confirma con SU clave', r3.estado === 200, r3.datos);
+            const r4 = await llamar('POST', '/api/sesion', { cuerpo: { usuario: VICTIMA, clave: CLAVE_INTRUSO } });
+            comprobar('pre-secuestro: el intruso no puede ingresar', r4.estado === 401, r4.datos);
+        } else {
+            comprobar('pre-secuestro: aparecen los dos enlaces en el log', false, nuevos.length);
+        }
     } else {
         console.log('  – tramo de confirmacion omitido (no se paso el log de wrangler)');
     }
@@ -659,7 +761,7 @@ seccion('Cuenta publica y pago por predio');
             const enlaces = [...readFileSync(LOG, 'utf8').matchAll(/registro\/verificar\?t=([A-Za-z0-9_-]+)/g)];
             m = enlaces.length ? enlaces.pop() : null;
         }
-        if (m) await fetch(API + '/api/registro/verificar?t=' + m[1], { redirect: 'manual' });
+        if (m) await llamar('POST', '/api/registro/confirmar', { cuerpo: { t: m[1], clave: CLAVE_PUB } });
         const ingreso = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_PUB, clave: CLAVE_PUB } });
         comprobar('la cuenta publica confirma e ingresa', ingreso.estado === 200, ingreso.datos);
         tokenPub = ingreso.datos?.token;
@@ -1079,7 +1181,8 @@ seccion('Bitacora y auditoria');
         descargas.estado === 200 && descargas.datos.descargas.some(d => d.formato === 'dxf' && d.usuario === 'admin'),
         descargas.datos?.resumen);
 
-    const eventos = await llamar('GET', '/api/admin/eventos', { token: tokenAdmin });
+    // El freno de fuerza bruta deja muchos fallos recientes: se pide la bitacora entera.
+    const eventos = await llamar('GET', '/api/admin/eventos?limite=500', { token: tokenAdmin });
     comprobar('la bitacora registra los ingresos fallidos',
         eventos.datos?.eventos?.some(e => e.tipo === 'ingreso_fallido'));
     comprobar('la bitacora registra las altas de afiliados',

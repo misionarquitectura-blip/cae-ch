@@ -36,6 +36,10 @@ CREATE TABLE IF NOT EXISTS afiliados (
     registro_validado     INTEGER NOT NULL DEFAULT 0,
     registro_validado_en  TEXT,
     registro_validado_por TEXT,                             -- usuario del admin que valido
+    -- El numero que escribio quien se registra, mientras no confirma el
+    -- correo. Al confirmar pasa a `registro_profesional` si sigue libre:
+    -- una cuenta sin confirmar no reserva el numero de nadie (007).
+    registro_pendiente    TEXT,
 
     -- Herramientas concedidas a esta cuenta, separadas por comas. Las
     -- descargas NO estan aqui: van con el registro cotejado. Aqui van las
@@ -143,10 +147,15 @@ CREATE TABLE IF NOT EXISTS descargas (
     afiliado_id     TEXT    REFERENCES afiliados(id) ON DELETE SET NULL,
     pase_id         TEXT    REFERENCES pases_freemium(id) ON DELETE SET NULL,
     clave_catastral TEXT,
-    ip_hash         TEXT
+    ip_hash         TEXT,
+    -- Folio que lleva el producto y que GET /api/verificar reconoce (007).
+    folio           TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_descargas_fecha    ON descargas (creado_en);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_descargas_folio
+    ON descargas (folio)
+    WHERE folio IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_descargas_afiliado ON descargas (afiliado_id);
 
 -- ── Predios habilitados ─────────────────────────────────────────────
@@ -226,6 +235,9 @@ CREATE TABLE IF NOT EXISTS eventos (
 
 CREATE INDEX IF NOT EXISTS idx_eventos_fecha ON eventos (creado_en);
 CREATE INDEX IF NOT EXISTS idx_eventos_tipo  ON eventos (tipo);
+-- El freno de intentos de ingreso cuenta fallos por conexion y por usuario.
+CREATE INDEX IF NOT EXISTS idx_eventos_ip      ON eventos (tipo, ip_hash, creado_en);
+CREATE INDEX IF NOT EXISTS idx_eventos_usuario ON eventos (tipo, usuario, creado_en);
 
 -- ── Solicitudes presenciales del DICAT ──────────────────────────────
 -- La hoja que se llena en el mostrador de la sede. Es la unica tabla con

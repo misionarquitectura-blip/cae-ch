@@ -39,6 +39,25 @@
     --sombra-2: 0 6px 18px rgba(46, 50, 56, .09), 0 18px 40px rgba(46, 50, 56, .09);
     --sombra-btn: 0 4px 14px rgba(227, 30, 36, .26);
 
+    /* «Tecla»: la tarjeta se define por su canto, no por una sombra que
+       la despega. Un filete, un brillo arriba y una línea de peso abajo;
+       queda apoyada en la página en vez de flotando sobre ella. La clara
+       cuenta con que la tarjeta ya lleva `border: 1px solid var(--borde)`;
+       la oscura trae su propio anillo y va SIN borde, o saldría doble. */
+    --tecla-clara:  inset 0 -1px 0 rgba(46, 50, 56, .08), 0 1px 2px rgba(46, 50, 56, .04);
+    --tecla-oscura: inset 0 1px 0 rgba(255, 255, 255, .07),
+                    0 0 0 1px rgba(255, 255, 255, .12),
+                    inset 0 -1px 0 rgba(0, 0, 0, .25);
+    --tecla-oscura-viva: inset 0 1px 0 rgba(255, 255, 255, .10),
+                    0 0 0 1px rgba(255, 255, 255, .24),
+                    inset 0 -1px 0 rgba(0, 0, 0, .25);
+
+    /* Un escalón por debajo del grafito: el fondo de lo que cierra la
+       página (pie) y el arranque del hero. Los fondos oscuros se
+       distinguen por pasos cortos de valor, no por bordes gruesos. */
+    --grafito-hondo: #212428;
+    --filete-oscuro: rgba(255, 255, 255, .12);
+
     --radio: 4px;                 /* el isologo no tiene esquinas blandas */
     --tracking-caps: .28em;
 
@@ -101,6 +120,16 @@ code, kbd, samp, pre, .caech-acc-clave { font-family: var(--fuente-mono); }
     border: 0;
     background: var(--rojo-caech);
 }
+
+/* Metadato técnico: proyección, versión, dominio. En monoespaciada y
+   separado por barras, se lee como dato de máquina sin pedir rótulo. */
+.meta-tecnica {
+    font-family: var(--fuente-mono);
+    font-size: 12px;
+    letter-spacing: .02em;
+    color: var(--grafito-sua);
+}
+.meta-tecnica > span { margin: 0 .7em; opacity: .5; }
 
 /* ── 3 · El botón ───────────────────────────────────────────────── */
 /* Una sola base para todas las variantes que existían sueltas por el

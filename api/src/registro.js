@@ -20,7 +20,13 @@
 //       Sin la aceptacion expresa de los Terminos y la Politica de
 //       Privacidad no hay alta: queda la version aceptada y la fecha.
 //    2. GET  /api/registro/verificar?t=<token>
-//       Marca el correo verificado y redirige al sitio.
+//       Es el enlace del correo. Ya NO confirma nada: lleva al sitio, que
+//       pide la contrasena de la cuenta y llama a
+//       POST /api/registro/confirmar {t, clave}
+//       Solo quien tiene el correo (el token) Y la clave confirma la cuenta,
+//       y queda con la sesion abierta. Antes bastaba pulsar el enlace, y
+//       quien registraba el correo de otra persona con una clave suya se
+//       quedaba con la cuenta en cuanto el titular confirmaba.
 //    3. POST /api/registro/reenviar   {correo}
 //       Vuelve a enviar el enlace si caduco o no llego.
 //
@@ -30,14 +36,17 @@
 //  hasta que el emisor de correo este configurado.
 // ════════════════════════════════════════════════════════════════════
 
-import { generarId, generarToken, sha256, hashearClave, hashIP } from './cripto.js';
+import { generarId, generarToken, sha256, hashIP } from './cripto.js';
 import { ahora, vencido, texto, correoValido, enFuturo } from './http.js';
-import { iteraciones, registrarEvento, perfilPublico, permisos, validarClave, VERSION_TERMINOS } from './sesiones.js';
+import {
+    hashear, verificar, abrirSesion, registrarEvento, perfilPublico, permisos, validarClave, VERSION_TERMINOS
+} from './sesiones.js';
 import { enviarCorreo, plantillaVerificacionRegistro } from './correo.js';
 
 const MIN_ENLACE      = 60 * 24;  // el enlace de confirmacion dura un dia
 const MAX_REENVIOS    = 5;
 const MAX_POR_IP_HORA = 5;
+const MAX_CONFIRMACIONES_FALLIDAS = 5;   // claves erradas con un mismo enlace
 
 function usuarioValido(u) {
     return /^[a-z0-9](?:[a-z0-9._-]{2,29})$/.test(u);
@@ -173,12 +182,22 @@ export async function registrar(env, request, datos) {
         // exista: se responde igual que en un alta correcta, para no dejar
         // que nadie averigue quien esta registrado probando direcciones.
         if (!choque.correo_verificado) {
+            // Alguien vuelve a registrar un correo que nadie confirmo. Puede
+            // ser el titular que no encontro el primer correo... o el titular
+            // llegando DESPUES de que otro registrara su direccion. En los dos
+            // casos manda el ultimo alta: sus datos y su clave reemplazan a
+            // los anteriores y el enlace nuevo invalida al viejo. Como
+            // confirmar exige la clave, el enlace que llega al titular solo
+            // sirve con la clave que el mismo acaba de escribir.
             const fila = await env.DB.prepare('SELECT * FROM afiliados WHERE correo = ?').bind(correo).first();
             if (fila.reenvios_verificacion < MAX_REENVIOS) {
                 await env.DB.prepare(
-                    'UPDATE afiliados SET reenvios_verificacion = reenvios_verificacion + 1 WHERE id = ?'
-                ).bind(fila.id).run();
-                await enviarEnlace(env, fila);
+                    'UPDATE afiliados SET reenvios_verificacion = reenvios_verificacion + 1, nombre = ?, '
+                    + 'hash_clave = ?, registro_pendiente = ?, terminos_version = ?, terminos_aceptados_en = ?, '
+                    + 'actualizado_en = ? WHERE id = ? AND correo_verificado = 0'
+                ).bind(nombre, await hashear(env, clave), registro || null, VERSION_TERMINOS, ahora(), ahora(),
+                       fila.id).run();
+                await enviarEnlace(env, Object.assign({}, fila, { nombre: nombre }));
             }
         }
         await registrarEvento(env, {
@@ -187,15 +206,17 @@ export async function registrar(env, request, datos) {
         return respuestaAlta(!!registro);
     }
 
+    // El numero queda en `registro_pendiente` hasta que el correo se
+    // confirme: una cuenta sin confirmar no reserva el numero de nadie.
     const id = generarId('usr');
     const t = ahora();
     await env.DB.prepare(
-        'INSERT INTO afiliados (id, usuario, correo, nombre, registro_profesional, registro_validado, ' +
+        'INSERT INTO afiliados (id, usuario, correo, nombre, registro_pendiente, registro_validado, ' +
         ' nucleo, rol, origen, estado, hash_clave, requiere_cambio_clave, correo_verificado, ' +
         ' terminos_version, terminos_aceptados_en, creado_en, actualizado_en) ' +
         "VALUES (?, ?, ?, ?, ?, 0, 'Chimborazo', 'usuario', 'registro', 'activo', ?, 0, 0, ?, ?, ?, ?)"
     ).bind(id, usuario, correo, nombre, registro || null,
-            await hashearClave(clave, iteraciones(env)), VERSION_TERMINOS, t, t, t).run();
+            await hashear(env, clave), VERSION_TERMINOS, t, t, t).run();
 
     const fila = await env.DB.prepare('SELECT * FROM afiliados WHERE id = ?').bind(id).first();
     const envio = await enviarEnlace(env, fila);
@@ -243,7 +264,12 @@ function respuestaAlta(colegiado) {
 
 // ── 2. Confirmacion ─────────────────────────────────────────────────
 
-/** Devuelve una redireccion al sitio; no pasa por el helper JSON. */
+/**
+ * El enlace del correo. No confirma: lleva al sitio con el token para que
+ * la persona escriba su clave (ver `confirmarCorreo`). Solo descarta aqui
+ * los enlaces que no van a servir, para decirlo sin pedir la clave.
+ * Devuelve una redireccion; no pasa por el helper JSON.
+ */
 export async function verificarCorreo(env, request, url) {
     const token = url.searchParams.get('t') || '';
     const sitio = String(env.SITIO_URL || '').replace(/\/+$/, '');
@@ -252,24 +278,104 @@ export async function verificarCorreo(env, request, url) {
     if (!token) return volver('enlace_invalido');
 
     const fila = await env.DB.prepare(
-        'SELECT * FROM afiliados WHERE token_verificacion = ? LIMIT 1'
+        'SELECT correo_verificado, token_expira FROM afiliados WHERE token_verificacion = ? LIMIT 1'
     ).bind(await sha256(token)).first();
 
     if (!fila) return volver('enlace_invalido');
     if (fila.correo_verificado) return volver('ya_verificada');
     if (vencido(fila.token_expira)) return volver('enlace_caducado');
 
-    await env.DB.prepare(
-        'UPDATE afiliados SET correo_verificado = 1, verificado_en = ?, ' +
-        ' token_verificacion = NULL, token_expira = NULL, actualizado_en = ? WHERE id = ?'
-    ).bind(ahora(), ahora(), fila.id).run();
+    // En el fragmento (#) y no en la consulta: el fragmento no viaja al
+    // servidor de GitHub Pages ni en el Referer de lo que cargue la pagina.
+    return Response.redirect(sitio + '/index.html#confirmar=' + encodeURIComponent(token), 302);
+}
+
+/**
+ * POST /api/registro/confirmar {t, clave}
+ * Confirma el correo si el token es del enlace vigente Y la clave es la de
+ * la cuenta. Deja la sesion abierta: quien confirma acaba de demostrar que
+ * tiene el correo y la clave, igual que al ingresar.
+ */
+export async function confirmarCorreo(env, request, datos) {
+    const token = texto(datos.t, 200);
+    const clave = typeof datos.clave === 'string' ? datos.clave : '';
+    const ip_hash = await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA);
+    const invalido = { estado: 400, cuerpo: { ok: false, motivo: 'enlace_invalido',
+        error: 'El enlace de confirmacion no es valido o ya fue reemplazado por uno mas nuevo.' } };
+
+    if (!token) return invalido;
+    const fila = await env.DB.prepare(
+        'SELECT * FROM afiliados WHERE token_verificacion = ? LIMIT 1'
+    ).bind(await sha256(token)).first();
+
+    if (!fila) return invalido;
+    if (fila.correo_verificado) {
+        return { estado: 409, cuerpo: { ok: false, motivo: 'ya_verificada',
+            error: 'Esta cuenta ya estaba confirmada. Ingrese con su correo y contrasena.' } };
+    }
+    if (vencido(fila.token_expira)) {
+        return { estado: 410, cuerpo: { ok: false, motivo: 'enlace_caducado',
+            error: 'El enlace de confirmacion caduco. Ingrese y pida que se lo reenviemos.' } };
+    }
+    if (fila.estado !== 'activo') {
+        return { estado: 403, cuerpo: { ok: false, error: 'Su cuenta no esta activa. Comuniquese con la sede del CAE-CH.' } };
+    }
+
+    if (!clave || !await verificar(env, clave, fila.hash_clave)) {
+        await registrarEvento(env, { tipo: 'confirmacion_fallida', afiliado_id: fila.id, usuario: fila.usuario, ip_hash });
+        // Se cuentan los fallos desde el ultimo cambio de la fila, que es
+        // cuando se emitio este enlace (alta o reenvio).
+        const cuenta = await env.DB.prepare(
+            "SELECT COUNT(*) AS n FROM eventos WHERE tipo = 'confirmacion_fallida' AND afiliado_id = ? AND creado_en >= ?"
+        ).bind(fila.id, fila.actualizado_en || '').first();
+        if (cuenta && cuenta.n >= MAX_CONFIRMACIONES_FALLIDAS) {
+            // El enlace deja de servir: hay que pedir otro, que llega al correo.
+            await env.DB.prepare(
+                'UPDATE afiliados SET token_verificacion = NULL, token_expira = NULL WHERE id = ?'
+            ).bind(fila.id).run();
+            return { estado: 400, cuerpo: { ok: false, motivo: 'enlace_invalido',
+                error: 'Demasiados intentos con una contrasena incorrecta. Pida un enlace nuevo desde «Ingresar».' } };
+        }
+        return { estado: 401, cuerpo: { ok: false,
+            error: 'La contrasena no coincide con la que eligio al crear la cuenta.' } };
+    }
+
+    // El numero de registro pendiente pasa a la cuenta si sigue libre. Si
+    // otro colegiado lo confirmo antes, se queda sin el y se dice.
+    let registroOcupado = false;
+    let registro = fila.registro_pendiente || null;
+    if (registro) {
+        const otro = await env.DB.prepare(
+            'SELECT id FROM afiliados WHERE registro_profesional = ? AND id != ? LIMIT 1'
+        ).bind(registro, fila.id).first();
+        if (otro) { registroOcupado = true; registro = null; }
+    }
+
+    const t = ahora();
+    const cambio = await env.DB.prepare(
+        'UPDATE afiliados SET correo_verificado = 1, verificado_en = ?, token_verificacion = NULL, token_expira = NULL, '
+        + ' registro_profesional = COALESCE(?, registro_profesional), registro_pendiente = NULL, actualizado_en = ? '
+        + ' WHERE id = ? AND correo_verificado = 0'
+    ).bind(t, registro, t, fila.id).run();
+    if (!cambio.meta || cambio.meta.changes !== 1) {
+        return { estado: 409, cuerpo: { ok: false, motivo: 'ya_verificada',
+            error: 'Esta cuenta ya estaba confirmada. Ingrese con su correo y contrasena.' } };
+    }
 
     await registrarEvento(env, {
         tipo: 'registro_verificado', afiliado_id: fila.id, usuario: fila.usuario,
-        ip_hash: await hashIP(request.headers.get('CF-Connecting-IP'), env.PIMIENTA)
+        detalle: registroOcupado ? 'numero de registro ' + fila.registro_pendiente + ' ya tomado por otra cuenta' : null,
+        ip_hash: ip_hash
     });
 
-    return volver('verificada');
+    const confirmada = await env.DB.prepare('SELECT * FROM afiliados WHERE id = ?').bind(fila.id).first();
+    const r = await abrirSesion(env, request, confirmada, ip_hash);
+    r.cuerpo.registro_ocupado = registroOcupado;
+    r.cuerpo.mensaje = registroOcupado
+        ? 'Correo confirmado. El numero de registro que escribio ya pertenece a otra cuenta, asi que no lo '
+          + 'asociamos a esta: si es el suyo, escriba a la sede del CAE-CH.'
+        : 'Correo confirmado. Su cuenta ya esta activa.';
+    return r;
 }
 
 // ── 3. Reenvio ──────────────────────────────────────────────────────

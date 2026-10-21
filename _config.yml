@@ -1,0 +1,28 @@
+# Configuracion de Jekyll para GitHub Pages.
+#
+# Lo unico que se ajusta es QUE NO SE PUBLICA. El sitio es estatico y no usa
+# plantillas de Jekyll; estas rutas viven en el repositorio pero no hacen
+# falta en la web, y publicarlas le mostraba a cualquiera el esquema de la
+# base, la configuracion del Worker y las pruebas (auditoria 2026-10-21).
+#
+# Ojo: en Jekyll 3 (el de GitHub Pages) esta lista REEMPLAZA a la de serie,
+# por eso se repiten Gemfile, node_modules y vendor.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  # API de afiliados (Cloudflare Worker): se despliega con wrangler, no aqui.
+  - api
+  # Pruebas del visor (npm test).
+  - test
+  - package.json
+  - package-lock.json
+  # Scripts de construccion de capas: corren en local.
+  - build_capas.js
+  - DATA SET/build_catastro.js
+  - DATA SET/build_eersa.py
+  - DATA SET/build_indice_propietarios.js
+  - DATA SET/build_servicios_basicos.js
+  - DATA SET/build_telecom.py
+  - DATA SET/descarga_arcgis.py
