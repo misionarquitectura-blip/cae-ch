@@ -2915,8 +2915,9 @@
 
                             if (layerId === 6) {
                                 // Popup enriquecido para Catastro GADMR
+                                // El nombre del titular no se muestra en el mapa (LOPDP, minimización):
+                                // sólo sale en el DICAT, que exige cuenta.
                                 const p = feature.properties;
-                                const nombre = (p.gis_predio || '').trim() || (p.nombre_c || '').trim() || 'Sin nombre';
                                 const clave = (p.claves || '').trim() || (p.claves_aux || '').trim() || 'S/C';
                                 const area = p.Shape__Area ? parseFloat(p.Shape__Area).toFixed(2) + ' m²' : 'N/D';
                                 const avaluo = p.avaluo_c ? '$' + parseFloat(p.avaluo_c).toLocaleString('es-EC', { minimumFractionDigits: 2 }) : 'N/D';
@@ -2927,11 +2928,10 @@
                                             <i class="fas fa-home"></i> Catastro GADMR
                                         </div>
                                         <table style="font-size:12px;width:100%;border-collapse:collapse">
-                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Propietario</td><td style="padding:3px 4px">${nombre}</td></tr>
-                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Clave catastral</td><td style="padding:3px 4px;font-size:11px">${clave}</td></tr>
-                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Área</td><td style="padding:3px 4px">${area}</td></tr>
-                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Avalúo</td><td style="padding:3px 4px">${avaluo}</td></tr>
-                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Sup. construida</td><td style="padding:3px 4px">${supCons}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px;width:45%">Clave catastral</td><td style="padding:3px 4px;font-size:11px">${clave}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Área</td><td style="padding:3px 4px">${area}</td></tr>
+                                            <tr><td style="font-weight:bold;color:#555;padding:3px 4px">Avalúo</td><td style="padding:3px 4px">${avaluo}</td></tr>
+                                            <tr style="background:#f9f9f9"><td style="font-weight:bold;color:#555;padding:3px 4px">Sup. construida</td><td style="padding:3px 4px">${supCons}</td></tr>
                                         </table>
                                         <button onclick="seleccionarPredioDesdePopup(this)" data-clave="${clave}"
                                             style="margin-top:7px;width:100%;padding:5px;background:var(--rojo-oscuro);color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-weight:bold">
@@ -6195,7 +6195,8 @@
                     return;
                 }
 
-                // Agrupar por propietario (gis_predio o nombre_c, trimmeando primero)
+                // Agrupar por propietario (gis_predio o nombre_c, trimmeando primero).
+                // El nombre sólo sirve de clave: en pantalla se muestran claves catastrales.
                 const ownerMap = new Map();
                 matches.forEach(function (m) {
                     const key = (m.props.gis_predio || '').trim() || (m.props.nombre_c || '').trim() || 'Sin nombre';
@@ -6209,7 +6210,7 @@
                         const header = document.createElement('div');
                         header.className = 'search-result-item';
                         header.style.cssText = 'background:#fff5f5;border-left:3px solid var(--rojo-oscuro);cursor:default';
-                        header.innerHTML = `<strong style="color:var(--rojo-oscuro)"><i class="fas fa-user"></i> ${ownerName}</strong> <span style="background:var(--rojo-oscuro);color:white;border-radius:10px;padding:1px 7px;font-size:11px">${predios.length} predios</span>`;
+                        header.innerHTML = `<strong style="color:var(--rojo-oscuro)"><i class="fas fa-user"></i> Mismo titular</strong> <span style="background:var(--rojo-oscuro);color:white;border-radius:10px;padding:1px 7px;font-size:11px">${predios.length} predios</span>`;
                         searchResultsEl.appendChild(header);
 
                         predios.slice(0, 8).forEach(function ({ layer, props }, idx) {
@@ -6229,8 +6230,9 @@
                         const { layer, props } = predios[0];
                         const item = document.createElement('div');
                         item.className = 'search-result-item';
-                        const clave = (props.claves || props.claves_aux || '').trim();
-                        item.innerHTML = `<strong>${ownerName}</strong><br><small style="color:#888">${clave}</small>`;
+                        const clave = (props.claves || props.claves_aux || 'S/C').trim();
+                        const area = props.Shape__Area ? parseFloat(props.Shape__Area).toFixed(1) : '?';
+                        item.innerHTML = `<strong><i class="fas fa-map" style="color:var(--rojo-oscuro);margin-right:4px"></i>${clave}</strong><br><small style="color:#888">${area} m²</small>`;
                         item.addEventListener('click', function () {
                             selectPredio(layer, props, predios);
                         });
@@ -6278,10 +6280,10 @@
                 }
 
                 searchResultsEl.style.display = 'none';
-                searchInput.value = (props.gis_predio || '').trim() || (props.nombre_c || '').trim();
+                searchInput.value = (props.claves || '').trim() || (props.claves_aux || '').trim();
 
-                // Datos del predio (trim antes del OR para evitar espacios en blanco como truthy)
-                const nombre = (props.gis_predio || '').trim() || (props.nombre_c || '').trim() || 'Sin nombre';
+                // Datos del predio (trim antes del OR para evitar espacios en blanco como truthy).
+                // Sin el nombre del titular: sólo aparece en el DICAT.
                 const clave = (props.claves || 'S/C').trim();
                 const claveAux = (props.claves_aux || 'S/C').trim();
                 // Misma medición que el DICAT (UTM 17S sobre la geometría completa),
@@ -6300,7 +6302,6 @@
                 // Poblar tabla en el panel del sidebar
                 const table = document.getElementById('predio-data-table');
                 const rows = [
-                    ['Propietario', nombre],
                     ['Clave catastral', clave],
                     ['Clave auxiliar', claveAux],
                     ['Tipo catastral', tipoCatas],
