@@ -609,7 +609,6 @@ function seleccionarPredio(feature) {
         .join('');
     abrirDetalle('<i class="fas fa-vector-square"></i> Predio sin construcción declarada', `
         <div class="fp-row"><span>Clave catastral</span><span>${esc(p.clave) || '—'}</span></div>
-        <div class="fp-row"><span>Titular</span><span>${esc(p.nombre || p.gis_predio) || '—'}</span></div>
         <div class="fp-row"><span>Sup. predio</span><span>${fmt(p.sup_pred_m2)} m²</span></div>
         <div class="fp-row"><span>Sup. cons. declarada</span><span>${fmt(p.sup_cons_catastro)} m²</span></div>
         <div class="fp-row"><span>Avalúo catastral</span><span>$ ${fmt(p.avaluo)}</span></div>
@@ -631,8 +630,6 @@ function mostrarDetalle(p) {
         <hr style="border:none;border-top:1px solid #eee;margin:6px 0">
         <div class="fp-title" style="font-size:.82rem;margin-top:4px"><i class="fas fa-map-marker-alt"></i> Predio catastral</div>
         <div class="fp-row"><span>Clave catastral</span><span>${esc(p.clave_catastral) || '—'}</span></div>
-        <div class="fp-row"><span>GIS Predio</span><span>${esc(p.gis_predio) || '—'}</span></div>
-        <div class="fp-row"><span>Propietario</span><span>${esc(p.propietario) || '—'}</span></div>
         <div class="fp-row"><span>Sup. predio</span><span>${fmt(p.sup_predio_m2)} m²</span></div>
         <div class="fp-row"><span>Sup. cons. declarada</span><span>${fmt(p.sup_cons_catastro)} m²</span></div>
         <div class="fp-row"><span>Avalúo catastral</span><span>$ ${fmt(p.avaluo)}</span></div>
