@@ -1,4 +1,4 @@
-/* Motor de la planimetria CAE-Ch, empaquetado para el navegador.
+/* Motor de la planimetria CAE-CH, empaquetado para el navegador.
    GENERADO por planimetria/construir_web.js — no editar a mano.
    El codigo de lib/ va tal cual: la version de escritorio, esta y las
    pruebas corren exactamente lo mismo. */

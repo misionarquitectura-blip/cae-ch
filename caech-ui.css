@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════
-   CAE-Ch · Sistema de interfaz compartido
+   CAE-CH · Sistema de interfaz compartido
    ──────────────────────────────────────────────────────────────────
    Una sola paleta, una sola tipografía y UN SOLO botón para todo el
    sitio: landing, páginas legales, GeoVisor y las dos investigaciones.
@@ -25,7 +25,7 @@
     --rojo-brasa:  #8E1015;               /* pulsado */
     --rojo-humo:   rgba(227, 30, 36, .10); /* fondos y realces suaves */
 
-    /* Grises del wordmark "CAE-Ch" y de su línea de versalitas. */
+    /* Grises del wordmark "CAE-CH" y de su línea de versalitas. */
     --grafito:     #2E3238;
     --grafito-med: #565B63;
     --grafito-sua: #8B9098;
@@ -113,7 +113,7 @@ code, kbd, samp, pre, .caech-acc-clave { font-family: var(--fuente-mono); }
     letter-spacing: var(--tracking-caps);
 }
 
-/* Filete rojo: el que subraya "CAE-Ch" en el isologo. */
+/* Filete rojo: el que subraya "CAE-CH" en el isologo. */
 .filete, .filete-rojo {
     display: block;
     height: 1.5px;

@@ -95,7 +95,7 @@
         const s = document.createElement('style');
         s.id = 'caech-acceso-estilos';
         s.textContent = `
-        /* Identidad CAE-Ch 2025-2027. Los valores de reserva de var()
+        /* Identidad CAE-CH 2025-2027. Los valores de reserva de var()
            llevan el hex correcto porque este archivo se inyecta tambien
            en paginas que quiza no carguen caech-ui.css. */
         .caech-acc-overlay{position:fixed;inset:0;background:rgba(46,50,56,.62);display:none;

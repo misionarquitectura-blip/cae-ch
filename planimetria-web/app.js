@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  Planimetría CAE-Ch — interfaz
+//  Planimetría CAE-CH — interfaz
 //  Todo el cálculo ocurre en el servidor local (lib/). Aquí solo se lee el
 //  archivo, se muestra el resultado sobre el mapa y se recogen las ediciones
 //  del profesional (colindantes, márgenes, datos del informe).
@@ -843,7 +843,7 @@ $('#abrir-proyecto').addEventListener('change', async e => {
     if (!f) return;
     try {
         const p = JSON.parse(await f.text());
-        if (p.tipo !== 'planimetria-caech') throw new Error('El archivo no es un proyecto de Planimetría CAE-Ch.');
+        if (p.tipo !== 'planimetria-caech') throw new Error('El archivo no es un proyecto de Planimetría CAE-CH.');
         Object.assign(estado, {
             nombreArchivo: p.archivo, lectura: p.lectura, codigos: new Set(p.codigos || []), candidato: p.candidato || 0,
             normal: p.normal, opciones: p.opciones, ediciones: p.ediciones || {}, analisis: p.analisis,
