@@ -64,6 +64,17 @@ async function llamar(metodo, ruta, { cuerpo, token, origen, ip } = {}) {
     return { estado: r.status, datos, cabeceras: r.headers };
 }
 
+/** Lee y acepta por separado los documentos pendientes de una cuenta. */
+async function aceptarDocumentos(token, contexto) {
+    const estado = await llamar('GET', '/api/sesion/documentos', { token });
+    for (const d of estado.datos?.requiere_documentos || []) {
+        await llamar('POST', '/api/sesion/documentos', {
+            token, cuerpo: { documento: d.documento, version: d.version, acepta: true,
+                lectura_completa: true, segundos_lectura: d.minimo_segundos + 5, contexto }
+        });
+    }
+}
+
 const CLAVE_ADMIN = 'RiobambaCatastro2026';
 const CLAVE_AFILIADO = 'ChimborazoArqui2026';
 
@@ -188,6 +199,47 @@ seccion('Aceptacion de Terminos y Privacidad');
         despues.datos?.afiliado);
 }
 
+// ── 4c. Documentos legales, uno por uno, antes de descargar ─────────
+seccion('Documentos legales por separado');
+{
+    const estado = await llamar('GET', '/api/sesion/documentos', { token: tokenAdmin });
+    const pend = (estado.datos?.requiere_documentos || []).map(d => d.documento);
+    comprobar('la casilla unica no basta: los tres documentos quedan pendientes',
+        pend.join(',') === 'terminos,privacidad,cookies', estado.datos);
+
+    const bloqueada = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' } });
+    comprobar('sin aceptarlos la descarga responde 428', bloqueada.estado === 428
+        && bloqueada.datos?.requiere_documentos?.length === 3, bloqueada.datos);
+
+    const herramienta = await llamar('POST', '/api/herramientas', { token: tokenAdmin, cuerpo: { herramienta: 'planimetria' } });
+    comprobar('sin aceptarlos la planimetria responde 428', herramienta.estado === 428, herramienta.datos);
+
+    const d = estado.datos?.requiere_documentos?.[0] || { documento: 'terminos', version: '', minimo_segundos: 20 };
+    const base = { documento: d.documento, version: d.version, acepta: true, lectura_completa: true,
+                   segundos_lectura: d.minimo_segundos + 5, contexto: 'pdf' };
+    const rapida = await llamar('POST', '/api/sesion/documentos', { token: tokenAdmin, cuerpo: { ...base, segundos_lectura: 2 } });
+    comprobar('una lectura de 2 s no se acepta', rapida.estado === 400, rapida.datos);
+    const sinLeer = await llamar('POST', '/api/sesion/documentos', { token: tokenAdmin, cuerpo: { ...base, lectura_completa: false } });
+    comprobar('sin llegar al final no se acepta', sinLeer.estado === 400, sinLeer.datos);
+    const vieja = await llamar('POST', '/api/sesion/documentos', { token: tokenAdmin, cuerpo: { ...base, version: '2020-01-01' } });
+    comprobar('una version que no es la vigente responde 409', vieja.estado === 409, vieja.datos);
+    const inventado = await llamar('POST', '/api/sesion/documentos', { token: tokenAdmin, cuerpo: { ...base, documento: 'contrato' } });
+    comprobar('un documento desconocido responde 400', inventado.estado === 400, inventado.datos);
+    const sinSesion = await llamar('POST', '/api/sesion/documentos', { cuerpo: base });
+    comprobar('aceptar un documento exige sesion', sinSesion.estado === 401);
+
+    const uno = await llamar('POST', '/api/sesion/documentos', { token: tokenAdmin, cuerpo: base });
+    comprobar('acepta los Terminos por separado', uno.estado === 201
+        && uno.datos?.requiere_documentos?.map(x => x.documento).join(',') === 'privacidad,cookies', uno.datos);
+    const sigue = await llamar('POST', '/api/descargas', { token: tokenAdmin, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' } });
+    comprobar('con uno solo aceptado la descarga sigue en 428', sigue.estado === 428, sigue.datos);
+
+    await aceptarDocumentos(tokenAdmin, 'pdf');
+    const listo = await llamar('GET', '/api/sesion/documentos', { token: tokenAdmin });
+    comprobar('con los tres aceptados no queda nada pendiente',
+        listo.estado === 200 && listo.datos?.requiere_documentos?.length === 0, listo.datos);
+}
+
 // ── 5. Descargas autorizadas y auditadas ────────────────────────────
 seccion('Descargas de afiliado');
 {
@@ -274,6 +326,7 @@ let tokenAfiliado = null;
     await llamar('POST', '/api/sesion/clave', {
         token: tokenAfiliado, cuerpo: { clave_actual: claveAfiliado, clave_nueva: CLAVE_AFILIADO }
     });
+    await aceptarDocumentos(tokenAfiliado, 'planimetria');
 
     const intento = await llamar('GET', '/api/admin/afiliados', { token: tokenAfiliado });
     comprobar('el afiliado NO puede listar afiliados', intento.estado === 403, intento.datos);
@@ -611,6 +664,7 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
                 !!ingreso.datos?.afiliado?.terminos_version && ingreso.datos?.afiliado?.terminos_pendientes === false,
                 ingreso.datos?.afiliado);
             tokenUsuario = ingreso.datos?.token;
+            await aceptarDocumentos(tokenUsuario, 'pdf');
 
             comprobar('guarda el numero de registro que declaro',
                 ingreso.datos?.afiliado?.registro_profesional === REGISTRO_USR, ingreso.datos?.afiliado);
@@ -765,6 +819,7 @@ seccion('Cuenta publica y pago por predio');
         const ingreso = await llamar('POST', '/api/sesion', { cuerpo: { usuario: CORREO_PUB, clave: CLAVE_PUB } });
         comprobar('la cuenta publica confirma e ingresa', ingreso.estado === 200, ingreso.datos);
         tokenPub = ingreso.datos?.token;
+        await aceptarDocumentos(tokenPub, 'pdf');
         const p = ingreso.datos?.permisos;
         comprobar('nace sin numero de registro', ingreso.datos?.afiliado?.registro_profesional == null, ingreso.datos?.afiliado);
         comprobar('cobra por pago y tiene la planimetria', p?.cobro === 'pago' && p?.planimetria === true, p);

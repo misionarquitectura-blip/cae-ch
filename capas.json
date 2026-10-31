@@ -13,7 +13,7 @@
         "icono": "fas fa-city",
         "texto": "Información catastral georreferenciada del Gobierno Autónomo Descentralizado Municipal de Riobamba.",
         "badge": {
-          "texto": "Última actualización: octubre 2026",
+          "texto": "Última actualización: noviembre 2026",
           "fondo": "#eee",
           "color": "#555"
         }
@@ -22,7 +22,7 @@
         {
           "id": 6,
           "nombre": "Catastro GADMR",
-          "fuente": "GADMR – Catastro Predial · Actualización: octubre 2026"
+          "fuente": "GADMR – Catastro Predial · Actualización: noviembre 2026"
         }
       ]
     },

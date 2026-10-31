@@ -349,6 +349,10 @@
         // Si falta la declaración de equipo, autorizarHerramienta ya abrió el
         // formulario; la puerta queda detrás por si se cierra sin completarlo.
         if (await acceso.autorizarHerramienta('planimetria', comprobar)) arrancar();
+        else if (acceso.motivoHerramienta && acceso.motivoHerramienta() === 'documentos') mostrarPuerta('Falta un paso',
+            'Antes de usar la planimetría lea y acepte, uno por uno, los Términos y condiciones, '
+            + 'la Política de privacidad y el aviso de cookies y almacenamiento.', 'Leer los documentos',
+            () => comprobar());
         else mostrarPuerta('Falta un paso',
             'La planimetría solo admite levantamientos de equipo de alta precisión: receptor GNSS RTK, '
             + 'estación total, escáner LiDAR 3D u ortofoto verificada de 4 cm/px o mejor. '

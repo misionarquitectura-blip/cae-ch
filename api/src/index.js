@@ -37,6 +37,7 @@ import {
     listarPagos, habilitarPredioAdmin, eliminarPagosPreparados
 } from './cobros.js';
 import { declaracionVigente, leerDeclaracion, declararEquipo } from './equipo.js';
+import { documentosPendientes, cuerpoPendientes, estadoDocumentos, aceptarDocumento } from './documentos.js';
 import {
     listarSolicitudes, crearSolicitud, actualizarSolicitud, eliminarSolicitud
 } from './solicitudes.js';
@@ -115,6 +116,18 @@ async function enrutar(request, env, url, ruta, metodo) {
         return responder(await aceptarTerminos(env, request, sesion, datos));
     }
 
+    // Aceptacion por separado de Terminos, Privacidad y cookies (documentos.js).
+    if (ruta === '/api/sesion/documentos') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Sesion no valida o expirada.', 401, request, env);
+        if (metodo === 'GET') return responder(await estadoDocumentos(env, sesion));
+        if (metodo === 'POST') {
+            const datos = await cuerpoJSON(request);
+            if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+            return responder(await aceptarDocumento(env, request, sesion, datos));
+        }
+    }
+
     // ── Autorizacion de descarga (afiliados) ────────────────────────
     if (ruta === '/api/descargas' && metodo === 'POST') {
         const sesion = await sesionActual(env, request);
@@ -138,6 +151,14 @@ async function enrutar(request, env, url, ruta, metodo) {
                 motivo = 'Su cuenta no esta vigente. Comuniquese con la sede del CAE-CH.';
             }
             return error(motivo, 403, request, env, { requiere_cambio_clave: !!a.requiere_cambio_clave });
+        }
+
+        // Los tres documentos legales, leidos y aceptados uno por uno, antes
+        // de tocar el cupo o pedir un pago.
+        const faltan = await documentosPendientes(env, a.id);
+        if (faltan.length) {
+            return error('Antes de descargar lea y acepte los documentos legales vigentes.',
+                428, request, env, cuerpoPendientes(faltan));
         }
 
         // El predio: libre, ya habilitado, con cupo, o 402 con el precio.
@@ -194,6 +215,12 @@ async function enrutar(request, env, url, ruta, metodo) {
                 herramienta: herramienta,
                 requiere_cambio_clave: !!a.requiere_cambio_clave
             });
+        }
+
+        const faltan = await documentosPendientes(env, a.id);
+        if (faltan.length) {
+            return error('Antes de usar la herramienta lea y acepte los documentos legales vigentes.',
+                428, request, env, Object.assign({ herramienta: herramienta }, cuerpoPendientes(faltan)));
         }
 
         // La planimetria solo trabaja con equipo de alta precision declarado.

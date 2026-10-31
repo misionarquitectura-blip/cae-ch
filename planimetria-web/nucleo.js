@@ -3449,6 +3449,16 @@ function construirPDF(proyecto) {
         avisos.forEach(t => parrafo('· ' + t, { size: peq, color: MEDIO, sangria: 2 }));
     }
 
+    // 9. Datos personales: la misma declaracion que la cuenta acepta al abrir
+    // la herramienta (caech-acceso.js, VERSION_DECLARACION), aqui bajo firma.
+    seccion('Datos personales de terceros');
+    parrafo('Los nombres de titulares y colindantes que constan en este informe y en la lámina provienen del certificado de gravámenes ' +
+        'aportado por el titular, de lo declarado en campo y de la consulta predial pública del GADMR. Los tomados del catastro no acreditan dominio: ' +
+        'la titularidad la certifica el Registro de la Propiedad.', { size: peq, color: MEDIO });
+    parrafo('El profesional firmante declara que actúa por encargo o con autorización del titular; que es responsable del tratamiento de estos ' +
+        'datos conforme a la Ley Orgánica de Protección de Datos Personales; que los usa únicamente para el levantamiento y el trámite de este predio; ' +
+        'y que no los recopila ni difunde con otro fin. El CAE-CH provee la herramienta y no conserva copia de este informe.', { size: peq, color: MEDIO });
+
     // Firmas: el profesional y una por cada titular, de dos en dos
     const firmas = [[d.profesional || 'Profesional responsable', d.registro ? 'Registro ' + d.registro : 'Registro profesional']]
         .concat(titulares.length

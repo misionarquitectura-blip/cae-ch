@@ -163,6 +163,36 @@
         .caech-acc-check input{flex-shrink:0;width:17px;height:17px;margin:2px 0 0;
             accent-color:var(--rojo-caech,#E31E24);cursor:pointer}
         .caech-acc-check a{color:var(--rojo-hondo,#B2141A);font-weight:600}
+        .caech-acc-caja.ancha{max-width:720px}
+        .caech-acc-doc-paso{font-size:12px;color:var(--grafito-sua,#8B9098);margin:0 0 8px}
+        .caech-acc-lectura{max-height:52vh;overflow-y:auto;padding:4px 16px 12px;
+            border:1px solid var(--borde,rgba(46,50,56,.12));border-radius:var(--radio,4px);
+            background:var(--hueso,#F7F7F8);font-size:13px;line-height:1.6;color:var(--grafito,#2E3238)}
+        .caech-acc-lectura:focus{outline:2px solid var(--rojo-caech,#E31E24);outline-offset:1px}
+        .caech-acc-lectura h2{font-size:17px;margin:12px 0 4px}
+        .caech-acc-lectura h3{font-size:14px;margin:16px 0 6px}
+        .caech-acc-lectura p,.caech-acc-lectura li{margin:0 0 8px}
+        .caech-acc-lectura ul,.caech-acc-lectura ol{padding-left:20px;margin:0 0 8px}
+        .caech-acc-lectura table{width:100%;border-collapse:collapse;font-size:12px;margin:0 0 10px}
+        .caech-acc-lectura th,.caech-acc-lectura td{border:1px solid var(--borde,rgba(46,50,56,.12));
+            padding:5px 6px;text-align:left;vertical-align:top}
+        .caech-acc-lectura .vigencia{font-size:12px;color:var(--grafito-sua,#8B9098)}
+        .caech-acc-lectura .destacado{border-left:3px solid var(--rojo-caech,#E31E24);padding:2px 0 2px 10px}
+        .caech-acc-lectura a{color:var(--rojo-hondo,#B2141A)}
+        .caech-acc-progreso{height:4px;background:var(--borde,rgba(46,50,56,.12));border-radius:2px;
+            margin:8px 0 6px;overflow:hidden}
+        .caech-acc-progreso span{display:block;height:100%;width:0;background:var(--rojo-caech,#E31E24);
+            transition:width .2s}
+        .caech-acc-doc-estado{font-size:12px;color:var(--grafito-med,#565B63);margin:0 0 6px;min-height:1.4em}
+        .caech-acc-check input:disabled,.caech-acc-check input:disabled+span{cursor:not-allowed;opacity:.55}
+        .caech-acc-btn:disabled{opacity:.5;cursor:not-allowed}
+        .caech-acc-declaracion{max-height:210px;overflow-y:auto;margin:6px 0 12px;padding:10px 12px;
+            background:var(--hueso,#F7F7F8);border:1px solid var(--borde,rgba(46,50,56,.12));
+            border-radius:var(--radio,4px);font-size:12.5px;line-height:1.5;color:var(--grafito-med,#565B63)}
+        .caech-acc-declaracion p{margin:0 0 6px}
+        .caech-acc-declaracion ol{margin:0 0 6px;padding-left:20px}
+        .caech-acc-declaracion li{margin-bottom:4px}
+        .caech-acc-declaracion a{color:var(--rojo-hondo,#B2141A);font-weight:600}
         .caech-acc-enlace{background:none;border:0;color:var(--rojo-caech,#E31E24);
             text-decoration:underline;cursor:pointer;font-size:12px;padding:0;font-family:inherit}
         /* Reserva por si caech-ui.css no esta cargada en esta pagina:
@@ -477,9 +507,17 @@
      */
     function conTerminos(siguiente) {
         const fin = siguiente || function () {};
-        return function () {
-            if (perfil && perfil.terminos_pendientes) abrirTerminos(fin);
-            else fin();
+        return async function () {
+            if (!(perfil && perfil.terminos_pendientes)) return fin();
+            // Desde 2026-11-01 cada documento se lee y se acepta por separado.
+            // Un Worker anterior a la migracion 008 no conoce la ruta: se cae
+            // a la casilla unica de siempre.
+            const r = await api('GET', '/api/sesion/documentos');
+            if (r.estado === 200 && r.datos && Array.isArray(r.datos.requiere_documentos)) {
+                if (!r.datos.requiere_documentos.length) return fin();
+                return abrirDocumentos(r.datos.requiere_documentos, 'ingreso', fin, true);
+            }
+            abrirTerminos(fin);
         };
     }
 
@@ -518,6 +556,171 @@
                     alTerminar();
                 });
             });
+    }
+
+    // ── Lectura obligatoria de cada documento ───────────────────────
+
+    const DOCUMENTOS = {
+        terminos:   { titulo: 'T&eacute;rminos y condiciones', ancla: 'terminos' },
+        privacidad: { titulo: 'Pol&iacute;tica de privacidad', ancla: 'privacidad' },
+        cookies:    { titulo: 'Cookies y almacenamiento en su navegador', ancla: 'cookies' }
+    };
+
+    let textosLegales = null;
+
+    /**
+     * Los tres textos salen de legal.html, la misma pagina que se publica:
+     * no hay una segunda copia que pueda separarse de la vigente. La
+     * Politica llega hasta el punto de cookies, que se acepta aparte.
+     */
+    function cargarTextosLegales() {
+        if (textosLegales) return textosLegales;
+        textosLegales = fetch(LEGAL, { cache: 'no-cache' })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+            .then(html => {
+                const docu = new DOMParser().parseFromString(html, 'text/html');
+                const terminos = docu.getElementById('terminos');
+                const privacidad = docu.getElementById('privacidad');
+                const cookies = docu.getElementById('cookies');
+                if (!terminos || !privacidad || !cookies) throw new Error('legal.html sin las secciones esperadas');
+
+                const tramo = (desde, hasta) => {
+                    const caja = document.createElement('div');
+                    for (let n = desde; n && n !== hasta; n = n.nextElementSibling) caja.appendChild(n.cloneNode(true));
+                    return caja;
+                };
+                const limpiar = caja => {
+                    caja.querySelectorAll('script, style').forEach(n => n.remove());
+                    caja.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+                    caja.querySelectorAll('a[href]').forEach(a => {
+                        const h = a.getAttribute('href');
+                        if (h.charAt(0) === '#') a.setAttribute('href', LEGAL + h);
+                        a.setAttribute('target', '_blank');
+                        a.setAttribute('rel', 'noopener');
+                    });
+                    return caja.innerHTML;
+                };
+                let finCookies = cookies.nextElementSibling;
+                while (finCookies && finCookies.tagName !== 'H3') finCookies = finCookies.nextElementSibling;
+                // La Politica sin su punto de cookies: lo de antes y lo de despues.
+                const politica = tramo(privacidad.firstElementChild, cookies);
+                if (finCookies) politica.append(...tramo(finCookies, null).childNodes);
+                return {
+                    terminos: limpiar(tramo(terminos.firstElementChild, null)),
+                    privacidad: limpiar(politica),
+                    cookies: limpiar(tramo(cookies, finCookies))
+                };
+            })
+            .catch(e => { textosLegales = null; throw e; });
+        return textosLegales;
+    }
+
+    /**
+     * Pide leer y aceptar, uno por uno, los documentos que el Worker dio por
+     * pendientes. La casilla de cada uno nace sin marcar y DESHABILITADA:
+     * se habilita al llegar al final del texto y tras un tiempo minimo con
+     * la pagina a la vista (el Worker vuelve a exigir ese minimo). Cada
+     * aceptacion se guarda por separado, con la accion que la pidio.
+     *
+     * @param {Array<{documento,version,minimo_segundos}>} lista
+     * @param {string} contexto pdf, csv, dxf, planimetria o ingreso
+     * @param {Function} alTerminar se llama con los tres aceptados
+     * @param {boolean} [posponible] solo al ingresar: ofrece «Ahora no»
+     */
+    async function abrirDocumentos(lista, contexto, alTerminar, posponible) {
+        let textos;
+        try {
+            textos = await cargarTextosLegales();
+        } catch (e) {
+            modal('caech-modal-documentos', 'Documentos legales',
+                '<div class="caech-acc-aviso error" style="display:block">No se pudieron cargar los documentos ' +
+                'legales para leerlos aqu&iacute;. Revise su conexi&oacute;n y vuelva a intentarlo.</div>' +
+                '<p>Mientras tanto puede leerlos en <a href="' + LEGAL + '" target="_blank" rel="noopener">' +
+                'Informaci&oacute;n legal</a>. Sin aceptarlos no se puede continuar.</p>');
+            return;
+        }
+
+        let i = 0;
+        const paso = () => {
+            const d = lista[i];
+            const info = DOCUMENTOS[d.documento] || { titulo: esc(d.documento) };
+            const minimo = Math.max(1, d.minimo_segundos || 10);
+            const ids = { caja: 'caech-doc-texto', barra: 'caech-doc-barra', estado: 'caech-doc-estado',
+                          acepto: 'caech-doc-acepto', boton: 'caech-doc-aceptar' };
+
+            modal('caech-modal-documentos', info.titulo,
+                '<div class="caech-acc-aviso"></div>' +
+                '<p class="caech-acc-doc-paso">Documento ' + (i + 1) + ' de ' + lista.length +
+                ' &middot; versi&oacute;n del ' + esc(d.version) + '. Cada documento se acepta por separado.</p>' +
+                '<div class="caech-acc-lectura" id="' + ids.caja + '" tabindex="0">' + textos[d.documento] + '</div>' +
+                '<div class="caech-acc-progreso"><span id="' + ids.barra + '"></span></div>' +
+                '<p class="caech-acc-doc-estado" id="' + ids.estado + '"></p>' +
+                '<label class="caech-acc-check" for="' + ids.acepto + '"><input type="checkbox" id="' + ids.acepto + '" disabled>' +
+                '<span>He le&iacute;do completo el documento &laquo;' + info.titulo + '&raquo; y lo acepto.</span></label>' +
+                '<button class="caech-acc-btn" id="' + ids.boton + '" disabled>' +
+                (i + 1 < lista.length ? 'Aceptar y seguir' : 'Aceptar y continuar') + '</button>' +
+                (posponible ? '<p class="caech-acc-pie"><button class="caech-acc-enlace" id="caech-doc-luego">' +
+                    'Ahora no; se pedir&aacute; antes de descargar o usar la planimetr&iacute;a</button></p>' : ''),
+                (overlay, cerrar) => {
+                    overlay.querySelector('.caech-acc-caja').classList.add('ancha');
+                    const caja = el(ids.caja), barra = el(ids.barra), estado = el(ids.estado);
+                    const acepto = el(ids.acepto), boton = el(ids.boton);
+                    let segundos = 0, alFinal = false;
+
+                    // Solo cuenta el tiempo con la pestana a la vista.
+                    const reloj = setInterval(() => {
+                        if (!document.body.contains(overlay)) return clearInterval(reloj);
+                        if (document.visibilityState === 'visible') segundos++;
+                        revisar();
+                    }, 1000);
+
+                    function revisar() {
+                        const recorrido = caja.scrollHeight <= caja.clientHeight
+                            ? 1 : (caja.scrollTop + caja.clientHeight) / caja.scrollHeight;
+                        if (recorrido >= 0.985) alFinal = true;
+                        barra.style.width = Math.round(Math.min(1, recorrido) * 100) + '%';
+                        const listo = alFinal && segundos >= minimo;
+                        acepto.disabled = !listo;
+                        if (!listo) acepto.checked = false;
+                        boton.disabled = !(listo && acepto.checked);
+                        estado.textContent = !alFinal
+                            ? 'Desplácese hasta el final del texto para habilitar la aceptación.'
+                            : segundos < minimo
+                            ? 'Puede aceptarlo en ' + (minimo - segundos) + ' s.'
+                            : 'Lectura completa. Marque la casilla para aceptar.';
+                    }
+                    caja.addEventListener('scroll', revisar, { passive: true });
+                    acepto.addEventListener('change', revisar);
+                    revisar();
+                    caja.focus();
+
+                    if (posponible) el('caech-doc-luego').addEventListener('click', () => {
+                        clearInterval(reloj); cerrar(); alTerminar();
+                    });
+
+                    boton.addEventListener('click', async () => {
+                        if (boton.disabled) return;
+                        boton.disabled = true;
+                        boton.textContent = 'Guardando...';
+                        const r = await api('POST', '/api/sesion/documentos', {
+                            documento: d.documento, version: d.version, acepta: true,
+                            lectura_completa: true, segundos_lectura: segundos, contexto: contexto
+                        });
+                        if (r.estado !== 201) {
+                            boton.textContent = i + 1 < lista.length ? 'Aceptar y seguir' : 'Aceptar y continuar';
+                            revisar();
+                            return avisar(overlay, 'error', (r.datos && r.datos.error) || 'No se pudo registrar la aceptación.');
+                        }
+                        clearInterval(reloj);
+                        cerrar();
+                        i++;
+                        if (i < lista.length) return paso();
+                        if (perfil) perfil.terminos_pendientes = false;
+                        alTerminar();
+                    });
+                });
+        };
+        paso();
     }
 
     // ── Cambio de clave temporal (obligatorio) ──────────────────────
@@ -694,6 +897,12 @@
                 abrirPago(r.datos);
                 return false;
             }
+            // 428: faltan documentos legales por leer y aceptar. Se leen
+            // aqui mismo y la descarga se retoma sola.
+            if (r.estado === 428 && r.datos && r.datos.requiere_documentos) {
+                abrirDocumentos(r.datos.requiere_documentos, formato, () => reintentar(formato, claveCatastral));
+                return false;
+            }
             alert(r.datos.error || 'No se pudo autorizar la descarga.');
             return false;
         }
@@ -712,8 +921,11 @@
      * la declaracion del equipo: ese es el "no" mas probable, y se resuelve
      * aqui mismo con el formulario. Las herramientas que no sean abiertas
      * las concede la administracion cuenta por cuenta.
-     * @returns {Promise<boolean>} true si se puede continuar.
+     * @returns {Promise<boolean>} true si se puede continuar. Si es false,
+     *          `motivoHerramienta()` dice si faltaban los documentos legales,
+     *          para que la pagina explique el paso correcto.
      */
+    let motivoHerramienta = null;
     async function autorizarHerramienta(herramienta, alEntrar) {
         if (!CONFIG.activo) return true;
 
@@ -724,8 +936,14 @@
         }
 
         const r = await api('POST', '/api/herramientas', { herramienta: herramienta });
+        motivoHerramienta = null;
         if (r.estado === 200) return true;
 
+        if (r.estado === 428 && r.datos && r.datos.requiere_documentos) {
+            motivoHerramienta = 'documentos';
+            abrirDocumentos(r.datos.requiere_documentos, herramienta, alEntrar || function () { location.reload(); });
+            return false;
+        }
         if (r.datos && r.datos.requiere_cambio_clave) {
             abrirCambioClave(null, alEntrar || function () { location.reload(); });
             return false;
@@ -812,17 +1030,34 @@
      * trabajar cada cuenta en cada momento. Por eso la casilla de
      * responsabilidad NUNCA sale marcada, ni siquiera corrigiendo una coma:
      * cada fila es una declaracion nueva y se asume de nuevo.
+     *
+     * Sin `actual`, se pregunta al Worker: si la cuenta declaro con un texto
+     * anterior (VERSION_DECLARACION subio), el equipo sale relleno y solo
+     * hay que leer y aceptar el texto nuevo.
      */
-    function abrirDeclaracion(alTerminar, actual) {
-        const corrige = !!(actual && actual.tipo);
+    async function abrirDeclaracion(alTerminar, actual) {
+        let renueva = false;
+        if (!actual) {
+            const r = await api('GET', '/api/equipo');
+            if (r.estado === 200 && r.datos && r.datos.anterior) {
+                actual = r.datos.anterior;
+                renueva = true;
+            }
+        }
+        const corrige = !renueva && !!(actual && actual.tipo);
 
         modal('caech-modal-equipo',
-            corrige ? 'Corregir el equipo declarado' : 'Declaraci&oacute;n de equipo',
+            corrige ? 'Corregir el equipo declarado'
+                : renueva ? 'Declaraci&oacute;n actualizada' : 'Declaraci&oacute;n de equipo',
             '<div class="caech-acc-aviso"></div>' +
             (corrige
                 ? '<p>Ajuste lo que haga falta. Se guarda como una <b>declaraci&oacute;n nueva</b> con ' +
                   'la fecha de hoy; la anterior se conserva como constancia de con qu&eacute; equipo ' +
                   'trabaj&oacute; hasta ahora.</p>'
+                : renueva
+                ? '<p>La declaraci&oacute;n de responsabilidad <b>cambi&oacute;</b>: ahora incluye el uso de ' +
+                  'los datos de terceros que aparecen en los planos. Su equipo ya est&aacute; cargado; ' +
+                  'rev&iacute;selo, lea la declaraci&oacute;n y vuelva a aceptarla.</p>'
                 : '<p>La planimetr&iacute;a es gratuita, pero solo admite levantamientos tomados con ' +
                   '<b>equipo de alta precisi&oacute;n</b>. Indique el equipo con que trabaja.</p>') +
             '<div class="caech-acc-campo"><label for="caech-eq-tipo">Tipo de equipo</label>' +
@@ -837,11 +1072,31 @@
             '<div class="caech-acc-campo" id="caech-eq-gsd-caja" hidden><label for="caech-eq-gsd">Resoluci&oacute;n verificada (cm/px)</label>' +
             '  <input id="caech-eq-gsd" type="text" inputmode="decimal" placeholder="4 o menos">' +
             '  <small>Para la ortofoto, indique la marca, el modelo y la serie del dron o la c&aacute;mara.</small></div>' +
+            '<div class="caech-acc-declaracion">' +
+            '<p><b>Datos personales de terceros.</b> Los planos e informes muestran nombres de titulares y ' +
+            'colindantes, tomados del certificado que yo cargo o de la consulta predial p&uacute;blica del GADMR. Declaro que:</p>' +
+            '<ol>' +
+            '<li>Act&uacute;o por encargo del titular del predio o con su autorizaci&oacute;n, y los datos del ' +
+            'certificado de grav&aacute;menes que cargo me los entreg&oacute; &eacute;l para este tr&aacute;mite.</li>' +
+            '<li>Usar&eacute; esos datos <b>solo</b> para el levantamiento y el tr&aacute;mite de ese predio ' +
+            '(linderaci&oacute;n, escrituras, aprobaci&oacute;n de planos), sin difundirlos con otro fin.</li>' +
+            '<li>No recopilar&eacute; nombres ni datos de propietarios para armar listas o bases, ' +
+            'ni los usar&eacute; con fines comerciales, de publicidad o de contacto.</li>' +
+            '<li>Soy <b>responsable del tratamiento</b> de los datos que contienen los planos e informes que ' +
+            'descargue y respondo frente a los titulares y la autoridad por su uso. El CAE-CH solo provee la herramienta.</li>' +
+            '<li>Los nombres del catastro no acreditan dominio; verificar&eacute; la titularidad en el ' +
+            'Registro de la Propiedad antes de usarlos en un documento con efectos legales.</li>' +
+            '</ol>' +
+            '<p class="caech-acc-pie" style="text-align:left">Texto completo en ' +
+            '<a href="' + LEGAL + '#planimetria" target="_blank" rel="noopener">Condiciones de uso de la planimetr&iacute;a</a>. ' +
+            'Esta declaraci&oacute;n se guarda con fecha y la incumplida suspende la cuenta.</p>' +
+            '</div>' +
             '<label class="caech-acc-check" for="caech-eq-acepto"><input type="checkbox" id="caech-eq-acepto">' +
             '<span>Declaro bajo mi responsabilidad que los levantamientos que procese en la planimetr&iacute;a ' +
             'fueron tomados con este equipo, en buen estado y calibrado; que <b>no provienen</b> de Google Earth ' +
             'o Google Maps, de GPS recreativos ni de tel&eacute;fonos m&oacute;viles; y que respondo por su ' +
-            'exactitud y por el uso de los planos e informes que genere.</span></label>' +
+            'exactitud y por el uso de los planos e informes que genere; y que cumplo la declaraci&oacute;n ' +
+            'sobre datos personales de terceros que antecede.</span></label>' +
             '<button class="caech-acc-btn" id="caech-eq-guardar">' +
             (corrige ? 'Guardar los cambios' : 'Declarar y continuar') + '</button>',
             (overlay, cerrar) => {
@@ -849,7 +1104,7 @@
                 const boton = el('caech-eq-guardar');
                 const etiqueta = boton.textContent;
 
-                if (corrige) {
+                if (actual && actual.tipo) {
                     tipo.value = actual.tipo;
                     el('caech-eq-marca').value = actual.marca || '';
                     el('caech-eq-modelo').value = actual.modelo || '';
@@ -1002,6 +1257,9 @@
         config: CONFIG,
         autorizar: autorizar,
         autorizarHerramienta: autorizarHerramienta,
+        motivoHerramienta: () => motivoHerramienta,
+        /** Lectura obligatoria de los documentos legales pendientes. */
+        abrirDocumentos: abrirDocumentos,
         abrirIngreso: abrirIngreso,
         abrirRegistro: abrirRegistro,
         /** Formulario de declaracion de equipo; tambien lo usa el panel. */

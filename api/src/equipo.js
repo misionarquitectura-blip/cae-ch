@@ -11,13 +11,16 @@
 //  La vigente es la ultima de cada cuenta; las anteriores se conservan
 //  como constancia. Si cambia el texto de responsabilidad se sube
 //  VERSION_DECLARACION y todas las cuentas vuelven a declarar.
+//
+//  2026-11-01: el texto suma el uso de los datos de terceros (nombres de
+//  titulares y colindantes) conforme a la LOPDP. Ver legal.html#planimetria.
 // ════════════════════════════════════════════════════════════════════
 
 import { hashIP } from './cripto.js';
 import { ahora, texto } from './http.js';
 import { registrarEvento } from './sesiones.js';
 
-export const VERSION_DECLARACION = '2026-10-02';
+export const VERSION_DECLARACION = '2026-11-01';
 
 export const TIPOS_EQUIPO = {
     gnss_rtk:       'Receptor GNSS RTK',
@@ -28,11 +31,15 @@ export const TIPOS_EQUIPO = {
 
 const GSD_MAXIMO_CM = 4;
 
-/** Ultima declaracion vigente de la cuenta, o null. */
-export async function declaracionVigente(env, afiliadoId) {
-    const fila = await env.DB.prepare(
+function ultimaDeclaracion(env, afiliadoId) {
+    return env.DB.prepare(
         'SELECT * FROM declaraciones_equipo WHERE afiliado_id = ? ORDER BY id DESC LIMIT 1'
     ).bind(afiliadoId).first();
+}
+
+/** Ultima declaracion vigente de la cuenta, o null. */
+export async function declaracionVigente(env, afiliadoId) {
+    const fila = await ultimaDeclaracion(env, afiliadoId);
     return fila && fila.texto_version === VERSION_DECLARACION ? fila : null;
 }
 
@@ -46,11 +53,16 @@ function vista(f) {
 }
 
 export async function leerDeclaracion(env, sesion) {
+    const ultima = await ultimaDeclaracion(env, sesion.afiliado.id);
+    const vigente = ultima && ultima.texto_version === VERSION_DECLARACION ? ultima : null;
     return {
         estado: 200,
         cuerpo: {
             ok: true,
-            declaracion: vista(await declaracionVigente(env, sesion.afiliado.id)),
+            declaracion: vista(vigente),
+            // La de un texto anterior: el formulario la usa para no hacer
+            // teclear de nuevo el equipo, pero la casilla se vuelve a marcar.
+            anterior: vigente ? null : vista(ultima),
             version: VERSION_DECLARACION,
             tipos: TIPOS_EQUIPO
         }

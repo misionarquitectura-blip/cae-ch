@@ -220,6 +220,24 @@ CREATE TABLE IF NOT EXISTS declaraciones_equipo (
 
 CREATE INDEX IF NOT EXISTS idx_equipo_cuenta ON declaraciones_equipo (afiliado_id, creado_en);
 
+-- ── Aceptacion de cada documento legal ──────────────────────────────
+-- Una fila por documento aceptado, tras leerlo entero en la ventana de
+-- lectura (ver src/documentos.js). Se conservan todas: son la prueba de
+-- que version acepto cada cuenta, cuando y antes de que accion.
+CREATE TABLE IF NOT EXISTS aceptaciones (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    afiliado_id       TEXT    NOT NULL REFERENCES afiliados(id) ON DELETE CASCADE,
+    documento         TEXT    NOT NULL
+                              CHECK (documento IN ('terminos', 'privacidad', 'cookies')),
+    version           TEXT    NOT NULL,
+    segundos_lectura  INTEGER NOT NULL,                     -- tiempo con el texto abierto
+    contexto          TEXT,                                 -- pdf, csv, dxf, planimetria o ingreso
+    aceptado_en       TEXT    NOT NULL,
+    ip_hash           TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_aceptaciones_cuenta ON aceptaciones (afiliado_id, documento, id);
+
 -- ── Bitacora de seguridad ───────────────────────────────────────────
 -- Ingresos, fallos, altas, bajas y cambios de clave. Sin datos personales
 -- mas alla del usuario afectado.
