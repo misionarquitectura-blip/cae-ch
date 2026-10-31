@@ -2037,54 +2037,7 @@
         .section-blanca { background-color: var(--blanco, #FFFFFF); }
         a.logo { display: flex; }
 
-        /* ── Tres herramientas ────────────────────────────────── */
-        .herramientas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 28px;
-        }
-        .herramienta {
-            display: flex;
-            flex-direction: column;
-            background: var(--blanco, #FFFFFF);
-            border: 1px solid var(--borde);
-            border-top: 3px solid var(--grafito);
-            border-radius: var(--radio);
-            padding: 30px 28px 28px;
-            box-shadow: var(--sombra-1);
-            transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s;
-        }
-        .herramienta:hover { transform: translateY(-4px); box-shadow: var(--sombra-2); }
-        .herramienta-nueva { border-top-color: var(--rojo-caech); }
-        .herramienta-cabeza {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .herramienta-acceso {
-            font-size: 10.5px;
-            font-weight: 600;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            padding: 5px 10px;
-            border-radius: var(--radio);
-            white-space: nowrap;
-        }
-        .herramienta-acceso i { margin-right: 5px; }
-        .herramienta-acceso.libre { background: rgba(30, 132, 73, .1); color: var(--linea-2, #1E8449); }
-        .herramienta-acceso.nuevo { background: var(--rojo-caech); color: #FFFFFF; }
-        .herramienta h3 { font-size: 21px; font-weight: 700; margin-bottom: 12px; }
-        .herramienta > p { color: var(--grafito-med); }
-        .herramienta .feature-list { margin-bottom: 22px; }
-        .herramienta-pie {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 14px;
-        }
-        .herramienta-pie .btn { width: 100%; white-space: normal; }
+        /* ── Enlaces de texto bajo los botones ────────────────── */
         .herramienta-enlace {
             align-self: center;
             font-size: 13.5px;
@@ -2414,6 +2367,403 @@
         .footer-column h3 { color: #FFFFFF; font-size: 15px; margin-bottom: 16px; }
         .copyright { border-top-color: var(--filete-oscuro); }
         .copyright .meta-tecnica { margin-top: 10px; color: rgba(255, 255, 255, .5); }
+
+        /* ══════════════════════════════════════════════════════════
+           ESQUEMA DE LA PLATAFORMA · #herramientas (2026-10-31)
+           Fuentes → base unificada → herramientas, con cables SVG que
+           dibuja el script y tarjetas de vidrio. El usuario pidio aqui
+           el vidrio de forma expresa; el resto de la portada sigue con
+           el vidrio solo en "Solicitar DICAT".
+        ══════════════════════════════════════════════════════════ */
+        .eco {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            background: var(--grafito-hondo);
+            padding: 96px 0 84px;
+        }
+        .eco .section-title p { max-width: 680px; }
+
+        /* Fondo: reticula de plano que se desvanece y tres manchas lentas.
+           --px/--py las mueve el puntero (paralaje suave). */
+        .eco-fondo {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px);
+            background-size: 44px 44px;
+            -webkit-mask-image: radial-gradient(75% 70% at 50% 50%, #000 30%, transparent 100%);
+                    mask-image: radial-gradient(75% 70% at 50% 50%, #000 30%, transparent 100%);
+        }
+        .eco-mancha {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: .55;
+            translate: calc(var(--px, 0) * 30px) calc(var(--py, 0) * 30px);
+            transition: translate .8s cubic-bezier(.2, .7, .2, 1);
+        }
+        /* El rojo va detras del nucleo: detras de las fuentes las tenia
+           todas como si estuvieran resaltadas. */
+        .eco-m1 { width: 420px; height: 420px; left: 34%; top: 30%; background: var(--rojo-caech); opacity: .42; animation: eco-deriva 22s ease-in-out infinite alternate; }
+        .eco-m2 { width: 400px; height: 400px; left: 2%;  top: 22%; background: var(--linea-1, #2563A8); opacity: .45; animation: eco-deriva 26s ease-in-out -8s infinite alternate-reverse; }
+        .eco-m3 { width: 340px; height: 340px; right: 26%; bottom: -6%; background: var(--linea-2, #1E8449); opacity: .4; animation: eco-deriva 30s ease-in-out -14s infinite alternate; }
+        @keyframes eco-deriva {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(60px, -40px) scale(1.12); }
+            100% { transform: translate(-40px, 50px) scale(.92); }
+        }
+
+        /* ── Vidrio ─────────────────────────────────────────────── */
+        .eco .vidrio {
+            position: relative;
+            background: linear-gradient(140deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .035));
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: var(--radio);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+                    backdrop-filter: blur(16px) saturate(140%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 18px 40px rgba(0, 0, 0, .22);
+            transition: border-color .3s, background-color .3s, opacity .35s, transform .35s cubic-bezier(.2, .7, .2, 1), box-shadow .35s;
+        }
+        /* Brillo que sigue al puntero (--mx/--my los pone el script). */
+        .eco .vidrio::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .14), transparent 60%);
+            opacity: 0;
+            transition: opacity .3s;
+        }
+        .eco .vidrio:hover::before, .eco .vidrio:focus-within::before { opacity: 1; }
+
+        /* ── Esquema: tres columnas sobre una capa de cables ─────── */
+        .eco-esquema {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1.25fr);
+            gap: 0 clamp(40px, 6vw, 96px);
+            align-items: center;
+        }
+        .eco-cables {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .eco-col { position: relative; z-index: 1; }
+        .eco-rotulo {
+            display: block;
+            margin-bottom: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: var(--tracking-caps, .28em);
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .55);
+        }
+        .eco-rotulo b { color: #FF6B6F; font-weight: 700; margin-right: 6px; }
+
+        /* Cables: base tenue que se dibuja al entrar, flujo discontinuo
+           que se enciende al resaltar y una particula que viaja. */
+        .eco-cable-base {
+            fill: none;
+            stroke: rgba(255, 255, 255, .16);
+            stroke-width: 1.2;
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            transition: stroke-dashoffset 1.4s cubic-bezier(.6, 0, .2, 1), stroke .3s, opacity .3s;
+        }
+        .eco.dibujado .eco-cable-base { stroke-dashoffset: 0; }
+        .eco-cable-flujo {
+            fill: none;
+            stroke: var(--rojo-caech);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-dasharray: 2 8;
+            opacity: 0;
+            transition: opacity .3s;
+            animation: eco-flujo 1.2s linear infinite;
+        }
+        @keyframes eco-flujo { to { stroke-dashoffset: -10; } }
+        .eco-particula { fill: #FFFFFF; opacity: 0; transition: opacity .3s; }
+        .eco.dibujado .eco-particula { opacity: .7; }
+        .eco-cable.activo .eco-cable-flujo { opacity: 1; }
+        .eco-cable.activo .eco-cable-base { stroke: rgba(227, 30, 36, .55); }
+        .eco-cable.activo .eco-particula { fill: #FF6B6F; opacity: 1; }
+        .eco-cable.atenuado .eco-cable-base,
+        .eco-cable.atenuado .eco-particula { opacity: .18; }
+
+        /* ── 01 · Fuentes ───────────────────────────────────────── */
+        .eco-lista-fuentes {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 8px;
+        }
+        .eco-fuente {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 14px;
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+        /* Entrada con animation y fill "backwards": al terminar suelta las
+           propiedades y el hover/atenuado vuelven a mandar sin retardo. */
+        /* Ocultas solo si el script ya arranco: sin JS se ven igual. */
+        .eco.eco-anima:not(.dibujado) .eco-fuente,
+        .eco.eco-anima:not(.dibujado) .eco-herr { visibility: hidden; }
+        .eco.dibujado .eco-fuente { animation: eco-entra-izq .6s cubic-bezier(.2, .7, .2, 1) calc(var(--i, 0) * 60ms) backwards; }
+        @keyframes eco-entra-izq { from { opacity: 0; transform: translateX(-14px); } }
+        @keyframes eco-entra-der { from { opacity: 0; transform: translateX(14px); } }
+        .eco-fuente > i {
+            width: 30px;
+            height: 30px;
+            flex: none;
+            display: grid;
+            place-items: center;
+            border-radius: var(--radio);
+            background: rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .85);
+            font-size: 13px;
+            transition: background-color .3s, color .3s;
+        }
+        .eco-fuente span { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+        .eco-fuente strong { font-size: 13.5px; font-weight: 600; }
+        .eco-fuente small { font-size: 11px; color: rgba(255, 255, 255, .5); letter-spacing: .04em; }
+        .eco-fuente.activa,
+        .eco-fuente:hover,
+        .eco-fuente:focus-visible { border-color: rgba(227, 30, 36, .55); transform: translateX(4px); }
+        .eco-fuente.activa > i,
+        .eco-fuente:hover > i { background: var(--rojo-caech); color: #FFFFFF; }
+        .eco-fuente.atenuada { opacity: .32; }
+        .eco-nota {
+            margin: 14px 0 0;
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, .55);
+        }
+
+        /* ── 02 · Nucleo ────────────────────────────────────────── */
+        .eco-centro { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .eco-nucleo {
+            position: relative;
+            width: min(100%, 230px);
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+        }
+        .eco-orbita {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, .22);
+            animation: eco-gira 40s linear infinite;
+        }
+        .eco-orbita::after {
+            content: "";
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            margin-left: -4px;
+            border-radius: 50%;
+            background: var(--rojo-caech);
+            box-shadow: 0 0 12px var(--rojo-caech);
+        }
+        .eco-o2 { inset: 14%; border-style: solid; border-color: rgba(255, 255, 255, .1); animation-duration: 26s; animation-direction: reverse; }
+        .eco-o2::after { background: #FFFFFF; box-shadow: 0 0 10px #FFFFFF; width: 6px; height: 6px; margin-left: -3px; top: -3px; }
+        @keyframes eco-gira { to { transform: rotate(360deg); } }
+        .eco-pulso {
+            position: absolute;
+            inset: 24%;
+            border-radius: 50%;
+            border: 1px solid rgba(227, 30, 36, .6);
+            animation: eco-late 2.8s cubic-bezier(.2, .6, .3, 1) infinite;
+        }
+        @keyframes eco-late {
+            0%   { transform: scale(.9); opacity: .9; }
+            100% { transform: scale(1.75); opacity: 0; }
+        }
+        .eco .eco-nucleo-cara {
+            position: relative;
+            width: 58%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            color: #FFFFFF;
+            background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .2), rgba(227, 30, 36, .22) 70%);
+            border-color: rgba(255, 255, 255, .25);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 0 50px rgba(227, 30, 36, .35);
+            translate: calc(var(--px, 0) * 8px) calc(var(--py, 0) * 8px);
+            transition: translate .5s cubic-bezier(.2, .7, .2, 1), box-shadow .3s;
+        }
+        .eco-nucleo-cara > i { font-size: 20px; margin-bottom: 4px; color: #FFFFFF; }
+        .eco-nucleo-cara strong { font-size: 12.5px; font-weight: 700; letter-spacing: .02em; }
+        .eco-nucleo-cara span { font-size: 10.5px; color: rgba(255, 255, 255, .75); }
+        .eco-nucleo-cara b { font-weight: 700; color: #FFFFFF; }
+        .eco-nucleo-cara .eco-utm { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .55); }
+        .eco-esquema.resaltando .eco-nucleo-cara { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 0 70px rgba(227, 30, 36, .6); }
+
+        /* ── 03 · Herramientas (acordeon) ───────────────────────── */
+        .eco-herramientas { display: grid; gap: 12px; align-content: center; }
+        .eco-herramientas .eco-rotulo { margin-bottom: 4px; }
+        .eco-herr {
+            color: #FFFFFF;
+        }
+        .eco.dibujado .eco-herr { animation: eco-entra-der .6s cubic-bezier(.2, .7, .2, 1) calc(300ms + var(--i, 0) * 90ms) backwards; }
+        .eco-herr.atenuada { opacity: .4; }
+        .eco-herr.abierta { border-color: rgba(227, 30, 36, .55); }
+        .eco-herr-cabeza {
+            all: unset;
+            box-sizing: border-box;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            cursor: pointer;
+        }
+        .eco-herr-cabeza:focus-visible { outline: 2px solid #FF6B6F; outline-offset: -2px; border-radius: var(--radio); }
+        .eco-icono {
+            width: 42px;
+            height: 42px;
+            flex: none;
+            display: grid;
+            place-items: center;
+            border-radius: var(--radio);
+            background: rgba(255, 255, 255, .08);
+            font-size: 17px;
+            transition: background-color .3s, box-shadow .3s;
+        }
+        .eco-herr.abierta .eco-icono,
+        .eco-herr.activa .eco-icono { background: var(--rojo-caech); box-shadow: 0 6px 18px rgba(227, 30, 36, .45); }
+        .eco-herr-titulo { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .eco-herr-titulo strong { font-size: 15.5px; font-weight: 700; color: #FFFFFF; }
+        .eco-herr-titulo small { font-size: 11.5px; color: rgba(255, 255, 255, .55); margin-top: 2px; }
+        .eco-nuevo {
+            font-style: normal;
+            font-weight: 700;
+            font-size: 10px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #FFFFFF;
+            background: var(--rojo-caech);
+            padding: 1px 6px;
+            border-radius: var(--radio);
+        }
+        .eco-flecha { font-size: 12px; color: rgba(255, 255, 255, .5); transition: transform .35s; }
+        .eco-herr.abierta .eco-flecha { transform: rotate(180deg); }
+
+        /* Cuerpo plegable: 0fr → 1fr anima la altura sin medirla. */
+        .eco-herr-cuerpo {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows .45s cubic-bezier(.2, .7, .2, 1);
+        }
+        .eco-herr.abierta .eco-herr-cuerpo { grid-template-rows: 1fr; }
+        .eco-herr-cuerpo > div { overflow: hidden; padding: 0 16px; }
+        .eco-herr-cuerpo > div > :first-child { margin-top: 0; }
+        .eco-herr-cuerpo > div > :last-child { margin-bottom: 16px; }
+        .eco-herr-cuerpo p { font-size: 13.5px; line-height: 1.6; color: rgba(255, 255, 255, .72); margin: 0 0 12px; }
+        .eco-salidas {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0 0 14px;
+            padding: 0;
+        }
+        .eco-salidas li {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 9px;
+            border-radius: var(--radio);
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-left: 2px solid var(--tono, rgba(255, 255, 255, .4));
+            color: rgba(255, 255, 255, .88);
+        }
+        .eco-salidas i { margin-right: 4px; opacity: .75; }
+        .eco-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+        .eco-enlace { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .7); text-decoration: none; }
+        .eco-enlace:hover { color: #FFFFFF; }
+        .eco-enlace i { font-size: .85em; margin-left: 4px; transition: transform .25s; }
+        .eco-enlace:hover i { transform: translateX(3px); }
+
+        /* ── Transversal ────────────────────────────────────────── */
+        .eco-transversal {
+            list-style: none;
+            margin: 56px 0 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .eco-transversal li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, .7);
+        }
+        .eco-transversal li:hover { transform: translateY(-3px); border-color: rgba(255, 255, 255, .26); }
+        .eco-transversal i { font-size: 16px; color: #FF6B6F; flex: none; width: 1.2em; text-align: center; }
+        .eco-transversal strong { display: block; color: #FFFFFF; font-size: 13px; }
+        .eco .hoja-ruta { color: rgba(255, 255, 255, .65); margin-top: 36px; }
+        .eco .hoja-ruta strong { color: #FFFFFF; }
+
+        /* ── Tableta y movil: una columna, el cable se vuelve vertical ── */
+        @media (max-width: 960px) {
+            .eco { padding: 72px 0 64px; }
+            .eco-esquema { grid-template-columns: minmax(0, 1fr); gap: 56px; }
+            .eco-cables { display: none; }
+            .eco-lista-fuentes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .eco-rotulo, .eco-nota { text-align: center; }
+            .eco-nucleo { width: 190px; }
+            /* Tramo vertical animado entre bloques. */
+            .eco-col:not(:last-of-type)::after {
+                content: "";
+                position: absolute;
+                left: 50%;
+                bottom: -50px;
+                width: 2px;
+                height: 44px;
+                margin-left: -1px;
+                background: linear-gradient(rgba(227, 30, 36, 0), var(--rojo-caech)) 0 0 / 100% 200%;
+                animation: eco-baja 1.6s linear infinite;
+            }
+            .eco-transversal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @keyframes eco-baja { from { background-position: 0 100%; } to { background-position: 0 -100%; } }
+        @media (max-width: 560px) {
+            .eco-lista-fuentes { grid-template-columns: minmax(0, 1fr); }
+            .eco-transversal { grid-template-columns: minmax(0, 1fr); }
+            .eco-fuente { padding: 8px 12px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .eco-mancha, .eco-orbita, .eco-pulso, .eco-cable-flujo,
+            .eco-col::after { animation: none !important; }
+            .eco-pulso { display: none; }
+            .eco .vidrio, .eco-cable-base, .eco-herr-cuerpo, .eco-mancha, .eco .eco-nucleo-cara { transition: none; }
+            .eco-fuente, .eco-herr { visibility: visible !important; animation: none !important; }
+        }
+        .eco.fuera *, .eco.fuera *::before, .eco.fuera *::after { animation-play-state: paused; }
     </style>
     <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
          Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
@@ -2732,66 +3082,140 @@
     <!-- ══════════════════════════════════════════════════════
          HERRAMIENTAS · lo que ofrece la plataforma
     ══════════════════════════════════════════════════════ -->
-    <section class="section section-blanca" id="herramientas">
+    <section class="section section-dark eco" id="herramientas">
+        <!-- Fondo del vidrio: sin algo detras que difuminar, el blur no se ve.
+             Tres manchas con los colores de la identidad y una reticula de plano. -->
+        <div class="eco-fondo" aria-hidden="true">
+            <span class="eco-mancha eco-m1"></span>
+            <span class="eco-mancha eco-m2"></span>
+            <span class="eco-mancha eco-m3"></span>
+        </div>
         <div class="container">
             <div class="section-title">
                 <span class="eyebrow">Lo que ofrece la plataforma</span>
-                <h2>Tres herramientas, un mismo territorio</h2>
-                <p>Todas parten de la misma base de datos institucionales y miden en UTM 17S: el catastro que muestra el GeoVisor es el mismo con el que la planimetría reconoce a los colindantes.</p>
+                <h2>Un territorio, una base, tres herramientas</h2>
+                <p>Ocho fuentes institucionales se unifican en una sola base medida en UTM 17S, y de ella parten el GeoVisor, la planimetría y la investigación. Pase el cursor o toque cualquier pieza del esquema para seguir sus datos.</p>
             </div>
-            <div class="herramientas-grid">
-                <article class="herramienta">
-                    <div class="herramienta-cabeza">
-                        <div class="feature-icon"><i class="fas fa-map-location-dot"></i></div>
-                        <span class="herramienta-acceso libre"><i class="fas fa-lock-open"></i> Mapa libre</span>
-                    </div>
-                    <h3>GeoVisor y reporte DICAT</h3>
-                    <p>El mapa de Riobamba con todas las capas institucionales. Se elige un predio y sale el DICAT: su diagnóstico catastral y territorial en PDF.</p>
-                    <ul class="feature-list">
-                        <li>Cada capa declara la institución que la publica</li>
-                        <li>Colindantes, afectación vial, servicios y PUGS del predio</li>
-                        <li>Plano georreferenciado, CSV y DXF para CAD</li>
+
+            <div class="eco-esquema" id="eco-esquema">
+                <svg class="eco-cables" id="eco-cables" aria-hidden="true" focusable="false"></svg>
+
+                <!-- 01 · Fuentes -->
+                <div class="eco-col eco-fuentes">
+                    <span class="eco-rotulo"><b>01</b> Fuentes institucionales</span>
+                    <ul class="eco-lista-fuentes">
+                        <li><a class="eco-fuente vidrio" data-fuente="catastro" href="geovisor.html?capa=6"><i class="fas fa-city"></i><span><strong>Catastro</strong><small>GADMR</small></span></a></li>
+                        <li><a class="eco-fuente vidrio" data-fuente="electrica" href="geovisor.html?capa=3"><i class="fas fa-bolt"></i><span><strong>Red eléctrica</strong><small>EERSA</small></span></a></li>
+                        <li><a class="eco-fuente vidrio" data-fuente="vialidad" href="geovisor.html?capa=7"><i class="fas fa-road"></i><span><strong>Vialidad provincial</strong><small>GADPCH</small></span></a></li>
+                        <li><a class="eco-fuente vidrio" data-fuente="pugs" href="geovisor.html?capa=1,2"><i class="fas fa-layer-group"></i><span><strong>PUGS</strong><small>GADMR</small></span></a></li>
+                        <li><a class="eco-fuente vidrio" data-fuente="ia" href="geovisor.html?capa=9,10"><i class="fas fa-robot"></i><span><strong>Construcciones IA</strong><small>Open Buildings</small></span></a></li>
+                        <li><a class="eco-fuente vidrio" data-fuente="agua" href="geovisor.html?capa=4"><i class="fas fa-tint"></i><span><strong>Agua potable</strong><small>EP Riobamba</small></span></a></li>
+                        <li><a class="eco-fuente vidrio" data-fuente="alcantarillado" href="geovisor.html?capa=11"><i class="fas fa-water"></i><span><strong>Alcantarillado</strong><small>EMAPAR</small></span></a></li>
+                        <li><a class="eco-fuente vidrio" data-fuente="telecom" href="geovisor.html?capa=5"><i class="fas fa-wifi"></i><span><strong>Telecomunicaciones</strong><small>CNT EP</small></span></a></li>
                     </ul>
-                    <div class="herramienta-pie">
-                        <a href="geovisor.html" class="btn btn-outline"><i class="fas fa-map-location-dot"></i> Abrir el GeoVisor</a>
-                        <a href="#dicat-interactivo" class="herramienta-enlace">Qué contiene el DICAT <i class="fas fa-arrow-right"></i></a>
+                    <p class="eco-nota">Cada capa declara la institución que la publica.</p>
+                </div>
+
+                <!-- 02 · Base unificada -->
+                <div class="eco-col eco-centro">
+                    <span class="eco-rotulo"><b>02</b> Base unificada</span>
+                    <div class="eco-nucleo" id="eco-nucleo">
+                        <span class="eco-orbita" aria-hidden="true"></span>
+                        <span class="eco-orbita eco-o2" aria-hidden="true"></span>
+                        <span class="eco-pulso" aria-hidden="true"></span>
+                        <div class="eco-nucleo-cara vidrio">
+                            <i class="fas fa-database" aria-hidden="true"></i>
+                            <strong>Base territorial</strong>
+                            <span><b data-contador="72198">0</b> predios</span>
+                            <span class="eco-utm">UTM 17S · plano</span>
+                        </div>
                     </div>
-                </article>
-                <article class="herramienta herramienta-nueva">
-                    <div class="herramienta-cabeza">
-                        <div class="feature-icon"><i class="fas fa-drafting-compass"></i></div>
-                        <span class="herramienta-acceso nuevo"><i class="fas fa-star"></i> Nuevo</span>
-                    </div>
-                    <h3>Planimetría automatizada</h3>
-                    <p>Para predios que no están en el catastro: del levantamiento de la estación total o del GNSS al plano georreferenciado y al informe de linderación.</p>
-                    <ul class="feature-list">
-                        <li>Colindantes leídos del catastro vigente</li>
-                        <li>Contraste con el certificado de gravámenes</li>
-                        <li>DXF R12 en UTM 17S y lámina en PDF A4 o A3</li>
-                    </ul>
-                    <div class="herramienta-pie">
-                        <a href="planimetria.html" class="btn btn-outline"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
-                        <a href="#planimetria" class="herramienta-enlace">Cómo funciona <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                </article>
-                <article class="herramienta">
-                    <div class="herramienta-cabeza">
-                        <div class="feature-icon"><i class="fas fa-microscope"></i></div>
-                        <span class="herramienta-acceso libre"><i class="fas fa-lock-open"></i> Libre, sin cuenta</span>
-                    </div>
-                    <h3>Investigación territorial</h3>
-                    <p>Tres líneas permanentes sobre Riobamba, con su método, sus cifras y sus límites publicados, en estudios interactivos y en diapositivas.</p>
-                    <ul class="feature-list">
-                        <li>Catastro y suelo construido</li>
-                        <li>Equipamiento e infraestructura urbana</li>
-                        <li>Economía y base productiva del cantón</li>
-                    </ul>
-                    <div class="herramienta-pie">
-                        <a href="RESEARCH/index.html" class="btn btn-outline"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
-                        <a href="#investigacion" class="herramienta-enlace">Las tres líneas <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                </article>
+                </div>
+
+                <!-- 03 · Herramientas: acordeon, una abierta a la vez -->
+                <div class="eco-col eco-herramientas">
+                    <span class="eco-rotulo"><b>03</b> Herramientas</span>
+
+                    <article class="eco-herr vidrio abierta" data-herr="geovisor"
+                             data-usa="catastro electrica vialidad pugs ia agua alcantarillado telecom">
+                        <button type="button" class="eco-herr-cabeza" aria-expanded="true" aria-controls="eco-det-geovisor">
+                            <span class="eco-icono"><i class="fas fa-map-location-dot"></i></span>
+                            <span class="eco-herr-titulo">
+                                <strong>GeoVisor y reporte DICAT</strong>
+                                <small>Mapa libre · usa las 8 fuentes</small>
+                            </span>
+                            <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
+                        </button>
+                        <div class="eco-herr-cuerpo" id="eco-det-geovisor">
+                            <div>
+                                <p>El mapa de Riobamba con todas las capas. Se elige un predio y sale el DICAT: su diagnóstico catastral y territorial.</p>
+                                <ul class="eco-salidas">
+                                    <li><i class="fas fa-file-pdf"></i> PDF</li><li><i class="fas fa-table"></i> CSV</li><li><i class="fas fa-compass-drafting"></i> DXF</li><li><i class="fas fa-qrcode"></i> QR y folio</li>
+                                </ul>
+                                <div class="eco-acciones">
+                                    <a href="geovisor.html" class="btn btn-secondary btn-sm"><i class="fas fa-map-location-dot"></i> Abrir el GeoVisor</a>
+                                    <a href="#dicat-interactivo" class="eco-enlace">Qué contiene el DICAT <i class="fas fa-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="eco-herr vidrio" data-herr="planimetria" data-usa="catastro">
+                        <button type="button" class="eco-herr-cabeza" aria-expanded="false" aria-controls="eco-det-planimetria">
+                            <span class="eco-icono"><i class="fas fa-drafting-compass"></i></span>
+                            <span class="eco-herr-titulo">
+                                <strong>Planimetría automatizada</strong>
+                                <small><em class="eco-nuevo">Nuevo</em> · colindantes del catastro</small>
+                            </span>
+                            <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
+                        </button>
+                        <div class="eco-herr-cuerpo" id="eco-det-planimetria">
+                            <div>
+                                <p>Del levantamiento de la estación total o del GNSS al plano georreferenciado y al informe de linderación, contrastado con el certificado de gravámenes.</p>
+                                <ul class="eco-salidas">
+                                    <li><i class="fas fa-file-pdf"></i> Lámina A4 / A3</li><li><i class="fas fa-compass-drafting"></i> DXF R12</li><li><i class="fas fa-file-signature"></i> Linderación</li>
+                                </ul>
+                                <div class="eco-acciones">
+                                    <a href="planimetria.html" class="btn btn-secondary btn-sm"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
+                                    <a href="#planimetria" class="eco-enlace">Cómo funciona <i class="fas fa-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="eco-herr vidrio" data-herr="investigacion" data-usa="catastro pugs ia">
+                        <button type="button" class="eco-herr-cabeza" aria-expanded="false" aria-controls="eco-det-investigacion">
+                            <span class="eco-icono"><i class="fas fa-microscope"></i></span>
+                            <span class="eco-herr-titulo">
+                                <strong>Investigación territorial</strong>
+                                <small>Libre, sin cuenta · tres líneas</small>
+                            </span>
+                            <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
+                        </button>
+                        <div class="eco-herr-cuerpo" id="eco-det-investigacion">
+                            <div>
+                                <p>Tres líneas permanentes sobre Riobamba, con su método, sus cifras y sus límites publicados.</p>
+                                <ul class="eco-salidas">
+                                    <li style="--tono: var(--linea-1)"><i class="fas fa-house-circle-exclamation"></i> Catastro y suelo</li><li style="--tono: var(--linea-2)"><i class="fas fa-tree"></i> Equipamiento</li><li style="--tono: var(--linea-3)"><i class="fas fa-chart-line"></i> Economía</li>
+                                </ul>
+                                <div class="eco-acciones">
+                                    <a href="RESEARCH/index.html" class="btn btn-secondary btn-sm"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
+                                    <a href="#investigacion" class="eco-enlace">Las tres líneas <i class="fas fa-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
             </div>
+
+            <!-- Lo que atraviesa a las tres -->
+            <ul class="eco-transversal">
+                <li class="vidrio"><i class="fas fa-lock-open"></i><span><strong>Mapa público</strong> se consulta sin cuenta</span></li>
+                <li class="vidrio"><i class="fas fa-user-check"></i><span><strong>Con cuenta</strong> se descargan PDF, CSV y DXF</span></li>
+                <li class="vidrio"><i class="fas fa-qrcode"></i><span><strong>Folio verificable</strong> con QR en cada reporte</span></li>
+                <li class="vidrio"><i class="fas fa-building-columns"></i><span><strong>Versión firmada</strong> en la sede del CAE-CH</span></li>
+            </ul>
+
             <div class="hoja-ruta">
                 <span class="badge-prox">En hoja de ruta</span>
                 <p><strong>Integración BIM.</strong> Modelos de información constructiva enlazados al GeoVisor, para seguir el edificio a lo largo de su ciclo de vida.</p>
@@ -3828,6 +4252,194 @@
                 pendiente = false;
             });
         }, { passive: true });
+    })();
+    </script>
+    <!-- ══════════════════════════════════════════════════════
+         Esquema de la plataforma (#herramientas): cables, resaltado y acordeón
+    ══════════════════════════════════════════════════════ -->
+    <script>
+    (function () {
+        const seccion = document.getElementById('herramientas');
+        const esquema = document.getElementById('eco-esquema');
+        const svg = document.getElementById('eco-cables');
+        const nucleo = document.getElementById('eco-nucleo');
+        if (!seccion || !esquema || !svg || !nucleo) return;
+
+        const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const NS = 'http://www.w3.org/2000/svg';
+        const fuentes = Array.from(esquema.querySelectorAll('.eco-fuente'));
+        const herrs = Array.from(esquema.querySelectorAll('.eco-herr'));
+        const usa = h => h.dataset.usa.split(' ');
+        fuentes.forEach((f, i) => f.style.setProperty('--i', i));
+        herrs.forEach((h, i) => h.style.setProperty('--i', i));
+        seccion.classList.add('eco-anima');
+
+        // ── Cables: una base que se dibuja (pathLength 1), un flujo
+        //    discontinuo para el resaltado y una partícula que viaja.
+        const cables = [];
+        function crearCable(tipo, clave, el, n) {
+            const g = document.createElementNS(NS, 'g');
+            g.setAttribute('class', 'eco-cable');
+            const base = document.createElementNS(NS, 'path');
+            base.setAttribute('class', 'eco-cable-base');
+            base.setAttribute('pathLength', '1');
+            base.id = 'eco-cable-' + tipo + '-' + clave;
+            const flujo = document.createElementNS(NS, 'path');
+            flujo.setAttribute('class', 'eco-cable-flujo');
+            flujo.setAttribute('pathLength', '100');
+            g.append(base, flujo);
+            if (!reducido) {
+                const p = document.createElementNS(NS, 'circle');
+                p.setAttribute('r', '2.4');
+                p.setAttribute('class', 'eco-particula');
+                const mov = document.createElementNS(NS, 'animateMotion');
+                const dur = tipo === 'fuente' ? 3.2 : 2.6;
+                mov.setAttribute('dur', dur + 's');
+                // Inicio negativo: ya va en marcha, nunca asoma en el origen.
+                mov.setAttribute('begin', '-' + ((n * 0.41) % dur).toFixed(2) + 's');
+                mov.setAttribute('repeatCount', 'indefinite');
+                const mp = document.createElementNS(NS, 'mpath');
+                mp.setAttribute('href', '#' + base.id);
+                mov.appendChild(mp);
+                p.appendChild(mov);
+                g.appendChild(p);
+            }
+            svg.appendChild(g);
+            cables.push({ g, base, flujo, tipo, clave, el });
+        }
+        fuentes.forEach((f, i) => crearCable('fuente', f.dataset.fuente, f, i));
+        herrs.forEach((h, i) => crearCable('herr', h.dataset.herr, h.querySelector('.eco-herr-cabeza'), i + fuentes.length));
+
+        // Curvas medidas en px del propio esquema. Entran y salen del
+        // núcleo en dirección radial, como radios de una rueda.
+        function trazar() {
+            if (getComputedStyle(svg).display === 'none') return;
+            const r0 = esquema.getBoundingClientRect();
+            svg.setAttribute('viewBox', '0 0 ' + r0.width + ' ' + r0.height);
+            const rn = nucleo.getBoundingClientRect();
+            const cx = rn.left + rn.width / 2 - r0.left;
+            const cy = rn.top + rn.height / 2 - r0.top;
+            const rad = rn.width / 2;
+            const f = n => n.toFixed(1);
+            cables.forEach(function (c) {
+                const r = c.el.getBoundingClientRect();
+                const x = (c.tipo === 'fuente' ? r.right : r.left) - r0.left;
+                const y = r.top + r.height / 2 - r0.top;
+                const ang = Math.atan2(y - cy, x - cx);
+                const bx = cx + Math.cos(ang) * rad, by = cy + Math.sin(ang) * rad;
+                const k = Math.abs(x - bx) * 0.5;
+                const rx = cx + Math.cos(ang) * (rad + k), ry = cy + Math.sin(ang) * (rad + k);
+                const d = c.tipo === 'fuente'
+                    ? 'M' + f(x) + ' ' + f(y) + 'C' + f(x + k) + ' ' + f(y) + ' ' + f(rx) + ' ' + f(ry) + ' ' + f(bx) + ' ' + f(by)
+                    : 'M' + f(bx) + ' ' + f(by) + 'C' + f(rx) + ' ' + f(ry) + ' ' + f(x - k) + ' ' + f(y) + ' ' + f(x) + ' ' + f(y);
+                c.base.setAttribute('d', d);
+                c.flujo.setAttribute('d', d);
+            });
+        }
+        let pendiente = false;
+        const programar = () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; trazar(); });
+        };
+        // El acordeón cambia alturas fotograma a fotograma: se observa
+        // cada tarjeta, no solo el esquema.
+        const ro = new ResizeObserver(programar);
+        ro.observe(esquema);
+        herrs.forEach(h => ro.observe(h));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(programar);
+        trazar();
+
+        // ── Resaltado: una herramienta enciende sus fuentes, y una
+        //    fuente enciende las herramientas que la usan.
+        let abierta = (herrs.find(h => h.classList.contains('abierta')) || {}).dataset;
+        abierta = abierta ? abierta.herr : null;
+        function resaltar(tipo, clave) {
+            const fu = new Set(), he = new Set();
+            if (tipo === 'herr') {
+                he.add(clave);
+                usa(herrs.find(h => h.dataset.herr === clave)).forEach(x => fu.add(x));
+            } else if (tipo === 'fuente') {
+                fu.add(clave);
+                herrs.forEach(h => { if (usa(h).includes(clave)) he.add(h.dataset.herr); });
+            }
+            esquema.classList.toggle('resaltando', !!tipo);
+            fuentes.forEach(function (el) {
+                const on = fu.has(el.dataset.fuente);
+                el.classList.toggle('activa', !!tipo && on);
+                el.classList.toggle('atenuada', !!tipo && !on);
+            });
+            herrs.forEach(function (el) {
+                const on = he.has(el.dataset.herr);
+                el.classList.toggle('activa', !!tipo && on);
+                el.classList.toggle('atenuada', !!tipo && !on);
+            });
+            cables.forEach(function (c) {
+                const on = c.tipo === 'fuente' ? fu.has(c.clave) : he.has(c.clave);
+                c.g.classList.toggle('activo', tipo ? on : (c.tipo === 'herr' && c.clave === abierta));
+                c.g.classList.toggle('atenuado', !!tipo && !on);
+            });
+        }
+        const soltar = () => resaltar(null);
+        fuentes.forEach(function (el) {
+            const ir = () => resaltar('fuente', el.dataset.fuente);
+            el.addEventListener('pointerenter', ir);
+            el.addEventListener('focus', ir);
+            el.addEventListener('pointerleave', soltar);
+            el.addEventListener('blur', soltar);
+        });
+        herrs.forEach(function (el) {
+            const ir = () => resaltar('herr', el.dataset.herr);
+            el.addEventListener('pointerenter', ir);
+            el.addEventListener('focusin', ir);
+            el.addEventListener('pointerleave', soltar);
+            el.addEventListener('focusout', function (e) { if (!el.contains(e.relatedTarget)) soltar(); });
+
+            // Acordeón: una abierta a la vez.
+            el.querySelector('.eco-herr-cabeza').addEventListener('click', function () {
+                const abrir = !el.classList.contains('abierta');
+                herrs.forEach(function (h) {
+                    const si = abrir && h === el;
+                    h.classList.toggle('abierta', si);
+                    h.querySelector('.eco-herr-cabeza').setAttribute('aria-expanded', si);
+                });
+                abierta = abrir ? el.dataset.herr : null;
+                resaltar('herr', el.dataset.herr);
+            });
+        });
+        resaltar(null);
+
+        // ── Brillo bajo el puntero y paralaje del fondo ─────────
+        if (!reducido) {
+            let ev = null;
+            seccion.addEventListener('pointermove', function (e) {
+                if (ev === null) requestAnimationFrame(function () {
+                    const v = ev.target.closest && ev.target.closest('.vidrio');
+                    if (v) {
+                        const r = v.getBoundingClientRect();
+                        v.style.setProperty('--mx', (ev.clientX - r.left) + 'px');
+                        v.style.setProperty('--my', (ev.clientY - r.top) + 'px');
+                    }
+                    const rs = seccion.getBoundingClientRect();
+                    seccion.style.setProperty('--px', ((ev.clientX - rs.left) / rs.width - 0.5).toFixed(3));
+                    seccion.style.setProperty('--py', ((ev.clientY - rs.top) / rs.height - 0.5).toFixed(3));
+                    ev = null;
+                });
+                ev = e;
+            });
+        }
+
+        // ── Entrada al verla y pausa cuando sale de pantalla ─────
+        new IntersectionObserver(function (entradas) {
+            entradas.forEach(function (e) {
+                if (e.isIntersecting && !seccion.classList.contains('dibujado')) {
+                    trazar();
+                    seccion.classList.add('dibujado');
+                }
+                seccion.classList.toggle('fuera', !e.isIntersecting);
+                if (svg.pauseAnimations) e.isIntersecting ? svg.unpauseAnimations() : svg.pauseAnimations();
+            });
+        }, { threshold: 0.15 }).observe(seccion);
     })();
     </script>
 </body>
