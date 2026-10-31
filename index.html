@@ -1775,39 +1775,7 @@
             .hero .stat-item { flex: 0 0 auto; }
         }
 
-        /* Las diapositivas ocupan el hero, sobre el fondo oscuro y encima
-           del perfil urbano. */
-        .hero .servicios-carrusel { text-align: left; max-width: 1120px; margin: 0 auto; }
-        .hero .servicio { box-shadow: 0 24px 60px rgba(0, 0, 0, .35); border-color: rgba(255, 255, 255, .08); }
-        .hero .servicios-flecha, .hero .servicios-pausa {
-            background: transparent;
-            border-color: rgba(255, 255, 255, .3);
-            color: #fff;
-        }
-        .hero .servicios-puntos button { color: rgba(255, 255, 255, .5); }
-        .hero .servicios-puntos button[aria-current="true"] { color: #fff; }
-        .hero .servicios-puntos button span { background: rgba(255, 255, 255, .2); }
         .hero .stats { margin-top: 44px; }
-        /* Índice grande y tenue, como marca de agua en la esquina de la
-           columna de texto: en el dibujo tapaba el marcador del mapa. */
-        .servicio-texto { position: relative; }
-        .servicio-texto > * { position: relative; }
-        .servicio-texto > .servicio-indice {
-            position: absolute;
-            top: 22px; right: 26px;
-            font-size: 64px;
-            font-weight: 700;
-            letter-spacing: -.04em;
-            line-height: 1;
-            color: rgba(46, 50, 56, .07);
-            font-variant-numeric: tabular-nums;
-            pointer-events: none;
-        }
-        .servicio-indice small { font-size: 18px; letter-spacing: 0; color: rgba(46, 50, 56, .16); }
-        @media (max-width: 900px) {
-            .servicio-texto > .servicio-indice { top: 16px; right: 18px; font-size: 44px; }
-            .servicio-indice small { font-size: 14px; }
-        }
         .hero-bienvenida .destacado { white-space: nowrap; }
 
         .stat-icono {
@@ -1860,170 +1828,9 @@
         .hero .hero-bienvenida h1 { font-size: clamp(2rem, 4.6vw, 3.4rem); }
         .hero-bienvenida .hero-filete { margin: 20px auto 14px; }
         .hero .hero-bienvenida h2 { margin-bottom: 0; }
-        .servicios-carrusel { position: relative; }
-        /* Las tres diapositivas ocupan la misma celda: el carrusel mide lo
-           que la más alta y no salta de altura al cambiar. */
-        .servicios-pista { display: grid; }
-        .servicio {
-            grid-area: 1 / 1;
-            display: grid;
-            grid-template-columns: 1.08fr 1fr;
-            background: var(--blanco, #FFFFFF);
-            border: 1px solid var(--borde);
-            border-radius: var(--radio);
-            box-shadow: var(--sombra-2);
-            overflow: hidden;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(24px);
-            transition: opacity .6s ease, transform .6s cubic-bezier(.4, 0, .2, 1), visibility 0s linear .6s;
-        }
-        .servicio.activa {
-            opacity: 1;
-            visibility: visible;
-            transform: none;
-            transition: opacity .6s ease, transform .6s cubic-bezier(.4, 0, .2, 1), visibility 0s;
-        }
-        .servicio.saliendo { transform: translateX(-24px); }
-        .servicio-texto {
-            padding: 46px 48px 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            border-top: 3px solid var(--rojo-caech);
-        }
-        .servicio-num {
-            font-size: 10.5px;
-            font-weight: 600;
-            letter-spacing: var(--tracking-caps);
-            text-transform: uppercase;
-            color: var(--rojo-caech);
-            margin-bottom: 14px;
-        }
-        .servicio h3 {
-            font-size: clamp(1.45rem, 2.6vw, 2rem);
-            font-weight: 700;
-            letter-spacing: -.02em;
-            line-height: 1.15;
-            margin-bottom: 14px;
-            color: var(--grafito);
-        }
-        .servicio-texto > p { color: var(--grafito-med); font-size: 16px; line-height: 1.65; margin: 0 0 18px; }
-        .servicio-claves { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px; padding: 0; }
-        .servicio-claves li {
-            font-size: 11.5px;
-            font-weight: 600;
-            padding: 6px 11px;
-            border: 1px solid var(--borde-marcado);
-            border-radius: var(--radio);
-            color: var(--grafito);
-            background: var(--hueso, #F7F7F8);
-        }
-        .servicio-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
-        .servicio-acciones .herramienta-enlace { align-self: center; }
-        .servicio-figura {
-            position: relative;
-            background: linear-gradient(160deg, #24272C 0%, #2E3238 70%, #3A2A2D 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 28px;
-            min-height: 300px;
-        }
-        .servicio-figura::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px);
-            background-size: 32px 32px;
-        }
-        .servicio-figura svg { position: relative; width: 100%; max-width: 420px; height: auto; display: block; }
-        .servicio-figura .etiqueta {
-            position: absolute;
-            left: 18px; bottom: 14px;
-            font-size: 10px;
-            letter-spacing: .16em;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, .55);
-        }
-
-        /* Controles: flechas, puntos con barra de avance y pausa. */
-        .servicios-controles {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            margin-top: 24px;
-        }
-        .servicios-flecha, .servicios-pausa {
-            width: 40px; height: 40px;
-            display: inline-flex; align-items: center; justify-content: center;
-            border: 1px solid var(--borde-marcado);
-            border-radius: 50%;
-            background: var(--blanco, #FFFFFF);
-            color: var(--grafito);
-            cursor: pointer;
-            font-size: 13px;
-            transition: background-color .2s, color .2s, border-color .2s;
-        }
-        .servicios-flecha:hover, .servicios-pausa:hover { background: var(--rojo-caech); border-color: var(--rojo-caech); color: #fff; }
-        .servicios-flecha:focus-visible, .servicios-pausa:focus-visible,
-        .servicios-puntos button:focus-visible { outline: 2px solid var(--rojo-caech); outline-offset: 3px; }
-        .servicios-puntos { display: flex; gap: 8px; }
-        .servicios-puntos button {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 4px;
-            background: none;
-            border: 0;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--grafito-sua);
-        }
-        .servicios-puntos button[aria-current="true"] { color: var(--grafito); }
-        /* La barra se llena mientras la diapositiva está a la vista. */
-        .servicios-puntos button span {
-            position: relative;
-            display: block;
-            width: 44px; height: 3px;
-            border-radius: 2px;
-            background: var(--borde-marcado);
-            overflow: hidden;
-        }
-        .servicios-puntos button span::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--rojo-caech);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform .1s linear;
-        }
-        .servicios-puntos button[aria-current="true"] span::after { transform: scaleX(var(--avance, 0)); }
-
-        @media (max-width: 900px) {
-            .servicio { grid-template-columns: 1fr; }
-            .servicio-figura { order: -1; min-height: 0; padding: 22px 22px 34px; }
-            .servicio-figura svg { max-width: 300px; }
-            .servicio-texto { padding: 28px 24px 26px; }
-            .servicio-acciones { width: 100%; flex-direction: column; align-items: stretch; gap: 12px; }
-            .servicio-acciones .btn { width: 100%; white-space: normal; }
-            .servicios-puntos button { font-size: 0; gap: 0; }
-            .servicios-puntos button span { width: 34px; }
-        }
-
         @media (prefers-reduced-motion: reduce) {
             .hero-eyebrow .punto { animation: none; }
             .hero-ciudad .ventanas rect { animation: none !important; }
-            .servicio { transition: none !important; }
             .about-card, .feature-card, .integration-item,
             .dicat-panel-cuerpo, .btn, .feature-icon,
             .about-icon, .integration-icon { transition: none; }
@@ -2037,16 +1844,6 @@
         .section-blanca { background-color: var(--blanco, #FFFFFF); }
         a.logo { display: flex; }
 
-        /* ── Enlaces de texto bajo los botones ────────────────── */
-        .herramienta-enlace {
-            align-self: center;
-            font-size: 13.5px;
-            font-weight: 600;
-            color: var(--grafito-med);
-            text-decoration: none;
-        }
-        .herramienta-enlace:hover { color: var(--rojo-caech); }
-        .herramienta-enlace i { font-size: .85em; margin-left: 4px; }
         .hoja-ruta {
             display: flex;
             align-items: center;
@@ -2375,28 +2172,30 @@
            el vidrio de forma expresa; el resto de la portada sigue con
            el vidrio solo en "Solicitar DICAT".
         ══════════════════════════════════════════════════════════ */
+        /* Vive dentro del hero, en el hueco que dejaron las diapositivas:
+           el fondo oscuro y el recorte los pone el hero. */
         .eco {
             position: relative;
-            overflow: hidden;
             isolation: isolate;
-            background: var(--grafito-hondo);
-            padding: 96px 0 84px;
+            text-align: left;
+            scroll-margin-top: 90px;
         }
-        .eco .section-title p { max-width: 680px; }
+        .eco-intro {
+            max-width: 680px;
+            margin: 0 auto 44px;
+            text-align: center;
+            font-size: 15.5px;
+            line-height: 1.65;
+            color: rgba(255, 255, 255, .72);
+        }
 
-        /* Fondo: reticula de plano que se desvanece y tres manchas lentas.
+        /* Fondo: tres manchas lentas (la reticula ya la pone el hero).
            --px/--py las mueve el puntero (paralaje suave). */
         .eco-fondo {
             position: absolute;
             inset: 0;
             z-index: -1;
             pointer-events: none;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px);
-            background-size: 44px 44px;
-            -webkit-mask-image: radial-gradient(75% 70% at 50% 50%, #000 30%, transparent 100%);
-                    mask-image: radial-gradient(75% 70% at 50% 50%, #000 30%, transparent 100%);
         }
         .eco-mancha {
             position: absolute;
@@ -2729,7 +2528,6 @@
 
         /* ── Tableta y movil: una columna, el cable se vuelve vertical ── */
         @media (max-width: 960px) {
-            .eco { padding: 72px 0 64px; }
             .eco-esquema { grid-template-columns: minmax(0, 1fr); gap: 56px; }
             .eco-cables { display: none; }
             .eco-lista-fuentes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2804,165 +2602,146 @@
     <!-- Hero Section -->
     <section class="hero" id="inicio">
         <div class="container">
-            <!-- Bienvenida: breve, para que las diapositivas queden a la vista
-                 sin desplazarse. -->
+            <!-- Bienvenida: breve, para que el esquema de la plataforma quede
+                 a la vista sin desplazarse. -->
             <div class="hero-bienvenida">
                 <span class="hero-eyebrow"><span class="punto"></span> Catastro actualizado a noviembre 2026</span>
                 <h1>Le damos la bienvenida a la plataforma territorial <span class="destacado">del CAE-Ch</span></h1>
                 <hr class="filete-rojo hero-filete">
                 <h2>Colegio de Arquitectos del Ecuador<br>Provincial de <strong>Chimborazo</strong></h2>
             </div>
-            <div class="servicios-carrusel" id="servicios-carrusel" role="region" aria-roledescription="carrusel" aria-label="Servicios de la plataforma">
-                <div class="servicios-pista" aria-live="off">
+            <div class="eco" id="herramientas">
+                <!-- Fondo del vidrio: sin algo detras que difuminar, el blur no se ve.
+                     Tres manchas con los colores de la identidad y una reticula de plano. -->
+                <div class="eco-fondo" aria-hidden="true">
+                    <span class="eco-mancha eco-m1"></span>
+                    <span class="eco-mancha eco-m2"></span>
+                    <span class="eco-mancha eco-m3"></span>
+                </div>
+                <p class="eco-intro">Ocho fuentes institucionales se unifican en una sola base medida en UTM 17S, y de ella parten el GeoVisor, la planimetría y la investigación. Pase el cursor o toque cualquier pieza del esquema para seguir sus datos.</p>
 
-                    <article class="servicio activa" role="group" aria-roledescription="diapositiva" aria-label="1 de 3: GeoVisor y reporte DICAT">
-                        <div class="servicio-texto">
-                            <span class="servicio-indice" aria-hidden="true">01<small> / 03</small></span>
-                            <span class="servicio-num">Servicio 1 · Mapa libre</span>
-                            <h3>Todo lo que se sabe de un predio, en un solo reporte</h3>
-                            <p>Elija un predio en el GeoVisor y obtenga el DICAT: su diagnóstico catastral y territorial, con el plano georreferenciado y las cifras medidas en UTM 17S.</p>
-                            <ul class="servicio-claves">
-                                <li>Colindantes</li><li>Afectación vial</li><li>Servicios básicos</li><li>Norma del PUGS</li>
-                            </ul>
-                            <div class="servicio-acciones">
-                                <a href="geovisor.html" class="btn"><i class="fas fa-map-location-dot"></i> Abrir el GeoVisor</a>
-                                <a href="#dicat-interactivo" class="herramienta-enlace">Qué contiene el DICAT <i class="fas fa-arrow-right"></i></a>
+                <div class="eco-esquema" id="eco-esquema">
+                    <svg class="eco-cables" id="eco-cables" aria-hidden="true" focusable="false"></svg>
+
+                    <!-- 01 · Fuentes -->
+                    <div class="eco-col eco-fuentes">
+                        <span class="eco-rotulo"><b>01</b> Fuentes institucionales</span>
+                        <ul class="eco-lista-fuentes">
+                            <li><a class="eco-fuente vidrio" data-fuente="catastro" href="geovisor.html?capa=6"><i class="fas fa-city"></i><span><strong>Catastro</strong><small>GADMR</small></span></a></li>
+                            <li><a class="eco-fuente vidrio" data-fuente="electrica" href="geovisor.html?capa=3"><i class="fas fa-bolt"></i><span><strong>Red eléctrica</strong><small>EERSA</small></span></a></li>
+                            <li><a class="eco-fuente vidrio" data-fuente="vialidad" href="geovisor.html?capa=7"><i class="fas fa-road"></i><span><strong>Vialidad provincial</strong><small>GADPCH</small></span></a></li>
+                            <li><a class="eco-fuente vidrio" data-fuente="pugs" href="geovisor.html?capa=1,2"><i class="fas fa-layer-group"></i><span><strong>PUGS</strong><small>GADMR</small></span></a></li>
+                            <li><a class="eco-fuente vidrio" data-fuente="ia" href="geovisor.html?capa=9,10"><i class="fas fa-robot"></i><span><strong>Construcciones IA</strong><small>Open Buildings</small></span></a></li>
+                            <li><a class="eco-fuente vidrio" data-fuente="agua" href="geovisor.html?capa=4"><i class="fas fa-tint"></i><span><strong>Agua potable</strong><small>EP Riobamba</small></span></a></li>
+                            <li><a class="eco-fuente vidrio" data-fuente="alcantarillado" href="geovisor.html?capa=11"><i class="fas fa-water"></i><span><strong>Alcantarillado</strong><small>EMAPAR</small></span></a></li>
+                            <li><a class="eco-fuente vidrio" data-fuente="telecom" href="geovisor.html?capa=5"><i class="fas fa-wifi"></i><span><strong>Telecomunicaciones</strong><small>CNT EP</small></span></a></li>
+                        </ul>
+                        <p class="eco-nota">Cada capa declara la institución que la publica.</p>
+                    </div>
+
+                    <!-- 02 · Base unificada -->
+                    <div class="eco-col eco-centro">
+                        <span class="eco-rotulo"><b>02</b> Base unificada</span>
+                        <div class="eco-nucleo" id="eco-nucleo">
+                            <span class="eco-orbita" aria-hidden="true"></span>
+                            <span class="eco-orbita eco-o2" aria-hidden="true"></span>
+                            <span class="eco-pulso" aria-hidden="true"></span>
+                            <div class="eco-nucleo-cara vidrio">
+                                <i class="fas fa-database" aria-hidden="true"></i>
+                                <strong>Base territorial</strong>
+                                <span><b data-contador="72198">0</b> predios</span>
+                                <span class="eco-utm">UTM 17S · plano</span>
                             </div>
                         </div>
-                        <div class="servicio-figura" aria-hidden="true">
-                            <svg viewBox="0 0 400 260" fill="none">
-                                <!-- Manzanas y predios -->
-                                <g stroke="#FFFFFF" stroke-opacity=".28" stroke-width="1.2">
-                                    <path d="M30 30h140v90H30zM30 75h140M77 30v90M123 30v90"/>
-                                    <path d="M210 30h160v90H210zM210 75h160M263 30v90M317 30v45M290 75v45"/>
-                                    <path d="M30 150h140v80H30zM100 150v80M30 190h70"/>
-                                    <path d="M210 150h160v80H210zM250 150v80M300 150v80M340 150v80"/>
-                                </g>
-                                <!-- Vías -->
-                                <path d="M0 135h400M190 0v260" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="18"/>
-                                <path d="M0 135h400M190 0v260" stroke="#FFFFFF" stroke-opacity=".35" stroke-dasharray="8 8"/>
-                                <!-- Predio elegido y su afectación -->
-                                <path d="M263 75h54v45h-27v-45" fill="#E31E24" fill-opacity=".22"/>
-                                <path d="M263 75h54v45h-54z" fill="#E31E24" fill-opacity=".35" stroke="#E31E24" stroke-width="2.4"/>
-                                <path d="M263 113h54v7h-54z" fill="#FFFFFF" fill-opacity=".35"/>
-                                <!-- Marcador -->
-                                <path d="M290 34c-11 0-19 8-19 18 0 14 19 30 19 30s19-16 19-30c0-10-8-18-19-18z" fill="#E31E24"/>
-                                <circle cx="290" cy="52" r="6" fill="#FFFFFF"/>
-                                <!-- Hoja del DICAT -->
-                                <g transform="translate(40 158)">
-                                    <rect width="104" height="136" rx="3" fill="#FFFFFF" transform="rotate(-6)"/>
-                                    <g transform="rotate(-6)">
-                                        <rect x="10" y="10" width="44" height="6" fill="#E31E24"/>
-                                        <rect x="10" y="24" width="84" height="34" fill="#2E3238" fill-opacity=".14"/>
-                                        <path d="M30 50l14-16 12 10 16-14" stroke="#E31E24" stroke-width="2"/>
-                                        <rect x="10" y="66" width="70" height="4" fill="#2E3238" fill-opacity=".35"/>
-                                        <rect x="10" y="76" width="80" height="4" fill="#2E3238" fill-opacity=".2"/>
-                                        <rect x="10" y="86" width="60" height="4" fill="#2E3238" fill-opacity=".2"/>
-                                    </g>
-                                </g>
-                            </svg>
-                            <span class="etiqueta">GeoVisor · DICAT en PDF, CSV y DXF</span>
-                        </div>
-                    </article>
+                    </div>
 
-                    <article class="servicio" role="group" aria-roledescription="diapositiva" aria-label="2 de 3: Planimetría automatizada" aria-hidden="true">
-                        <div class="servicio-texto">
-                            <span class="servicio-indice" aria-hidden="true">02<small> / 03</small></span>
-                            <span class="servicio-num">Servicio 2 · Nuevo</span>
-                            <h3>Del levantamiento de campo al plano, sin redibujar</h3>
-                            <p>Cargue los puntos de la estación total o del GNSS y reciba la lámina del predio y el informe de linderación, con los colindantes leídos del catastro vigente. Gratuita con cuenta.</p>
-                            <ul class="servicio-claves">
-                                <li>CSV, TXT o DXF</li><li>Certificado de gravámenes</li><li>DXF R12 en UTM 17S</li><li>PDF A4 o A3</li>
-                            </ul>
-                            <div class="servicio-acciones">
-                                <a href="planimetria.html" class="btn"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
-                                <a href="#planimetria" class="herramienta-enlace">Cómo funciona <i class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </div>
-                        <div class="servicio-figura" aria-hidden="true">
-                            <svg viewBox="0 0 400 260" fill="none">
-                                <!-- Colindantes -->
-                                <g stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1.2">
-                                    <path d="M20 40 110 58 92 150 14 160z"/>
-                                    <path d="M110 58 250 36 262 68"/>
-                                    <path d="M300 200 360 210 380 120 318 96"/>
-                                    <path d="M120 222 92 150M120 222 300 200"/>
-                                </g>
-                                <!-- Predio levantado -->
-                                <path d="M110 58 262 68 318 96 300 200 120 222 92 150z" fill="#E31E24" fill-opacity=".18" stroke="#E31E24" stroke-width="2.4"/>
-                                <!-- Cotas -->
-                                <g fill="#FFFFFF" fill-opacity=".8" font-family="Montserrat, sans-serif" font-size="11" font-weight="600">
-                                    <text x="168" y="54">24,31 m</text>
-                                    <text x="318" y="152">16,87 m</text>
-                                    <text x="186" y="232">28,05 m</text>
-                                    <text x="58" y="112">15,40 m</text>
-                                </g>
-                                <!-- Vértices -->
-                                <g fill="#2E3238" stroke="#FFFFFF" stroke-width="2">
-                                    <circle cx="110" cy="58" r="5"/><circle cx="262" cy="68" r="5"/><circle cx="318" cy="96" r="5"/>
-                                    <circle cx="300" cy="200" r="5"/><circle cx="120" cy="222" r="5"/><circle cx="92" cy="150" r="5"/>
-                                </g>
-                                <g fill="#FFFFFF" fill-opacity=".6" font-family="Montserrat, sans-serif" font-size="10">
-                                    <text x="96" y="46">P1</text><text x="262" y="58">P2</text><text x="326" y="92">P3</text>
-                                    <text x="306" y="216">P4</text><text x="104" y="240">P5</text><text x="72" y="152">P6</text>
-                                </g>
-                                <!-- Área y norte -->
-                                <text x="206" y="146" text-anchor="middle" fill="#FFFFFF" font-family="Montserrat, sans-serif" font-size="15" font-weight="700">512,64 m²</text>
-                                <g transform="translate(362 36)" stroke="#FFFFFF" stroke-opacity=".7">
-                                    <circle r="16" stroke-opacity=".3"/>
-                                    <path d="M0 -12 6 8 0 4 -6 8z" fill="#E31E24" stroke="none"/>
-                                </g>
-                            </svg>
-                            <span class="etiqueta">Planimetría · lámina e informe de linderación</span>
-                        </div>
-                    </article>
+                    <!-- 03 · Herramientas: acordeon, una abierta a la vez -->
+                    <div class="eco-col eco-herramientas">
+                        <span class="eco-rotulo"><b>03</b> Herramientas</span>
 
-                    <article class="servicio" role="group" aria-roledescription="diapositiva" aria-label="3 de 3: Investigación territorial" aria-hidden="true">
-                        <div class="servicio-texto">
-                            <span class="servicio-indice" aria-hidden="true">03<small> / 03</small></span>
-                            <span class="servicio-num">Servicio 3 · Libre, sin cuenta</span>
-                            <h3>Riobamba en cifras que se pueden comprobar</h3>
-                            <p>Tres líneas de investigación permanentes, con el método, las fuentes y los límites publicados. Por ejemplo: la ciudad tiene 1,87 m² de área verde por habitante, frente a los 9 m² recomendados.</p>
-                            <ul class="servicio-claves">
-                                <li>Catastro y suelo</li><li>Equipamiento urbano</li><li>Economía del cantón</li>
-                            </ul>
-                            <div class="servicio-acciones">
-                                <a href="RESEARCH/index.html" class="btn"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
-                                <a href="#investigacion" class="herramienta-enlace">Las tres líneas <i class="fas fa-arrow-right"></i></a>
+                        <article class="eco-herr vidrio abierta" data-herr="geovisor"
+                                 data-usa="catastro electrica vialidad pugs ia agua alcantarillado telecom">
+                            <button type="button" class="eco-herr-cabeza" aria-expanded="true" aria-controls="eco-det-geovisor">
+                                <span class="eco-icono"><i class="fas fa-map-location-dot"></i></span>
+                                <span class="eco-herr-titulo">
+                                    <strong>GeoVisor y reporte DICAT</strong>
+                                    <small>Mapa libre · usa las 8 fuentes</small>
+                                </span>
+                                <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
+                            </button>
+                            <div class="eco-herr-cuerpo" id="eco-det-geovisor">
+                                <div>
+                                    <p>El mapa de Riobamba con todas las capas. Se elige un predio y sale el DICAT: su diagnóstico catastral y territorial.</p>
+                                    <ul class="eco-salidas">
+                                        <li><i class="fas fa-file-pdf"></i> PDF</li><li><i class="fas fa-table"></i> CSV</li><li><i class="fas fa-compass-drafting"></i> DXF</li><li><i class="fas fa-qrcode"></i> QR y folio</li>
+                                    </ul>
+                                    <div class="eco-acciones">
+                                        <a href="geovisor.html" class="btn btn-secondary btn-sm"><i class="fas fa-map-location-dot"></i> Abrir el GeoVisor</a>
+                                        <a href="#dicat-interactivo" class="eco-enlace">Qué contiene el DICAT <i class="fas fa-arrow-right"></i></a>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="servicio-figura" aria-hidden="true">
-                            <svg viewBox="0 0 400 260" fill="none">
-                                <g stroke="#FFFFFF" stroke-opacity=".14">
-                                    <path d="M40 40h330M40 90h330M40 140h330M40 190h330"/>
-                                </g>
-                                <path d="M40 220h330" stroke="#FFFFFF" stroke-opacity=".5"/>
-                                <!-- Área verde por habitante: la de Riobamba frente a la recomendada -->
-                                <rect x="80" y="189" width="70" height="31" fill="#E31E24"/>
-                                <rect x="230" y="70" width="70" height="150" fill="#FFFFFF" fill-opacity=".22"/>
-                                <path d="M230 70h70" stroke="#FFFFFF" stroke-opacity=".7" stroke-dasharray="4 4"/>
-                                <g font-family="Montserrat, sans-serif" text-anchor="middle">
-                                    <text x="115" y="180" fill="#FFFFFF" font-size="20" font-weight="700">1,87</text>
-                                    <text x="265" y="60" fill="#FFFFFF" font-size="20" font-weight="700">9</text>
-                                    <text x="115" y="240" fill="#FFFFFF" fill-opacity=".6" font-size="10">Riobamba</text>
-                                    <text x="265" y="240" fill="#FFFFFF" fill-opacity=".6" font-size="10">Recomendado</text>
-                                </g>
-                                <text x="40" y="26" fill="#FFFFFF" fill-opacity=".6" font-family="Montserrat, sans-serif" font-size="10" letter-spacing="1.5">ÁREA VERDE · m² POR HABITANTE</text>
-                            </svg>
-                            <span class="etiqueta">Investigación · línea 2, equipamiento urbano</span>
-                        </div>
-                    </article>
+                        </article>
+
+                        <article class="eco-herr vidrio" data-herr="planimetria" data-usa="catastro">
+                            <button type="button" class="eco-herr-cabeza" aria-expanded="false" aria-controls="eco-det-planimetria">
+                                <span class="eco-icono"><i class="fas fa-drafting-compass"></i></span>
+                                <span class="eco-herr-titulo">
+                                    <strong>Planimetría automatizada</strong>
+                                    <small><em class="eco-nuevo">Nuevo</em> · colindantes del catastro</small>
+                                </span>
+                                <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
+                            </button>
+                            <div class="eco-herr-cuerpo" id="eco-det-planimetria">
+                                <div>
+                                    <p>Del levantamiento de la estación total o del GNSS al plano georreferenciado y al informe de linderación, contrastado con el certificado de gravámenes.</p>
+                                    <ul class="eco-salidas">
+                                        <li><i class="fas fa-file-pdf"></i> Lámina A4 / A3</li><li><i class="fas fa-compass-drafting"></i> DXF R12</li><li><i class="fas fa-file-signature"></i> Linderación</li>
+                                    </ul>
+                                    <div class="eco-acciones">
+                                        <a href="planimetria.html" class="btn btn-secondary btn-sm"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
+                                        <a href="#planimetria" class="eco-enlace">Cómo funciona <i class="fas fa-arrow-right"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="eco-herr vidrio" data-herr="investigacion" data-usa="catastro pugs ia">
+                            <button type="button" class="eco-herr-cabeza" aria-expanded="false" aria-controls="eco-det-investigacion">
+                                <span class="eco-icono"><i class="fas fa-microscope"></i></span>
+                                <span class="eco-herr-titulo">
+                                    <strong>Investigación territorial</strong>
+                                    <small>Libre, sin cuenta · tres líneas</small>
+                                </span>
+                                <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
+                            </button>
+                            <div class="eco-herr-cuerpo" id="eco-det-investigacion">
+                                <div>
+                                    <p>Tres líneas permanentes sobre Riobamba, con su método, sus cifras y sus límites publicados.</p>
+                                    <ul class="eco-salidas">
+                                        <li style="--tono: var(--linea-1)"><i class="fas fa-house-circle-exclamation"></i> Catastro y suelo</li><li style="--tono: var(--linea-2)"><i class="fas fa-tree"></i> Equipamiento</li><li style="--tono: var(--linea-3)"><i class="fas fa-chart-line"></i> Economía</li>
+                                    </ul>
+                                    <div class="eco-acciones">
+                                        <a href="RESEARCH/index.html" class="btn btn-secondary btn-sm"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
+                                        <a href="#investigacion" class="eco-enlace">Las tres líneas <i class="fas fa-arrow-right"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
                 </div>
 
-                <div class="servicios-controles">
-                    <button type="button" class="servicios-flecha" id="servicios-anterior" aria-label="Servicio anterior"><i class="fas fa-chevron-left"></i></button>
-                    <div class="servicios-puntos" id="servicios-puntos">
-                        <button type="button" aria-current="true" aria-label="Ver servicio 1: GeoVisor">GeoVisor <span></span></button>
-                        <button type="button" aria-label="Ver servicio 2: Planimetría">Planimetría <span></span></button>
-                        <button type="button" aria-label="Ver servicio 3: Investigación">Investigación <span></span></button>
-                    </div>
-                    <button type="button" class="servicios-flecha" id="servicios-siguiente" aria-label="Servicio siguiente"><i class="fas fa-chevron-right"></i></button>
-                    <button type="button" class="servicios-pausa" id="servicios-pausa" aria-label="Detener el paso automático"><i class="fas fa-pause"></i></button>
+                <!-- Lo que atraviesa a las tres -->
+                <ul class="eco-transversal">
+                    <li class="vidrio"><i class="fas fa-lock-open"></i><span><strong>Mapa público</strong> se consulta sin cuenta</span></li>
+                    <li class="vidrio"><i class="fas fa-user-check"></i><span><strong>Con cuenta</strong> se descargan PDF, CSV y DXF</span></li>
+                    <li class="vidrio"><i class="fas fa-qrcode"></i><span><strong>Folio verificable</strong> con QR en cada reporte</span></li>
+                    <li class="vidrio"><i class="fas fa-building-columns"></i><span><strong>Versión firmada</strong> en la sede del CAE-CH</span></li>
+                </ul>
+
+                <div class="hoja-ruta">
+                    <span class="badge-prox">En hoja de ruta</span>
+                    <p><strong>Integración BIM.</strong> Modelos de información constructiva enlazados al GeoVisor, para seguir el edificio a lo largo de su ciclo de vida.</p>
                 </div>
             </div>
             <div class="hero-content">
@@ -3077,150 +2856,6 @@
             <path d="M0 284.5H1440" stroke="#E31E24" stroke-opacity=".5" stroke-width="1"/>
             <path d="M0 292H1440" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="1" stroke-dasharray="14 12"/>
         </svg>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         HERRAMIENTAS · lo que ofrece la plataforma
-    ══════════════════════════════════════════════════════ -->
-    <section class="section section-dark eco" id="herramientas">
-        <!-- Fondo del vidrio: sin algo detras que difuminar, el blur no se ve.
-             Tres manchas con los colores de la identidad y una reticula de plano. -->
-        <div class="eco-fondo" aria-hidden="true">
-            <span class="eco-mancha eco-m1"></span>
-            <span class="eco-mancha eco-m2"></span>
-            <span class="eco-mancha eco-m3"></span>
-        </div>
-        <div class="container">
-            <div class="section-title">
-                <span class="eyebrow">Lo que ofrece la plataforma</span>
-                <h2>Un territorio, una base, tres herramientas</h2>
-                <p>Ocho fuentes institucionales se unifican en una sola base medida en UTM 17S, y de ella parten el GeoVisor, la planimetría y la investigación. Pase el cursor o toque cualquier pieza del esquema para seguir sus datos.</p>
-            </div>
-
-            <div class="eco-esquema" id="eco-esquema">
-                <svg class="eco-cables" id="eco-cables" aria-hidden="true" focusable="false"></svg>
-
-                <!-- 01 · Fuentes -->
-                <div class="eco-col eco-fuentes">
-                    <span class="eco-rotulo"><b>01</b> Fuentes institucionales</span>
-                    <ul class="eco-lista-fuentes">
-                        <li><a class="eco-fuente vidrio" data-fuente="catastro" href="geovisor.html?capa=6"><i class="fas fa-city"></i><span><strong>Catastro</strong><small>GADMR</small></span></a></li>
-                        <li><a class="eco-fuente vidrio" data-fuente="electrica" href="geovisor.html?capa=3"><i class="fas fa-bolt"></i><span><strong>Red eléctrica</strong><small>EERSA</small></span></a></li>
-                        <li><a class="eco-fuente vidrio" data-fuente="vialidad" href="geovisor.html?capa=7"><i class="fas fa-road"></i><span><strong>Vialidad provincial</strong><small>GADPCH</small></span></a></li>
-                        <li><a class="eco-fuente vidrio" data-fuente="pugs" href="geovisor.html?capa=1,2"><i class="fas fa-layer-group"></i><span><strong>PUGS</strong><small>GADMR</small></span></a></li>
-                        <li><a class="eco-fuente vidrio" data-fuente="ia" href="geovisor.html?capa=9,10"><i class="fas fa-robot"></i><span><strong>Construcciones IA</strong><small>Open Buildings</small></span></a></li>
-                        <li><a class="eco-fuente vidrio" data-fuente="agua" href="geovisor.html?capa=4"><i class="fas fa-tint"></i><span><strong>Agua potable</strong><small>EP Riobamba</small></span></a></li>
-                        <li><a class="eco-fuente vidrio" data-fuente="alcantarillado" href="geovisor.html?capa=11"><i class="fas fa-water"></i><span><strong>Alcantarillado</strong><small>EMAPAR</small></span></a></li>
-                        <li><a class="eco-fuente vidrio" data-fuente="telecom" href="geovisor.html?capa=5"><i class="fas fa-wifi"></i><span><strong>Telecomunicaciones</strong><small>CNT EP</small></span></a></li>
-                    </ul>
-                    <p class="eco-nota">Cada capa declara la institución que la publica.</p>
-                </div>
-
-                <!-- 02 · Base unificada -->
-                <div class="eco-col eco-centro">
-                    <span class="eco-rotulo"><b>02</b> Base unificada</span>
-                    <div class="eco-nucleo" id="eco-nucleo">
-                        <span class="eco-orbita" aria-hidden="true"></span>
-                        <span class="eco-orbita eco-o2" aria-hidden="true"></span>
-                        <span class="eco-pulso" aria-hidden="true"></span>
-                        <div class="eco-nucleo-cara vidrio">
-                            <i class="fas fa-database" aria-hidden="true"></i>
-                            <strong>Base territorial</strong>
-                            <span><b data-contador="72198">0</b> predios</span>
-                            <span class="eco-utm">UTM 17S · plano</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 03 · Herramientas: acordeon, una abierta a la vez -->
-                <div class="eco-col eco-herramientas">
-                    <span class="eco-rotulo"><b>03</b> Herramientas</span>
-
-                    <article class="eco-herr vidrio abierta" data-herr="geovisor"
-                             data-usa="catastro electrica vialidad pugs ia agua alcantarillado telecom">
-                        <button type="button" class="eco-herr-cabeza" aria-expanded="true" aria-controls="eco-det-geovisor">
-                            <span class="eco-icono"><i class="fas fa-map-location-dot"></i></span>
-                            <span class="eco-herr-titulo">
-                                <strong>GeoVisor y reporte DICAT</strong>
-                                <small>Mapa libre · usa las 8 fuentes</small>
-                            </span>
-                            <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
-                        </button>
-                        <div class="eco-herr-cuerpo" id="eco-det-geovisor">
-                            <div>
-                                <p>El mapa de Riobamba con todas las capas. Se elige un predio y sale el DICAT: su diagnóstico catastral y territorial.</p>
-                                <ul class="eco-salidas">
-                                    <li><i class="fas fa-file-pdf"></i> PDF</li><li><i class="fas fa-table"></i> CSV</li><li><i class="fas fa-compass-drafting"></i> DXF</li><li><i class="fas fa-qrcode"></i> QR y folio</li>
-                                </ul>
-                                <div class="eco-acciones">
-                                    <a href="geovisor.html" class="btn btn-secondary btn-sm"><i class="fas fa-map-location-dot"></i> Abrir el GeoVisor</a>
-                                    <a href="#dicat-interactivo" class="eco-enlace">Qué contiene el DICAT <i class="fas fa-arrow-right"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="eco-herr vidrio" data-herr="planimetria" data-usa="catastro">
-                        <button type="button" class="eco-herr-cabeza" aria-expanded="false" aria-controls="eco-det-planimetria">
-                            <span class="eco-icono"><i class="fas fa-drafting-compass"></i></span>
-                            <span class="eco-herr-titulo">
-                                <strong>Planimetría automatizada</strong>
-                                <small><em class="eco-nuevo">Nuevo</em> · colindantes del catastro</small>
-                            </span>
-                            <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
-                        </button>
-                        <div class="eco-herr-cuerpo" id="eco-det-planimetria">
-                            <div>
-                                <p>Del levantamiento de la estación total o del GNSS al plano georreferenciado y al informe de linderación, contrastado con el certificado de gravámenes.</p>
-                                <ul class="eco-salidas">
-                                    <li><i class="fas fa-file-pdf"></i> Lámina A4 / A3</li><li><i class="fas fa-compass-drafting"></i> DXF R12</li><li><i class="fas fa-file-signature"></i> Linderación</li>
-                                </ul>
-                                <div class="eco-acciones">
-                                    <a href="planimetria.html" class="btn btn-secondary btn-sm"><i class="fas fa-drafting-compass"></i> Automatizar planimetría</a>
-                                    <a href="#planimetria" class="eco-enlace">Cómo funciona <i class="fas fa-arrow-right"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="eco-herr vidrio" data-herr="investigacion" data-usa="catastro pugs ia">
-                        <button type="button" class="eco-herr-cabeza" aria-expanded="false" aria-controls="eco-det-investigacion">
-                            <span class="eco-icono"><i class="fas fa-microscope"></i></span>
-                            <span class="eco-herr-titulo">
-                                <strong>Investigación territorial</strong>
-                                <small>Libre, sin cuenta · tres líneas</small>
-                            </span>
-                            <i class="fas fa-chevron-down eco-flecha" aria-hidden="true"></i>
-                        </button>
-                        <div class="eco-herr-cuerpo" id="eco-det-investigacion">
-                            <div>
-                                <p>Tres líneas permanentes sobre Riobamba, con su método, sus cifras y sus límites publicados.</p>
-                                <ul class="eco-salidas">
-                                    <li style="--tono: var(--linea-1)"><i class="fas fa-house-circle-exclamation"></i> Catastro y suelo</li><li style="--tono: var(--linea-2)"><i class="fas fa-tree"></i> Equipamiento</li><li style="--tono: var(--linea-3)"><i class="fas fa-chart-line"></i> Economía</li>
-                                </ul>
-                                <div class="eco-acciones">
-                                    <a href="RESEARCH/index.html" class="btn btn-secondary btn-sm"><i class="fas fa-microscope"></i> Ver las investigaciones</a>
-                                    <a href="#investigacion" class="eco-enlace">Las tres líneas <i class="fas fa-arrow-right"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-            </div>
-
-            <!-- Lo que atraviesa a las tres -->
-            <ul class="eco-transversal">
-                <li class="vidrio"><i class="fas fa-lock-open"></i><span><strong>Mapa público</strong> se consulta sin cuenta</span></li>
-                <li class="vidrio"><i class="fas fa-user-check"></i><span><strong>Con cuenta</strong> se descargan PDF, CSV y DXF</span></li>
-                <li class="vidrio"><i class="fas fa-qrcode"></i><span><strong>Folio verificable</strong> con QR en cada reporte</span></li>
-                <li class="vidrio"><i class="fas fa-building-columns"></i><span><strong>Versión firmada</strong> en la sede del CAE-CH</span></li>
-            </ul>
-
-            <div class="hoja-ruta">
-                <span class="badge-prox">En hoja de ruta</span>
-                <p><strong>Integración BIM.</strong> Modelos de información constructiva enlazados al GeoVisor, para seguir el edificio a lo largo de su ciclo de vida.</p>
-            </div>
-        </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════
@@ -4119,106 +3754,6 @@
             }, { threshold: 0.5 });
             contadores.forEach(function (c) { obs.observe(c); });
         }
-
-        // ── Diapositivas de servicios ────────────────────────
-        // Un solo reloj de 100 ms mueve la barra de avance y decide el paso:
-        // pausar (cursor encima, foco dentro, carrusel fuera de pantalla,
-        // pestaña oculta o el botón de pausa) congela las dos cosas a la vez.
-        (function () {
-            const carrusel = document.getElementById('servicios-carrusel');
-            if (!carrusel) return;
-            const diapositivas = carrusel.querySelectorAll('.servicio');
-            const puntos = carrusel.querySelectorAll('#servicios-puntos button');
-            const botonPausa = document.getElementById('servicios-pausa');
-            const DURACION = 7000;
-
-            let actual = 0;
-            let transcurrido = 0;
-            let ultimo = performance.now();
-            let detenido = false;          // lo decide el usuario con el botón
-            const motivos = new Set();     // pausas pasajeras: cursor, foco, fuera de vista
-
-            const enPausa = () => detenido || motivos.size > 0 || document.hidden;
-
-            function pintarAvance() {
-                puntos[actual].style.setProperty('--avance', detenido ? 0 : Math.min(transcurrido / DURACION, 1));
-            }
-
-            function pintarPausa() {
-                carrusel.classList.toggle('en-pausa', enPausa());
-                botonPausa.innerHTML = detenido ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-                botonPausa.setAttribute('aria-label', detenido ? 'Reanudar el paso automático' : 'Detener el paso automático');
-                pintarAvance();
-            }
-
-            function ir(i) {
-                i = (i + diapositivas.length) % diapositivas.length;
-                transcurrido = 0;
-                if (i === actual) return pintarAvance();
-                const antes = diapositivas[actual];
-                antes.classList.remove('activa');
-                antes.classList.add('saliendo');
-                antes.setAttribute('aria-hidden', 'true');
-                setTimeout(function () { antes.classList.remove('saliendo'); }, 650);
-                diapositivas[i].classList.add('activa');
-                diapositivas[i].removeAttribute('aria-hidden');
-                puntos.forEach(function (p, j) {
-                    p.style.setProperty('--avance', 0);
-                    if (j === i) p.setAttribute('aria-current', 'true'); else p.removeAttribute('aria-current');
-                });
-                actual = i;
-                pintarAvance();
-            }
-
-            function reloj() {
-                const ahora = performance.now();
-                if (!enPausa()) {
-                    // Tope por vuelta: si el navegador espació el reloj, no se
-                    // salta de golpe todo el tiempo que estuvo quieto.
-                    transcurrido += Math.min(ahora - ultimo, 250);
-                    if (transcurrido >= DURACION) ir(actual + 1);
-                    else pintarAvance();
-                }
-                ultimo = ahora;
-            }
-
-            puntos.forEach(function (p, j) { p.addEventListener('click', function () { ir(j); }); });
-            document.getElementById('servicios-anterior').addEventListener('click', function () { ir(actual - 1); });
-            document.getElementById('servicios-siguiente').addEventListener('click', function () { ir(actual + 1); });
-            botonPausa.addEventListener('click', function () { detenido = !detenido; transcurrido = 0; pintarPausa(); });
-
-            function pausa(motivo, si) { si ? motivos.add(motivo) : motivos.delete(motivo); pintarPausa(); }
-            carrusel.addEventListener('mouseenter', function () { pausa('cursor', true); });
-            carrusel.addEventListener('mouseleave', function () { pausa('cursor', false); });
-            carrusel.addEventListener('focusin', function () { pausa('foco', true); });
-            carrusel.addEventListener('focusout', function (e) {
-                if (!carrusel.contains(e.relatedTarget)) pausa('foco', false);
-            });
-            carrusel.addEventListener('keydown', function (e) {
-                if (e.target.closest('a')) return;
-                if (e.key === 'ArrowRight') { e.preventDefault(); ir(actual + 1); }
-                else if (e.key === 'ArrowLeft') { e.preventDefault(); ir(actual - 1); }
-            });
-            new IntersectionObserver(function (entradas) {
-                pausa('fuera', !entradas[0].isIntersecting);
-            }, { threshold: 0.35 }).observe(carrusel);
-
-            // Deslizar con el dedo en el teléfono.
-            let x0 = null, y0 = null;
-            carrusel.addEventListener('touchstart', function (e) {
-                x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
-            }, { passive: true });
-            carrusel.addEventListener('touchend', function (e) {
-                if (x0 === null) return;
-                const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-                if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) ir(actual + (dx < 0 ? 1 : -1));
-                x0 = null;
-            }, { passive: true });
-
-            document.addEventListener('visibilitychange', pintarPausa);
-            pintarPausa();
-            setInterval(reloj, 100);
-        })();
 
         // ── Barra de progreso y cabecera compacta ────────────
         const barra = document.querySelector('.progreso-lectura');
