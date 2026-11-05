@@ -1152,6 +1152,86 @@
             font-size: 13.5px;
             margin-bottom: 18px;
         }
+        /* ── Precios ────────────────────────────────────────────────
+           Cuatro maneras de obtener un predio, de la prueba al colegiado.
+           Con auto-fit se reacomodan solas: 4, 2 o 1 por fila. */
+        .precios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+            gap: 18px;
+            align-items: stretch;
+        }
+        .precio {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 26px 22px 22px;
+            border-radius: 10px;
+            background: var(--blanco);
+            color: var(--grafito);
+        }
+        .precio-plan { box-shadow: 0 0 0 3px var(--rojo-caech); }
+        .precio-sello {
+            position: absolute;
+            top: -12px;
+            left: 22px;
+            padding: 3px 11px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--blanco);
+            background: var(--rojo-caech);
+        }
+        .precio h3 { margin-bottom: 12px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--grafito-med); }
+        .precio-valor { font-size: 34px; font-weight: 700; line-height: 1.05; letter-spacing: -.02em; color: var(--grafito); }
+        .precio-valor.rojo { color: var(--rojo-caech); }
+        .precio-unidad { margin: 4px 0 16px; font-size: 13px; font-weight: 600; color: var(--grafito-med); }
+        .precio ul { flex: 1; margin: 0 0 18px; padding: 0; list-style: none; }
+        .precio li { position: relative; padding: 6px 0 6px 20px; font-size: 13px; line-height: 1.45; color: var(--grafito-med); }
+        .precio li i { position: absolute; left: 0; top: 10px; font-size: 11px; color: var(--rojo-caech); }
+        .precio .btn { width: 100%; white-space: normal; line-height: 1.25; text-align: center; }
+        .precio [data-caech] { width: 100%; }
+        .precios-ejemplo {
+            margin: 24px 0 0;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--blanco-primario);
+        }
+        .precios-ejemplo strong { color: var(--blanco); text-decoration: underline; text-decoration-color: var(--rojo-caech); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+        .precios-nota {
+            max-width: 760px;
+            margin: 12px auto 0;
+            text-align: center;
+            font-size: 12.5px;
+            line-height: 1.6;
+            color: var(--blanco-secundario);
+        }
+        .precios-nota a { color: var(--blanco-primario); }
+
+        /* Aviso bajo la bienvenida: una sola linea, para no empujar el esquema. */
+        .hero-promo {
+            display: inline-flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 4px 10px;
+            margin-top: 14px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13.5px;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--grafito);
+            background: var(--blanco);
+            border: 1px solid var(--rojo-caech);
+            transition: background-color .2s;
+        }
+        .hero-promo:hover { background: var(--rojo-humo); }
+        .hero-promo strong { color: var(--rojo-caech); }
+
         /* Etiqueta bajo el titulo: la misma para las tres tarjetas. */
         .dicat-via-destacado {
             display: inline-block;
@@ -2586,6 +2666,7 @@
                 <ul class="nav-links" id="nav-links">
                     <li><a href="#herramientas">Herramientas</a></li>
                     <li><a href="#dicat-interactivo">El DICAT</a></li>
+                    <li><a href="#precios" class="nav-destacado">Precios</a></li>
                     <li><a href="#planimetria">Planimetría</a></li>
                     <li><a href="#investigacion">Investigación</a></li>
                     <li><a href="#integracion">Fuentes</a></li>
@@ -2609,6 +2690,7 @@
                 <h1>Le damos la bienvenida a la plataforma territorial <span class="destacado">del CAE-CH</span></h1>
                 <hr class="filete-rojo hero-filete">
                 <h2>Colegio de Arquitectos del Ecuador<br>Provincial de <strong>Chimborazo</strong></h2>
+                <a class="hero-promo" href="#precios"><strong>Su primer DICAT es gratis.</strong> <span>Después, USD 5 por predio o USD 9,90 al mes con 3 incluidos <i class="fas fa-arrow-right"></i></span></a>
             </div>
             <div class="eco" id="herramientas">
                 <!-- Fondo del vidrio: sin algo detras que difuminar, el blur no se ve.
@@ -3122,8 +3204,8 @@
                     <div class="dicat-via" data-caech="modulo" hidden>
                         <div class="dicat-via-icon"><i class="fas fa-map-location-dot"></i></div>
                         <h3>Usted mismo, en el GeoVisor</h3>
-                        <p class="dicat-via-destacado">Con su cuenta · USD 20 por predio</p>
-                        <p>El mapa está abierto para todos. Para <strong>descargar</strong> el DICAT en PDF —y exportar el predio en CSV y DXF— cree una cuenta y habilite el predio con un pago en línea de <strong>USD 20, IVA incluido</strong>, que cubre los tres productos durante 30 días. Los colegiados del CAE tienen <strong>1 predio gratuito al mes</strong> y, desde el segundo, un 50 % de descuento: <strong>USD 10 por predio</strong>.</p>
+                        <p class="dicat-via-destacado">Su primer predio es gratis</p>
+                        <p>El mapa está abierto para todos. Para <strong>descargar</strong> el DICAT en PDF —y exportar el predio en CSV y DXF— cree una cuenta: el primer predio no se paga. Después, elija entre pagar por predio o el plan mensual. <a href="#precios">Ver precios</a>.</p>
                         <div data-caech="sin-sesion" hidden>
                             <button type="button" class="btn dicat-via-btn" onclick="caechAcceso.abrirRegistro()">
                                 <i class="fas fa-id-card"></i> Crear mi cuenta
@@ -3148,13 +3230,102 @@
                         agua potable, alcantarillado y redes eléctricas. Lo que exige una cuenta verificada por
                         correo son los tres productos que salen de ahí —el DICAT en PDF, el CSV y el DXF—, porque
                         el CAE-CH responde por ellos y deja constancia de cada descarga. Cualquier persona puede
-                        crear su cuenta: cada predio se habilita con un pago de USD 20 (IVA incluido), y los
-                        colegiados que declaran y validan su número de registro tienen 1 predio gratuito al mes y pagan USD 10 (IVA incluido) por cada predio adicional.
+                        crear su cuenta, y el primer predio de cada cuenta es gratis. Después, cada predio se habilita con un
+                        pago de USD 5 (IVA incluido) o con la suscripción de USD 9,90 al mes, que incluye 3 predios
+                        gratuitos por ciclo y los demás a USD 2,50. Los
+                        colegiados que declaran y validan su número de registro tienen 4 predios gratuitos al mes, sin suscripción, y pagan USD 2,50 (IVA incluido) por cada predio adicional.
                         El DICAT es un documento técnico-informativo del CAE-CH y no reemplaza los documentos
                         oficiales del GADMR.
                     </p>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         PRECIOS. Las cifras salen de api/wrangler.toml y de legal.html:
+         si cambian alla, hay que cambiarlas aqui.
+    ══════════════════════════════════════════════════════ -->
+    <section class="section section-dark" id="precios">
+        <div class="container">
+            <div class="section-title">
+                <span class="eyebrow">Precios</span>
+                <h2>Pruebe el DICAT gratis y pague solo lo que necesite</h2>
+                <p>Cada predio incluye su DICAT en PDF, su CSV y su DXF, que puede volver a descargar durante 30 días.</p>
+            </div>
+
+            <div class="precios-grid">
+                <article class="precio">
+                    <h3>Para probar</h3>
+                    <div class="precio-valor rojo">Gratis</div>
+                    <p class="precio-unidad">su primer predio</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i>Para toda cuenta con el correo confirmado</li>
+                        <li><i class="fas fa-check"></i>Se aplica solo al primer predio que descargue</li>
+                        <li><i class="fas fa-check"></i>Una sola vez por cuenta</li>
+                    </ul>
+                    <div data-caech="sin-sesion" hidden>
+                        <button type="button" class="btn" onclick="caechAcceso.abrirRegistro()">Crear mi cuenta</button>
+                    </div>
+                    <div data-caech="con-sesion" hidden>
+                        <a href="geovisor.html" class="btn">Elegir mi predio</a>
+                    </div>
+                </article>
+
+                <article class="precio">
+                    <h3>Por predio</h3>
+                    <div class="precio-valor">USD 5,00</div>
+                    <p class="precio-unidad">por predio, IVA incluido</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i>Sin suscripción ni compromiso</li>
+                        <li><i class="fas fa-check"></i>Pago con tarjeta en línea o en la sede</li>
+                        <li><i class="fas fa-check"></i>Para quien necesita un predio de vez en cuando</li>
+                    </ul>
+                    <a href="geovisor.html" class="btn btn-outline">Abrir el GeoVisor</a>
+                </article>
+
+                <article class="precio precio-plan">
+                    <span class="precio-sello">El más conveniente</span>
+                    <h3>Plan mensual</h3>
+                    <div class="precio-valor">USD 9,90</div>
+                    <p class="precio-unidad">al mes, IVA incluido</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i><strong>3 predios incluidos</strong> en cada ciclo</li>
+                        <li><i class="fas fa-check"></i>Los demás, a <strong>USD 2,50</strong> cada uno</li>
+                        <li><i class="fas fa-check"></i>No se debita solo: usted decide si renueva</li>
+                    </ul>
+                    <div data-caech="sin-sesion" hidden>
+                        <button type="button" class="btn" onclick="caechAcceso.abrirRegistro()">Crear cuenta y suscribirme</button>
+                    </div>
+                    <div data-caech="con-sesion" hidden>
+                        <a href="pago.html?suscripcion=1" class="btn">Suscribirme</a>
+                    </div>
+                </article>
+
+                <article class="precio">
+                    <h3>Colegiados del CAE-CH</h3>
+                    <div class="precio-valor rojo">4 gratis</div>
+                    <p class="precio-unidad">cada mes, sin suscripción</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i>Desde el quinto, <strong>USD 2,50</strong> por predio</li>
+                        <li><i class="fas fa-check"></i>Con su número de registro validado</li>
+                        <li><i class="fas fa-check"></i>Más su predio de prueba</li>
+                    </ul>
+                    <div data-caech="sin-sesion" hidden>
+                        <button type="button" class="btn btn-outline" onclick="caechAcceso.abrirRegistro()">Registrarme como colegiado</button>
+                    </div>
+                    <div data-caech="con-sesion" hidden>
+                        <a href="panel.html" class="btn btn-outline">Ver mi cuenta</a>
+                    </div>
+                </article>
+            </div>
+
+            <p class="precios-ejemplo">Con el plan mensual, 3 predios cuestan <strong>USD 9,90</strong> en lugar de USD 15,00.</p>
+            <p class="precios-nota">
+                Consultar el mapa no cuesta nada ni pide cuenta. Los predios gratuitos de un mes o de un ciclo no se acumulan
+                para el siguiente. El DICAT es un documento técnico-informativo y no reemplaza los documentos oficiales del GADMR.
+                Condiciones completas en los <a href="legal.html#terminos">Términos</a>.
+            </p>
         </div>
     </section>
 
@@ -3460,6 +3631,7 @@
                     <ul class="footer-links">
                         <li><a href="geovisor.html">GeoVisor</a></li>
                         <li><a href="#solicitar">Solicitar el reporte DICAT</a></li>
+                        <li><a href="#precios">Precios y planes</a></li>
                         <li><a href="planimetria.html">Planimetría automatizada</a></li>
                         <li><a href="RESEARCH/index.html">Investigación territorial</a></li>
                         <li><a href="#integracion">Fuentes de datos</a></li>

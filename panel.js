@@ -30,10 +30,10 @@
 
     const COBRO = {
         libre: ['admin', 'libre'],
-        cupo:  ['si', 'cupo'],
-        pago:  ['neutra', 'pago']
+        cupo:  ['si', 'colegiado'],
+        pago:  ['neutra', 'general']
     };
-    const VIA = { cupo: 'cupo del mes', pago: 'pago en línea', admin: 'administración' };
+    const VIA = { cortesia: 'predio de cortesía', cupo: 'predio gratuito', pago: 'pago en línea', admin: 'administración' };
     const usd = c => 'USD ' + (c / 100).toFixed(2).replace('.', ',');
 
     // ── Utilidades de presentación ──────────────────────────────
@@ -144,14 +144,37 @@
               + ' días. ' + (d.cobro === 'cupo'
                 ? 'Como colegiado tiene ' + (d.cupo.total === 1 ? '1 predio gratuito' : d.cupo.total + ' predios gratuitos')
                   + ' al mes; los adicionales tienen el 50 % de descuento y cuestan '
+                : d.suscripcion && d.suscripcion.activa
+                ? 'Su suscripción incluye ' + (d.cupo.total === 1 ? '1 predio gratuito' : d.cupo.total + ' predios gratuitos')
+                  + ' por ciclo; los adicionales tienen el 50 % de descuento y cuestan '
                 : 'Cada predio cuesta ') + usd(t.precio || 0) + ', IVA incluido.'
+              + (d.cortesia_disponible
+                  ? ' <b>Tiene 1 predio de cortesía:</b> el primero que descargue en el visor no se cobra ni gasta sus gratuitos.' : '')
               + (t.cobro_en_linea ? '' : ' <b>El pago en línea aún no está habilitado</b>: puede pagar en la sede.');
 
         $('mis-cifras').innerHTML = d.cupo
-            ? '<div class="cifra"><b>' + d.cupo.restantes + '</b><span>gratis este mes</span></div>'
+            ? '<div class="cifra"><b>' + d.cupo.restantes + '</b><span>gratis este ' + (d.cupo.periodo === 'ciclo' ? 'ciclo' : 'mes') + '</span></div>'
               + '<div class="cifra"><b>' + d.cupo.usados + '</b><span>de ' + d.cupo.total + ' usados</span></div>'
             : '';
         $('mis-cifras').hidden = !d.cupo;
+
+        // Solo las cuentas generales tienen suscripción: el colegiado y el
+        // administrador reciben null.
+        const s = d.suscripcion;
+        const pagarCiclo = '<a class="btn chico" href="pago.html?suscripcion=1">';
+        $('mi-suscripcion').hidden = !s;
+        $('mi-suscripcion').innerHTML = !s ? ''
+            : s.activa
+            ? '<div class="aviso exito"><b>Suscripción activa</b> hasta el ' + fecha(s.vence_en) + '. '
+              + (s.renovada
+                  ? 'Ya renovó el siguiente ciclo: queda cubierta hasta el ' + fecha(s.cubierta_hasta) + '.'
+                  : 'No se renueva sola: si no la paga de nuevo, sus predios vuelven a costar ' + usd(t.precio_publico || 0) + '.')
+              + '</div>'
+              + (s.renovada ? '' : '<div class="acciones">' + pagarCiclo + 'Renovar por ' + usd(t.precio_suscripcion || 0) + '</a></div>')
+            : '<div class="aviso info"><b>Suscripción mensual: ' + usd(t.precio_suscripcion || 0) + '.</b> '
+              + 'Incluye ' + (t.cupo_suscripcion === 1 ? '1 predio gratuito' : t.cupo_suscripcion + ' predios gratuitos') + ' por ciclo y los demás a '
+              + usd(Math.round((t.precio_publico || 0) / 2)) + ' cada uno. Se paga ciclo por ciclo y no se debita sola.</div>'
+              + '<div class="acciones">' + pagarCiclo + 'Suscribirme</a></div>';
 
         const predios = d.predios || [];
         $('tabla-mis-predios').innerHTML = predios.length
@@ -172,7 +195,8 @@
               + '<div class="tabla-marco"><table><thead><tr><th>Fecha</th><th>Predio</th><th>Monto</th><th>Estado</th>'
               + '<th>Transacción</th></tr></thead><tbody>'
               + pagos.map(p => '<tr><td class="tenue">' + fecha(p.creado_en, true) + '</td>'
-                + '<td class="mono">' + esc(p.clave_catastral) + '</td><td>' + usd(p.monto) + '</td>'
+                + (p.concepto === 'suscripcion' ? '<td>Suscripción mensual</td>'
+                    : '<td class="mono">' + esc(p.clave_catastral) + '</td>') + '<td>' + usd(p.monto) + '</td>'
                 + '<td>' + insigniaPago(p.estado) + '</td>'
                 + '<td class="mono">' + esc(p.transaccion || '—') + '</td></tr>').join('')
               + '</tbody></table></div>'
@@ -229,9 +253,10 @@
                     ? (validado ? insignia('si', 'validado') : insignia('espera', 'por cotejar'))
                     : ''))
             + fila('Rol', esc(p.rol))
+            + fila('Categoría', misPermisos.categoria === 'colegiado' ? 'colegiado' : 'general')
             + fila('Predios', misPermisos.cobro === 'libre' ? 'libres, sin cupo ni pago'
                 : misPermisos.cobro === 'cupo' ? 'cupo mensual de colegiado; los adicionales se pagan'
-                : 'se habilitan con un pago por predio')
+                : 'se habilitan con un pago por predio o con la suscripción mensual')
             + fila('Estado', esc(p.estado))
             + fila('Vigencia', p.vigencia_hasta ? fecha(p.vigencia_hasta) : 'sin caducidad')
             + fila('Último acceso', fecha(p.ultimo_acceso, true))
@@ -257,7 +282,8 @@
             {
                 icono: 'fa-file-pdf', nombre: 'DICAT, CSV y DXF',
                 texto: 'Las tres descargas del visor, que se habilitan por predio: libres para el '
-                     + 'administrador, con cupo mensual para el colegiado y con un pago para el resto.',
+                     + 'administrador, con cupo mensual para el colegiado y con suscripción o un pago para el resto. '
+                     + 'Toda cuenta tiene 1 predio de cortesía para probarlos.',
                 estado: cobro ? insignia(COBRO[cobro][0], COBRO[cobro][1]) : insignia('espera', 'pendiente'),
                 enlace: '<a class="btn btn-outline chico" href="geovisor.html">Ir al visor</a>'
             },
@@ -379,6 +405,9 @@
             if (cobro && cobro !== 'libre') {
                 acciones.push('<button class="btn btn-outline chico" data-predio="' + esc(c.id) + '"><i class="fas fa-plus"></i> Predio</button>');
             }
+            if (cobro === 'pago') {
+                acciones.push('<button class="btn btn-outline chico" data-suscripcion="' + esc(c.id) + '"><i class="fas fa-plus"></i> Suscripción</button>');
+            }
             if (!propia) {
                 acciones.push(c.estado === 'activo'
                     ? '<button class="btn btn-outline chico" data-suspender="' + esc(c.id) + '">Suspender</button>'
@@ -414,6 +443,7 @@
                     ? '<br><span class="tenue">' + (vencida ? 'venció ' : 'vence ') + fecha(c.vigencia_hasta) + '</span>'
                     : '') + '</td>'
                 + '<td><div class="tenue">Predios ' + (cobro ? insignia(COBRO[cobro][0], COBRO[cobro][1]) : insignia('no', 'no'))
+                + (c.suscripcion_hasta ? '<br>suscrita hasta ' + fecha(c.suscripcion_hasta) : '')
                 + '</div>' + HERRAMIENTAS.map(h => {
                     // El administrador las tiene por su rol: la casilla se
                     // muestra marcada y bloqueada, para que se vea el porque.
@@ -437,11 +467,12 @@
     // enteras en cada cambio y así no quedan oyentes huérfanos.
     document.querySelector('section[data-hoja="padron"]').addEventListener('click', async e => {
         const boton = e.target.closest('button[data-validar], button[data-invalidar], button[data-clave],'
-            + ' button[data-suspender], button[data-activar], button[data-desbloquear], button[data-predio]');
+            + ' button[data-suspender], button[data-activar], button[data-desbloquear], button[data-predio],'
+            + ' button[data-suscripcion]');
         if (!boton) return;
 
         const d = boton.dataset;
-        const id = d.validar || d.invalidar || d.clave || d.suspender || d.activar || d.desbloquear || d.predio;
+        const id = d.validar || d.invalidar || d.clave || d.suspender || d.activar || d.desbloquear || d.predio || d.suscripcion;
         const cuenta = cuentas.find(c => c.id === id) || {};
         const quien = cuenta.nombre || cuenta.usuario || 'esta cuenta';
 
@@ -459,6 +490,19 @@
                 : (r.datos.error || 'No se pudo habilitar el predio.')));
         }
 
+        // Un ciclo de suscripción pagado en la sede.
+        if (d.suscripcion !== undefined) {
+            if (!confirm('¿Abrir un ciclo de suscripción mensual a ' + quien + '?\n\nHágalo solo si ya recibió el pago.')) return;
+            const motivo = (prompt('Motivo (queda en la bitácora):', 'pago en sede') || '').trim();
+            boton.disabled = true;
+            const r = await pedir('POST', '/api/admin/afiliados/' + id + '/suscripcion', { motivo: motivo });
+            boton.disabled = false;
+            avisar('aviso-padron', r.estado === 201 ? 'exito' : 'error', esc(r.estado === 201
+                ? quien + ': suscripción abierta hasta el ' + fecha(r.datos.vence_en) + '.'
+                : (r.datos.error || 'No se pudo abrir la suscripción.')));
+            return cargarPadron();
+        }
+
         if (d.clave !== undefined) {
             if (!confirm('¿Restablecer la contraseña de ' + quien + '?\n\n'
                 + 'Se cerrarán todas sus sesiones y tendrá que usar una clave temporal '
@@ -474,7 +518,7 @@
         let cambios = null;
         if (d.validar    !== undefined) cambios = { registro_validado: true };
         if (d.invalidar  !== undefined) {
-            if (!confirm('¿Quitar la validación a ' + quien + '?\n\nPerderá el cupo de colegiado y pagará cada predio nuevo.')) return;
+            if (!confirm('¿Quitar la validación a ' + quien + '?\n\nPerderá el cupo de colegiado y pasará a cuenta general.')) return;
             cambios = { registro_validado: false };
         }
         if (d.suspender  !== undefined) {
@@ -595,7 +639,7 @@
             ? filas.map(p =>
                 '<tr><td class="tenue">' + fecha(p.creado_en, true) + '</td>'
                 + '<td>' + esc(p.nombre || '—') + (p.usuario ? '<br><span class="tenue mono">' + esc(p.usuario) + '</span>' : '') + '</td>'
-                + '<td class="mono">' + esc(p.clave_catastral) + '</td>'
+                + (p.concepto === 'suscripcion' ? '<td>Suscripción mensual</td>' : '<td class="mono">' + esc(p.clave_catastral) + '</td>')
                 + '<td>' + usd(p.monto) + '<br><span class="tenue">base ' + usd(p.base) + ' + IVA ' + usd(p.iva) + '</span></td>'
                 + '<td>' + insigniaPago(p.estado) + (p.detalle ? '<br><span class="tenue">' + esc(p.detalle) + '</span>' : '') + '</td>'
                 + '<td class="mono">' + esc(p.transaccion || '—')

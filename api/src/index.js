@@ -4,7 +4,8 @@
 //  Controla quien puede descargar los productos del GeoVisor. Desde el
 //  2026-10-02 cualquiera crea cuenta y los productos de un predio -DICAT
 //  en PDF, CSV y DXF- se habilitan por predio: libre para el admin, con
-//  cupo mensual para el colegiado y con pago para el resto (cobros.js).
+//  cupo mensual para el colegiado, con suscripcion o con pago para el resto
+//  (cobros.js).
 //  La planimetria es gratis para toda cuenta con el equipo declarado.
 //
 //  Alcance honesto del control: el visor se sirve estatico desde GitHub
@@ -34,7 +35,7 @@ import { solicitarPase, verificarPase, consumirPase, estadoPase } from './freemi
 import { registrar, verificarCorreo, confirmarCorreo, reenviarVerificacion } from './registro.js';
 import {
     autorizarPredio, estadoPredio, prepararPago, confirmarPago, resumenCuenta,
-    listarPagos, habilitarPredioAdmin, eliminarPagosPreparados
+    listarPagos, habilitarPredioAdmin, concederSuscripcionAdmin, eliminarPagosPreparados
 } from './cobros.js';
 import { declaracionVigente, leerDeclaracion, declararEquipo } from './equipo.js';
 import { documentosPendientes, cuerpoPendientes, estadoDocumentos, aceptarDocumento } from './documentos.js';
@@ -380,6 +381,14 @@ async function enrutar(request, env, url, ruta, metodo) {
             const datos = await cuerpoJSON(request);
             if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
             return responder(await habilitarPredioAdmin(env, request, sesion, mPredio[1], datos));
+        }
+
+        // Suscripcion pagada en la sede.
+        const mSuscripcion = /^\/api\/admin\/afiliados\/([A-Za-z0-9_-]+)\/suscripcion$/.exec(ruta);
+        if (mSuscripcion && metodo === 'POST') {
+            const datos = await cuerpoJSON(request);
+            if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+            return responder(await concederSuscripcionAdmin(env, request, sesion, mSuscripcion[1], datos));
         }
 
         // Solicitudes presenciales del DICAT: la hoja del mostrador de la sede.

@@ -5,8 +5,8 @@
     <!-- Politica de contenido: de donde puede cargar esta pagina. Ver la auditoria de seguridad (2026-10-21) antes de anadir un dominio. -->
     <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pago de predio | CAE-CH</title>
-    <meta name="description" content="Pago en línea de los productos de un predio del GeoVisor del CAE-CH: DICAT en PDF, CSV y DXF.">
+    <title>Pagos | CAE-CH</title>
+    <meta name="description" content="Pago en línea de los productos de un predio y de la suscripción mensual del GeoVisor del CAE-CH.">
     <meta name="robots" content="noindex, nofollow">
     <!-- PayPhone valida el dominio por el Referer: sin el origen, la cajita
          responde "acceso denegado". -->
@@ -71,7 +71,7 @@
         <a href="index.html" title="Volver al sitio del CAE-CH">
             <img src="LOGO/logo-caech.png" alt="CAE-CH" width="520" height="188">
         </a>
-        <span>Pago de predio</span>
+        <span>Pagos</span>
     </div>
 </header>
 
@@ -95,11 +95,13 @@
 //
 //    pago.html?clave=…                      el Worker prepara la transacción y
 //                                           aquí se dibuja la cajita
+//    pago.html?suscripcion=1[&clave=…]      igual, para un ciclo de suscripción;
+//                                           la clave es el predio al que se vuelve
 //    pago.html?id=…&clientTransactionId=…   PayPhone devuelve aquí (es la URL de
 //                                           respuesta de la aplicación) y el
 //                                           Worker confirma el pago
 //
-//  Lo que habilita el predio es la confirmación en el Worker, que coteja monto,
+//  Lo que habilita el predio o abre el ciclo es la confirmación en el Worker, que coteja monto,
 //  cuenta y transacción contra lo que preparó. Esta página no decide nada.
 // ─────────────────────────────────────────────────────────────────────────────
 (function () {
@@ -125,8 +127,9 @@
             + '<tr><td>Predio</td><td class="mono">' + esc(clave) + '</td></tr>'
             + '<tr><td>Incluye</td><td>DICAT en PDF, CSV y DXF<br><span class="tenue">durante '
             + (t.dias_acceso || 30) + ' días</span></td></tr>'
-            + (t.descuento_colegiado
-                ? '<tr><td>Precio de colegiado</td><td>50 % de descuento<br><span class="tenue">precio público '
+            + (t.descuento_colegiado || t.descuento_suscriptor
+                ? '<tr><td>Precio de ' + (t.descuento_colegiado ? 'colegiado' : 'suscriptor')
+                  + '</td><td>50 % de descuento<br><span class="tenue">precio regular '
                   + usd(t.precio_publico) + '</span></td></tr>'
                 : '')
             + '<tr><td>Base imponible</td><td>' + usd(t.base) + '</td></tr>'
@@ -134,6 +137,19 @@
             + '<tr class="total"><td>Total</td><td>' + usd(t.precio) + '</td></tr>'
             + '</tbody></table>';
     }
+
+    function desgloseSuscripcion(p, t) {
+        return '<table><tbody>'
+            + '<tr><td>Suscripción mensual</td><td>' + (t.cupo_suscripcion === 1 ? '1 predio gratuito' : t.cupo_suscripcion + ' predios gratuitos') + ' por ciclo'
+            + '<br><span class="tenue">los demás con el 50 % de descuento</span></td></tr>'
+            + '<tr><td>Base imponible</td><td>' + usd(p.base) + '</td></tr>'
+            + '<tr><td>IVA ' + t.iva_porcentaje + ' %</td><td>' + usd(p.iva) + '</td></tr>'
+            + '<tr class="total"><td>Total</td><td>' + usd(p.monto) + '</td></tr>'
+            + '</tbody></table>';
+    }
+
+    /** El predio del que se venía, si lo hay: una suscripción puede no tenerlo. */
+    const conPredio = clave => clave && clave !== 'SUSCRIPCION';
 
     // La cajita se carga solo cuando hace falta: es código de PayPhone y no
     // tiene por qué bajar en la vuelta ni en los errores.
@@ -173,17 +189,35 @@
         }
 
         const r = await acceso.peticion('POST', '/api/pagos', { clave_catastral: clave });
-        if (r.estado !== 201) {
-            return pintar('<h1>No se puede pagar ahora</h1>'
-                + '<div class="aviso ' + (r.estado === 503 ? 'info' : 'error') + '">'
-                + esc((r.datos && r.datos.error) || 'No se pudo preparar el pago.') + '</div>'
-                + '<div class="acciones"><a class="btn btn-outline" href="' + esc(alVisor(clave)) + '">Volver al visor</a></div>');
-        }
+        if (r.estado !== 201) return noSePuedePagar(r, alVisor(clave), 'Volver al visor');
 
         const d = r.datos;
-        pintar('<h1>Habilitar el predio</h1>'
+        return mostrarCajita(d, '<h1>Habilitar el predio</h1>'
             + '<p class="sub">Un solo pago habilita los tres productos de este predio en su cuenta.</p>'
-            + desglose(d.pago.clave_catastral, d.tarifa)
+            + desglose(d.pago.clave_catastral, d.tarifa));
+    }
+
+    async function prepararSuscripcion(clave) {
+        cargando('Preparando la suscripción…');
+        const r = await acceso.peticion('POST', '/api/pagos', { concepto: 'suscripcion', clave_catastral: clave || '' });
+        if (r.estado !== 201) return noSePuedePagar(r, clave ? alVisor(clave) : 'panel.html', clave ? 'Volver al visor' : 'Ir a mi cuenta');
+
+        const d = r.datos;
+        return mostrarCajita(d, '<h1>Suscripción mensual</h1>'
+            + '<p class="sub">Vale por un mes desde hoy o, si renueva antes de tiempo, desde que termine el ciclo vigente. '
+            + 'No se renueva ni se debita sola: cada ciclo se paga aquí. Lo que no use en un ciclo no pasa al siguiente.</p>'
+            + desgloseSuscripcion(d.pago, d.tarifa));
+    }
+
+    function noSePuedePagar(r, volver, rotulo) {
+        return pintar('<h1>No se puede pagar ahora</h1>'
+            + '<div class="aviso ' + (r.estado === 503 ? 'info' : 'error') + '">'
+            + esc((r.datos && r.datos.error) || 'No se pudo preparar el pago.') + '</div>'
+            + '<div class="acciones"><a class="btn btn-outline" href="' + esc(volver) + '">' + esc(rotulo) + '</a></div>');
+    }
+
+    async function mostrarCajita(d, encabezado) {
+        pintar(encabezado
             + '<div id="pp-button"><p class="cargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando el formulario de pago…</p></div>'
             + '<p class="tenue" style="margin-top:12px">El formulario vence a los 10 minutos; si caduca, recargue la página. '
             + 'Transacción <span class="mono">' + esc(d.pago.id) + '</span>.</p>');
@@ -215,6 +249,21 @@
         }
 
         const p = d.pago;
+        const esSuscripcion = p.concepto === 'suscripcion';
+        if (p.estado === 'aprobado' && esSuscripcion) {
+            return pintar('<h1>Suscripción activa</h1>'
+                + '<div class="aviso exito">' + esc(d.mensaje)
+                + (d.vence_en ? ' Este ciclo pagado termina el ' + fecha(d.vence_en) + '.' : '') + '</div>'
+                + desgloseSuscripcion(p, d.tarifa)
+                + '<p class="tenue">Transacción PayPhone <span class="mono">' + esc(p.transaccion || '—') + '</span>'
+                + (p.autorizacion ? ' · autorización <span class="mono">' + esc(p.autorizacion) + '</span>' : '')
+                + '</p>'
+                + '<div class="acciones" style="margin-top:14px">'
+                + (conPredio(p.clave_catastral)
+                    ? '<a class="btn" href="' + esc(alVisor(p.clave_catastral)) + '">Volver al visor con el predio</a>'
+                    : '<a class="btn" href="geovisor.html">Ir al GeoVisor</a>')
+                + '<a class="btn btn-outline" href="panel.html">Mi suscripción</a></div>');
+        }
         if (p.estado === 'aprobado') {
             return pintar('<h1>Pago aprobado</h1>'
                 + '<div class="aviso exito">' + esc(d.mensaje)
@@ -227,10 +276,14 @@
                 + 'Volver al visor con el predio</a>'
                 + '<a class="btn btn-outline" href="panel.html">Mis pagos</a></div>');
         }
+        const reintento = esSuscripcion
+            ? 'pago.html?suscripcion=1' + (conPredio(p.clave_catastral) ? '&clave=' + encodeURIComponent(p.clave_catastral) : '')
+            : 'pago.html?clave=' + encodeURIComponent(p.clave_catastral);
         return pintar('<h1>' + (p.estado === 'cancelado' ? 'Pago cancelado' : 'Pago no completado') + '</h1>'
             + '<div class="aviso ' + (p.estado === 'cancelado' ? 'info' : 'error') + '">' + esc(d.mensaje) + '</div>'
-            + '<div class="acciones"><a class="btn" href="pago.html?clave=' + encodeURIComponent(p.clave_catastral) + '">'
-            + 'Intentar de nuevo</a><a class="btn btn-outline" href="' + esc(alVisor(p.clave_catastral)) + '">Volver al visor</a></div>');
+            + '<div class="acciones"><a class="btn" href="' + esc(reintento) + '">Intentar de nuevo</a>'
+            + '<a class="btn btn-outline" href="' + esc(conPredio(p.clave_catastral) ? alVisor(p.clave_catastral) : 'geovisor.html')
+            + '">Volver al visor</a></div>');
     }
 
     async function arrancar() {
@@ -248,6 +301,7 @@
         const clientTx = params.get('clientTransactionId');
         const clave = params.get('clave');
         if (id && clientTx) return confirmar(id, clientTx);
+        if (params.get('suscripcion')) return prepararSuscripcion(clave);
         if (clave) return preparar(clave);
         pintar('<h1>No hay ningún predio que pagar</h1>'
             + '<p class="sub">Elija un predio en el GeoVisor y pida su DICAT, CSV o DXF: si hace falta pagar, '

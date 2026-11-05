@@ -79,15 +79,22 @@ REGISTRO_ACTIVO = "si"
 # encenderlo sin revisar `permisos()` en src/sesiones.js.
 FREEMIUM_ACTIVO = "no"
 
-# ── Cobro por predio (convenio CAE-CH, 2026-10-02) ──────────────────
+# ── Cobro por predio y suscripcion (desde el 2026-11-05) ────────────
 # Precio de un predio -DICAT, CSV y DXF- en centavos, IVA incluido.
-# 2000 = USD 20,00 (base 17,39 + IVA 2,61). Ver src/cobros.js.
-PRECIO_PREDIO_CENTAVOS = "2000"
-# Precio para el colegiado (50 % de descuento desde el 2026-10-05), una vez
-# usado su cupo. 1000 = USD 10,00 (base 8,70 + IVA 1,30).
-PRECIO_COLEGIADO_CENTAVOS = "1000"
+# 500 = USD 5,00 (base 4,35 + IVA 0,65). Ver src/cobros.js.
+PRECIO_PREDIO_CENTAVOS = "500"
+# Precio para el colegiado, una vez usado su cupo.
+# 250 = USD 2,50 (base 2,17 + IVA 0,33).
+PRECIO_COLEGIADO_CENTAVOS = "250"
+# Precio para el suscriptor, una vez usados los predios gratuitos del ciclo.
+PRECIO_SUSCRIPTOR_CENTAVOS = "250"
+# Suscripcion de una cuenta general, por ciclo mensual.
+# 990 = USD 9,90 (base 8,61 + IVA 1,29).
+PRECIO_SUSCRIPCION_CENTAVOS = "990"
 IVA_PORCENTAJE = "15"
-# Predios gratuitos al mes para cada colegiado (1 desde el 2026-10-05).
-CUPO_MENSUAL = "1"
+# Predios gratuitos al mes calendario para cada colegiado.
+CUPO_MENSUAL = "4"
+# Predios gratuitos por ciclo para cada suscriptor.
+CUPO_SUSCRIPCION = "3"
 # Dias que un predio habilitado sigue abierto para volver a descargarlo.
 DIAS_ACCESO_PREDIO = "30"

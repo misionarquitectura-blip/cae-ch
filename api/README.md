@@ -19,18 +19,30 @@ crear cuenta**: el número de registro del CAE es opcional.
 | | cuenta pública (o colegiado por cotejar) | colegiado (`afiliado`, o `usuario` validado) | `admin` |
 |---|---|---|---|
 | Abrir el GeoVisor | sí (no hace falta cuenta) | sí | sí |
-| **DICAT, CSV y DXF** | pagando el predio | **1 predio al mes** sin pagar; después, USD 10 (50 % de descuento) | libre |
+| **DICAT, CSV y DXF** | 1 predio de cortesía; luego USD 5 por predio o, con **suscripción de USD 9,90 al mes**, 3 predios por ciclo sin pagar y después USD 2,50 | 1 predio de cortesía y **4 predios al mes** sin pagar ni suscribirse; después, USD 2,50 | libre |
 | **Planimetría** | gratis, con el equipo declarado | gratis, con el equipo declarado | con el equipo declarado |
 
 ### Cobro por predio (`src/cobros.js`)
 
 - Un predio habilitado abre **los tres formatos** durante `DIAS_ACCESO_PREDIO`
   días (30). Repetir la descarga dentro del plazo no gasta cupo ni cobra otra vez.
-- Precio: `PRECIO_PREDIO_CENTAVOS` (2000 = USD 20,00 IVA incluido; base 17,39 +
-  IVA 2,61). El colegiado, pasado su cupo, paga `PRECIO_COLEGIADO_CENTAVOS`
-  (1000 = USD 10,00; base 8,70 + IVA 1,30): `tarifa(env, fila)` elige el precio.
-  El cupo del colegiado es `CUPO_MENSUAL` (1), por mes calendario de
+- Precio: `PRECIO_PREDIO_CENTAVOS` (500 = USD 5,00 IVA incluido; base 4,35 +
+  IVA 0,65). El colegiado, pasado su cupo, paga `PRECIO_COLEGIADO_CENTAVOS` y el
+  suscriptor, pasado el suyo, `PRECIO_SUSCRIPTOR_CENTAVOS` (250 = USD 2,50; base
+  2,17 + IVA 0,33). `regimen(env, fila)` resuelve tarifa, ciclo y cupo de cada cuenta.
+  El cupo del colegiado es `CUPO_MENSUAL` (4), por mes calendario de
   Ecuador (UTC-5).
+- Suscripción: `POST /api/pagos {concepto: 'suscripcion'}` cobra
+  `PRECIO_SUSCRIPCION_CENTAVOS` (990) y abre una fila en `suscripciones`: un ciclo
+  de un mes con `CUPO_SUSCRIPCION` (3) predios sin pagar. Es **prepagada**: la Cajita
+  no debita sola y no se guarda ninguna tarjeta. Renovar antes de tiempo encadena el
+  ciclo al final del vigente, y solo se admite un ciclo por delante. El colegiado no
+  se suscribe (409). Pago en sede: `POST /api/admin/afiliados/:id/suscripcion`.
+- Cortesía: `afiliados.cortesia_usada_en` nula da un predio (`via = 'cortesia'`) una
+  sola vez, antes que el cupo y sin restar de él. Con ella disponible, `/api/pagos`
+  responde 409 a la compra de un predio, para no cobrar lo que aún es gratis.
+- El cupo no se reinicia con ninguna tarea: se cuentan las filas `via = 'cupo'` desde
+  el inicio del mes o del ciclo vigente, así que lo no usado no se acumula.
 - Sin cupo ni habilitación, `POST /api/descargas` responde **402** con
   `requiere_pago`, la tarifa y el cupo. El visor lleva entonces a `pago.html`.
 - Pago con la **Cajita de PayPhone** en dos fases: `POST /api/pagos` prepara la

@@ -39,8 +39,13 @@ export async function listarAfiliados(env, url) {
         : 'SELECT * FROM afiliados ORDER BY estado, nombre COLLATE NOCASE';
 
     const { results } = await env.DB.prepare(sql).all();
+    const { results: ciclos } = await env.DB.prepare(
+        'SELECT afiliado_id, MAX(vence_en) AS hasta FROM suscripciones WHERE vence_en > ? GROUP BY afiliado_id'
+    ).bind(ahora()).all();
+    const suscritas = new Map((ciclos || []).map(c => [c.afiliado_id, c.hasta]));
     const afiliados = (results || []).map(f => Object.assign(perfilPublico(f), {
         permisos: permisos(f),
+        suscripcion_hasta: suscritas.get(f.id) || null,
         creado_en: f.creado_en,
         registro_validado_en: f.registro_validado_en,
         registro_validado_por: f.registro_validado_por,

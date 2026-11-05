@@ -71,6 +71,9 @@ CREATE TABLE IF NOT EXISTS afiliados (
     terminos_version      TEXT,
     terminos_aceptados_en TEXT,
 
+    -- Cuando uso su predio de cortesia, uno por cuenta (009). NULL: aun lo tiene.
+    cortesia_usada_en     TEXT,
+
     -- Verificacion del correo. Las cuentas que crea la administracion nacen
     -- verificadas: el CAE-CH responde por ellas y la clave se entrega en mano.
     -- Las del registro publico no pueden ingresar hasta confirmar el correo.
@@ -160,14 +163,15 @@ CREATE INDEX IF NOT EXISTS idx_descargas_afiliado ON descargas (afiliado_id);
 
 -- ── Predios habilitados ─────────────────────────────────────────────
 -- Una fila por predio que una cuenta puede descargar. `via` dice por que:
---   cupo  : uno de los predios gratuitos del mes del colegiado
+--   cupo  : un predio gratuito: del mes del colegiado o del ciclo del suscriptor
 --   pago  : pagado en linea (pago_id apunta a la transaccion)
 --   admin : concedido a mano por la administracion (pago en sede, cortesia)
+--   cortesia: el predio de prueba, uno por cuenta y una sola vez
 CREATE TABLE IF NOT EXISTS predios_habilitados (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     afiliado_id     TEXT    NOT NULL REFERENCES afiliados(id) ON DELETE CASCADE,
     clave_catastral TEXT    NOT NULL,
-    via             TEXT    NOT NULL CHECK (via IN ('cupo', 'pago', 'admin')),
+    via             TEXT    NOT NULL CHECK (via IN ('cupo', 'pago', 'admin', 'cortesia')),
     pago_id         TEXT    REFERENCES pagos(id) ON DELETE SET NULL,
     creado_en       TEXT    NOT NULL,
     vence_en        TEXT    NOT NULL,
@@ -195,11 +199,29 @@ CREATE TABLE IF NOT EXISTS pagos (
     autorizacion         TEXT,                              -- authorizationCode
     detalle              TEXT,                              -- motivo de rechazo, si lo hubo
     creado_en            TEXT    NOT NULL,
-    confirmado_en        TEXT
+    confirmado_en        TEXT,
+    -- En una suscripcion, `clave_catastral` guarda el predio desde el que se
+    -- contrato, para volver a el, o 'SUSCRIPCION' si no hubo (009).
+    concepto             TEXT    NOT NULL DEFAULT 'predio'
+                                 CHECK (concepto IN ('predio', 'suscripcion'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_pagos_cuenta ON pagos (afiliado_id, creado_en);
 CREATE INDEX IF NOT EXISTS idx_pagos_estado ON pagos (estado, creado_en);
+
+-- ── Suscripciones ───────────────────────────────────────────────────
+-- Una fila por ciclo mensual pagado de una cuenta general (009).
+CREATE TABLE IF NOT EXISTS suscripciones (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    afiliado_id     TEXT    NOT NULL REFERENCES afiliados(id) ON DELETE CASCADE,
+    pago_id         TEXT    REFERENCES pagos(id) ON DELETE SET NULL,
+    inicio          TEXT    NOT NULL,
+    vence_en        TEXT    NOT NULL,
+    creado_en       TEXT    NOT NULL,
+    concedido_por   TEXT                                    -- usuario del admin, si se pago en la sede
+);
+
+CREATE INDEX IF NOT EXISTS idx_suscripciones_cuenta ON suscripciones (afiliado_id, vence_en);
 
 -- ── Declaracion de equipo (planimetria) ─────────────────────────────
 -- La vigente es la ultima de cada cuenta. Se conservan las anteriores:

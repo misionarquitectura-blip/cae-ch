@@ -30,7 +30,7 @@ const CLAVE_MIN_LARGO = 12;
  * vigencia que encabeza legal.html. Al cambiar esos textos se sube aqui y
  * cada cuenta vuelve a aceptarlos en su siguiente ingreso.
  */
-export const VERSION_TERMINOS = '2026-11-01';
+export const VERSION_TERMINOS = '2026-11-05';
 
 /** true si la cuenta no acepto todavia la version vigente. */
 export function terminosPendientes(fila) {
@@ -154,7 +154,10 @@ export function perfilPublico(fila) {
  *   libre : el administrador
  *   cupo  : colegiado (afiliado, o usuario con el registro cotejado);
  *           unos predios al mes sin pagar y, pasado el cupo, paga
- *   pago  : cuenta publica, o colegiado con el numero aun por cotejar
+ *   pago  : cuenta general, o colegiado con el numero aun por cotejar. Si
+ *           tiene una suscripcion vigente, cobros.js le aplica sus condiciones
+ *
+ * `categoria` es la que ve el usuario: colegiado o general.
  */
 export function permisos(fila) {
     const base = fila.estado === 'activo'
@@ -170,6 +173,7 @@ export function permisos(fila) {
         dxf: base,
         csv: base,
         colegiado: colegiado,
+        categoria: !base ? null : colegiado ? 'colegiado' : 'general',
         cobro: !base ? null : fila.rol === 'admin' ? 'libre' : colegiado ? 'cupo' : 'pago'
     };
 

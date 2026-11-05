@@ -7,8 +7,9 @@
      · Cuentas      — cualquiera puede crearla; el numero de registro del
                       CAE es opcional y, cotejado, da el cupo de colegiado.
      · PDF, CSV, DXF — se habilitan POR PREDIO: libre para el admin, con
-                      cupo mensual para el colegiado y con pago para el
-                      resto. Un predio habilitado abre los tres formatos.
+                      cupo mensual para el colegiado y con suscripcion o
+                      pago para el resto. Un predio habilitado abre los
+                      tres formatos.
                       Si el Worker responde 402, aqui se ofrece el pago
                       (pago.html, Cajita de PayPhone).
      · Planimetria  — gratis para toda cuenta, previa declaracion del
@@ -398,9 +399,9 @@
             'de un predio.</p>' +
             '<div class="caech-acc-opciones" role="radiogroup" aria-label="Tipo de cuenta">' +
             '  <label><input type="radio" name="caech-reg-tipo" value="publica" checked>' +
-            '    <span><b>No soy colegiado</b><br>Pago cada predio</span></label>' +
+            '    <span><b>No soy colegiado</b><br>1 predio gratis para probar</span></label>' +
             '  <label><input type="radio" name="caech-reg-tipo" value="colegiado">' +
-            '    <span><b>Soy colegiado del CAE</b><br>1 predio gratis al mes</span></label>' +
+            '    <span><b>Soy colegiado del CAE</b><br>1 de prueba + 4 gratis al mes</span></label>' +
             '</div>' +
             '<div class="caech-acc-campo"><label for="caech-reg-nombre">Nombre completo</label>' +
             '  <input id="caech-reg-nombre" type="text" autocomplete="name"></div>' +
@@ -982,20 +983,34 @@
         const cupo = datos.cupo;
         const clave = datos.clave_catastral || '';
         const destino = PAGO + '?clave=' + encodeURIComponent(clave);
+        const destinoSuscripcion = PAGO + '?suscripcion=1&clave=' + encodeURIComponent(clave);
+        const ofrecerSuscripcion = !!datos.suscripcion && !datos.suscripcion.activa;
 
         modal('caech-modal-pago', 'Habilitar este predio',
             '<div class="caech-acc-aviso info">' + esc(datos.error || '') + '</div>' +
             '<div class="caech-acc-precio"><b>' + usd(t.precio || 0) + '</b>' +
             '<span>IVA incluido<br>base ' + usd(t.base || 0) + ' + IVA ' + usd(t.iva || 0) +
-            (t.descuento_colegiado ? '<br>precio de colegiado: 50 % menos que ' + usd(t.precio_publico || 0) : '') +
+            (t.descuento_colegiado || t.descuento_suscriptor
+                ? '<br>precio de ' + (t.descuento_colegiado ? 'colegiado' : 'suscriptor') + ': 50 % menos que ' + usd(t.precio_publico || 0)
+                : '') +
             '</span></div>' +
             '<p>Incluye el <b>DICAT en PDF, el CSV y el DXF</b> de este predio, que podr&aacute; volver ' +
             'a descargar durante <b>' + (t.dias_acceso || 30) + ' d&iacute;as</b>.<br>' +
             'Predio: <span class="caech-acc-mono">' + esc(clave) + '</span></p>' +
-            (cupo ? '<p class="caech-acc-pie" style="text-align:left;margin-top:0">Predios gratuitos de este mes: ' +
+            (cupo ? '<p class="caech-acc-pie" style="text-align:left;margin-top:0">Predios gratuitos de este ' +
+                (cupo.periodo === 'ciclo' ? 'ciclo' : 'mes') + ': ' +
                 cupo.usados + ' de ' + cupo.total + ' usados.</p>' : '') +
             (t.cobro_en_linea
-                ? '<a class="caech-acc-btn" href="' + esc(destino) + '" style="text-decoration:none">Pagar con tarjeta</a>' +
+                ? (ofrecerSuscripcion
+                    ? '<a class="caech-acc-btn" href="' + esc(destinoSuscripcion) + '" style="text-decoration:none">' +
+                      'Suscribirme: ' + usd(t.precio_suscripcion || 0) + ' al mes</a>' +
+                      '<p class="caech-acc-pie" style="margin:8px 0"><b>Este predio queda incluido.</b> Cada ciclo mensual incluye ' +
+                      (t.cupo_suscripcion === 1 ? '1 predio gratuito' : t.cupo_suscripcion + ' predios gratuitos') + ' y los dem&aacute;s a ' + usd(Math.round((t.precio_publico || 0) / 2)) + '. ' +
+                      'Se renueva pag&aacute;ndola otra vez: no se debita sola.</p>' +
+                      '<a class="caech-acc-btn" href="' + esc(destino) + '" style="text-decoration:none;display:block;' +
+                      'background:transparent;color:var(--grafito,#2E3238);border:1px solid var(--grafito,#2E3238)">' +
+                      'Solo este predio: ' + usd(t.precio || 0) + '</a>'
+                    : '<a class="caech-acc-btn" href="' + esc(destino) + '" style="text-decoration:none">Pagar con tarjeta</a>') +
                   '<p class="caech-acc-pie">El pago lo procesa PayPhone; la plataforma no ve ni guarda los datos ' +
                   'de su tarjeta. Al terminar volver&aacute; al visor con el predio abierto.</p>'
                 : '<div class="caech-acc-aviso exito" style="display:block">El pago en l&iacute;nea se habilita en breve. ' +

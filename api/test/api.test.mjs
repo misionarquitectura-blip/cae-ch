@@ -18,6 +18,17 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { finDeCiclo } from '../src/cobros.js';
+
+// El arnes habla HTTP y no puede adelantar el reloj: para simular un mes o un
+// ciclo nuevo se envejecen las filas directamente en la base local.
+function sql(orden) {
+    execFileSync('npx wrangler d1 execute caech-afiliados --local --command "' + orden + '"', {
+        cwd: fileURLToPath(new URL('..', import.meta.url)), shell: true, stdio: 'ignore'
+    });
+}
 import { createServer } from 'node:http';
 
 const API = process.env.API || 'http://127.0.0.1:8787';
@@ -416,14 +427,28 @@ seccion('Planimetria y declaracion de equipo');
 }
 
 // ── 7c. Cupo mensual del colegiado ──────────────────────────────────
+seccion('Duracion del ciclo de suscripcion');
+comprobar('un ciclo dura hasta el mismo dia del mes siguiente',
+    finDeCiclo('2026-12-15T15:00:00.000Z') === '2027-01-15T15:00:00.000Z');
+comprobar('si ese mes no tiene el dia, termina en el ultimo',
+    finDeCiclo('2027-01-31T15:00:00.000Z') === '2027-02-28T15:00:00.000Z');
+comprobar('el dia se cuenta en hora de Ecuador, no en UTC',
+    finDeCiclo('2027-02-01T02:00:00.000Z') === '2027-03-01T02:00:00.000Z');
+
 seccion('Cupo mensual del colegiado');
 {
-    const predios = ['0601500101'];
+    const cortesia = await llamar('POST', '/api/descargas', {
+        token: tokenAfiliado, cuerpo: { formato: 'pdf', clave_catastral: '0601500100' }
+    });
+    comprobar('el primer predio de la cuenta sale de cortesia',
+        cortesia.estado === 200 && cortesia.datos?.via === 'cortesia' && !cortesia.datos?.cupo, cortesia.datos);
+
+    const predios = ['0601500101', '0601500102', '0601500103', '0601500104'];
     for (let i = 0; i < predios.length; i++) {
         const r = await llamar('POST', '/api/descargas', {
             token: tokenAfiliado, cuerpo: { formato: 'pdf', clave_catastral: predios[i] }
         });
-        comprobar('predio ' + (i + 1) + ' de 1 entra por el cupo',
+        comprobar('predio ' + (i + 1) + ' de 4 entra por el cupo',
             r.estado === 200 && r.datos?.via === 'cupo' && r.datos?.cupo?.usados === i + 1, r.datos);
     }
 
@@ -439,18 +464,25 @@ seccion('Cupo mensual del colegiado');
     const segundo = await llamar('POST', '/api/descargas', {
         token: tokenAfiliado, cuerpo: { formato: 'pdf', clave_catastral: '0601500105' }
     });
-    comprobar('el segundo predio del mes pide pago (402)',
+    comprobar('el quinto predio del mes pide pago (402)',
         segundo.estado === 402 && segundo.datos?.requiere_pago === true, segundo.datos);
     comprobar('y dice el precio de colegiado (50 %) y el cupo agotado',
-        segundo.datos?.tarifa?.precio === 1000 && segundo.datos?.tarifa?.precio_publico === 2000
+        segundo.datos?.tarifa?.precio === 250 && segundo.datos?.tarifa?.precio_publico === 500
         && segundo.datos?.tarifa?.descuento_colegiado === true && segundo.datos?.cupo?.restantes === 0, segundo.datos);
+    comprobar('el colegiado figura como tal y sin suscripcion',
+        segundo.datos?.categoria === 'colegiado' && segundo.datos?.suscripcion === null, segundo.datos);
+
+    const colegiadoSuscribe = await llamar('POST', '/api/pagos', {
+        token: tokenAfiliado, cuerpo: { concepto: 'suscripcion' }
+    });
+    comprobar('el colegiado no puede contratar suscripcion', colegiadoSuscribe.estado === 409, colegiadoSuscribe.datos);
 
     const pagoColegiado = await llamar('POST', '/api/pagos', {
         token: tokenAfiliado, cuerpo: { clave_catastral: '0601500105' }
     });
-    comprobar('el pago del colegiado se prepara por USD 10 (870 + 130)',
-        pagoColegiado.estado === 201 && pagoColegiado.datos?.cajita?.amount === 1000
-        && pagoColegiado.datos?.cajita?.amountWithTax === 870 && pagoColegiado.datos?.cajita?.tax === 130, pagoColegiado.datos);
+    comprobar('el pago del colegiado se prepara por USD 2,50 (217 + 33)',
+        pagoColegiado.estado === 201 && pagoColegiado.datos?.cajita?.amount === 250
+        && pagoColegiado.datos?.cajita?.amountWithTax === 217 && pagoColegiado.datos?.cajita?.tax === 33, pagoColegiado.datos);
 
     const estado = await llamar('GET', '/api/predios/estado?clave=' + predios[0], { token: tokenAfiliado });
     comprobar('el estado del predio lo da por habilitado via cupo',
@@ -458,7 +490,17 @@ seccion('Cupo mensual del colegiado');
 
     const resumen = await llamar('GET', '/api/cuenta/cobros', { token: tokenAfiliado });
     comprobar('el resumen de la cuenta lista el predio del cupo',
-        resumen.estado === 200 && resumen.datos?.predios?.length === 1 && resumen.datos?.cupo?.usados === 1, resumen.datos);
+        resumen.estado === 200 && resumen.datos?.predios?.length === 5 && resumen.datos?.cupo?.usados === 4, resumen.datos);
+    comprobar('la cortesia no resto del cupo y ya no esta disponible',
+        resumen.datos?.cortesia_disponible === false, resumen.datos);
+
+    // El mes siguiente se simula envejeciendo las filas: el contador vuelve a
+    // cero sin que nada lo reinicie, y lo no usado no se habria acumulado.
+    sql("UPDATE predios_habilitados SET creado_en = '2020-01-15T00:00:00.000Z' WHERE via = 'cupo'");
+    const mesNuevo = await llamar('GET', '/api/cuenta/cobros', { token: tokenAfiliado });
+    comprobar('al empezar otro mes el colegiado vuelve a tener 4 gratis, no mas',
+        mesNuevo.datos?.cupo?.usados === 0 && mesNuevo.datos?.cupo?.restantes === 4, mesNuevo.datos?.cupo);
+    comprobar('y la cortesia no vuelve con el mes', mesNuevo.datos?.cortesia_disponible === false, mesNuevo.datos);
 }
 
 // ── 8. Suspension y vigencia ────────────────────────────────────────
@@ -683,6 +725,9 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
             comprobar('puede pedir productos', p?.pdf === true && p?.dxf === true && p?.csv === true, p);
             comprobar('pero cobra por pago, no por cupo', p?.cobro === 'pago' && p?.colegiado === false, p);
 
+            await llamar('POST', '/api/descargas', {
+                token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010100' }
+            });
             const pdfPendiente = await llamar('POST', '/api/descargas', {
                 token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010101' }
             });
@@ -716,10 +761,13 @@ const REGISTRO_USR = 'CAE-CH-' + String(Date.now()).slice(-6);
             });
             comprobar('y el servidor lo autoriza con su cupo', pdfOk.estado === 200 && pdfOk.datos?.via === 'cupo', pdfOk.datos);
 
+            for (const clave of ['060150010102', '060150010103', '060150010104']) {
+                await llamar('POST', '/api/descargas', { token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: clave } });
+            }
             const pdfOtro = await llamar('POST', '/api/descargas', {
-                token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010102' }
+                token: tokenUsuario, cuerpo: { formato: 'pdf', clave_catastral: '060150010105' }
             });
-            comprobar('el segundo predio del mes ya pide pago', pdfOtro.estado === 402 && pdfOtro.datos?.requiere_pago === true, pdfOtro.datos);
+            comprobar('el quinto predio del mes ya pide pago', pdfOtro.estado === 402 && pdfOtro.datos?.requiere_pago === true, pdfOtro.datos);
 
             const invalidar = await llamar('PATCH', '/api/admin/afiliados/' + yo.datos.afiliado.id, {
                 token: tokenAdmin, cuerpo: { registro_validado: false }
@@ -829,6 +877,24 @@ seccion('Cuenta publica y pago por predio');
 
     if (tokenPub) {
         const PREDIO = '0601500201';
+
+        const comprarAntes = await llamar('POST', '/api/pagos', { token: tokenPub, cuerpo: { clave_catastral: PREDIO } });
+        comprobar('con la cortesia disponible no deja pagar un predio',
+            comprarAntes.estado === 409 && comprarAntes.datos?.cortesia_disponible === true, comprarAntes.datos);
+        const estadoAntes = await llamar('GET', '/api/cuenta/cobros', { token: tokenPub });
+        comprobar('la cuenta nueva tiene su predio de cortesia', estadoAntes.datos?.cortesia_disponible === true, estadoAntes.datos);
+
+        const [cortesia1, cortesia2] = await Promise.all(['0601500200', '0601500202'].map(clave =>
+            llamar('POST', '/api/descargas', { token: tokenPub, cuerpo: { formato: 'pdf', clave_catastral: clave } })));
+        comprobar('dos descargas a la vez solo obtienen una cortesia',
+            [cortesia1, cortesia2].filter(r => r.datos?.via === 'cortesia').length === 1
+            && [cortesia1, cortesia2].filter(r => r.estado === 402).length === 1, [cortesia1.datos, cortesia2.datos]);
+        const clavesCortesia = cortesia1.datos?.via === 'cortesia' ? '0601500200' : '0601500202';
+        for (const formato of ['dxf', 'csv']) {
+            const r = await llamar('POST', '/api/descargas', { token: tokenPub, cuerpo: { formato, clave_catastral: clavesCortesia } });
+            comprobar('la cortesia abre tambien el ' + formato.toUpperCase(), r.estado === 200 && r.datos?.via === 'cortesia', r.datos);
+        }
+
         const sinPagar = await llamar('POST', '/api/descargas', {
             token: tokenPub, cuerpo: { formato: 'pdf', clave_catastral: PREDIO }
         });
@@ -836,7 +902,11 @@ seccion('Cuenta publica y pago por predio');
         comprobar('una cuenta publica no tiene cupo', sinPagar.datos?.cupo === null, sinPagar.datos);
         comprobar('el cobro en linea figura disponible', sinPagar.datos?.tarifa?.cobro_en_linea === true, sinPagar.datos?.tarifa);
         comprobar('la cuenta publica paga el precio completo, sin descuento',
-            sinPagar.datos?.tarifa?.precio === 2000 && sinPagar.datos?.tarifa?.descuento_colegiado === false, sinPagar.datos?.tarifa);
+            sinPagar.datos?.tarifa?.precio === 500 && sinPagar.datos?.tarifa?.descuento_colegiado === false
+            && sinPagar.datos?.tarifa?.descuento_suscriptor === false, sinPagar.datos?.tarifa);
+        comprobar('es general, sin suscripcion, y se la ofrece',
+            sinPagar.datos?.categoria === 'general' && sinPagar.datos?.suscripcion?.activa === false
+            && sinPagar.datos?.tarifa?.precio_suscripcion === 990, sinPagar.datos);
 
         async function preparar() {
             const r = await llamar('POST', '/api/pagos', { token: tokenPub, cuerpo: { clave_catastral: PREDIO } });
@@ -847,8 +917,8 @@ seccion('Cuenta publica y pago por predio');
         const p1 = await preparar();
         comprobar('prepara el pago', p1.estado === 201 && !!p1.datos?.pago?.id, p1.datos);
         const c = p1.datos?.cajita || {};
-        comprobar('la cajita cobra USD 20 con IVA desglosado',
-            c.amount === 2000 && c.amountWithTax === 1739 && c.tax === 261 && c.amountWithoutTax === 0, c);
+        comprobar('la cajita cobra USD 5 con IVA desglosado',
+            c.amount === 500 && c.amountWithTax === 435 && c.tax === 65 && c.amountWithoutTax === 0, c);
         comprobar('el clientTransactionId es el id del pago y es alfanumerico',
             c.clientTransactionId === p1.datos?.pago?.id && /^[A-Z0-9]{10,40}$/.test(c.clientTransactionId), c.clientTransactionId);
 
@@ -916,12 +986,12 @@ seccion('Cuenta publica y pago por predio');
         comprobar('una cuenta publica no se habilita predios a si misma', seHabilitaSolo.estado === 403);
 
         const resumen = await llamar('GET', '/api/cuenta/cobros', { token: tokenPub });
-        comprobar('su resumen muestra los dos predios y los tres pagos cerrados',
-            resumen.datos?.predios?.length === 2 && resumen.datos?.pagos?.length === 3, resumen.datos);
+        comprobar('su resumen muestra los tres predios y los tres pagos cerrados',
+            resumen.datos?.predios?.length === 3 && resumen.datos?.pagos?.length === 3, resumen.datos);
 
         const pagosAdmin = await llamar('GET', '/api/admin/pagos', { token: tokenAdmin });
         comprobar('el admin ve los pagos con su estado',
-            pagosAdmin.estado === 200 && pagosAdmin.datos?.resumen?.some(f => f.estado === 'aprobado' && f.monto === 2000),
+            pagosAdmin.estado === 200 && pagosAdmin.datos?.resumen?.some(f => f.estado === 'aprobado' && f.monto === 500),
             pagosAdmin.datos?.resumen);
         const pagosAjeno = await llamar('GET', '/api/admin/pagos', { token: tokenPub });
         comprobar('y una cuenta publica no', pagosAjeno.estado === 403);
@@ -975,6 +1045,99 @@ seccion('Cuenta publica y pago por predio');
             siguen.datos?.pagos?.some(p => p.id === idRecien));
         comprobar('y el aprobado tambien',
             siguen.datos?.pagos?.some(p => p.id === yaCobrado?.id && p.estado === 'aprobado'));
+
+        // ── Suscripcion mensual ─────────────────────────────────────
+        seccion('Suscripcion mensual');
+        const predioNuevo = '0601500301';
+        const suscribir = async (cuerpo = {}) => {
+            const r = await llamar('POST', '/api/pagos', { token: tokenPub, cuerpo: { concepto: 'suscripcion', ...cuerpo } });
+            if (r.datos?.cajita) preparados.set(r.datos.cajita.clientTransactionId, r.datos.cajita.amount);
+            return r;
+        };
+        const confirmarCon = (id, tx) => llamar('POST', '/api/pagos/confirmar', {
+            token: tokenPub, cuerpo: { id: id, clientTransactionId: tx }
+        });
+        const pedirPdf = clave => llamar('POST', '/api/descargas', {
+            token: tokenPub, cuerpo: { formato: 'pdf', clave_catastral: clave }
+        });
+        const cobros = async () => (await llamar('GET', '/api/cuenta/cobros', { token: tokenPub })).datos;
+
+        const sub1 = await suscribir({ clave_catastral: predioNuevo });
+        const cajaSub = sub1.datos?.cajita || {};
+        comprobar('la suscripcion se prepara por USD 9,90 con IVA desglosado',
+            sub1.estado === 201 && sub1.datos?.pago?.concepto === 'suscripcion'
+            && cajaSub.amount === 990 && cajaSub.amountWithTax === 861 && cajaSub.tax === 129, sub1.datos);
+
+        const subCancelada = await confirmarCon(999, sub1.datos?.pago?.id);
+        comprobar('cancelada no abre ningun ciclo',
+            subCancelada.datos?.pago?.estado === 'cancelado' && (await cobros()).suscripcion?.activa === false, subCancelada.datos);
+
+        const sub2 = await suscribir({ clave_catastral: predioNuevo });
+        const subOk = await confirmarCon(50001, sub2.datos?.pago?.id);
+        comprobar('aprobada abre el ciclo y dice hasta cuando',
+            subOk.datos?.ok === true && subOk.datos?.pago?.concepto === 'suscripcion' && !!subOk.datos?.vence_en, subOk.datos);
+        const antesConfirm = llamadasConfirm.length;
+        await confirmarCon(50001, sub2.datos?.pago?.id);
+        const trasRepetir = await cobros();
+        comprobar('confirmarla dos veces no abre otro ciclo',
+            llamadasConfirm.length === antesConfirm && trasRepetir.suscripcion?.renovada === false, trasRepetir.suscripcion);
+        comprobar('el ciclo trae 3 predios gratuitos',
+            trasRepetir.cupo?.total === 3 && trasRepetir.cupo?.restantes === 3 && trasRepetir.cupo?.periodo === 'ciclo', trasRepetir.cupo);
+
+        for (const clave of [predioNuevo, '0601500304', '0601500305']) {
+            const gratis = await pedirPdf(clave);
+            comprobar('los 3 primeros predios del ciclo salen gratis', gratis.estado === 200 && gratis.datos?.via === 'cupo', gratis.datos);
+        }
+
+        const segundoCiclo = await pedirPdf('0601500302');
+        comprobar('el cuarto predio del ciclo pide USD 2,50',
+            segundoCiclo.estado === 402 && segundoCiclo.datos?.tarifa?.precio === 250
+            && segundoCiclo.datos?.tarifa?.descuento_suscriptor === true, segundoCiclo.datos);
+        const pagoSuscriptor = await llamar('POST', '/api/pagos', {
+            token: tokenPub, cuerpo: { clave_catastral: '0601500302' }
+        });
+        comprobar('y la cajita cobra ese precio (217 + 33)',
+            pagoSuscriptor.datos?.cajita?.amount === 250 && pagoSuscriptor.datos?.cajita?.amountWithTax === 217
+            && pagoSuscriptor.datos?.cajita?.tax === 33, pagoSuscriptor.datos);
+
+        const finPrimero = subOk.datos?.vence_en;
+        const renovar = await suscribir();
+        await confirmarCon(50002, renovar.datos?.pago?.id);
+        const renovada = await cobros();
+        comprobar('renovar antes de tiempo no pierde dias: encadena el ciclo',
+            renovada.suscripcion?.renovada === true && renovada.suscripcion?.vence_en === finPrimero
+            && renovada.suscripcion?.cubierta_hasta === finDeCiclo(finPrimero), renovada.suscripcion);
+        comprobar('y renovar no regala otro predio en el ciclo vigente', renovada.cupo?.restantes === 0, renovada.cupo);
+        const terceraVez = await suscribir();
+        comprobar('no se paga mas de un ciclo por delante',
+            terceraVez.estado === 409 && terceraVez.datos?.ya_renovada === true, terceraVez.datos);
+
+        // Empieza el ciclo renovado: los gratuitos vuelven, y solo los suyos.
+        sql("UPDATE predios_habilitados SET creado_en = '2020-01-15T00:00:00.000Z' WHERE via = 'cupo'");
+        sql("UPDATE suscripciones SET inicio = '2020-01-01T00:00:00.000Z', vence_en = '2020-02-01T00:00:00.000Z' WHERE vence_en = '" + finPrimero + "'");
+        sql("UPDATE suscripciones SET inicio = '2020-02-01T00:00:00.000Z' WHERE inicio = '" + finPrimero + "'");
+        const cicloNuevo = await cobros();
+        comprobar('en el ciclo nuevo vuelven 3 predios gratuitos, sin acumular',
+            cicloNuevo.suscripcion?.activa === true && cicloNuevo.cupo?.usados === 0 && cicloNuevo.cupo?.restantes === 3, cicloNuevo.cupo);
+
+        // Sin pagar otro ciclo se vuelve a la tarifa regular.
+        sql("UPDATE suscripciones SET vence_en = '2020-03-01T00:00:00.000Z' WHERE inicio = '2020-02-01T00:00:00.000Z'");
+        const vencida = await pedirPdf('0601500303');
+        comprobar('vencida, vuelve a USD 5 y sin predio gratuito',
+            vencida.estado === 402 && vencida.datos?.tarifa?.precio === 500 && vencida.datos?.cupo === null
+            && vencida.datos?.suscripcion?.activa === false, vencida.datos);
+
+        const idPub = yo.datos.afiliado.id;
+        const seSuscribeSola = await llamar('POST', '/api/admin/afiliados/' + idPub + '/suscripcion', { token: tokenPub, cuerpo: {} });
+        comprobar('una cuenta publica no se concede suscripcion', seSuscribeSola.estado === 403);
+        const enSede = await llamar('POST', '/api/admin/afiliados/' + idPub + '/suscripcion', {
+            token: tokenAdmin, cuerpo: { motivo: 'pago en sede' }
+        });
+        comprobar('el admin abre un ciclo pagado en la sede',
+            enSede.estado === 201 && (await cobros()).suscripcion?.activa === true, enSede.datos);
+        const padronSub = await llamar('GET', '/api/admin/afiliados', { token: tokenAdmin });
+        comprobar('y el padron muestra hasta cuando esta suscrita',
+            padronSub.datos?.afiliados?.find(a => a.id === idPub)?.suscripcion_hasta === enSede.datos?.vence_en);
     }
 
     simulador.close();
