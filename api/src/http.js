@@ -13,7 +13,7 @@ export function cabecerasCORS(request, env) {
     const permitidos = listaOrigenes(env);
     const cabeceras = {
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
         'Access-Control-Max-Age': '86400',
         'Vary': 'Origin'
     };

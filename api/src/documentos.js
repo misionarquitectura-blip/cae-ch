@@ -18,9 +18,14 @@ import { hashIP } from './cripto.js';
 import { ahora, texto } from './http.js';
 import { registrarEvento, VERSION_TERMINOS } from './sesiones.js';
 
+// La Politica de Privacidad cambio sola el 2026-11-18 (datos de facturacion
+// opcionales): solo ella se vuelve a pedir. Coincide con su vigencia en
+// legal.html y con VERSION de caech-privacidad.js.
+export const VERSION_PRIVACIDAD = '2026-11-18';
+
 export const DOCUMENTOS = {
     terminos:   { version: VERSION_TERMINOS, minimo: 20, nombre: 'Terminos y condiciones' },
-    privacidad: { version: VERSION_TERMINOS, minimo: 20, nombre: 'Politica de privacidad' },
+    privacidad: { version: VERSION_PRIVACIDAD, minimo: 20, nombre: 'Politica de privacidad' },
     cookies:    { version: VERSION_TERMINOS, minimo: 8,  nombre: 'Cookies y almacenamiento en el navegador' }
 };
 

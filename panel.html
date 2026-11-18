@@ -609,6 +609,30 @@
                     <tbody id="tabla-pagos"></tbody>
                 </table></div>
             </div>
+
+            <div class="tarjeta">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Reporte mensual para facturación</h2>
+                <p class="sub">Los pagos aprobados del mes, según la hora de Ecuador, con lo que necesita para
+                   emitir cada factura electrónica en el SRI y para la declaración del IVA. Sin datos, la factura
+                   va a consumidor final. Cuando emita una, anote su número: así queda separada de las pendientes.
+                   La comisión de PayPhone no figura aquí: está en la factura que PayPhone le emite a usted.</p>
+                <div class="barra-filtros" style="align-items:flex-end">
+                    <div class="campo" style="margin:0">
+                        <label for="rep-mes">Mes</label>
+                        <input type="month" id="rep-mes">
+                    </div>
+                    <button class="btn btn-linea chico" id="btn-rep-csv">
+                        <i class="fas fa-file-csv"></i> Descargar CSV
+                    </button>
+                </div>
+                <div class="cifras" id="cifras-reporte"></div>
+                <div id="aviso-reporte"></div>
+                <div class="tabla-marco"><table>
+                    <thead><tr><th>Cobrado</th><th>Factura a</th><th>Concepto</th><th>Base</th><th>IVA</th>
+                               <th>Total</th><th>Transacción</th><th>N.º de factura</th></tr></thead>
+                    <tbody id="tabla-reporte"></tbody>
+                </table></div>
+            </div>
         </section>
 
         <!-- Descargas ----------------------------------------------- -->

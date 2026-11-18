@@ -323,7 +323,7 @@
     function cargarHoja(hoja) {
         if (!perfil) return;
         if (hoja === 'padron'    && perfil.rol === 'admin') cargarPadron();
-        if (hoja === 'pagos'     && perfil.rol === 'admin') cargarPagos();
+        if (hoja === 'pagos'     && perfil.rol === 'admin') { cargarPagos(); cargarReporte(); }
         if (hoja === 'descargas' && perfil.rol === 'admin') cargarDescargas();
         if (hoja === 'bitacora'  && perfil.rol === 'admin') cargarEventos();
         if (hoja === 'solicitudes' && perfil.rol === 'admin') cargarSolicitudes();
@@ -638,7 +638,8 @@
         $('tabla-pagos').innerHTML = filas.length
             ? filas.map(p =>
                 '<tr><td class="tenue">' + fecha(p.creado_en, true) + '</td>'
-                + '<td>' + esc(p.nombre || '—') + (p.usuario ? '<br><span class="tenue mono">' + esc(p.usuario) + '</span>' : '') + '</td>'
+                + '<td>' + esc(p.nombre || '—') + (p.usuario ? '<br><span class="tenue mono">' + esc(p.usuario) + '</span>' : '')
+                + (p.estado === 'aprobado' ? '<br><span class="tenue">' + esc(textoFactura(p.facturacion)) + '</span>' : '') + '</td>'
                 + (p.concepto === 'suscripcion' ? '<td>Suscripción mensual</td>' : '<td class="mono">' + esc(p.clave_catastral) + '</td>')
                 + '<td>' + usd(p.monto) + '<br><span class="tenue">base ' + usd(p.base) + ' + IVA ' + usd(p.iva) + '</span></td>'
                 + '<td>' + insigniaPago(p.estado) + (p.detalle ? '<br><span class="tenue">' + esc(p.detalle) + '</span>' : '') + '</td>'
@@ -682,6 +683,146 @@
         if (!confirm('¿Borrar el pago preparado ' + b.dataset.pago + '?\n\nNo hubo cobro: es un intento que no se completó.')) return;
         borrarPreparados(b.dataset.pago);
     });
+
+    // ── Reporte mensual para facturación ────────────────────────
+
+    const DOC = { cedula: 'Cédula', ruc: 'RUC', pasaporte: 'Pasaporte' };
+
+    /** Una línea: «Factura 001-001-…» o a quién va a ir. */
+    function textoFactura(f) {
+        f = f || {};
+        const a = f.tipo && f.tipo !== 'consumidor_final' ? f.nombre + ' (' + (DOC[f.tipo] || f.tipo) + ')' : 'consumidor final';
+        return f.numero ? 'Factura ' + f.numero : 'Por facturar a ' + a;
+    }
+
+    let reporte = null;
+
+    function mesActualEcuador() {
+        return new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 7);
+    }
+
+    async function cargarReporte() {
+        if (!$('rep-mes').value) $('rep-mes').value = mesActualEcuador();
+        const r = await pedir('GET', '/api/admin/pagos/reporte?mes=' + encodeURIComponent($('rep-mes').value));
+        if (r.estado !== 200) {
+            reporte = null;
+            return avisar('aviso-reporte', 'error', esc((r.datos && r.datos.error) || 'No se pudo cargar el reporte.'));
+        }
+        reporte = r.datos;
+        const t = reporte.totales;
+        $('cifras-reporte').innerHTML =
+            '<div class="cifra"><b>' + t.n + '</b><span>pagos aprobados</span></div>'
+            + '<div class="cifra"><b>' + usd(t.base) + '</b><span>base imponible</span></div>'
+            + '<div class="cifra"><b>' + usd(t.iva) + '</b><span>IVA cobrado</span></div>'
+            + '<div class="cifra"><b>' + usd(t.monto) + '</b><span>total</span></div>'
+            + '<div class="cifra"><b>' + t.pendientes + '</b><span>por facturar</span></div>';
+
+        const filas = reporte.pagos || [];
+        $('tabla-reporte').innerHTML = filas.length
+            ? filas.map(p => {
+                const f = p.facturacion || {};
+                const conDatos = f.tipo && f.tipo !== 'consumidor_final';
+                return '<tr><td class="tenue">' + fecha(p.confirmado_en, true) + '</td>'
+                    + '<td>' + (conDatos
+                        ? esc(f.nombre) + '<br><span class="tenue">' + esc(DOC[f.tipo] || f.tipo) + ' <span class="mono">'
+                          + esc(f.identificacion) + '</span>' + (f.correo ? ' · ' + esc(f.correo) : '')
+                          + (f.direccion ? '<br>' + esc(f.direccion) : '') + '</span>'
+                        : 'Consumidor final<br><span class="tenue">' + esc(p.nombre || '') + ' · ' + esc(p.correo_cuenta || '') + '</span>')
+                    + '</td>'
+                    + (p.concepto === 'suscripcion' ? '<td>Suscripción mensual</td>'
+                        : '<td>Predio<br><span class="tenue mono">' + esc(p.clave_catastral) + '</span></td>')
+                    + '<td>' + usd(p.base) + '</td><td>' + usd(p.iva) + '</td><td><b>' + usd(p.monto) + '</b></td>'
+                    + '<td class="mono">' + esc(p.transaccion || '—')
+                    + (p.autorizacion ? '<br><span class="tenue">aut. ' + esc(p.autorizacion) + '</span>' : '') + '</td>'
+                    + '<td>' + (f.numero
+                        ? '<span class="mono">' + esc(f.numero) + '</span><br><span class="tenue">' + fecha(f.facturado_en) + '</span> '
+                          + '<button class="btn btn-linea chico" data-desfacturar="' + esc(p.id) + '" title="Quitar el número">'
+                          + '<i class="fas fa-undo"></i></button>'
+                        : '<div style="display:flex;gap:6px;align-items:center">'
+                          + '<input class="mono" data-numero="' + esc(p.id) + '" placeholder="001-001-000000001" '
+                          + 'style="width:170px;padding:6px 8px;font-size:12.5px;border:1px solid var(--borde-marcado);border-radius:var(--radio)">'
+                          + '<button class="btn chico" data-facturar="' + esc(p.id) + '">Anotar</button></div>')
+                    + '</td></tr>';
+            }).join('')
+            : '<tr><td colspan="8" class="vacio">No hay pagos aprobados en este mes.</td></tr>';
+    }
+
+    async function anotarFactura(id, numero) {
+        const r = await pedir('PATCH', '/api/admin/pagos/' + encodeURIComponent(id) + '/factura', { numero: numero });
+        if (r.estado !== 200) {
+            return avisar('aviso-reporte', 'error', esc((r.datos && r.datos.error) || 'No se pudo anotar la factura.'));
+        }
+        avisar('aviso-reporte', 'exito', numero ? 'Factura ' + esc(r.datos.numero) + ' anotada.' : 'Número de factura retirado.');
+        cargarReporte();
+        cargarPagos();
+    }
+
+    $('rep-mes').addEventListener('change', () => { avisar('aviso-reporte', '', ''); cargarReporte(); });
+
+    $('tabla-reporte').addEventListener('click', e => {
+        const b = e.target.closest('button[data-facturar], button[data-desfacturar]');
+        if (!b) return;
+        if (b.dataset.facturar) {
+            const input = $('tabla-reporte').querySelector('input[data-numero="' + CSS.escape(b.dataset.facturar) + '"]');
+            const numero = (input && input.value.trim()) || '';
+            if (!numero) return avisar('aviso-reporte', 'info', 'Escriba el número de la factura emitida en el SRI.');
+            return anotarFactura(b.dataset.facturar, numero);
+        }
+        if (!confirm('¿Quitar el número de factura de este pago?\n\nVolverá a figurar como pendiente de facturar.')) return;
+        anotarFactura(b.dataset.desfacturar, '');
+    });
+
+    $('tabla-reporte').addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || !e.target.matches('input[data-numero]')) return;
+        const numero = e.target.value.trim();
+        if (numero) anotarFactura(e.target.dataset.numero, numero);
+    });
+
+    /** Mismo formato que el de las solicitudes: BOM y punto y coma, para Excel en español. */
+    function exportarReporteCSV() {
+        if (!reporte || !(reporte.pagos || []).length) {
+            return avisar('aviso-reporte', 'info', 'No hay pagos aprobados que exportar en este mes.');
+        }
+        const campo = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const dec = c => (c / 100).toFixed(2).replace('.', ',');
+        const cab = ['Cobrado', 'Tipo de identificacion', 'Identificacion', 'Nombre o razon social', 'Correo factura',
+            'Direccion', 'Cuenta', 'Correo de la cuenta', 'Concepto', 'Clave catastral', 'Base imponible', 'IVA', 'Total',
+            'Transaccion PayPhone', 'Autorizacion', 'Id del pago', 'N. de factura', 'Facturado'];
+        const filas = [cab.map(campo).join(';')];
+        reporte.pagos.forEach(p => {
+            const f = p.facturacion || {};
+            const conDatos = f.tipo && f.tipo !== 'consumidor_final';
+            filas.push([
+                fecha(p.confirmado_en, true),
+                conDatos ? (DOC[f.tipo] || f.tipo) : 'Consumidor final',
+                conDatos ? "'" + f.identificacion : "'9999999999999",
+                conDatos ? f.nombre : 'CONSUMIDOR FINAL',
+                conDatos ? (f.correo || p.correo_cuenta || '') : (p.correo_cuenta || ''),
+                conDatos ? (f.direccion || '') : '',
+                p.usuario || '', p.correo_cuenta || '',
+                p.concepto === 'suscripcion' ? 'Suscripcion mensual CAE-CH' : 'Productos del predio',
+                p.concepto === 'suscripcion' ? '' : "'" + p.clave_catastral,
+                dec(p.base), dec(p.iva), dec(p.monto),
+                "'" + (p.transaccion || ''), p.autorizacion || '', p.id,
+                f.numero || '', f.facturado_en ? fecha(f.facturado_en) : ''
+            ].map(campo).join(';'));
+        });
+        const t = reporte.totales;
+        filas.push(['TOTAL ' + reporte.mes, '', '', '', '', '', '', '', '', '', dec(t.base), dec(t.iva), dec(t.monto),
+            '', '', '', '', ''].map(campo).join(';'));
+
+        const blob = new Blob(['﻿' + filas.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'pagos-facturacion-' + reporte.mes + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    $('btn-rep-csv').addEventListener('click', exportarReporteCSV);
 
     // ── Descargas ───────────────────────────────────────────────
 

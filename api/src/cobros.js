@@ -49,6 +49,7 @@
 import { generarToken, hashIP } from './cripto.js';
 import { ahora, texto } from './http.js';
 import { permisos, registrarEvento } from './sesiones.js';
+import { vistaFacturacion, facturacionAnterior } from './facturacion.js';
 
 const URL_CONFIRMAR_PAYPHONE = 'https://paymentbox.payphonetodoesposible.com/api/confirm';
 
@@ -455,6 +456,8 @@ export async function prepararPago(env, request, sesion, datos) {
             pago: { id: id, clave_catastral: clave, monto: cobro.precio, base: cobro.base, iva: cobro.iva,
                     concepto: esSuscripcion ? 'suscripcion' : 'predio' },
             tarifa: tarifaPublica(t),
+            // Para ofrecer la factura con los mismos datos de la vez anterior.
+            facturacion_anterior: await facturacionAnterior(env, fila.id),
             // Configuracion de PPaymentButtonBox. El token de PayPhone viaja
             // al navegador porque asi funciona la Cajita: la autorizacion de
             // verdad esta en el Confirm, que solo hace este Worker.
@@ -606,7 +609,8 @@ function vistaPago(f) {
     return {
         id: f.id, concepto: f.concepto || 'predio', clave_catastral: f.clave_catastral, monto: f.monto, base: f.base, iva: f.iva,
         estado: f.estado, pasarela: f.pasarela, transaccion: f.transaccion, autorizacion: f.autorizacion,
-        creado_en: f.creado_en, confirmado_en: f.confirmado_en
+        creado_en: f.creado_en, confirmado_en: f.confirmado_en,
+        facturacion: vistaFacturacion(f)
     };
 }
 

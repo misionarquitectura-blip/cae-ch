@@ -203,11 +203,23 @@ CREATE TABLE IF NOT EXISTS pagos (
     -- En una suscripcion, `clave_catastral` guarda el predio desde el que se
     -- contrato, para volver a el, o 'SUSCRIPCION' si no hubo (009).
     concepto             TEXT    NOT NULL DEFAULT 'predio'
-                                 CHECK (concepto IN ('predio', 'suscripcion'))
+                                 CHECK (concepto IN ('predio', 'suscripcion')),
+    -- Datos de la factura que pidio quien paga (010). factura_tipo nulo =
+    -- consumidor final.
+    factura_tipo           TEXT  CHECK (factura_tipo IS NULL OR factura_tipo IN ('cedula', 'ruc', 'pasaporte')),
+    factura_identificacion TEXT,
+    factura_nombre         TEXT,
+    factura_correo         TEXT,
+    factura_direccion      TEXT,
+    -- La factura emitida en el SRI, anotada por la administracion (010).
+    factura_numero         TEXT,
+    facturado_en           TEXT,
+    facturado_por          TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_pagos_cuenta ON pagos (afiliado_id, creado_en);
 CREATE INDEX IF NOT EXISTS idx_pagos_estado ON pagos (estado, creado_en);
+CREATE INDEX IF NOT EXISTS idx_pagos_confirmado ON pagos (estado, confirmado_en);
 
 -- ── Suscripciones ───────────────────────────────────────────────────
 -- Una fila por ciclo mensual pagado de una cuenta general (009).

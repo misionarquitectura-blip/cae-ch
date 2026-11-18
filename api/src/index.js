@@ -37,6 +37,7 @@ import {
     autorizarPredio, estadoPredio, prepararPago, confirmarPago, resumenCuenta,
     listarPagos, habilitarPredioAdmin, concederSuscripcionAdmin, eliminarPagosPreparados
 } from './cobros.js';
+import { guardarFacturacion, reporteMensual, marcarFactura } from './facturacion.js';
 import { declaracionVigente, leerDeclaracion, declararEquipo } from './equipo.js';
 import { documentosPendientes, cuerpoPendientes, estadoDocumentos, aceptarDocumento } from './documentos.js';
 import {
@@ -267,6 +268,16 @@ async function enrutar(request, env, url, ruta, metodo) {
         return responder(await confirmarPago(env, request, sesion, datos));
     }
 
+    // Datos de facturacion de un pago propio: opcionales, antes o despues de pagar.
+    const mFacturacion = /^\/api\/pagos\/([A-Za-z0-9_-]+)\/facturacion$/.exec(ruta);
+    if (mFacturacion && metodo === 'PUT') {
+        const sesion = await sesionActual(env, request);
+        if (!sesion) return error('Sesion no valida o expirada.', 401, request, env);
+        const datos = await cuerpoJSON(request);
+        if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+        return responder(await guardarFacturacion(env, request, sesion, mFacturacion[1], datos));
+    }
+
     // ── Declaracion de equipo (planimetria) ─────────────────────────
     if (ruta === '/api/equipo') {
         const sesion = await sesionActual(env, request);
@@ -419,6 +430,13 @@ async function enrutar(request, env, url, ruta, metodo) {
         // plural va ANTES que la de un id suelto, que si no se la comeria.
         if (ruta === '/api/admin/pagos/preparados' && metodo === 'DELETE') {
             return responder(await eliminarPagosPreparados(env, request, sesion, null));
+        }
+        if (ruta === '/api/admin/pagos/reporte' && metodo === 'GET') return responder(await reporteMensual(env, url));
+        const mFactura = /^\/api\/admin\/pagos\/([A-Za-z0-9_-]+)\/factura$/.exec(ruta);
+        if (mFactura && metodo === 'PATCH') {
+            const datos = await cuerpoJSON(request);
+            if (!datos) return error('Cuerpo JSON invalido.', 400, request, env);
+            return responder(await marcarFactura(env, request, sesion, mFactura[1], datos));
         }
         const mPago = /^\/api\/admin\/pagos\/([A-Za-z0-9_-]+)$/.exec(ruta);
         if (mPago && metodo === 'DELETE') {

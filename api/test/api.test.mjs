@@ -996,6 +996,65 @@ seccion('Cuenta publica y pago por predio');
         const pagosAjeno = await llamar('GET', '/api/admin/pagos', { token: tokenPub });
         comprobar('y una cuenta publica no', pagosAjeno.estado === 403);
 
+        // ── Datos de facturacion y reporte mensual ──────────────────
+        const idAprobado = p3.datos?.pago?.id;
+        const rutaFac = id => '/api/pagos/' + id + '/facturacion';
+        comprobar('sin datos, el pago aprobado se factura a consumidor final',
+            aprobado.datos?.pago?.facturacion?.tipo === 'consumidor_final', aprobado.datos?.pago?.facturacion);
+
+        const cedulaMala = await llamar('PUT', rutaFac(idAprobado), {
+            token: tokenPub, cuerpo: { tipo: 'cedula', identificacion: '0604430321', nombre: 'Persona de Prueba' } });
+        comprobar('una cedula con el verificador mal se rechaza', cedulaMala.estado === 400, cedulaMala.datos);
+        const sinNombre = await llamar('PUT', rutaFac(idAprobado), {
+            token: tokenPub, cuerpo: { tipo: 'ruc', identificacion: '1790010937001', nombre: '' } });
+        comprobar('sin nombre o razon social se rechaza', sinNombre.estado === 400, sinNombre.datos);
+        const facAjena = await llamar('PUT', rutaFac(idAprobado), {
+            token: tokenAdmin, cuerpo: { tipo: 'cedula', identificacion: '1710034065', nombre: 'Otra Persona' } });
+        comprobar('otra cuenta no toca los datos de un pago ajeno', facAjena.estado === 404, facAjena.datos);
+
+        const facOk = await llamar('PUT', rutaFac(idAprobado), {
+            token: tokenPub, cuerpo: { tipo: 'ruc', identificacion: '1790-010937-001', nombre: '  Empresa   de Prueba S.A. ',
+                                       correo: 'Facturas@Ejemplo.ec' } });
+        comprobar('guarda los datos de facturacion, normalizados',
+            facOk.estado === 200 && facOk.datos?.facturacion?.identificacion === '1790010937001'
+            && facOk.datos?.facturacion?.nombre === 'Empresa de Prueba S.A.'
+            && facOk.datos?.facturacion?.correo === 'facturas@ejemplo.ec', facOk.datos);
+
+        // Otro predio: el de la prueba ya esta habilitado y no se deja pagar de nuevo.
+        const pAnt = await llamar('POST', '/api/pagos', { token: tokenPub, cuerpo: { clave_catastral: '0601500888' } });
+        comprobar('el siguiente pago ofrece los datos de la vez anterior',
+            pAnt.datos?.facturacion_anterior?.identificacion === '1790010937001', pAnt.datos?.facturacion_anterior);
+
+        const mes = new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 7);
+        const rep = await llamar('GET', '/api/admin/pagos/reporte?mes=' + mes, { token: tokenAdmin });
+        const filaRep = rep.datos?.pagos?.find(p => p.id === idAprobado);
+        comprobar('el reporte del mes trae el aprobado con sus datos de factura',
+            rep.estado === 200 && filaRep?.facturacion?.tipo === 'ruc' && rep.datos?.totales?.pendientes >= 1
+            && rep.datos?.totales?.base + rep.datos?.totales?.iva === rep.datos?.totales?.monto, rep.datos);
+        comprobar('y solo aprobados', (rep.datos?.pagos || []).every(p => p.monto > 0) && !rep.datos?.pagos?.some(p => p.id === pAnt.datos?.pago?.id), rep.datos?.pagos);
+        const repMalo = await llamar('GET', '/api/admin/pagos/reporte?mes=2026-13', { token: tokenAdmin });
+        comprobar('un mes mal escrito responde 400', repMalo.estado === 400);
+        const repAjeno = await llamar('GET', '/api/admin/pagos/reporte', { token: tokenPub });
+        comprobar('una cuenta publica no ve el reporte', repAjeno.estado === 403);
+
+        const numMalo = await llamar('PATCH', '/api/admin/pagos/' + idAprobado + '/factura', { token: tokenAdmin, cuerpo: { numero: 'F-12' } });
+        comprobar('un numero de factura mal escrito se rechaza', numMalo.estado === 400, numMalo.datos);
+        const sinCobrar = await llamar('PATCH', '/api/admin/pagos/' + pAnt.datos?.pago?.id + '/factura', { token: tokenAdmin, cuerpo: { numero: '001-001-1' } });
+        comprobar('un pago sin cobrar no se factura', sinCobrar.estado === 409, sinCobrar.datos);
+        const numOk = await llamar('PATCH', '/api/admin/pagos/' + idAprobado + '/factura', { token: tokenAdmin, cuerpo: { numero: '001001123' } });
+        comprobar('anota la factura con el secuencial completo', numOk.estado === 200 && numOk.datos?.numero === '001-001-000000123', numOk.datos);
+        const tarde = await llamar('PUT', rutaFac(idAprobado), { token: tokenPub, cuerpo: { tipo: 'consumidor_final' } });
+        comprobar('emitida la factura, la cuenta ya no cambia sus datos', tarde.estado === 409, tarde.datos);
+        const facSelf = await llamar('PATCH', '/api/admin/pagos/' + idAprobado + '/factura', { token: tokenPub, cuerpo: { numero: '' } });
+        comprobar('una cuenta publica no anota facturas', facSelf.estado === 403);
+        const quitar = await llamar('PATCH', '/api/admin/pagos/' + idAprobado + '/factura', { token: tokenAdmin, cuerpo: { numero: '' } });
+        const rep2 = await llamar('GET', '/api/admin/pagos/reporte?mes=' + mes, { token: tokenAdmin });
+        comprobar('quitar el numero la devuelve a pendientes',
+            quitar.estado === 200 && rep2.datos?.pagos?.find(p => p.id === idAprobado)?.facturacion?.numero === null, rep2.datos);
+        const vueltaCf = await llamar('PUT', rutaFac(idAprobado), { token: tokenPub, cuerpo: { tipo: 'consumidor_final' } });
+        comprobar('y la cuenta puede volver a consumidor final',
+            vueltaCf.estado === 200 && vueltaCf.datos?.facturacion?.identificacion === null, vueltaCf.datos);
+
         // ── Escoba de pagos 'preparados' ────────────────────────────
         // Un 'preparado' no movio dinero, pero borrarlo mientras el usuario
         // teclea su tarjeta dejaria el cobro hecho y el predio cerrado: por

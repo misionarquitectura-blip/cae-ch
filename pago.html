@@ -61,6 +61,24 @@
         .acciones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
         #pp-button { margin-top: 16px; min-height: 40px; }
         .cargando { display: flex; align-items: center; gap: 10px; color: var(--grafito-med); }
+        /* Factura: opcional, encima de la cajita. */
+        .factura { border-top: 1px solid var(--borde); margin-top: 16px; padding-top: 14px; }
+        .factura h2 {
+            font-size: 11.5px; font-weight: 700; letter-spacing: var(--tracking-caps);
+            text-transform: uppercase; color: var(--grafito-med); margin-bottom: 8px;
+        }
+        .opcion { display: flex; gap: 9px; align-items: flex-start; padding: 5px 0; cursor: pointer; }
+        .opcion input { margin-top: 4px; accent-color: var(--rojo-caech); }
+        .campos { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 10px 0 6px; }
+        @media (min-width: 520px) { .campos { grid-template-columns: 150px 1fr; } .campos .ancho { grid-column: 1 / -1; } }
+        .campo label { display: block; font-size: 12px; font-weight: 600; color: var(--grafito-med); margin-bottom: 3px; }
+        .campo input, .campo select {
+            width: 100%; padding: 8px 10px; font: inherit; color: var(--grafito);
+            border: 1px solid var(--borde-marcado); border-radius: var(--radio); background: var(--blanco);
+        }
+        .campo input:focus, .campo select:focus { outline: 2px solid var(--rojo-humo); border-color: var(--rojo-caech); }
+        .resumen-factura { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+        .enlace { background: none; border: 0; padding: 0; font: inherit; color: var(--rojo-caech); cursor: pointer; text-decoration: underline; }
         [hidden] { display: none !important; }
     </style>
 </head>
@@ -218,18 +236,148 @@
 
     async function mostrarCajita(d, encabezado) {
         pintar(encabezado
-            + '<div id="pp-button"><p class="cargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando el formulario de pago…</p></div>'
+            + '<div class="factura" id="factura"></div>'
+            + '<div id="pp-espera" class="aviso info" hidden style="margin-top:16px">Guarde los datos de la factura para continuar al pago.</div>'
+            + '<div id="pp-button" hidden><p class="cargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando el formulario de pago…</p></div>'
             + '<p class="tenue" style="margin-top:12px">El formulario vence a los 10 minutos; si caduca, recargue la página. '
             + 'Transacción <span class="mono">' + esc(d.pago.id) + '</span>.</p>');
 
-        try {
-            await cargarCajita();
-            document.getElementById('pp-button').innerHTML = '';
-            new window.PPaymentButtonBox(d.cajita).render('pp-button');
-        } catch (e) {
-            document.getElementById('pp-button').innerHTML =
-                '<div class="aviso error">No se pudo cargar el formulario de PayPhone. Revise su conexión y recargue la página.</div>';
+        // La cajita se dibuja una sola vez, cuando la factura ya está decidida:
+        // si se pide a nombre propio, primero se guardan los datos.
+        let dibujada = false;
+        async function habilitarPago(listo) {
+            document.getElementById('pp-espera').hidden = listo;
+            document.getElementById('pp-button').hidden = !listo;
+            if (!listo || dibujada) return;
+            dibujada = true;
+            try {
+                await cargarCajita();
+                document.getElementById('pp-button').innerHTML = '';
+                new window.PPaymentButtonBox(d.cajita).render('pp-button');
+            } catch (e) {
+                document.getElementById('pp-button').innerHTML =
+                    '<div class="aviso error">No se pudo cargar el formulario de PayPhone. Revise su conexión y recargue la página.</div>';
+            }
         }
+
+        formularioFactura(document.getElementById('factura'), d.pago.id, null, d.facturacion_anterior, habilitarPago);
+    }
+
+    // ── Factura: consumidor final o a nombre de quien paga ──────────────
+    const ROTULO_DOC = { cedula: 'cédula', ruc: 'RUC', pasaporte: 'pasaporte' };
+    const rutaFactura = id => '/api/pagos/' + encodeURIComponent(id) + '/facturacion';
+
+    /**
+     * Dibuja la elección de factura en `cont`. `alCambiar(listo)` avisa si el
+     * pago puede seguir: con «a mi nombre» sin guardar, no. Los datos de una
+     * compra anterior se aplican solos y se muestran resumidos, con «Cambiar».
+     */
+    function formularioFactura(cont, pagoId, actual, anterior, alCambiar) {
+        let vigente = actual && actual.tipo !== 'consumidor_final' ? actual : null;
+
+        function resumen(f) {
+            cont.innerHTML = '<h2>Factura</h2>'
+                + '<div class="resumen-factura"><span>A nombre de <b>' + esc(f.nombre) + '</b> · '
+                + esc(ROTULO_DOC[f.tipo] || f.tipo) + ' <span class="mono">' + esc(f.identificacion) + '</span>'
+                + (f.correo ? '<br><span class="tenue">Se envía a ' + esc(f.correo) + '</span>' : '') + '</span>'
+                + '<button type="button" class="enlace" id="fac-cambiar">Cambiar</button></div>';
+            document.getElementById('fac-cambiar').addEventListener('click', () => formulario(f));
+            alCambiar(true);
+        }
+
+        function formulario(previo) {
+            const p = previo || {};
+            const conDatos = !!previo;
+            cont.innerHTML = '<h2>Factura</h2>'
+                + '<label class="opcion"><input type="radio" name="fac" value="cf"' + (conDatos ? '' : ' checked') + '>'
+                + '<span>A consumidor final <span class="tenue">— sin datos personales</span></span></label>'
+                + '<label class="opcion"><input type="radio" name="fac" value="datos"' + (conDatos ? ' checked' : '') + '>'
+                + '<span>A mi nombre o al de mi empresa <span class="tenue">— para deducirla como gasto</span></span></label>'
+                + '<div id="fac-campos"' + (conDatos ? '' : ' hidden') + '>'
+                + '<div class="campos">'
+                + '<div class="campo"><label for="fac-tipo">Identificación</label><select id="fac-tipo">'
+                + ['cedula', 'ruc', 'pasaporte'].map(t => '<option value="' + t + '"' + (p.tipo === t ? ' selected' : '') + '>'
+                    + (t === 'cedula' ? 'Cédula' : t === 'ruc' ? 'RUC' : 'Pasaporte') + '</option>').join('')
+                + '</select></div>'
+                + '<div class="campo"><label for="fac-ident">Número</label><input id="fac-ident" autocomplete="off" maxlength="20" value="' + esc(p.identificacion || '') + '"></div>'
+                + '<div class="campo ancho"><label for="fac-nombre">Nombre o razón social</label><input id="fac-nombre" autocomplete="name" maxlength="150" value="' + esc(p.nombre || '') + '"></div>'
+                + '<div class="campo ancho"><label for="fac-correo">Correo para la factura <span class="tenue">(opcional; si no, el de su cuenta)</span></label><input id="fac-correo" type="email" autocomplete="email" maxlength="254" value="' + esc(p.correo || '') + '"></div>'
+                + '<div class="campo ancho"><label for="fac-dir">Dirección <span class="tenue">(opcional)</span></label><input id="fac-dir" autocomplete="street-address" maxlength="200" value="' + esc(p.direccion || '') + '"></div>'
+                + '</div>'
+                + '<p class="tenue">Estos datos se usan solo para emitir la factura electrónica de este pago y se conservan '
+                + 'con él por la obligación tributaria. <a href="legal.html#privacidad">Política de privacidad</a>.</p>'
+                + '<div id="fac-error"></div>'
+                + '<div class="acciones"><button type="button" class="btn" id="fac-guardar">Guardar datos de la factura</button></div>'
+                + '</div>';
+
+            const campos = document.getElementById('fac-campos');
+            cont.querySelectorAll('input[name="fac"]').forEach(r => r.addEventListener('change', async () => {
+                const datos = r.value === 'datos' && r.checked;
+                campos.hidden = !datos;
+                if (datos) return alCambiar(false);
+                // Vuelve a consumidor final: si había datos guardados, se borran.
+                if (vigente) {
+                    const x = await acceso.peticion('PUT', rutaFactura(pagoId), { tipo: 'consumidor_final' });
+                    if (x.estado === 200) vigente = null;
+                }
+                alCambiar(true);
+            }));
+            document.getElementById('fac-guardar').addEventListener('click', guardar);
+            alCambiar(!conDatos);
+        }
+
+        async function guardar() {
+            const b = document.getElementById('fac-guardar');
+            const err = document.getElementById('fac-error');
+            b.disabled = true;
+            const x = await acceso.peticion('PUT', rutaFactura(pagoId), {
+                tipo: document.getElementById('fac-tipo').value,
+                identificacion: document.getElementById('fac-ident').value,
+                nombre: document.getElementById('fac-nombre').value,
+                correo: document.getElementById('fac-correo').value,
+                direccion: document.getElementById('fac-dir').value
+            });
+            b.disabled = false;
+            if (x.estado !== 200) {
+                err.innerHTML = '<div class="aviso error">' + esc((x.datos && x.datos.error) || 'No se pudieron guardar los datos.') + '</div>';
+                return;
+            }
+            vigente = x.datos.facturacion;
+            resumen(vigente);
+        }
+
+        if (vigente) return resumen(vigente);
+        if (anterior) {
+            // Los mismos datos que la vez anterior: se aplican y se pueden cambiar.
+            alCambiar(false);
+            acceso.peticion('PUT', rutaFactura(pagoId), anterior).then(x => {
+                if (x.estado === 200) { vigente = x.datos.facturacion; resumen(vigente); }
+                else formulario(null);
+            });
+            return;
+        }
+        formulario(null);
+    }
+
+    /** Debajo de un pago aprobado: la factura que va a salir, o la emitida. */
+    function bloqueFacturaAprobado(p) {
+        const f = p.facturacion || {};
+        if (f.numero) {
+            return '<div class="factura"><h2>Factura</h2><p>Emitida: <span class="mono">' + esc(f.numero) + '</span>'
+                + (f.nombre ? ' a nombre de ' + esc(f.nombre) : ' a consumidor final') + '.</p></div>';
+        }
+        return '<div class="factura" id="factura-aprobado"></div>';
+    }
+
+    function activarFacturaAprobado(p) {
+        const cont = document.getElementById('factura-aprobado');
+        if (!cont) return;
+        const f = p.facturacion || {};
+        if (f.tipo && f.tipo !== 'consumidor_final') return formularioFactura(cont, p.id, f, null, () => {});
+        cont.innerHTML = '<h2>Factura</h2><p>Se emitirá a consumidor final. '
+            + '<button type="button" class="enlace" id="fac-pedir">La necesito a mi nombre</button></p>';
+        document.getElementById('fac-pedir').addEventListener('click', () =>
+            formularioFactura(cont, p.id, null, null, () => {}));
     }
 
     // ── Fase 2: confirmar a la vuelta de PayPhone ───────────────────────
@@ -262,7 +410,9 @@
                 + (conPredio(p.clave_catastral)
                     ? '<a class="btn" href="' + esc(alVisor(p.clave_catastral)) + '">Volver al visor con el predio</a>'
                     : '<a class="btn" href="geovisor.html">Ir al GeoVisor</a>')
-                + '<a class="btn btn-outline" href="panel.html">Mi suscripción</a></div>');
+                + '<a class="btn btn-outline" href="panel.html">Mi suscripción</a></div>'
+                + bloqueFacturaAprobado(p));
+            return activarFacturaAprobado(p);
         }
         if (p.estado === 'aprobado') {
             return pintar('<h1>Pago aprobado</h1>'
@@ -274,7 +424,9 @@
                 + '</p>'
                 + '<div class="acciones" style="margin-top:14px"><a class="btn" href="' + esc(alVisor(p.clave_catastral)) + '">'
                 + 'Volver al visor con el predio</a>'
-                + '<a class="btn btn-outline" href="panel.html">Mis pagos</a></div>');
+                + '<a class="btn btn-outline" href="panel.html">Mis pagos</a></div>'
+                + bloqueFacturaAprobado(p));
+            return activarFacturaAprobado(p);
         }
         const reintento = esSuscripcion
             ? 'pago.html?suscripcion=1' + (conPredio(p.clave_catastral) ? '&clave=' + encodeURIComponent(p.clave_catastral) : '')
