@@ -2621,6 +2621,74 @@
             .eco-fuente, .eco-herr { visibility: visible !important; animation: none !important; }
         }
         .eco.fuera *, .eco.fuera *::before, .eco.fuera *::after { animation-play-state: paused; }
+
+        /* ── Formación continua · cursos de diciembre 2026 ──
+           La sección lleva data-cierre: pasado ese día (fin de inscripciones)
+           el script del pie la quita junto con su enlace del menú. */
+        .cursos-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+        .curso-tarjeta {
+            background: var(--hueso);
+            border-top: 4px solid var(--rojo-caech);
+            border-radius: var(--radio);
+            padding: 30px 28px;
+            display: flex; flex-direction: column;
+        }
+        .curso-tarjeta .curso-icono { color: var(--rojo-caech); font-size: 30px; margin-bottom: 16px; }
+        .curso-tarjeta h3 { color: var(--grafito); font-size: 22px; font-weight: 700; line-height: 1.25; margin-bottom: 6px; }
+        .curso-instructor { color: var(--grafito-med); font-size: 15px; margin-bottom: 12px; }
+        .curso-nivel {
+            align-self: flex-start;
+            border: 1.5px solid var(--grafito);
+            border-radius: var(--radio);
+            padding: 3px 10px;
+            font-size: 13px; font-weight: 600; color: var(--grafito);
+            margin-bottom: 18px;
+        }
+        .curso-temas { list-style: none; margin: 0 0 6px; padding: 0; }
+        .curso-temas li { position: relative; padding: 6px 0 6px 20px; color: var(--grafito-med); font-size: 14.5px; }
+        .curso-temas li::before {
+            content: ''; position: absolute; left: 0; top: 13px;
+            width: 8px; height: 8px; background: var(--rojo-caech);
+        }
+        .curso-nota { margin-top: auto; padding-top: 14px; font-size: 13px; color: var(--grafito-sua); }
+        .cursos-datos {
+            display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px;
+            margin: 32px 0 0;
+        }
+        .cursos-datos div { border-top: 2px solid var(--grafito); padding-top: 12px; }
+        .cursos-datos dt { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--grafito-med); font-weight: 600; }
+        .cursos-datos dd { margin: 4px 0 0; font-size: 20px; font-weight: 700; color: var(--grafito); }
+        .cursos-datos dd small { display: block; font-size: 13px; font-weight: 400; color: var(--grafito-med); }
+        .cursos-inversion {
+            margin-top: 32px;
+            background: var(--rojo-caech); color: #FFFFFF;
+            border-radius: var(--radio) var(--radio) 0 0;
+            padding: 26px 28px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 18px 36px;
+        }
+        .cursos-inversion .versalitas { color: #FFFFFF; font-weight: 700; font-size: 13px; }
+        .cursos-precio { display: flex; align-items: baseline; gap: 8px; }
+        .cursos-precio strong { font-size: 44px; font-weight: 800; line-height: 1; }
+        .cursos-precio span { font-weight: 600; }
+        .cursos-inscripcion {
+            background: var(--grafito); color: #FFFFFF;
+            border-radius: 0 0 var(--radio) var(--radio);
+            padding: 22px 28px;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+        }
+        .cursos-inscripcion p { margin: 0; color: rgba(255, 255, 255, .75); font-size: 14px; }
+        .cursos-inscripcion p strong { display: block; color: #FFFFFF; font-size: 18px; }
+        .cursos-sede { margin-top: 18px; font-size: 14px; color: var(--grafito-med); }
+        .cursos-sede i { color: var(--rojo-caech); margin-right: 6px; }
+        @media (max-width: 900px) {
+            .cursos-grid { grid-template-columns: minmax(0, 1fr); }
+            .cursos-datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 480px) {
+            .curso-tarjeta { padding: 24px 20px; }
+            .cursos-precio strong { font-size: 36px; }
+            .cursos-inscripcion .btn { width: 100%; justify-content: center; }
+        }
     </style>
     <!-- Sistema de interfaz compartido: paleta, tipografia y botones.
          Va despues del <style> de arriba a proposito; ver caech-ui.css. -->
@@ -2643,6 +2711,7 @@
                     <span></span><span></span><span></span>
                 </button>
                 <ul class="nav-links" id="nav-links">
+                    <li><a href="#cursos" class="nav-destacado">Cursos</a></li>
                     <li><a href="#herramientas">Herramientas</a></li>
                     <li><a href="#dicat-interactivo">El DICAT</a></li>
                     <li><a href="#precios" class="nav-destacado">Precios</a></li>
@@ -2916,6 +2985,64 @@
             <path d="M0 284.5H1440" stroke="#E31E24" stroke-opacity=".5" stroke-width="1"/>
             <path d="M0 292H1440" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="1" stroke-dasharray="14 12"/>
         </svg>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FORMACIÓN CONTINUA · cursos de diciembre 2026
+         Se quita sola después de data-cierre (ver script del pie).
+    ══════════════════════════════════════════════════════ -->
+    <section class="section section-blanca" id="cursos" data-cierre="2026-12-02">
+        <div class="container">
+            <div class="section-title">
+                <span class="eyebrow">Formación continua · Inscripciones abiertas</span>
+                <h2>Dos cursos. Tres sábados.</h2>
+                <p>Diciembre 2026, presencial en la sede del CAE-CH o en línea por Google Meet.</p>
+            </div>
+            <div class="cursos-grid">
+                <article class="curso-tarjeta">
+                    <i class="fas fa-map-location-dot curso-icono" aria-hidden="true"></i>
+                    <h3>SIG aplicado a la Arquitectura con QGIS</h3>
+                    <p class="curso-instructor">Arq. Hernán Barragán</p>
+                    <span class="curso-nivel">De cero a intermedio</span>
+                    <ul class="curso-temas">
+                        <li>Georreferenciar planos CAD y levantamientos catastrales</li>
+                        <li>Analizar predios, retiros, afectaciones y normativa (COS y CUS)</li>
+                        <li>Curvas de nivel, pendientes y orientación del terreno</li>
+                        <li>Láminas cartográficas profesionales para estudios y trámites</li>
+                    </ul>
+                    <p class="curso-nota">QGIS es software libre y gratuito.</p>
+                </article>
+                <article class="curso-tarjeta">
+                    <i class="fas fa-cube curso-icono" aria-hidden="true"></i>
+                    <h3>Modelado BIM con Revit</h3>
+                    <p class="curso-instructor">Arq. Alexander Vilaña</p>
+                    <span class="curso-nivel">Nivel intermedio</span>
+                    <ul class="curso-temas">
+                        <li>Modelar una vivienda de dos plantas a partir de un plano CAD</li>
+                        <li>Cubiertas, escaleras, familias, materiales y terreno</li>
+                        <li>Plantas, cortes, fachadas y cómputo de cantidades</li>
+                        <li>Láminas listas para trámite y exportación a PDF, DWG e IFC</li>
+                    </ul>
+                    <p class="curso-nota">Requisito: Revit instalado.</p>
+                </article>
+            </div>
+            <dl class="cursos-datos">
+                <div><dt>Sábados</dt><dd>5, 12 y 19 dic</dd></div>
+                <div><dt>Horario</dt><dd>09:00 – 13:00</dd></div>
+                <div><dt>Certificado</dt><dd>20 horas<small>de aprobación</small></dd></div>
+                <div><dt>Cupos por curso</dt><dd>15 + 20<small>presencial + en línea</small></dd></div>
+            </dl>
+            <div class="cursos-inversion">
+                <span class="versalitas">Inversión por curso</span>
+                <div class="cursos-precio"><strong>$25</strong><span>estudiantes</span></div>
+                <div class="cursos-precio"><strong>$30</strong><span>profesionales</span></div>
+            </div>
+            <div class="cursos-inscripcion">
+                <p><strong>Inscripciones hasta el 2 de diciembre</strong>Tarifa estudiantil con carné o correo institucional.</p>
+                <a href="https://forms.gle/TJbqDSnpdy4SeXQY6" class="btn btn-lg" target="_blank" rel="noopener"><i class="fas fa-pen-to-square"></i> Inscribirme</a>
+            </div>
+            <p class="cursos-sede"><i class="fas fa-location-dot" aria-hidden="true"></i>Sede: Av. Daniel León Borja, Pasaje Centro de Arte y Cultura, Riobamba · (+593) 967804543 · caechoficial@gmail.com</p>
+        </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════
@@ -4126,6 +4253,19 @@
             });
         }, { threshold: 0.15 }).observe(seccion);
     })();
+    </script>
+    <script>
+        // Cursos de diciembre: fuera de la portada pasado el cierre de inscripciones.
+        (function () {
+            var s = document.getElementById('cursos');
+            if (!s) return;
+            var fin = new Date(s.getAttribute('data-cierre') + 'T23:59:59-05:00');
+            if (Date.now() > fin.getTime()) {
+                s.remove();
+                var a = document.querySelector('.nav-links a[href="#cursos"]');
+                if (a && a.parentNode) a.parentNode.remove();
+            }
+        })();
     </script>
 </body>
 </html>
